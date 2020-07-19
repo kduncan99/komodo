@@ -6,17 +6,12 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import org.junit.*;
-import static org.junit.Assert.*;
+import org.junit.After;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Unit tests for InstructionProcessor class
@@ -24,21 +19,13 @@ import static org.junit.Assert.*;
 public class Test_FixedPointBinaryInstructions extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void addAccumulator(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -55,26 +42,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(023, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(023, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addAccumulator_posZeros(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -91,26 +73,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addAccumulator_negZeros(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -128,26 +105,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_777777_777777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertTrue(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_777777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertTrue(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addNegativeAccumulator(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -169,26 +141,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_777777_777775L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertTrue(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_777777_777775L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertTrue(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addMagnitudeAccumulator_positive(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -210,26 +177,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0472, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0472, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addMagnitudeAccumulator_negative(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -251,26 +213,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0236, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0236, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addNegativeMagnitudeAccumulator(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -292,26 +249,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0777777_777775L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertTrue(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0777777_777775L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertTrue(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addAccumulatorUpper(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -328,27 +280,22 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(07, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(023, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(07, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(023, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addNegativeAccumulatorUpper(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -365,27 +312,22 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(07, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_777777_777772L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertTrue(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(07, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_777777_777772L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertTrue(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addIndexRegister(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -402,26 +344,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(023, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(023, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addNegativeIndexRegister(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -438,26 +375,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_777777_777772L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        assertTrue(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_777777_777772L, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        assertTrue(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addAccumulator_Overflow(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -491,23 +423,18 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01022, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01022, ip.getLatestStopDetail());
     }
 
     @Test
     public void addHalves(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -529,26 +456,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_000124_000124L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_000124_000124L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addNegativeHalves(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -570,26 +492,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_000124_223000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_000124_223000L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addThirds(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -611,26 +528,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_000124_770124L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_000124_770124L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void addNegativeThirds(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -652,26 +564,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_0001_5544_2123L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_0001_5544_2123L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void divideInteger(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         // Example from the hardware guide
         String[] source = {
             "          $EXTEND",
@@ -695,25 +602,20 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_005213_747442L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        Assert.assertEquals(0_000000_244613L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_005213_747442L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_000000_244613L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 
     @Test
     public void divideInteger_byZero(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -749,23 +651,18 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01020, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01020, ip.getLatestStopDetail());
     }
 
     @Test
     public void divideInteger_byZero_noInterrupt(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         // disable arithmetic exception interrupt, and look for zeros in the resulting registers
         String[] source = {
             "          $EXTEND",
@@ -789,26 +686,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertTrue(_instructionProcessor.getDesignatorRegister().getDivideCheck());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertTrue(ip.getDesignatorRegister().getDivideCheck());
     }
 
     @Test
     public void divideInteger_byNegativeZero(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -845,23 +737,18 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01020, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01020, ip.getLatestStopDetail());
     }
 
     @Test
     public void divideSingleFractional(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         // Example from the hardware guide
         String[] source = {
             "          $EXTEND",
@@ -885,24 +772,19 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_001733_765274L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_001733_765274L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
     }
 
     @Test
     public void divideSingleFractional_byZero(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -939,23 +821,18 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01020, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01020, ip.getLatestStopDetail());
     }
 
     @Test
     public void divideSingleFractional_byZero_noInterrupt(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         // disable arithmetic exception interrupt, and look for zeros in the resulting registers
         String[] source = {
             "          $EXTEND",
@@ -979,25 +856,20 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertTrue(_instructionProcessor.getDesignatorRegister().getDivideCheck());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertTrue(ip.getDesignatorRegister().getDivideCheck());
     }
 
     @Test
     public void divideSingleFractional_byNegativeZero(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1033,23 +905,18 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01020, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01020, ip.getLatestStopDetail());
     }
 
     @Test
     public void divideFractional(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         // Example from the hardware guide
         String[] source = {
             "          $EXTEND",
@@ -1074,25 +941,20 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_000000_021653L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        Assert.assertEquals(0_000000_000056L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_000000_021653L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        assertEquals(0_000000_000056L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
     @Test
     public void divideFractional_byZero(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1129,23 +991,18 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01020, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01020, ip.getLatestStopDetail());
     }
 
     @Test
     public void divideFractional_byZero_noInterrupt(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         // disable arithmetic exception interrupt, and look for zeros in the resulting registers
         String[] source = {
             "          $EXTEND",
@@ -1170,26 +1027,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertTrue(_instructionProcessor.getDesignatorRegister().getDivideCheck());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertTrue(ip.getDesignatorRegister().getDivideCheck());
     }
 
     @Test
     public void divideFractional_byNegativeZero(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1226,23 +1078,18 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01020, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01020, ip.getLatestStopDetail());
     }
 
     @Test
     public void doubleAdd(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1267,27 +1114,23 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_333333_555555L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_333333_555555L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        assertEquals(0_333333_555555L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_333333_555555L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertFalse(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void doubleAddNegative(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1312,27 +1155,22 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_222222_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_333333_333333L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertTrue(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_222222_000000L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_333333_333333L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertTrue(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void multiplyInteger(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1352,27 +1190,22 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_177777_777777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_000000_000001L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        Assert.assertEquals(0_777777_777777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        Assert.assertEquals(0_775533_664422L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_177777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_000000_000001L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_777777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_775533_664422L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 
     @Test
     public void multiplySingleInteger(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1390,24 +1223,19 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(200 * 520L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(200 * 520L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
     public void multiplySingleInteger_overflow(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -1440,23 +1268,18 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01022, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01022, ip.getLatestStopDetail());
     }
 
     @Test
     public void multiplyFractional(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
@@ -1482,25 +1305,21 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_044444_444445L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        Assert.assertEquals(0_044444_444444L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        assertEquals(0_044444_444445L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(0_044444_444444L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
     }
 
     @Test
     public void add1(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
@@ -1525,31 +1344,27 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        long[] bankData = getBankByBaseRegister(2);
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_777777_111111L, bankData[0]);
         assertEquals(0_0000_0001_0000L, bankData[1]);
         assertEquals(0_000000_000000L, bankData[2]);
 
         //  check overflow and carry from the last instruction
-        assertTrue(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        assertTrue(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void add1_badPrivilege(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  In basic mode, PP of zero is required
         String[] source = {
             "          $EXTEND",
@@ -1585,23 +1400,18 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01016, ip.getLatestStopDetail());
     }
 
     @Test
     public void sub1(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  This unit test is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
@@ -1626,32 +1436,27 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_5555_0000_5555L, bankData[0]);
         assertEquals(0_777777_000000L, bankData[1]);
         assertEquals(0_777777_777776L, bankData[2]);
 
         //  check overflow and carry from the last instruction
-        assertTrue(_instructionProcessor.getDesignatorRegister().getCarry());
-        assertFalse(_instructionProcessor.getDesignatorRegister().getOverflow());
+        assertTrue(ip.getDesignatorRegister().getCarry());
+        assertFalse(ip.getDesignatorRegister().getOverflow());
     }
 
     @Test
     public void sub1_badPrivilege(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  In basic mode, PP of zero is required
         String[] source = {
             "          $EXTEND",
@@ -1687,23 +1492,18 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01016, ip.getLatestStopDetail());
     }
 
     @Test
     public void inc(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
@@ -1734,31 +1534,26 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_000000_000001L, bankData[0]);
         assertEquals(0_000000_000000L, bankData[1]);
         assertEquals(0_000011_111111L, bankData[2]);
-        Assert.assertEquals(0_0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        Assert.assertEquals(0_1L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_0L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_1L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
     }
 
     @Test
     public void dec(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
@@ -1789,31 +1584,26 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_000000_000000L, bankData[0]);
         assertEquals(0_777777_777776L, bankData[1]);
         assertEquals(0_000007_111111L, bankData[2]);
-        Assert.assertEquals(0_0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        Assert.assertEquals(0_1L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_0L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_1L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
     }
 
     @Test
     public void inc2(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
@@ -1844,31 +1634,26 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_000000_000002L, bankData[0]);
         assertEquals(0_000000_000000L, bankData[1]);
         assertEquals(0_000012_111111L, bankData[2]);
-        Assert.assertEquals(0_0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        Assert.assertEquals(0_1L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_0L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_1L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
     }
 
     @Test
     public void dec2(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
@@ -1899,31 +1684,26 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_000000_000000L, bankData[0]);
         assertEquals(0_777777_777775L, bankData[1]);
         assertEquals(0_000006_111111L, bankData[2]);
-        Assert.assertEquals(0_0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        Assert.assertEquals(0_1L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_0L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_1L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
     }
 
     @Test
     public void enz(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  This is per the hardware instruction guide
         String[] source = {
             "          $EXTEND",
@@ -1954,18 +1734,20 @@ public class Test_FixedPointBinaryInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_000000_000000L, bankData[0]);
         assertEquals(0_000000_000000L, bankData[1]);
         assertEquals(0_000010_111111L, bankData[2]);
-        Assert.assertEquals(0_0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_0L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        Assert.assertEquals(0_1L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_0L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0_0L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_1L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
     }
 }

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.message.EntryMessage;
@@ -34,7 +35,7 @@ import org.apache.logging.log4j.message.EntryMessage;
  * The Processors are all interconnected via the Send/Ack UPI business, which is used mainly for IO.
  * Previous comments notwithstanding, the InventoryManager does impose upper limits for the create methods.
  *
- * Connected to the InputOutputProcessor(s) is/are the ChannelModules. The ChannelModule is where data is translated
+ * Connected to the InputOutputProcessor(s) is/are the ChannelModule(s). The ChannelModule is where data is translated
  *      (if necessary) from Word36 format to byte format.  We need at least one CM for any byte devices, and one for
  *      any word devices. We can have more... we impose no architectural limit on max CMs.
  *
@@ -64,7 +65,7 @@ public abstract class Node {
         public static NodeCategory getValue(
             final int code
         ) {
-            //  We do not model Control Units, but if we did, they'd be case 3
+            //  We do not model Controller Nodes, but if we did, they'd be case 3
             return switch (code) {
                 case 1 -> Processor;
                 case 2 -> ChannelModule;
@@ -89,12 +90,12 @@ public abstract class Node {
     /**
      * Category of this node
      */
-    final NodeCategory _category;
+    public final NodeCategory _category;
 
     /**
      * Unique name of this node
      */
-    final String _name;
+    public final String _name;
 
     /**
      * Set of nodes to which this node connects
@@ -294,16 +295,8 @@ public abstract class Node {
     }
 
     /**
-     * Convenience wrapper which disconnects the given descendant node from this ancestor node
-     */
-    public void disconnect(
-        final Node descendant
-    ) {
-        disconnect(this, descendant);
-    }
-
-    /**
-     * Convenience wrapper which disconnects this node from its ancestor nodes
+     * Convenience wrapper which disconnects this node from all of its ancestor nodes.
+     * Does NOT disconnect any desccendent nodes.
      */
     public void disconnect() {
         Set<Node> ancestors = new HashSet<>(_ancestors);
@@ -323,8 +316,8 @@ public abstract class Node {
      * @param slice slice to be logged
      */
     static void logBuffer(
-        final org.apache.logging.log4j.Logger logger,
-        final org.apache.logging.log4j.Level logLevel,
+        final Logger logger,
+        final Level logLevel,
         final String caption,
         final ArraySlice slice
     ) {
@@ -339,8 +332,8 @@ public abstract class Node {
      * @param buffer buffer to be logged
      */
     static void logBuffer(
-        final org.apache.logging.log4j.Logger logger,
-        final org.apache.logging.log4j.Level logLevel,
+        final Logger logger,
+        final Level logLevel,
         final String caption,
         final byte[] buffer
     ) {

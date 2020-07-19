@@ -112,7 +112,6 @@ public abstract class Processor extends Node implements Worker {
 
     /**
      * Lookup table of mailbox slots for UPI communication.
-     * Populated by SystemProcessor at any appropriate point prior to OS initialization.
      * Key is the combination of source and destination UPI indices, value is the AbsoluteAddress
      * in storage where the communication area is located, for messages from the source processor
      * to the destination processor.
@@ -121,15 +120,8 @@ public abstract class Processor extends Node implements Worker {
      * not every combinaion of processors interrupt each other, that broadcast messages exist
      * where-in the destination is not known to the source, and that in some cases where
      * paths *do* exist from one processor to another, no communication area is necessary.
-     * It is up to the SP to determine which combinations are to exist, to build that area in
-     * storage, to store the location of the communications area in the configuration bank
-     * so that the OS can access it, and to populate this container accordingly.
-     * --
-     * The communications area in storage is formatted in a manner only relevant to the SP and
-     * to the OS - the actual absolute addresses of each specific communications slot is
-     * all we care about here.
      */
-    static final Map<UPIIndexPair, AbsoluteAddress> _upiCommunicationLookup = new HashMap<>();
+    private static final Map<UPIIndexPair, AbsoluteAddress> _upiCommunicationLookup = new HashMap<>();
 
     /**
      * All processors must implement a thread, if for no other reason than to monitor the UPI tables.
@@ -239,6 +231,7 @@ public abstract class Processor extends Node implements Worker {
         _logger.traceExit(em);
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public final boolean isReady() {
         return _isReady;
     }
@@ -331,6 +324,12 @@ public abstract class Processor extends Node implements Worker {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Static methods
     //  ----------------------------------------------------------------------------------------------------------------------------
+
+    //TODO need to automate UPI mailslot stuff
+    //  just allocate slots for all possible combinations between IPs, IOPs, and SPs
+    //  however, we cannot do this until we have at least one MSP, and if that one goes back away,
+    //  we have to move the mailslots to another MSP, but if there isn't one, then the mailslots are all wacked.
+    //  ... and, what do we do if one or more IPs are active when we need to wack the mailslots?
 
     /**
      * Retrieves selected processor

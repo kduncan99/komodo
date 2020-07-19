@@ -56,31 +56,21 @@ class BaseFunctions {
     Set<LinkOption> _linkOptions = DEFAULT_LINK_OPTIONS;
     LinkResult _linkResult = null;
 
-    InventoryManager _inventoryManager = null;
-    InstructionProcessor _instructionProcessor = null;
-    InputOutputProcessor _inputOutputProcessor = null;
-    InstrumentedMainStorageProcessor _mainStorageProcessor = null;
-    SystemProcessor _systemProcessor = null;
-    ByteChannelModule _byteChannelModule = null;
-    WordChannelModule _wordChannelModule = null;
-    ScratchDiskDevice _scratchDiskDevice = null;
-
     private static final String[] GEN_DEFS_SOURCE = {
         ". ................................",
         ". Generally Useful Definitions",
         ".",
-        "DR$SETPP01* $PROC",
+        "DR$SETPP*   $PROC",
+        ". P(1,1) is the requested privilege, 0 to 3",
+        "PPRIV     $EQU      DR$SETPP(1, 0)",
+        "VALUE     $EQU      PPRIV*/20",
+        "",
         "          SD        A13",
-        "          AND       A13,(0777763,0777777)",
-        "          OR        A14,(04,0)",
+        "          AND       A13,(0777763777777)",
+        "          OR        A14,(VALUE)",
         "          LD        A15",
         "          $END",
-        ".",
-        "DR$SETPP03* $PROC",
-        "          SD        A14",
-        "          OR        A14,(014,0)",
-        "          LD        A15",
-        "          $END",
+        "",
         ".",
         "DR$SETQWORD* $PROC",
         "          SD        A14",
@@ -410,7 +400,7 @@ class BaseFunctions {
     }
 
     /**
-     * Common processor creation code
+     * Common configuration creation code
      * Creates the following configuration:
      *      1 System Processor
      *      1 Instruction Processor
@@ -420,33 +410,75 @@ class BaseFunctions {
      *          1 Word Channel Module at index 1
      *      1 Main Storage Processor
      */
-    void createProcessors(
-    ) throws MaxNodesException,
+    void createConfiguration(
+    ) throws CannotConnectException,
+             ChannelModuleIndexConflictException,
+             MaxNodesException,
              NodeNameConflictException,
-             UPIConflictException, CannotConnectException {
-        _inventoryManager = InventoryManager.getInstance();
-        _systemProcessor = _inventoryManager.createSystemProcessor("SP0",
-                                                                   8080,
-                                                                   null,
-                                                                   new Credentials("test", "test"));
-        _instructionProcessor = _inventoryManager.createInstructionProcessor("IP0");
-        _inputOutputProcessor = _inventoryManager.createInputOutputProcessor("IOP0");
-        _mainStorageProcessor = new InstrumentedMainStorageProcessor("MSP0",
-                                                                     (short) 1,
-                                                                     8 * 1024 * 1024);
-        _inventoryManager.addMainStorageProcessor(_mainStorageProcessor);
+             UPIConflictException,
+             UPIInvalidException {
+        createConfiguration(1, 1, 1);
+    }
 
-        _byteChannelModule = new ByteChannelModule("CHM00");
-        Node.connect(_inputOutputProcessor, 0, _byteChannelModule);
-        _byteChannelModule.initialize();
+    /**
+     * Common processor creation code
+     * Creates 1 system processor, a number of other processors as indicated by the parameters,
+     * and the following other nodes:
+     *      1 byte channel module CHMBx0 per IOP, at index 0
+     *      1 word channel module CHMWx1 per IOP, at index 1
+     *      1 scratch disk device on all IOPs, CHMBx0 at index 0
+     * @param ipCount number of IPs to create
+     * @param iopCount number of IOPs to create
+     * @param mspCount number of MSPs to create
+     */
+    void createConfiguration(
+        final int ipCount,
+        final int iopCount,
+        final int mspCount
+    ) throws CannotConnectException,
+             ChannelModuleIndexConflictException,
+             MaxNodesException,
+             NodeNameConflictException,
+             UPIConflictException,
+             UPIInvalidException {
+        assertFalse(ipCount >= InventoryManager.MAX_IPS);
+        assertFalse(iopCount >= InventoryManager.MAX_IOPS);
+        assertFalse(mspCount >= InventoryManager.MAX_MSPS);
 
-        _wordChannelModule = new WordChannelModule("CHM01");
-        Node.connect(_inputOutputProcessor, 1, _wordChannelModule);
-        _wordChannelModule.initialize();
+        InventoryManager im = InventoryManager.getInstance();
+        im.createSystemProcessor("SP0",
+                                 8080,
+                                 null,
+                                 new Credentials("test", "test"));
 
-        _scratchDiskDevice = new ScratchDiskDevice("DISK0");
-        Node.connect(_byteChannelModule, 0, _scratchDiskDevice);
-        _scratchDiskDevice.initialize();
+        for (int px = 0; px < mspCount; ++px) {
+            MainStorageProcessor msp = new InstrumentedMainStorageProcessor(String.format("MSP%d", px),
+                                                                            (short) 1,
+                                                                            8 * 1024 * 1024);
+            im.addMainStorageProcessor(msp);
+        }
+
+        for (int px = 0; px < ipCount; ++px) {
+            im.createInstructionProcessor(String.format("IP%d", px));
+        }
+
+        Set<ChannelModule> byteChannelModules = new HashSet<>();
+        Set<ChannelModule> wordChannelModules = new HashSet<>();
+        for (int px = 0; px < iopCount; ++px) {
+            InputOutputProcessor iop = im.createInputOutputProcessor(String.format("IOP%d", px));
+            ChannelModule cm0 = im.createChannelModule(ChannelModule.ChannelModuleType.Byte,
+                                                       String.format("CHMB%d0", px),
+                                                       iop,
+                                                       0);
+            byteChannelModules.add(cm0);
+            ChannelModule cm1 = im.createChannelModule(ChannelModule.ChannelModuleType.Word,
+                                                       String.format("CHMW%d1", px),
+                                                       iop,
+                                                       1);
+            wordChannelModules.add(cm1);
+        }
+
+        //TODO create disk
     }
 
 
@@ -524,31 +556,16 @@ class BaseFunctions {
     }
 
     /**
-     * Convenience method for below
-     * @param source source code to be built
-     * @param includeInterruptHandlers We include default interrupt handlers and a routine to initialize the IH vectors
-     * @param avoidDBankCollision databanks are adjusted upwards to avoid addressing collision - usually only useful for basic mode
-     */
-    void buildMultiBank(
-        final String[] source,
-        final boolean includeInterruptHandlers,
-        final boolean avoidDBankCollision
-    ) {
-        buildMultiBank(source, includeInterruptHandlers, avoidDBankCollision, false);
-    }
-
-    /**
      * Builds a binary executable consisting of one bank per location counter.
+     * Includes an interrupt handler bank.
      * Odd-number BDIs are static read-only
      * Even-number BDIs are dynamic dbanks, read-write, no enter
      * @param source source code to be built
-     * @param includeInterruptHandlers We include default interrupt handlers and a routine to initialize the IH vectors
      * @param avoidDBankCollision databanks are adjusted upwards to avoid addressing collision - usually only useful for basic mode
      * @param writeableCodeBanks true if code banks are to be marked as writeable (for SLJ instruction tests)
      */
     void buildMultiBank(
         final String[] source,
-        final boolean includeInterruptHandlers,
         final boolean avoidDBankCollision,
         final boolean writeableCodeBanks
     ) {
@@ -615,21 +632,19 @@ class BaseFunctions {
             bdIndex++;
         }
 
-        if (includeInterruptHandlers) {
-            buildInterruptHandlerModule();
-            LCPoolSpecification[] lcpSpecs = { new LCPoolSpecification(_ihRelocatable, 1) };
-            BankDeclaration bankDecl = new BankDeclaration.Builder().setBankDescriptorIndex(bdIndex)
-                                                                    .setBankLevel(1)
-                                                                    .setBankName("IHBANK")
-                                                                    .setPoolSpecifications(lcpSpecs)
-                                                                    .setSpecialAccessPermissions(codeSAP)
-                                                                    .setGeneralAccessPermissions(gap)
-                                                                    .setStartingAddress(01000)
-                                                                    .setAccessInfo(new AccessInfo(0, 0))
-                                                                    .setOptions(codeBankOpts)
-                                                                    .build();
-            bankDeclarations.add(bankDecl);
-        }
+        buildInterruptHandlerModule();
+        LCPoolSpecification[] lcpSpecs = { new LCPoolSpecification(_ihRelocatable, 1) };
+        BankDeclaration bankDecl = new BankDeclaration.Builder().setBankDescriptorIndex(bdIndex)
+                                                                .setBankLevel(1)
+                                                                .setBankName("IHBANK")
+                                                                .setPoolSpecifications(lcpSpecs)
+                                                                .setSpecialAccessPermissions(codeSAP)
+                                                                .setGeneralAccessPermissions(gap)
+                                                                .setStartingAddress(01000)
+                                                                .setAccessInfo(new AccessInfo(0, 0))
+                                                                .setOptions(codeBankOpts)
+                                                                .build();
+        bankDeclarations.add(bankDecl);
 
         _linker = new Linker.Builder().setModuleName("BINARY")
                                       .setOptions(_linkOptions)
@@ -672,52 +687,8 @@ class BaseFunctions {
      * Clears the class state for a subsequent build/ipl process
      */
     void clear(
-    ) throws UPINotAssignedException {
-        if (_scratchDiskDevice != null) {
-            _scratchDiskDevice.terminate();
-            _scratchDiskDevice.disconnect();
-            _scratchDiskDevice = null;
-        }
-
-        if (_byteChannelModule != null) {
-            _byteChannelModule.terminate();
-            _byteChannelModule.disconnect();
-            _byteChannelModule = null;
-        }
-
-        if (_wordChannelModule != null) {
-            _wordChannelModule.terminate();
-            _wordChannelModule.disconnect();
-            _wordChannelModule = null;
-        }
-
-        if (_instructionProcessor != null) {
-            _instructionProcessor.stop(InstructionProcessor.StopReason.Cleared, 0);
-            while (!_instructionProcessor.isStopped()) {
-                Thread.onSpinWait();
-            }
-            _instructionProcessor.terminate();
-            _inventoryManager.deleteProcessor(_instructionProcessor._upiIndex);
-            _instructionProcessor = null;
-        }
-
-        if (_inputOutputProcessor != null) {
-            _inputOutputProcessor.terminate();
-            _inventoryManager.deleteProcessor(_inputOutputProcessor._upiIndex);
-            _inputOutputProcessor = null;
-        }
-
-        if (_mainStorageProcessor != null) {
-            _mainStorageProcessor.terminate();
-            _inventoryManager.deleteProcessor(_mainStorageProcessor._upiIndex);
-            _mainStorageProcessor = null;
-        }
-
-        if (_systemProcessor != null) {
-            _systemProcessor.terminate();
-            _inventoryManager.deleteProcessor(_systemProcessor._upiIndex);
-            _systemProcessor = null;
-        }
+    ) {
+        InventoryManager.getInstance().clearConfiguration();
 
         _assembler = null;
         _assemblerOptions = DEFAULT_ASSEMBLER_OPTIONS;
@@ -733,9 +704,10 @@ class BaseFunctions {
      * This is a copy of the content, so if you update the result, you don't screw up the actual content in the MSP.
      */
     long[] getBankByBaseRegister(
+        final InstructionProcessor ip,
         final int baseRegisterIndex
     ) {
-        ArraySlice array = _instructionProcessor.getBaseRegister(baseRegisterIndex)._storage;
+        ArraySlice array = ip.getBaseRegister(baseRegisterIndex)._storage;
         long[] result = new long[array.getSize()];
         for (int ax = 0; ax < array.getSize(); ++ax) {
             result[ax] = array.get(ax);
@@ -743,8 +715,33 @@ class BaseFunctions {
         return result;
     }
 
+    InputOutputProcessor getFirstIOP() {
+        try {
+            return InventoryManager.getInstance().getInputOutputProcessor(InventoryManager.FIRST_IOP_UPI_INDEX);
+        } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
+            return null;
+        }
+    }
+
+    InstructionProcessor getFirstIP() {
+        try {
+            return InventoryManager.getInstance().getInstructionProcessor(InventoryManager.FIRST_IP_UPI_INDEX);
+        } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
+            return null;
+        }
+    }
+
+    MainStorageProcessor getFirstMSP() {
+        try {
+            return InventoryManager.getInstance().getMainStorageProcessor(InventoryManager.FIRST_MSP_UPI_INDEX);
+        } catch (UPINotAssignedException | UPIProcessorTypeException ex) {
+            return null;
+        }
+    }
+
     /**
      * Using the results of a previous build, we call on the SP to load the created banks and start the IP
+     * (for multi-IP configurations, we start the first one, and load into the first MSP)
      * @param wait true to wait until the IP halts, false to return immediately after starting the IP
      */
     void ipl(
@@ -756,28 +753,34 @@ class BaseFunctions {
         assertNotNull(_linkResult);
         assertNotNull(_linkResult._loadableBanks);
         assertNotNull(_linkResult._programStartInfo);
-        assertNotNull(_instructionProcessor);
-        assertNotNull(_mainStorageProcessor);
-        assertNotNull(_systemProcessor);
 
-        _instructionProcessor.setDevelopmentMode(true);
-        _instructionProcessor.setTraceInstructions(true);
-        _systemProcessor.iplBinary("TEST",
-                                   _linkResult._loadableBanks,
-                                   _linkResult._programStartInfo._vAddress,
-                                   _mainStorageProcessor._upiIndex,
-                                   _instructionProcessor._upiIndex,
-                                   false,
-                                   false);
+        InventoryManager im = InventoryManager.getInstance();
+        InstructionProcessor ip0 = im.getInstructionProcessor(InventoryManager.FIRST_IP_UPI_INDEX);
+        MainStorageProcessor msp0 = im.getMainStorageProcessor(InventoryManager.FIRST_MSP_UPI_INDEX);
+        SystemProcessor sp0 = im.getSystemProcessor(InventoryManager.FIRST_SP_UPI_INDEX);
+
+        assertNotNull(ip0);
+        assertNotNull(msp0);
+        assertNotNull(sp0);
+
+        ip0.setDevelopmentMode(true);
+        ip0.setTraceInstructions(true);
+        sp0.iplBinary("TEST",
+                      _linkResult._loadableBanks,
+                      _linkResult._programStartInfo._vAddress,
+                      msp0._upiIndex,
+                      ip0._upiIndex,
+                      false,
+                      false);
 
         //  wait for IP to start
-        while (_instructionProcessor.isStopped()) {
+        while (ip0.isStopped()) {
             Thread.onSpinWait();
         }
 
         //  maybe wait for IP to stop
         if (wait) {
-            while (!_instructionProcessor.isStopped()) {
+            while (!ip0.isStopped()) {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException ex) {
@@ -792,174 +795,181 @@ class BaseFunctions {
      * Includes elements of IP state, as well as the content of all loaded banks in the MSP
      */
     void showDebugInfo() {
-        InstructionProcessor ip = _instructionProcessor;
-        InstrumentedMainStorageProcessor msp = _mainStorageProcessor;
-        DesignatorRegister dr = ip.getDesignatorRegister();
-        int oldpp = dr.getProcessorPrivilege();
-        dr.setProcessorPrivilege(0);
+        System.out.println("Debug Info:");
+        InventoryManager im = InventoryManager.getInstance();
+        for (int upi = InventoryManager.FIRST_IP_UPI_INDEX; upi < InventoryManager.LAST_IP_UPI_INDEX; ++upi) {
+            try {
+                InstructionProcessor ip = im.getInstructionProcessor(upi);
+                DesignatorRegister dr = ip.getDesignatorRegister();
+                int oldpp = dr.getProcessorPrivilege();
+                dr.setProcessorPrivilege(0);
 
-        try {
-            System.out.println("Debug Info:");
-            System.out.println(String.format("  PAR: %012o", ip.getProgramAddressRegister().get()));
-            System.out.println(String.format("  DR:  %012o", ip.getDesignatorRegister().getW()));
-            final int regsPerLine = 4;
+                System.out.println("  " + ip._name);
+                System.out.println(String.format("    PAR: %012o", ip.getProgramAddressRegister().get()));
+                System.out.println(String.format("    DR:  %012o", ip.getDesignatorRegister().getW()));
+                final int regsPerLine = 4;
 
-            System.out.println("  GRS:");
-            for (int x = 0; x < 16; x += regsPerLine) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(String.format("  X%d-X%d:", x, x + regsPerLine - 1));
-                while (sb.length() < 12) { sb.append(' '); }
-                for (int y = 0; y < regsPerLine; ++y) {
-                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.X0 + x + y).getW()));
-                }
-                System.out.println(sb.toString());
-            }
-
-            for (int x = 0; x < 16; x += regsPerLine) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(String.format("  A%d-A%d:", x, x + regsPerLine - 1));
-                while (sb.length() < 12) { sb.append(' '); }
-                for (int y = 0; y < regsPerLine; ++y) {
-                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.A0 + x + y).getW()));
-                }
-                System.out.println(sb.toString());
-            }
-
-            for (int x = 0; x < 16; x += regsPerLine) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(String.format("  R%d-R%d:", x, x + regsPerLine - 1));
-                while (sb.length() < 12) { sb.append(' '); }
-                for (int y = 0; y < regsPerLine; ++y) {
-                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.R0 + x + y).getW()));
-                }
-                System.out.println(sb.toString());
-            }
-
-            for (int x = 0; x < 16; x += regsPerLine) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(String.format("  EX%d-EX%d:", x, x + regsPerLine - 1));
-                while (sb.length() < 12) { sb.append(' '); }
-                for (int y = 0; y < regsPerLine; ++y) {
-                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.EX0 + x + y).getW()));
-                }
-                System.out.println(sb.toString());
-            }
-
-            for (int x = 0; x < 16; x += regsPerLine) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(String.format("  EA%d-EA%d:", x, x + regsPerLine - 1));
-                while (sb.length() < 12) { sb.append(' '); }
-                for (int y = 0; y < regsPerLine; ++y) {
-                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.EA0 + x + y).getW()));
-                }
-                System.out.println(sb.toString());
-            }
-
-            for (int x = 0; x < 16; x += regsPerLine) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(String.format("  ER%d-ER%d:", x, x + regsPerLine - 1));
-                while (sb.length() < 12) { sb.append(' '); }
-                for (int y = 0; y < regsPerLine; ++y) {
-                    sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.ER0 + x + y).getW()));
-                }
-                System.out.println(sb.toString());
-            }
-
-            System.out.println("  Base Registers:");
-            for (int bx = 0; bx < 32; ++bx) {
-                BaseRegister br = ip.getBaseRegister(bx);
-                System.out.println(String.format("    B%d base:%s(%s) lower:%d upper:%d",
-                                                 bx,
-                                                 br._voidFlag ? "(VOID)" : "",
-                                                 br._baseAddress.toString(),
-                                                 br._lowerLimitNormalized,
-                                                 br._upperLimitNormalized));
-                if (bx >= 16 && bx < 24) {
-                    System.out.println(String.format("    Base register refers to BDT level %d; BDT Content follows:",
-                                                     bx - 16));
-                    if (br._storage != null) {
-                        for (int sx = 0; sx < br._storage.getSize(); sx += 8) {
-                            StringBuilder sb = new StringBuilder();
-                            sb.append(String.format("      %08o:", sx));
-                            for (int sy = 0; sy < 8; ++sy) {
-                                if (sx + sy < br._storage.getSize()) {
-                                    sb.append(String.format(" %012o", br._storage.get(sx + sy)));
-                                }
-                            }
-                            System.out.println(sb.toString());
-                        }
+                System.out.println("    GRS:");
+                for (int x = 0; x < 16; x += regsPerLine) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(String.format("    X%d-X%d:", x, x + regsPerLine - 1));
+                    while (sb.length() < 12) { sb.append(' '); }
+                    for (int y = 0; y < regsPerLine; ++y) {
+                        sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.X0 + x + y).getW()));
                     }
-                } else if (bx == 25) {
-                    System.out.println("    Base register describes the RCS stack; Content follows:");
-                    if (br._storage != null) {
-                        for (int sx = 0; sx < br._storage.getSize(); sx += 8) {
-                            StringBuilder sb = new StringBuilder();
-                            sb.append(String.format("      %08o:", sx));
-                            for (int sy = 0; sy < 8; ++sy) {
-                                if (sx + sy < br._storage.getSize()) {
-                                    sb.append(String.format(" %012o", br._storage.get(sx + sy)));
-                                }
-                            }
-                            System.out.println(sb.toString());
-                        }
-                    }
-                } else if (bx == 26) {
-                    System.out.println("    Base register describes the ICS stack; Content follows:");
-                    if (br._storage != null) {
-                        for (int sx = 0; sx < br._storage.getSize(); sx += 8) {
-                            StringBuilder sb = new StringBuilder();
-                            sb.append(String.format("      %08o:", sx));
-                            for (int sy = 0; sy < 8; ++sy) {
-                                if (sx + sy < br._storage.getSize()) {
-                                    sb.append(String.format(" %012o", br._storage.get(sx + sy)));
-                                }
-                            }
-                            System.out.println(sb.toString());
-                        }
-                    }
+                    System.out.println(sb.toString());
                 }
-            }
 
-            for (int level = 0; level < 8; ++level) {
-                BaseRegister br = ip.getBaseRegister(InstructionProcessor.L0_BDT_BASE_REGISTER + level);
-                System.out.println(String.format("  Level %d Banks:%s", level, (br == null) ? "<BR not set>" : ""));
-                if (br != null) {
-                    int firstBDI = (level == 0) ? 32 : 0;
-                    if (br._storage == null) {
-                        System.out.println("    no storage");
-                    } else {
-                        for (int bdi = firstBDI; bdi < br._storage.getSize() >> 3; ++bdi) {
-                            BankDescriptor bd =
-                                new BankDescriptor(br._storage, 8 * bdi);
-                            if (bd.getBaseAddress()._upiIndex > 0) {
-                                System.out.println(String.format("    BDI=%06o AbsAddr=%s Lower:%o Upper:%o ProcessorType:%s",
-                                                                 bdi,
-                                                                 bd.getBaseAddress().toString(),
-                                                                 bd.getLowerLimitNormalized(),
-                                                                 bd.getUpperLimitNormalized(),
-                                                                 bd.getBankType().name()));
-                                int len = bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1;
-                                for (int ix = 0; ix < len; ix += 8) {
-                                    StringBuilder sb = new StringBuilder();
-                                    sb.append(String.format("      %08o:%08o  ", ix + bd.getLowerLimitNormalized(), ix));
-                                    for (int iy = 0; iy < 8; ++iy) {
-                                        if (ix + iy < len) {
-                                            ArraySlice mspStorage = msp.getStorage(bd.getBaseAddress()._segment);
-                                            long value = mspStorage.get(ix + iy + bd.getBaseAddress()._offset);
-                                            sb.append(String.format(" %012o", value));
-                                        }
+                for (int x = 0; x < 16; x += regsPerLine) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(String.format("    A%d-A%d:", x, x + regsPerLine - 1));
+                    while (sb.length() < 12) { sb.append(' '); }
+                    for (int y = 0; y < regsPerLine; ++y) {
+                        sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.A0 + x + y).getW()));
+                    }
+                    System.out.println(sb.toString());
+                }
+
+                for (int x = 0; x < 16; x += regsPerLine) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(String.format("    R%d-R%d:", x, x + regsPerLine - 1));
+                    while (sb.length() < 12) { sb.append(' '); }
+                    for (int y = 0; y < regsPerLine; ++y) {
+                        sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.R0 + x + y).getW()));
+                    }
+                    System.out.println(sb.toString());
+                }
+
+                for (int x = 0; x < 16; x += regsPerLine) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(String.format("    EX%d-EX%d:", x, x + regsPerLine - 1));
+                    while (sb.length() < 12) { sb.append(' '); }
+                    for (int y = 0; y < regsPerLine; ++y) {
+                        sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.EX0 + x + y).getW()));
+                    }
+                    System.out.println(sb.toString());
+                }
+
+                for (int x = 0; x < 16; x += regsPerLine) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(String.format("    EA%d-EA%d:", x, x + regsPerLine - 1));
+                    while (sb.length() < 12) { sb.append(' '); }
+                    for (int y = 0; y < regsPerLine; ++y) {
+                        sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.EA0 + x + y).getW()));
+                    }
+                    System.out.println(sb.toString());
+                }
+
+                for (int x = 0; x < 16; x += regsPerLine) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(String.format("    ER%d-ER%d:", x, x + regsPerLine - 1));
+                    while (sb.length() < 12) { sb.append(' '); }
+                    for (int y = 0; y < regsPerLine; ++y) {
+                        sb.append(String.format(" %012o", ip.getGeneralRegister(GeneralRegisterSet.ER0 + x + y).getW()));
+                    }
+                    System.out.println(sb.toString());
+                }
+
+                System.out.println("    Base Registers:");
+                for (int bx = 0; bx < 32; ++bx) {
+                    BaseRegister br = ip.getBaseRegister(bx);
+                    System.out.println(String.format("      B%d base:%s(%s) lower:%d upper:%d",
+                                                     bx,
+                                                     br._voidFlag ? "(VOID)" : "",
+                                                     br._baseAddress.toString(),
+                                                     br._lowerLimitNormalized,
+                                                     br._upperLimitNormalized));
+                    if (bx >= 16 && bx < 24) {
+                        System.out.println(String.format("      Base register refers to BDT level %d; BDT Content follows:",
+                                                         bx - 16));
+                        if (br._storage != null) {
+                            for (int sx = 0; sx < br._storage.getSize(); sx += 8) {
+                                StringBuilder sb = new StringBuilder();
+                                sb.append(String.format("        %08o:", sx));
+                                for (int sy = 0; sy < 8; ++sy) {
+                                    if (sx + sy < br._storage.getSize()) {
+                                        sb.append(String.format(" %012o", br._storage.get(sx + sy)));
                                     }
-                                    System.out.println(sb.toString());
+                                }
+                                System.out.println(sb.toString());
+                            }
+                        }
+                    } else if (bx == 25) {
+                        System.out.println("      Base register describes the RCS stack; Content follows:");
+                        if (br._storage != null) {
+                            for (int sx = 0; sx < br._storage.getSize(); sx += 8) {
+                                StringBuilder sb = new StringBuilder();
+                                sb.append(String.format("        %08o:", sx));
+                                for (int sy = 0; sy < 8; ++sy) {
+                                    if (sx + sy < br._storage.getSize()) {
+                                        sb.append(String.format(" %012o", br._storage.get(sx + sy)));
+                                    }
+                                }
+                                System.out.println(sb.toString());
+                            }
+                        }
+                    } else if (bx == 26) {
+                        System.out.println("      Base register describes the ICS stack; Content follows:");
+                        if (br._storage != null) {
+                            for (int sx = 0; sx < br._storage.getSize(); sx += 8) {
+                                StringBuilder sb = new StringBuilder();
+                                sb.append(String.format("        %08o:", sx));
+                                for (int sy = 0; sy < 8; ++sy) {
+                                    if (sx + sy < br._storage.getSize()) {
+                                        sb.append(String.format(" %012o", br._storage.get(sx + sy)));
+                                    }
+                                }
+                                System.out.println(sb.toString());
+                            }
+                        }
+                    }
+                }
+
+                for (int level = 0; level < 8; ++level) {
+                    BaseRegister br = ip.getBaseRegister(InstructionProcessor.L0_BDT_BASE_REGISTER + level);
+                    System.out.println(String.format("    Level %d Banks:%s", level, (br == null) ? "<BR not set>" : ""));
+                    if (br != null) {
+                        int firstBDI = (level == 0) ? 32 : 0;
+                        if (br._storage == null) {
+                            System.out.println("      no storage");
+                        } else {
+                            for (int bdi = firstBDI; bdi < br._storage.getSize() >> 3; ++bdi) {
+                                BankDescriptor bd =
+                                    new BankDescriptor(br._storage, 8 * bdi);
+                                if (bd.getBaseAddress()._upiIndex > 0) {
+                                    System.out.println(String.format("      BDI=%06o AbsAddr=%s Lower:%o Upper:%o ProcessorType:%s",
+                                                                     bdi,
+                                                                     bd.getBaseAddress().toString(),
+                                                                     bd.getLowerLimitNormalized(),
+                                                                     bd.getUpperLimitNormalized(),
+                                                                     bd.getBankType().name()));
+                                    int len = bd.getUpperLimitNormalized() - bd.getLowerLimitNormalized() + 1;
+                                    for (int ix = 0; ix < len; ix += 8) {
+                                        StringBuilder sb = new StringBuilder();
+                                        sb.append(String.format("      %08o:%08o  ", ix + bd.getLowerLimitNormalized(), ix));
+                                        for (int iy = 0; iy < 8; ++iy) {
+                                            if (ix + iy < len) {
+                                                AbsoluteAddress baseAddr = bd.getBaseAddress();
+                                                MainStorageProcessor msp = im.getMainStorageProcessor(baseAddr._upiIndex);
+                                                ArraySlice mspStorage = msp.getStorage(baseAddr._segment);
+                                                long value = mspStorage.get(ix + iy + baseAddr._offset);
+                                                sb.append(String.format(" %012o", value));
+                                            }
+                                        }
+                                        System.out.println(sb.toString());
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        } catch (MachineInterrupt ex) {
-            System.out.println("Caught:" + ex.getMessage());
-        }
 
-        dr.setProcessorPrivilege(oldpp);
+                dr.setProcessorPrivilege(oldpp);
+            } catch (UPINotAssignedException ex) {
+                //  not notable
+            } catch (MachineInterrupt | UPIProcessorTypeException ex) {
+                System.out.println("Caught:" + ex.getMessage());
+            }
+        }
     }
 }

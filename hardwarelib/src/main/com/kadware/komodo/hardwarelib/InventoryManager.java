@@ -5,6 +5,7 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.Credentials;
+import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.configlib.HardwareConfiguration;
 import com.kadware.komodo.configlib.ProcessorDefinition;
 import com.kadware.komodo.hardwarelib.exceptions.*;
@@ -12,6 +13,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +29,10 @@ import org.apache.logging.log4j.message.EntryMessage;
 public class InventoryManager {
 
     public static class Counters {
-        final int _inputOutputProcessors;
-        final int _instructionProcessors;
-        final int _mainStorageProcessors;
-        final int _systemProcessors;
+        public final int _inputOutputProcessors;
+        public final int _instructionProcessors;
+        public final int _mainStorageProcessors;
+        public final int _systemProcessors;
 
         Counters(
             final int inputOutputProcessors,
@@ -48,19 +50,23 @@ public class InventoryManager {
     //  The following are only useful for the create* routines.
     //  It is highly recommended that these be used for creation of processors, however that is not enforced.
     //  Client code can create any type of processor at any UPI index - we only enforce uniqueness of UPI index and name.
-    private final static int MAX_IOPS = 2;
-    private final static int MAX_IPS = 8;
-    private final static int MAX_MSPS = 4;
-    private final static int MAX_SPS = 1;
+    public final static int MAX_IOPS = 2;
+    public final static int MAX_IPS = 8;
+    public final static int MAX_MSPS = 4;
+    public final static int MAX_SPS = 1;
 
-    final static int FIRST_SP_UPI_INDEX = 0;
-    final static int FIRST_MSP_UPI_INDEX = FIRST_SP_UPI_INDEX + MAX_SPS;            //  currently 1
-    final static int FIRST_IOP_UPI_INDEX = FIRST_MSP_UPI_INDEX + MAX_MSPS;          //  currently 5
+    public final static int FIRST_SP_UPI_INDEX = 0;
+    public final static int FIRST_MSP_UPI_INDEX = FIRST_SP_UPI_INDEX + MAX_SPS;     //  currently 1
+    public final static int FIRST_IOP_UPI_INDEX = FIRST_MSP_UPI_INDEX + MAX_MSPS;   //  currently 5
     public final static int FIRST_IP_UPI_INDEX = FIRST_IOP_UPI_INDEX + MAX_IOPS;    //  currently 7
 
+    public final static int LAST_SP_UPI_INDEX = FIRST_SP_UPI_INDEX + MAX_SPS - 1;
+    public final static int LAST_MSP_UPI_INDEX = FIRST_MSP_UPI_INDEX + MAX_MSPS - 1;
+    public final static int LAST_IOP_UPI_INDEX = FIRST_IOP_UPI_INDEX + MAX_IOPS - 1;
+    public final static int LAST_IP_UPI_INDEX = FIRST_IP_UPI_INDEX + MAX_IPS - 1;
+
+    private final Map<String, Node> _nodes = new HashMap<>();
     private final Map<Integer, Processor> _processors = new HashMap<>();
-    private final List<ChannelModule> _channelModules = new LinkedList<>();
-    private final List<Device> _devices = new LinkedList<>();
 
     private static InventoryManager _instance = null;
 
@@ -88,14 +94,18 @@ public class InventoryManager {
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Public methods
+    //  Private methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private void putProcessor(
-        final Processor processor
+    private void putNode(
+        final Node node
     ) {
-        _processors.put(processor._upiIndex, processor);
-        LOGGER.info(String.format("Processor %s inserted at upi %d", processor._name, processor._upiIndex));
+        _nodes.put(node._name.toUpperCase(), node);
+        if (node instanceof Processor) {
+            Processor processor = (Processor) node;
+            _processors.put(processor._upiIndex, processor);
+            LOGGER.info(String.format("Processor %s inserted at upi %d", processor._name, processor._upiIndex));
+        }
     }
 
 
@@ -107,137 +117,205 @@ public class InventoryManager {
      * Adds an existing InputOutputProcessor to our inventory.
      * The existing IOP should not yet have been initialized.
      * Only for unit tests.
-     * @param iop object to be added
+     * @param processor object to be added
      * @throws NodeNameConflictException if there is a conflict in node names
      * @throws UPIConflictException if there is a conflict in UPI
      */
     public void addInputOutputProcessor(
-        final InputOutputProcessor iop
+        final InputOutputProcessor processor
     ) throws NodeNameConflictException,
-             UPIConflictException {
-        if (_processors.get(iop._upiIndex) != null) {
-            throw new UPIConflictException(iop._upiIndex);
-        }
+             UPIConflictException,
+             UPIInvalidException {
+        EntryMessage em = LOGGER.traceEntry("name:{} upi:{}", processor._name, processor._upiIndex);
 
-        for (Processor processor : _processors.values()) {
-            if (iop._name.equalsIgnoreCase(processor._name)) {
-                throw new NodeNameConflictException(iop._name);
+        synchronized (this) {
+            int upix = processor._upiIndex;
+            if ((upix < FIRST_IOP_UPI_INDEX) || (upix > LAST_IOP_UPI_INDEX)) {
+                throw new UPIInvalidException(upix);
             }
-        }
 
-        putProcessor(iop);
-        iop.initialize();
+            if (_processors.containsKey(upix)) {
+                throw new UPIConflictException(upix);
+            }
+
+            if (_nodes.containsKey(processor._name.toUpperCase())) {
+                throw new NodeNameConflictException(processor._name);
+            }
+
+            putNode(processor);
+            processor.initialize();
+        }
+        LOGGER.traceExit(em);
     }
 
     /**
      * Adds an existing InstructionProcessor to our inventory.
      * The existing IP should not yet have been initialized.
      * Only for unit tests.
-     * @param ip object to be added
+     * @param processor object to be added
      * @throws NodeNameConflictException if there is a conflict in node names
      * @throws UPIConflictException if there is a conflict in UPI
      */
     public void addInstructionProcessor(
-        final InstructionProcessor ip
+        final InstructionProcessor processor
     ) throws NodeNameConflictException,
-             UPIConflictException {
-        if (_processors.get(ip._upiIndex) != null) {
-            throw new UPIConflictException(ip._upiIndex);
-        }
+             UPIConflictException,
+             UPIInvalidException {
+        EntryMessage em = LOGGER.traceEntry("name:{} upi:{}", processor._name, processor._upiIndex);
 
-        for (Processor processor : _processors.values()) {
-            if (ip._name.equalsIgnoreCase(processor._name)) {
-                throw new NodeNameConflictException(ip._name);
+        synchronized (this) {
+            int upix = processor._upiIndex;
+            if ((upix < FIRST_IP_UPI_INDEX) || (upix > LAST_IP_UPI_INDEX)) {
+                throw new UPIInvalidException(upix);
             }
+
+            if (_processors.containsKey(upix)) {
+                throw new UPIConflictException(upix);
+            }
+
+            if (_nodes.containsKey(processor._name.toUpperCase())) {
+                throw new NodeNameConflictException(processor._name);
+            }
+
+            putNode(processor);
+            processor.initialize();
         }
 
-        putProcessor(ip);
-        ip.initialize();
+        LOGGER.traceExit(em);
     }
 
     /**
      * Adds an existing MainStorageProcessor to our inventory.
      * The existing MSP should not yet have been initialized.
      * Only for unit tests.
-     * @param msp object to be added
+     * @param processor object to be added
      * @throws NodeNameConflictException if there is a conflict in node names
      * @throws UPIConflictException if there is a conflict in UPI
      */
     public void addMainStorageProcessor(
-        final MainStorageProcessor msp
+        final MainStorageProcessor processor
     ) throws NodeNameConflictException,
-             UPIConflictException {
-        if (_processors.get(msp._upiIndex) != null) {
-            throw new UPIConflictException(msp._upiIndex);
-        }
+             UPIConflictException,
+             UPIInvalidException {
+        EntryMessage em = LOGGER.traceEntry("name:{} upi:{}", processor._name, processor._upiIndex);
 
-        for (Processor processor : _processors.values()) {
-            if (msp._name.equalsIgnoreCase(processor._name)) {
-                throw new NodeNameConflictException(msp._name);
+        synchronized (this) {
+            int upix = processor._upiIndex;
+            if ((upix < FIRST_MSP_UPI_INDEX) || (upix > LAST_MSP_UPI_INDEX)) {
+                throw new UPIInvalidException(upix);
             }
+
+            if (_processors.containsKey(upix)) {
+                throw new UPIConflictException(upix);
+            }
+
+            if (_nodes.containsKey(processor._name.toUpperCase())) {
+                throw new NodeNameConflictException(processor._name);
+            }
+
+            putNode(processor);
+            processor.initialize();
         }
 
-        putProcessor(msp);
-        msp.initialize();
+        LOGGER.traceExit(em);
     }
 
     /**
      * Adds an existing SystemProcessor to our inventory.
      * The existing SP should not yet have been initialized.
      * Only for unit tests.
-     * @param sp object to be added
+     * @param processor object to be added
      * @throws NodeNameConflictException if there is a conflict in node names
      * @throws UPIConflictException if there is a conflict in UPI
      */
     public void addSystemProcessor(
-        final SystemProcessor sp
+        final SystemProcessor processor
     ) throws NodeNameConflictException,
-             UPIConflictException {
-        if (_processors.get(sp._upiIndex) != null) {
-            throw new UPIConflictException(sp._upiIndex);
-        }
+             UPIConflictException,
+             UPIInvalidException {
+        EntryMessage em = LOGGER.traceEntry("name:{} upi:{}", processor._name, processor._upiIndex);
 
-        for (Processor processor : _processors.values()) {
-            if (sp._name.equalsIgnoreCase(processor._name)) {
-                throw new NodeNameConflictException(sp._name);
+        synchronized (this) {
+            int upix = processor._upiIndex;
+            if ((upix < FIRST_SP_UPI_INDEX) || (upix > LAST_SP_UPI_INDEX)) {
+                throw new UPIInvalidException(upix);
             }
+
+            if (_processors.containsKey(upix)) {
+                throw new UPIConflictException(upix);
+            }
+
+            if (_nodes.containsKey(processor._name.toUpperCase())) {
+                throw new NodeNameConflictException(processor._name);
+            }
+
+            putNode(processor);
+            processor.initialize();
         }
 
-        putProcessor(sp);
-        sp.initialize();
+        LOGGER.traceExit(em);
     }
 
     /**
      * Clears the configuration cleanly
      */
     public void clearConfiguration() {
-        EntryMessage em = LOGGER.traceEntry("clearConfiguration()");
-        for (Device device : _devices) {
-            for (Node ancestor : device._ancestors) {
-                Node.disconnect(ancestor, device);
+        EntryMessage em = LOGGER.traceEntry();
+
+        synchronized (this) {
+            for (Node node: new HashSet<>(_nodes.values())) {
+                if (node instanceof Device) {
+                    deleteNode(node);
+                }
             }
 
-            device.clear();
-            device.terminate();
-        }
-        _devices.clear();
-
-        for (ChannelModule chmod : _channelModules) {
-            for (Node ancestor : chmod._ancestors) {
-                Node.disconnect(ancestor, chmod);
+            for (Node node: new HashSet<>(_nodes.values())) {
+                if (node instanceof ChannelModule) {
+                    deleteNode(node);
+                }
             }
 
-            chmod.clear();
-            chmod.terminate();
+            for (Node node : new HashSet<>(_nodes.values())) {
+                deleteNode(node);
+            }
         }
-        _channelModules.clear();
-
-        for (Processor proc : _processors.values()) {
-            proc.terminate();
-        }
-        _processors.clear();
 
         LOGGER.traceExit(em);
+    }
+
+    /**
+     * Creates a new channel module and attaches it to the given iop at the given address
+     */
+    public ChannelModule createChannelModule(
+        final ChannelModule.ChannelModuleType type,
+        final String name,
+        final InputOutputProcessor iop,
+        final int cmIndex
+    ) throws CannotConnectException,
+             ChannelModuleIndexConflictException,
+             NodeNameConflictException {
+        EntryMessage em = LOGGER.traceEntry("type:{} name:{} iop:{} cmIndex:{}", type, name, iop._name, cmIndex);
+
+        ChannelModule chmod = null;
+        synchronized (this) {
+            if (_nodes.containsKey(name.toUpperCase())) {
+                throw new NodeNameConflictException(name);
+            }
+
+            if (iop._descendants.containsKey(cmIndex)) {
+                throw new ChannelModuleIndexConflictException(cmIndex);
+            }
+
+            chmod = switch (type) {
+                case Byte -> new ByteChannelModule(name);
+                case Word -> new WordChannelModule(name);
+            };
+
+            Node.connect(iop, cmIndex, chmod);
+        }
+
+        LOGGER.traceExit(em, chmod);
+        return chmod;
     }
 
     /**
@@ -248,13 +326,18 @@ public class InventoryManager {
     public InputOutputProcessor createInputOutputProcessor(
         final String name
     ) throws MaxNodesException {
+        EntryMessage em = LOGGER.traceEntry("name:{}", name);
+
         int upiIndex = FIRST_IOP_UPI_INDEX;
-        for (int px = 0; px < MAX_IOPS; ++px, ++upiIndex) {
-            if (_processors.get(upiIndex) == null) {
-                InputOutputProcessor iop = new InputOutputProcessor(name, upiIndex);
-                putProcessor(iop);
-                iop.initialize();
-                return iop;
+        synchronized (this) {
+            for (int px = 0; px < MAX_IOPS; ++px, ++upiIndex) {
+                if (_processors.get(upiIndex) == null) {
+                    InputOutputProcessor proc = new InputOutputProcessor(name, upiIndex);
+                    putNode(proc);
+                    proc.initialize();
+                    LOGGER.traceExit(em, proc);
+                    return proc;
+                }
             }
         }
 
@@ -269,13 +352,18 @@ public class InventoryManager {
     public InstructionProcessor createInstructionProcessor(
         final String name
     ) throws MaxNodesException {
+        EntryMessage em = LOGGER.traceEntry("name:{}", name);
+
         int upiIndex = FIRST_IP_UPI_INDEX;
-        for (int px = 0; px < MAX_IPS; ++px, ++upiIndex) {
-            if (_processors.get(upiIndex) == null) {
-                InstructionProcessor ip = new InstructionProcessor(name, upiIndex);
-                putProcessor(ip);
-                ip.initialize();
-                return ip;
+        synchronized (this) {
+            for (int px = 0; px < MAX_IPS; ++px, ++upiIndex) {
+                if (_processors.get(upiIndex) == null) {
+                    InstructionProcessor proc = new InstructionProcessor(name, upiIndex);
+                    putNode(proc);
+                    proc.initialize();
+                    LOGGER.traceExit(em, proc);
+                    return proc;
+                }
             }
         }
 
@@ -293,13 +381,18 @@ public class InventoryManager {
         final String name,
         final int fixedStorageSize
     ) throws MaxNodesException {
+        EntryMessage em = LOGGER.traceEntry("name:{}", name);
+
         int upiIndex = FIRST_MSP_UPI_INDEX;
-        for (int px = 0; px < MAX_MSPS; ++px, ++upiIndex) {
-            if (_processors.get(upiIndex) == null) {
-                MainStorageProcessor msp = new MainStorageProcessor(name, upiIndex, fixedStorageSize);
-                putProcessor(msp);
-                msp.initialize();
-                return msp;
+        synchronized (this) {
+            for (int px = 0; px < MAX_MSPS; ++px, ++upiIndex) {
+                if (_processors.get(upiIndex) == null) {
+                    MainStorageProcessor proc = new MainStorageProcessor(name, upiIndex, fixedStorageSize);
+                    putNode(proc);
+                    proc.initialize();
+                    LOGGER.traceExit(em, proc);
+                    return proc;
+                }
             }
         }
 
@@ -321,13 +414,18 @@ public class InventoryManager {
         final Integer httpsPort,
         final Credentials credentials
     ) throws MaxNodesException {
+        EntryMessage em = LOGGER.traceEntry("name:{}", name);
+
         int upiIndex = FIRST_SP_UPI_INDEX;
-        for (int px = 0; px < MAX_SPS; ++px, ++upiIndex) {
-            if (_processors.get(upiIndex) == null) {
-                SystemProcessor sp = new SystemProcessor(name, httpPort, httpsPort, credentials);
-                putProcessor(sp);
-                sp.initialize();
-                return sp;
+        synchronized (this) {
+            for (int px = 0; px < MAX_SPS; ++px, ++upiIndex) {
+                if (_processors.get(upiIndex) == null) {
+                    SystemProcessor proc = new SystemProcessor(name, httpPort, httpsPort, credentials);
+                    putNode(proc);
+                    proc.initialize();
+                    LOGGER.traceExit(em, proc);
+                    return proc;
+                }
             }
         }
 
@@ -335,20 +433,47 @@ public class InventoryManager {
     }
 
     /**
-     * Deletes a particular processor from our inventory
-     * @param upiIndex UPI of the processor to be deleted
-     * @throws UPINotAssignedException if no processor can be found
+     * Deletes a particular node from our inventory
+     * @param name name of the node to be deleted
+     * @throws NotFoundException if a node with the given name is not in our inventory
      */
-    public void deleteProcessor(
-        final int upiIndex
-    ) throws UPINotAssignedException {
-        Processor processor = _processors.get(upiIndex);
-        if (processor == null) {
-            throw new UPINotAssignedException(upiIndex);
+    public void deleteNode(
+        final String name
+    ) throws NotFoundException {
+        EntryMessage em = LOGGER.traceEntry("name:{}", name);
+        Node node = _nodes.get(name.toUpperCase());
+        if (node == null) {
+            throw new NotFoundException(name);
         }
+        deleteNode(node);
+        LOGGER.traceExit(em);
+    }
 
-        processor.terminate();
-        _processors.remove(upiIndex);
+    /**
+     * Deletes a particular node from our inventory
+     * @param node node to be deleted
+     */
+    public void deleteNode(
+        final Node node
+    ) {
+        EntryMessage em = LOGGER.traceEntry("name:{}", node._name);
+        if (node instanceof Processor) {
+            Processor proc = (Processor) node;
+            if (proc instanceof InstructionProcessor) {
+                InstructionProcessor ip = (InstructionProcessor) proc;
+                ip.stop(InstructionProcessor.StopReason.Cleared, 0);
+                while (!ip.isStopped()) {
+                    Thread.onSpinWait();
+                }
+            }
+            node.terminate();
+            _processors.remove(proc._upiIndex);
+        } else {
+            node.terminate();
+        }
+        _nodes.remove(node._name.toUpperCase());
+
+        LOGGER.traceExit(em);
     }
 
     /**
@@ -365,13 +490,17 @@ public class InventoryManager {
             }
 
             writer.write("Channel Modules ----------------------------\n");
-            for (ChannelModule cm : _channelModules) {
-                cm.dump(writer);
+            for (Node node : _nodes.values()) {
+                if (node instanceof ChannelModule) {
+                    node.dump(writer);
+                }
             }
 
             writer.write("Devices ------------------------------------\n");
-            for (Device d : _devices) {
-                d.dump(writer);
+            for (Node node : _nodes.values()) {
+                if (node instanceof Device) {
+                    node.dump(writer);
+                }
             }
         } catch (IOException ex) {
             LOGGER.catching(ex);
@@ -440,7 +569,7 @@ public class InventoryManager {
      * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
      * @throws UPINotAssignedException if no processor can be found
      */
-    InstructionProcessor getInstructionProcessor(
+    public InstructionProcessor getInstructionProcessor(
         final int upiIndex
     ) throws UPIProcessorTypeException,
              UPINotAssignedException {
@@ -472,7 +601,7 @@ public class InventoryManager {
      * @throws UPIProcessorTypeException if the UPI correspond to a processor not of the expected type
      * @throws UPINotAssignedException if no processor can be found
      */
-    MainStorageProcessor getMainStorageProcessor(
+    public MainStorageProcessor getMainStorageProcessor(
         final int upiIndex
     ) throws UPIProcessorTypeException,
              UPINotAssignedException {

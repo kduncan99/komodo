@@ -7,15 +7,7 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 import com.kadware.komodo.baselib.AccessInfo;
 import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.ReferenceViolationInterrupt;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.AssemblerOption;
@@ -36,21 +28,13 @@ import static org.junit.Assert.assertEquals;
 public class Test_UnconditionalJumpInstructions extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void jump_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          J         TARGET",
             "          HALT      077",
@@ -64,23 +48,17 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void jump_bankSelection(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -239,26 +217,20 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         _linkResult = linker.link(LinkType.MULTI_BANKED_BINARY);
         Assert.assertEquals(0, _linkResult._errorCount);
 
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
 
-        assertEquals(1, _instructionProcessor.getExecOrUserARegister(1).getW());
-        assertEquals(2, _instructionProcessor.getExecOrUserARegister(2).getW());
+        assertEquals(1, ip.getExecOrUserARegister(1).getW());
+        assertEquals(2, ip.getExecOrUserARegister(2).getW());
     }
 
     @Test
     public void jump_indexed_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LXI,U     X3,1",
             "          LXM,U     X3,5",
@@ -275,24 +247,18 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(01_000006L, _instructionProcessor.getGeneralRegister(3).getW());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(01_000006L, ip.getGeneralRegister(3).getW());
     }
 
     @Test
     public void jump_indirect_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          J         *TARGET2",
             "          HALT      077",
@@ -310,23 +276,17 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void jump_indexed_indirect_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LXI,U     X2,1",
             "          LXM,U     X2,2",
@@ -351,25 +311,19 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(01_000003, _instructionProcessor.getGeneralRegister(2).getW());
-        assertEquals(01_000002, _instructionProcessor.getGeneralRegister(3).getW());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(01_000003, ip.getGeneralRegister(2).getW());
+        assertEquals(01_000002, ip.getGeneralRegister(3).getW());
     }
 
     @Test
     public void jump_extended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          GOTO      (LBDIREF$+TEST, TEST)",
             "",
@@ -386,23 +340,17 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void jump_indexed_extended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LXI,U     X5,2",
             "          LXM,U     X5,3",
@@ -419,24 +367,18 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(02_000005, _instructionProcessor.getGeneralRegister(5).getW());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(02_000005, ip.getGeneralRegister(5).getW());
     }
 
     @Test
     public void jump_key_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LXM,U     X5,3",
             "          LXI,U     X5,1",
@@ -453,24 +395,18 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(01_000004L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(01_000004L, ip.getGeneralRegister(GeneralRegisterSet.X5).getW());
     }
 
     @Test
     public void haltJump_74_05_normal_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          HJ        TARGET",
             "          HALT      077",
@@ -479,23 +415,17 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void haltJump_74_15_05_normal_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LA,U      A0,0",
             "          HLTJ      TARGET",
@@ -507,22 +437,16 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, _instructionProcessor.getLatestStopReason());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, ip.getLatestStopReason());
     }
 
     @Test
     public void haltJump_74_15_05_normal_extended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          GOTO      (LBDIREF$+TEST, TEST)",
             "",
@@ -539,54 +463,42 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, _instructionProcessor.getLatestStopReason());
-        assertEquals(01004, _instructionProcessor.getProgramAddressRegister().getProgramCounter());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.HaltJumpExecuted, ip.getLatestStopReason());
+        assertEquals(01004, ip.getProgramAddressRegister().getProgramCounter());
     }
 
     @Test
     public void haltJump_74_15_05_pp1_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'GEN$DEFS'",
             "",
-            "          DR$SETPP01       . set proc priv = 1",
+            "          DR$SETPP  01     . set proc priv = 1",
             "          HLTJ      TARGET . should throw interrupt",
             "          HALT      077    . should not get here",
             "TARGET    HALT      076    . should not get here either"
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01016, ip.getLatestStopDetail());
     }
 
     @Test
     public void haltJump_74_15_05_pp1_extended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'GEN$DEFS'",
             "",
-            "          DR$SETPP01       . set proc priv = 1",
+            "          DR$SETPP  01     . set proc priv = 1",
             "          LA,U      A0,0",
             "          HLTJ      TARGET",
             "          LA,U      A0,5",
@@ -597,25 +509,19 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01016, ip.getLatestStopDetail());
     }
 
     //  no extended mode version of SLJ
 
     @Test
     public void storeLocationAndJump(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,0",
@@ -630,26 +536,20 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
             "          J         *SUBROUTINE  . return to caller"
         };
 
-        buildMultiBank(wrapForBasicMode(source), true, true, true);
-        createProcessors();
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(05L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
     }
 
     @Test
     public void storeLocationAndJump_indirect(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(4),VECTOR  + SUBROUTINE",
             "",
@@ -668,26 +568,20 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
             "          J         *SUBROUTINE  . return to caller"
         };
 
-        buildMultiBank(wrapForBasicMode(source), true, true, true);
-        createProcessors();
+        buildMultiBank(wrapForBasicMode(source), true, true);
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(05L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
     }
 
     @Test
     public void loadModifierAndJump_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LA,U      A0,0         . set up initial values",
             "          LA,U      A1,0",
@@ -701,25 +595,19 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(05L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
     }
 
     @Test
     public void loadModifierAndJump_indirect_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(4),VECTOR  + SUBROUTINE",
             "",
@@ -737,25 +625,19 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(05L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
     }
 
     @Test
     public void loadModifierAndJump_extended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          CALL      (LBDIREF$+TEST, TEST) . because of the large ibank",
             "",
@@ -775,25 +657,19 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(05L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(05L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(05L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
     }
 
     @Test
     public void jump_basic_referenceViolation1(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  address out of limits
         String[] source = {
             "          J         050000",
@@ -801,25 +677,19 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01010, ip.getLatestStopDetail());
         assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
-                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+                     ip.getLastInterrupt().getShortStatusField());
     }
 
     @Test
     public void jump_basic_referenceViolation2(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  address out of limits
         String[] source = {
             "          LXI,U     X3,010",
@@ -829,38 +699,33 @@ public class Test_UnconditionalJumpInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01010, ip.getLatestStopDetail());
         assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
-                     _instructionProcessor.getLastInterrupt().getShortStatusField());
-        assertEquals(010_000110L, _instructionProcessor.getGeneralRegister(3).getW());
+                     ip.getLastInterrupt().getShortStatusField());
+        assertEquals(010_000110L, ip.getGeneralRegister(3).getW());
     }
 
     @Test
     public void jump_extended_referenceViolation1(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          J         $+02000",
             "          HALT      077",
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01010, ip.getLatestStopDetail());
         assertEquals((ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation.getCode() << 4) + 1,
-                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+                     ip.getLastInterrupt().getShortStatusField());
     }
 }

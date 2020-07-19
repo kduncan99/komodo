@@ -4,14 +4,6 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import org.junit.After;
 import org.junit.Test;
@@ -23,21 +15,13 @@ import static org.junit.Assert.assertEquals;
 public class Test_StackInstructions extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void buySimple18(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -60,25 +44,20 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(128 - 16, _instructionProcessor.getExecOrUserXRegister(5).getXM());
-        assertEquals(16, _instructionProcessor.getExecOrUserXRegister(5).getXI());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(128 - 16, ip.getExecOrUserXRegister(5).getXM());
+        assertEquals(16, ip.getExecOrUserXRegister(5).getXI());
     }
 
     @Test
     public void buySimple24(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -102,25 +81,20 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(128 - 16, _instructionProcessor.getExecOrUserXRegister(5).getXM24());
-        assertEquals(16, _instructionProcessor.getExecOrUserXRegister(5).getXI12());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(128 - 16, ip.getExecOrUserXRegister(5).getXM24());
+        assertEquals(16, ip.getExecOrUserXRegister(5).getXI12());
     }
 
     @Test
     public void sellSimple18(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -143,25 +117,20 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(128, _instructionProcessor.getExecOrUserXRegister(5).getXM());
-        assertEquals(16, _instructionProcessor.getExecOrUserXRegister(5).getXI());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(128, ip.getExecOrUserXRegister(5).getXM());
+        assertEquals(16, ip.getExecOrUserXRegister(5).getXI());
     }
 
     @Test
     public void sellSimple24(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -185,25 +154,20 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(128, _instructionProcessor.getExecOrUserXRegister(5).getXM24());
-        assertEquals(16, _instructionProcessor.getExecOrUserXRegister(5).getXI12());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(128, ip.getExecOrUserXRegister(5).getXM24());
+        assertEquals(16, ip.getExecOrUserXRegister(5).getXI12());
     }
 
     @Test
     public void buyWithDisplacement(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -226,25 +190,20 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals((128 - 16) - 010, _instructionProcessor.getExecOrUserXRegister(5).getXM());
-        assertEquals(16, _instructionProcessor.getExecOrUserXRegister(5).getXI());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals((128 - 16) - 010, ip.getExecOrUserXRegister(5).getXM());
+        assertEquals(16, ip.getExecOrUserXRegister(5).getXI());
     }
 
     @Test
     public void buyOverflow(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -285,26 +244,21 @@ public class Test_StackInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(01013, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0, _instructionProcessor.getLastInterrupt().getShortStatusField());
-        assertEquals(0, _instructionProcessor.getGeneralRegister(5).getH2());
-        assertEquals(16, _instructionProcessor.getGeneralRegister(5).getH1());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01013, ip.getLatestStopDetail());
+        assertEquals(0, ip.getLastInterrupt().getShortStatusField());
+        assertEquals(0, ip.getGeneralRegister(5).getH2());
+        assertEquals(16, ip.getGeneralRegister(5).getH1());
     }
 
     @Test
     public void sellUnderflow(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -344,13 +298,15 @@ public class Test_StackInstructions extends BaseFunctions {
             "          $END      START"
         };
 
-        buildMultiBank(source, true, false);
-        createProcessors();
+        buildMultiBank(source, false, false);
+        createConfiguration();
         ipl(true);
 
-        assertEquals(01013, _instructionProcessor.getLatestStopDetail());
-        assertEquals(01, _instructionProcessor.getLastInterrupt().getShortStatusField());
-        assertEquals(128, _instructionProcessor.getGeneralRegister(5).getH2());
-        assertEquals(16, _instructionProcessor.getGeneralRegister(5).getH1());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(01013, ip.getLatestStopDetail());
+        assertEquals(01, ip.getLastInterrupt().getShortStatusField());
+        assertEquals(128, ip.getGeneralRegister(5).getH2());
+        assertEquals(16, ip.getGeneralRegister(5).getH1());
     }
 }

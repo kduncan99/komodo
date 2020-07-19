@@ -5,15 +5,7 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.RCSGenericStackUnderflowOverflowInterrupt;
 import org.junit.After;
 import org.junit.Assert;
@@ -27,8 +19,7 @@ import static org.junit.Assert.assertEquals;
 public class Test_ProcedureControlInstructions extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
@@ -37,14 +28,7 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
 
     @Test
     public void callNormal(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INFO     10 3,5",
             "",
@@ -61,27 +45,22 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
             "          HALT      0   . should land here"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
         //  The following depend on RCSTACK values set in BaseFunctions
-        Assert.assertEquals(63, _instructionProcessor.getBaseRegister(25)._upperLimitNormalized);
-        Assert.assertEquals(64 - 4, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX0).getW());
+        Assert.assertEquals(63, ip.getBaseRegister(25)._upperLimitNormalized);
+        Assert.assertEquals(64 - 4, ip.getGeneralRegister(GeneralRegisterSet.EX0).getW());
     }
 
     @Test
     public void gotoNormal(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INFO     10 3,5",
             "",
@@ -98,24 +77,19 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
             "          HALT      0   . should land here"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void loclNormal(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LOCL      TARGET1",
             "          HALT      077 . should not get here",
@@ -129,27 +103,22 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
             "          HALT      0"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
         //  The following depend on RCSTACK values set in BaseFunctions
-        Assert.assertEquals(63, _instructionProcessor.getBaseRegister(25)._upperLimitNormalized);
-        Assert.assertEquals(64 - 4, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX0).getW());
+        Assert.assertEquals(63, ip.getBaseRegister(25)._upperLimitNormalized);
+        Assert.assertEquals(64 - 4, ip.getGeneralRegister(GeneralRegisterSet.EX0).getW());
     }
 
     @Test
     public void rtnToCall(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INFO 10 3",
             "",
@@ -165,29 +134,24 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
             "          HALT      077 . should not get here"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(63, _instructionProcessor.getBaseRegister(25)._upperLimitNormalized);
-        Assert.assertEquals(64, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX0).getW());
-        Assert.assertEquals(5, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        Assert.assertEquals(6, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
-        Assert.assertEquals(7, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(63, ip.getBaseRegister(25)._upperLimitNormalized);
+        Assert.assertEquals(64, ip.getGeneralRegister(GeneralRegisterSet.EX0).getW());
+        Assert.assertEquals(5, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        Assert.assertEquals(6, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        Assert.assertEquals(7, ip.getGeneralRegister(GeneralRegisterSet.A7).getW());
     }
 
     @Test
     public void rtnToLocl(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LA,U      A5,5",
             "          LOCL      TARGETSUB",
@@ -200,41 +164,38 @@ public class Test_ProcedureControlInstructions extends BaseFunctions {
             "          HALT      077 . should not get here"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(63, _instructionProcessor.getBaseRegister(25)._upperLimitNormalized);
-        Assert.assertEquals(64, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX0).getW());
-        Assert.assertEquals(5, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        Assert.assertEquals(6, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
-        Assert.assertEquals(7, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(63, ip.getBaseRegister(25)._upperLimitNormalized);
+        Assert.assertEquals(64, ip.getGeneralRegister(GeneralRegisterSet.EX0).getW());
+        Assert.assertEquals(5, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        Assert.assertEquals(6, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        Assert.assertEquals(7, ip.getGeneralRegister(GeneralRegisterSet.A7).getW());
     }
 
     @Test
     public void rtnNoFrame(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          RTN       0",
             "          HALT      077 . should not get here"
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01013, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(01013, ip.getLatestStopDetail());
         assertEquals(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow.getCode(),
-                     _instructionProcessor.getLastInterrupt().getShortStatusField());
+                     ip.getLastInterrupt().getShortStatusField());
     }
 }

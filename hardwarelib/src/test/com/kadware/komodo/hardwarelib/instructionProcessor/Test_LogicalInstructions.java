@@ -5,15 +5,7 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import org.junit.*;
 
 /**
@@ -22,21 +14,13 @@ import org.junit.*;
 public class Test_LogicalInstructions extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void logicalANDBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -59,25 +43,20 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_777777_777123L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        Assert.assertEquals(0_000000_543121L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_777777_777123L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        Assert.assertEquals(0_000000_543121L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
     @Test
     public void logicalANDExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -94,25 +73,20 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_777777_777123L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        Assert.assertEquals(0_000000_543121L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_777777_777123L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        Assert.assertEquals(0_000000_543121L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
     @Test
     public void logicalMLUBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -136,25 +110,20 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_777777_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        Assert.assertEquals(0_070707_707070L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_777777_000000L, ip.getGeneralRegister(GeneralRegisterSet.A8).getW());
+        Assert.assertEquals(0_070707_707070L, ip.getGeneralRegister(GeneralRegisterSet.A9).getW());
     }
 
     @Test
     public void logicalMLUExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -172,25 +141,20 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_777777_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        Assert.assertEquals(0_070707_707070L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_777777_000000L, ip.getGeneralRegister(GeneralRegisterSet.A8).getW());
+        Assert.assertEquals(0_070707_707070L, ip.getGeneralRegister(GeneralRegisterSet.A9).getW());
     }
 
     @Test
     public void logicalORBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -213,25 +177,20 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_111111_111111L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_333333_333333L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_111111_111111L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        Assert.assertEquals(0_333333_333333L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
     }
 
     @Test
     public void logicalORExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -248,25 +207,20 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_111111_111111L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_333333_333333L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_111111_111111L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        Assert.assertEquals(0_333333_333333L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
     }
 
     @Test
     public void logicalXORBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -289,25 +243,20 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_777000_777000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        Assert.assertEquals(0_777000_027750L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_777000_777000L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        Assert.assertEquals(0_777000_027750L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 
     @Test
     public void logicalXORExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -324,12 +273,14 @@ public class Test_LogicalInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_777000_777000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        Assert.assertEquals(0_777000_027750L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_777000_777000L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        Assert.assertEquals(0_777000_027750L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 }

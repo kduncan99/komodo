@@ -5,15 +5,7 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import org.junit.*;
 
 /**
@@ -26,21 +18,13 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void generalLoadImmediate_Extended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  Write some load instructions starting at absolute address 01000 for the MSP's UPI
         String[] source = {
             "          $EXTEND .",
@@ -73,37 +57,32 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01000, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_777777_777776L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        Assert.assertEquals(01, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        Assert.assertEquals(02, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        Assert.assertEquals(03, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        Assert.assertEquals(0_777777_777773L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        Assert.assertEquals(0_777777_777772L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
-        Assert.assertEquals(0_000100_022020L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        Assert.assertEquals(0_111100_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
-        Assert.assertEquals(01234, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
-        Assert.assertEquals(0_777777_755332L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R8).getW());
-        Assert.assertEquals(0_357777_777776L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X6).getW());
-        Assert.assertEquals(0_003300_444444L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X7).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01000, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        Assert.assertEquals(0_777777_777776L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        Assert.assertEquals(01, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        Assert.assertEquals(02, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        Assert.assertEquals(03, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        Assert.assertEquals(0_777777_777773L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        Assert.assertEquals(0_777777_777772L, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A7).getW());
+        Assert.assertEquals(0_000100_022020L, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        Assert.assertEquals(0_111100_000000L, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        Assert.assertEquals(01234, ip.getGeneralRegister(GeneralRegisterSet.X5).getW());
+        Assert.assertEquals(0_777777_755332L, ip.getGeneralRegister(GeneralRegisterSet.R8).getW());
+        Assert.assertEquals(0_357777_777776L, ip.getGeneralRegister(GeneralRegisterSet.X6).getW());
+        Assert.assertEquals(0_003300_444444L, ip.getGeneralRegister(GeneralRegisterSet.X7).getW());
     }
 
     @Test
     public void X_A_RegisterOverlap(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -122,29 +101,24 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X12).getW());
-        Assert.assertEquals(02000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X13).getW());
-        Assert.assertEquals(03000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X14).getW());
-        Assert.assertEquals(04000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X15).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01000L, ip.getGeneralRegister(GeneralRegisterSet.X12).getW());
+        Assert.assertEquals(02000L, ip.getGeneralRegister(GeneralRegisterSet.X13).getW());
+        Assert.assertEquals(03000L, ip.getGeneralRegister(GeneralRegisterSet.X14).getW());
+        Assert.assertEquals(04000L, ip.getGeneralRegister(GeneralRegisterSet.X15).getW());
     }
 
     @Test
     public void partialWordLoad_ThirdWordMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  Tests the various third-word transfer modes in quarter-word-mode for load instructions
         String[] source = {
             "          $EXTEND",
@@ -189,36 +163,31 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_112233_445566L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_000000_445566L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        Assert.assertEquals(0_000000_112233L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        Assert.assertEquals(0_000000_377777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        Assert.assertEquals(0_777777_400000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        Assert.assertEquals(0_000000_355555L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        Assert.assertEquals(0_777777_455555L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
-        Assert.assertEquals(0_000000_003333L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
-        Assert.assertEquals(0_777777_776666L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        Assert.assertEquals(0_000000_002222L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
-        Assert.assertEquals(0_777777_775555L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A10).getW());
-        Assert.assertEquals(0_000000_001111L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A11).getW());
-        Assert.assertEquals(0_777777_774444L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A12).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_112233_445566L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        Assert.assertEquals(0_000000_445566L, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        Assert.assertEquals(0_000000_112233L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        Assert.assertEquals(0_000000_377777L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        Assert.assertEquals(0_777777_400000L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        Assert.assertEquals(0_000000_355555L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        Assert.assertEquals(0_777777_455555L, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        Assert.assertEquals(0_000000_003333L, ip.getGeneralRegister(GeneralRegisterSet.A7).getW());
+        Assert.assertEquals(0_777777_776666L, ip.getGeneralRegister(GeneralRegisterSet.A8).getW());
+        Assert.assertEquals(0_000000_002222L, ip.getGeneralRegister(GeneralRegisterSet.A9).getW());
+        Assert.assertEquals(0_777777_775555L, ip.getGeneralRegister(GeneralRegisterSet.A10).getW());
+        Assert.assertEquals(0_000000_001111L, ip.getGeneralRegister(GeneralRegisterSet.A11).getW());
+        Assert.assertEquals(0_777777_774444L, ip.getGeneralRegister(GeneralRegisterSet.A12).getW());
     }
 
     @Test
     public void partialWordLoad_QuarterWordMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  Tests the various partial-word transfer modes in quarter-word-mode for load instructions
         String[] source = {
             "          $EXTEND",
@@ -249,21 +218,23 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0222, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R0).getW());
-        Assert.assertEquals(0444, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R1).getW());
-        Assert.assertEquals(0333, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R2).getW());
-        Assert.assertEquals(0111, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R3).getW());
-        Assert.assertEquals(066, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R4).getW());
-        Assert.assertEquals(055, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R5).getW());
-        Assert.assertEquals(044, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R6).getW());
-        Assert.assertEquals(033, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R7).getW());
-        Assert.assertEquals(022, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R8).getW());
-        Assert.assertEquals(011, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R9).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0222, ip.getGeneralRegister(GeneralRegisterSet.R0).getW());
+        Assert.assertEquals(0444, ip.getGeneralRegister(GeneralRegisterSet.R1).getW());
+        Assert.assertEquals(0333, ip.getGeneralRegister(GeneralRegisterSet.R2).getW());
+        Assert.assertEquals(0111, ip.getGeneralRegister(GeneralRegisterSet.R3).getW());
+        Assert.assertEquals(066, ip.getGeneralRegister(GeneralRegisterSet.R4).getW());
+        Assert.assertEquals(055, ip.getGeneralRegister(GeneralRegisterSet.R5).getW());
+        Assert.assertEquals(044, ip.getGeneralRegister(GeneralRegisterSet.R6).getW());
+        Assert.assertEquals(033, ip.getGeneralRegister(GeneralRegisterSet.R7).getW());
+        Assert.assertEquals(022, ip.getGeneralRegister(GeneralRegisterSet.R8).getW());
+        Assert.assertEquals(011, ip.getGeneralRegister(GeneralRegisterSet.R9).getW());
     }
 
     //TODO need some various register-to-register loads
@@ -272,14 +243,7 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
 
     @Test
     public void loadRegisterSet_normal(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  Testing LRS with non-zero count1 and count2
         String[] source = {
             "          $EXTEND",
@@ -313,33 +277,28 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R0).getW());
-        Assert.assertEquals(02, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R1).getW());
-        Assert.assertEquals(03, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R2).getW());
-        Assert.assertEquals(04, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R3).getW());
-        Assert.assertEquals(05, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        Assert.assertEquals(06, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
-        Assert.assertEquals(07, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getW());
-        Assert.assertEquals(010, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X3).getW());
-        Assert.assertEquals(011, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X4).getW());
-        Assert.assertEquals(012, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01, ip.getGeneralRegister(GeneralRegisterSet.R0).getW());
+        Assert.assertEquals(02, ip.getGeneralRegister(GeneralRegisterSet.R1).getW());
+        Assert.assertEquals(03, ip.getGeneralRegister(GeneralRegisterSet.R2).getW());
+        Assert.assertEquals(04, ip.getGeneralRegister(GeneralRegisterSet.R3).getW());
+        Assert.assertEquals(05, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        Assert.assertEquals(06, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        Assert.assertEquals(07, ip.getGeneralRegister(GeneralRegisterSet.X2).getW());
+        Assert.assertEquals(010, ip.getGeneralRegister(GeneralRegisterSet.X3).getW());
+        Assert.assertEquals(011, ip.getGeneralRegister(GeneralRegisterSet.X4).getW());
+        Assert.assertEquals(012, ip.getGeneralRegister(GeneralRegisterSet.X5).getW());
     }
 
     @Test
     public void loadRegisterSet_count1Empty(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  Testing LRS with non-zero count1 and count2
         String[] source = {
             "          $EXTEND",
@@ -373,31 +332,26 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        Assert.assertEquals(02, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
-        Assert.assertEquals(03, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getW());
-        Assert.assertEquals(04, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X3).getW());
-        Assert.assertEquals(05, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X4).getW());
-        Assert.assertEquals(06, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        Assert.assertEquals(02, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        Assert.assertEquals(03, ip.getGeneralRegister(GeneralRegisterSet.X2).getW());
+        Assert.assertEquals(04, ip.getGeneralRegister(GeneralRegisterSet.X3).getW());
+        Assert.assertEquals(05, ip.getGeneralRegister(GeneralRegisterSet.X4).getW());
+        Assert.assertEquals(06, ip.getGeneralRegister(GeneralRegisterSet.X5).getW());
     }
 
     @Test
     public void loadRegisterSet_nop(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  Testing LRS with non-zero count1 and count2
         String[] source = {
             "          $EXTEND",
@@ -432,33 +386,28 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R0).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R1).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R2).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.R3).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X2).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X3).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X4).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.R0).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.R1).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.R2).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.R3).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X2).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X3).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X4).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.X5).getW());
     }
 
     @Test
     public void generalLoadFromStorage_Extended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //  Testing load instructions which cannot be tested with immediate addressing
         //  Also, minalib loading from multiple banks, including exec banks
         String[] source = {
@@ -532,29 +481,31 @@ public class Test_GeneralLoadInstructions extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01_000001, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(01_000002, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        Assert.assertEquals(0777776_777774L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        Assert.assertEquals(0777776_777773L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        Assert.assertEquals(1, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        Assert.assertEquals(01_000005, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
-        Assert.assertEquals(01_000006, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        Assert.assertEquals(2, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
-        Assert.assertEquals(0_667733_445566L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X0).getW());
-        Assert.assertEquals(0111, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A12).getW());
-        Assert.assertEquals(0333, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A13).getW());
-        Assert.assertEquals(0555, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A14).getW());
-        Assert.assertEquals(0777, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A15).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01_000001, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        Assert.assertEquals(01_000002, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        Assert.assertEquals(0777776_777774L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        Assert.assertEquals(0777776_777773L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        Assert.assertEquals(1, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        Assert.assertEquals(01_000005, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        Assert.assertEquals(01_000006, ip.getGeneralRegister(GeneralRegisterSet.A7).getW());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A8).getW());
+        Assert.assertEquals(2, ip.getGeneralRegister(GeneralRegisterSet.A9).getW());
+        Assert.assertEquals(0_667733_445566L, ip.getGeneralRegister(GeneralRegisterSet.X0).getW());
+        Assert.assertEquals(0111, ip.getGeneralRegister(GeneralRegisterSet.A12).getW());
+        Assert.assertEquals(0333, ip.getGeneralRegister(GeneralRegisterSet.A13).getW());
+        Assert.assertEquals(0555, ip.getGeneralRegister(GeneralRegisterSet.A14).getW());
+        Assert.assertEquals(0777, ip.getGeneralRegister(GeneralRegisterSet.A15).getW());
     }
 
-    //TODO minalib generating various interrupts
+    //TODO generating various interrupts
 
     //TODO storage limits testing for load operand, store value, double load operand, LRS
 }

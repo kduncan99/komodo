@@ -4,17 +4,10 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import static org.junit.Assert.*;
-import org.junit.*;
+import org.junit.After;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * Unit tests for InstructionProcessor class
@@ -26,21 +19,13 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void generalStore_PartialWords_QuarterWordMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)      ",
             "DATA $RES 32",
@@ -71,14 +56,16 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_777777_444444L, bankData[0]);
         assertEquals(0_000000_444444L, bankData[1]);
         assertEquals(0_444444_000000L, bankData[2]);
@@ -97,14 +84,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
 
     @Test
     public void generalStore_PartialWords_ThirdWordMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      $RES      32",
@@ -123,14 +103,16 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_444444_000000L, bankData[0]);
         assertEquals(0_000000_004444L, bankData[1]);
         assertEquals(0_000044_440000L, bankData[2]);
@@ -140,14 +122,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
 
     @Test
     public void generalStore(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      $RES      32",
@@ -181,14 +156,16 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_000000_333333L, bankData[0]);
         assertEquals(0_777777_333333L, bankData[1]);
         assertEquals(0_000000_333333L, bankData[2]);
@@ -205,14 +182,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
 
     @Test
     public void generalStore_FixedValues(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0),DATA                       .",
             "          + 0343434343434       .",
@@ -237,14 +207,16 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
             "          HALT      0           .",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(0_000000_000000L, bankData[0]);
         assertEquals(0_777777_777777L, bankData[1]);
         assertEquals(0_000001_343434L, bankData[2]);
@@ -257,14 +229,7 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
 
     @Test
     public void storeRegisterSet(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      $RES 10         . target for data, based on B2",
@@ -301,14 +266,16 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
             "          HALT      0",
         };
 
-        buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        buildMultiBank(wrapForExtendedMode(source), false, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
 
-        long[] bankData = getBankByBaseRegister(2);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bankData = getBankByBaseRegister(ip, 2);
         assertEquals(021, bankData[2]);
         assertEquals(031, bankData[3]);
         assertEquals(041, bankData[4]);
@@ -320,4 +287,5 @@ public class Test_GeneralStoreInstructions extends BaseFunctions {
     }
 
     //TODO Need SRS test for illegal reference condition(s)
+    //TODO Need basic mode indirect addressing test
 }

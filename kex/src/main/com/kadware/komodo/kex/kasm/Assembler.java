@@ -217,7 +217,8 @@ public class Assembler {
 
         if (_endFound) {
             if (!_endFoundMessage) {
-                appendDiagnostic(new ErrorDiagnostic(labelField._locale, "Label and/or Code follows $END directive"));
+                appendDiagnostic(new ErrorDiagnostic(new Locale(textLine._lineSpecifier, 1),
+                                                     "Label and/or Code follows $END directive"));
                 _endFoundMessage = true;
             }
             return;

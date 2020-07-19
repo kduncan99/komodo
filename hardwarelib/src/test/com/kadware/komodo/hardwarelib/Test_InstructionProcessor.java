@@ -35,8 +35,6 @@ public class Test_InstructionProcessor {
         assertFalse(ip.canConnect(ip));
     }
 
-    //TODO need more tests of nested class operations
-
     //  Base Register tests --------------------------------------------------------------------------------------------------------
 
     @Test
@@ -51,12 +49,13 @@ public class Test_InstructionProcessor {
     ) throws AddressingExceptionInterrupt,
              NodeNameConflictException,
              UPIConflictException,
-             UPINotAssignedException {
+             UPIInvalidException {
+        InventoryManager im = InventoryManager.getInstance();
         int mspSize = 16 * 1024 * 1024;
         MainStorageProcessor[] msps = new MainStorageProcessor[4];
         for (int mx = 0; mx < 4; ++mx) {
             msps[mx] = new InstrumentedMainStorageProcessor(String.format("MSP%d", mx), (short) mx, mspSize);
-            InventoryManager.getInstance().addMainStorageProcessor(msps[mx]);
+            im.addMainStorageProcessor(msps[mx]);
         }
 
         for (int x = 0; x < 2000; ++x) {
@@ -107,9 +106,7 @@ public class Test_InstructionProcessor {
             }
         }
 
-        for (int mx = 0; mx < 4; ++mx) {
-            InventoryManager.getInstance().deleteProcessor((short) mx);
-        }
+        im.clearConfiguration();
     }
 
     //  Indicator Key Register tests -----------------------------------------------------------------------------------------------

@@ -5,16 +5,9 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
+import com.kadware.komodo.hardwarelib.MainStorageProcessor;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import org.junit.After;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -25,21 +18,13 @@ import static org.junit.Assert.assertEquals;
 public class Test_SystemControlInstructions extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void sysc_badSubfunction(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -54,11 +39,12 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(526, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(526, ip.getLatestStopDetail());
     }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -74,14 +60,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 
     @Test
     public void sysc_create_good(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -101,28 +80,23 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        MainStorageProcessor msp = getFirstMSP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
 
-        long[] bank = getBankByBaseRegister(3);
+        long[] bank = getBankByBaseRegister(ip, 3);
         int segment = (int) bank[1];
-        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
+        ArraySlice slice = msp.getStorage(segment);
         assertEquals(32768, slice._length);
     }
 
     @Test
     public void sysc_create_badUPI(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -142,23 +116,17 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void sysc_create_badSize(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -178,11 +146,12 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  Subfunction 021: Release dynamic memory block
@@ -193,14 +162,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 
     @Test (expected = AddressingExceptionInterrupt.class)
     public void sysc_delete_good(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -233,28 +195,24 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        MainStorageProcessor msp = getFirstMSP();
 
-        long[] bank = getBankByBaseRegister(3);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(ip, 3);
         //  make sure assigned segment is gone
         int segment = (int) bank[1];
-        _mainStorageProcessor.getStorage(segment);
+        msp.getStorage(segment);
     }
 
     @Test
     public void sysc_delete_badUPI(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -287,27 +245,23 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        MainStorageProcessor msp = getFirstMSP();
 
-        long[] bank = getBankByBaseRegister(3);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(ip, 3);
         int segment = (int) bank[1];    // assigned segment number - make sure it still exists
-        _mainStorageProcessor.getStorage(segment);
+        msp.getStorage(segment);
     }
 
     @Test
     public void sysc_delete_badSegment(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -342,15 +296,18 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        MainStorageProcessor msp = getFirstMSP();
 
-        long[] bank = getBankByBaseRegister(3);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(ip, 3);
         int segment = (int) bank[1];    // assigned segment number - make sure it still exists
-        _mainStorageProcessor.getStorage(segment);
+        msp.getStorage(segment);
     }
 
     //  Subfunction 022: Resize dynamic memory block
@@ -362,14 +319,7 @@ public class Test_SystemControlInstructions extends BaseFunctions {
 
     @Test
     public void sysc_resize_good(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -403,28 +353,24 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        MainStorageProcessor msp = getFirstMSP();
 
-        long[] bank = getBankByBaseRegister(3);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(ip, 3);
         int segment = (int) bank[1];
-        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
+        ArraySlice slice = msp.getStorage(segment);
         assertEquals(65536, slice._length);
     }
 
     @Test
     public void sysc_resize_badUPI(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -458,28 +404,24 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        MainStorageProcessor msp = getFirstMSP();
 
-        long[] bank = getBankByBaseRegister(3);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(ip, 3);
         int segment = (int) bank[1];
-        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
+        ArraySlice slice = msp.getStorage(segment);
         assertEquals(32768, slice._length);
     }
 
     @Test
     public void sysc_resize_badSegment(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -514,28 +456,24 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        MainStorageProcessor msp = getFirstMSP();
 
-        long[] bank = getBankByBaseRegister(3);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(ip,  3);
         int segment = (int) bank[1];
-        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
+        ArraySlice slice = msp.getStorage(segment);
         assertEquals(32768, slice._length);
     }
 
     @Test
     public void sysc_resize_badSize(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'SYSC$DEFS'",
             "",
@@ -569,15 +507,18 @@ public class Test_SystemControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        MainStorageProcessor msp = getFirstMSP();
 
-        long[] bank = getBankByBaseRegister(3);
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+
+        long[] bank = getBankByBaseRegister(ip, 3);
         int segment = (int) bank[1];
-        ArraySlice slice = _mainStorageProcessor.getStorage(segment);
+        ArraySlice slice = msp.getStorage(segment);
         assertEquals(32768, slice._length);
     }
 }

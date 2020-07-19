@@ -5,14 +5,6 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import org.junit.After;
 import org.junit.Assert;
@@ -25,8 +17,7 @@ import static org.junit.Assert.assertEquals;
 public class Test_BasicModeAddressing extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
@@ -36,14 +27,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
 
     @Test
     public void immediateUnsigned_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -86,25 +70,20 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $END      START"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01000, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01000, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
     public void immediateSignedExtended_Positive_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -147,25 +126,20 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $END      START"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01000, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01000, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
     public void immediateSignedExtended_NegativeZero_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             //  Negative zero is converted to positive zero before sign-extension, per hardware docs
             "          $EXTEND",
@@ -209,25 +183,20 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $END START"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
     public void immediateSignedExtended_Negative_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -270,25 +239,20 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $END START"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_777777_777776L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_777777_777776L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
     public void grs_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -332,25 +296,20 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $END START"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01234, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01234, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
     public void grs_indexed_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -396,26 +355,21 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $END START"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01234, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        Assert.assertEquals(0_000002_000006L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.X1).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01234, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        Assert.assertEquals(0_000002_000006L, ip.getGeneralRegister(GeneralRegisterSet.X1).getW());
     }
 
     @Test
     public void grs_indirect_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -462,25 +416,20 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $END START"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01234, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01234, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
     public void storage_indexed_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -557,13 +506,15 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $end start"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        long[] bankData = getBankByBaseRegister(15);
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        long[] bankData = getBankByBaseRegister(ip, 15);
         assertEquals(01, bankData[0]);
         assertEquals(02, bankData[1]);
         assertEquals(03, bankData[2]);
@@ -573,14 +524,7 @@ public class Test_BasicModeAddressing extends BaseFunctions {
 
     @Test
     public void storage_indirect_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -638,25 +582,20 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $END START"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_112233_445566L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_112233_445566L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     @Test
     public void execRegisterSelection_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -704,28 +643,23 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $END START"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        _instructionProcessor.getDesignatorRegister().setProcessorPrivilege(0);
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(01, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.EA5).getW());
-        Assert.assertEquals(05, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.EX5).getW());
-        Assert.assertEquals(077, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.ER5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        ip.getDesignatorRegister().setProcessorPrivilege(0);
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(01, ip.getGeneralRegister(GeneralRegisterSet.EA5).getW());
+        Assert.assertEquals(05, ip.getGeneralRegister(GeneralRegisterSet.EX5).getW());
+        Assert.assertEquals(077, ip.getGeneralRegister(GeneralRegisterSet.ER5).getW());
     }
 
     @Test
     public void storage_BasicMode(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -769,13 +703,15 @@ public class Test_BasicModeAddressing extends BaseFunctions {
             "          $END START"
         };
 
-        buildMultiBank(source, true, true);
-        createProcessors();
+        buildMultiBank(source, true, false);
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(0_112233_445566L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        Assert.assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        Assert.assertEquals(0, ip.getLatestStopDetail());
+        Assert.assertEquals(0_112233_445566L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
     }
 
     //TODO read reference violation GAP

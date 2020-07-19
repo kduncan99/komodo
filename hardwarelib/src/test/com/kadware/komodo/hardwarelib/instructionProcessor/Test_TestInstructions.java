@@ -4,16 +4,10 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
-import org.junit.*;
+import org.junit.After;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * Unit tests for InstructionProcessor class
@@ -21,21 +15,13 @@ import org.junit.*;
 public class Test_TestInstructions extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void testEvenParityBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -53,23 +39,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testEvenParityExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -89,23 +69,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testOddParityBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -123,23 +97,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testOddParityExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -159,23 +127,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testZeroBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          TZ        DATA",
             "          HALT      077                 . this should be skipped",
@@ -196,23 +158,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -235,23 +191,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testNonZeroBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          TNZ       DATA",
             "          J         TARGET2             . should not be skipped",
@@ -274,23 +224,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testNonZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -315,23 +259,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testPosZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -356,25 +294,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  There is no TMZ for basic mode
 
     @Test
     public void testMinusZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -399,23 +331,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testPosBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          TP        DATA",
             "          HALT      077        . skipped",
@@ -432,23 +358,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testPosExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -467,23 +387,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testNegBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          TN        DATA",
             "          J         TARGET2    . not skipped",
@@ -499,23 +413,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testNegExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -533,25 +441,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No basic mode version of TNOP
 
     @Test
     public void testNOPExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -568,25 +470,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No basic mode version of TSKP
 
     @Test
     public void testSkipExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -600,23 +496,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testEqualBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LA,U      A10,0",
             "          TE        A10,DATA          . should skip",
@@ -630,23 +520,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testEqualExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -662,23 +546,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testNotEqualBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LA,U      A10,0",
             "          TNE       A10,DATA+1        . should skip",
@@ -692,23 +570,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testNotEqualExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -724,23 +596,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testLessOrEqualToModifierBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LXI,U     X5,2",
             "          LXM,U     X5,061234",
@@ -753,25 +619,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(2, _instructionProcessor.getExecOrUserXRegister(5).getXI());
-        Assert.assertEquals(061240, _instructionProcessor.getExecOrUserXRegister(5).getXM());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(2, ip.getExecOrUserXRegister(5).getXI());
+        assertEquals(061240, ip.getExecOrUserXRegister(5).getXM());
     }
 
     @Test
     public void testLessOrEqualToModifierExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "ARM       + 000135,0471234",
@@ -786,27 +646,21 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(2, _instructionProcessor.getExecOrUserXRegister(5).getXI());
-        Assert.assertEquals(061240, _instructionProcessor.getExecOrUserXRegister(5).getXM());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(2, ip.getExecOrUserXRegister(5).getXI());
+        assertEquals(061240, ip.getExecOrUserXRegister(5).getXM());
     }
 
     //  no basic mode version of TGZ
 
     @Test
     public void testGreaterThanZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -822,25 +676,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  no basic mode version of TMZG
 
     @Test
     public void testMinusZeroOrGreaterThanZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -856,25 +704,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  no basic mode version of TNLZ
 
     @Test
     public void testNotLessThanZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -890,25 +732,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  no basic mode version of TLZ
 
     @Test
     public void testLessThanZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -924,25 +760,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  no basic mode version of TPZL
 
     @Test
     public void testPositiveZeroOrLessThanZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -955,25 +785,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  no basic mode version of TNMZ
 
     @Test
     public void testNotMinusZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -989,25 +813,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  no basic mode version of TNPZ
 
     @Test
     public void testNotPositiveZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -1023,25 +841,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  no basic mode version of TNGZ
 
     @Test
     public void testNotGreaterThanZeroExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -1057,23 +869,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testLessThanOrEqualBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LA,U      A9,03567",
             "          TLE       A9,DATA           . should not skip",
@@ -1085,23 +891,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testLessThanOrEqualExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE  'GEN$DEFS'",
             "",
@@ -1118,23 +918,17 @@ public class Test_TestInstructions extends BaseFunctions {
             };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testGreaterBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LA        A3,DATA1",
             "          LA        A8,DATA2",
@@ -1150,23 +944,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testGreaterExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA1     + 000074416513",
@@ -1184,25 +972,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No TGM for basic mode
 
     @Test
     public void testGreaterMagnitudeExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0777777777577",
@@ -1215,23 +997,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testWithinRangeBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "STEP1",
             "          LA,U      A2,0441",
@@ -1260,23 +1036,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testWithinRangeExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA1     + 0443",
@@ -1307,23 +1077,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testNotWithinRangeBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         //Skip NI if (U) ≤ (Aa) or (U) > (Aa+1)
         String[] source = {
             "          LA,U      A2,0441",
@@ -1351,23 +1115,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testNotWithinRangeExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA1     + 0443",
@@ -1397,25 +1155,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No DTGM for basic mode
 
     @Test
     public void testDoubleTestGreaterMagnitudeExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0777777777577",
@@ -1434,25 +1186,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No MTE for basic mode
 
     @Test
     public void testMaskedTestEqualExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0253444123457",
@@ -1466,25 +1212,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No MTNE for basic mode
 
     @Test
     public void testMaskedTestNotEqualExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0253444123457",
@@ -1498,11 +1238,12 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No MTLE for basic mode
@@ -1510,14 +1251,7 @@ public class Test_TestInstructions extends BaseFunctions {
 
     @Test
     public void testMaskedTestLessThanOrEqualExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "SIX       + 044444012034",
@@ -1533,25 +1267,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No MTG for basic mode
 
     @Test
     public void testMaskedTestGreaterExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 044444012034",
@@ -1565,25 +1293,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No MTW for basic mode
 
     @Test
     public void testMaskedTestWithinRangeExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 066",
@@ -1598,25 +1320,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No MTNW for basic mode
 
     @Test
     public void testMaskedTestNotWithinRangeExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0711711",
@@ -1631,25 +1347,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No MATL for basic mode
 
     @Test
     public void testMaskedAlphaTestLessThanOrEqualExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0311753276514",
@@ -1663,25 +1373,19 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     //  No MATG for basic mode
 
     @Test
     public void testMaskedAlphaTestGreaterExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0311753276514",
@@ -1695,23 +1399,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
     }
 
     @Test
     public void testAndSetBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LBU       B13,(LBDIREF$+CLEAR, 0)",
             "          TS        CLEAR",
@@ -1724,26 +1422,20 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01000 + 13, _instructionProcessor.getLatestStopDetail());
-        long[] bank = getBankByBaseRegister(13);
-        Assert.assertEquals(0_010000_000000L, bank[0]);
-        Assert.assertEquals(0_0770000_000000L, bank[1]);
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01000 + 13, ip.getLatestStopDetail());
+        long[] bank = getBankByBaseRegister(ip, 13);
+        assertEquals(0_010000_000000L, bank[0]);
+        assertEquals(0_0770000_000000L, bank[1]);
     }
 
     @Test
     public void testAndSetExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "CLEAR     + 0",
@@ -1756,26 +1448,20 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01000 + 13, _instructionProcessor.getLatestStopDetail());
-        long[] bank = getBankByBaseRegister(2);
-        Assert.assertEquals(0_010000_000000L, bank[0]);
-        Assert.assertEquals(0_0770000_000000L, bank[1]);
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01000 + 13, ip.getLatestStopDetail());
+        long[] bank = getBankByBaseRegister(ip, 2);
+        assertEquals(0_010000_000000L, bank[0]);
+        assertEquals(0_0770000_000000L, bank[1]);
     }
 
     @Test
     public void testAndSetAndSkipBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LBU       B13,(LBDIREF$+CLEAR, 0)",
             "          TSS       CLEAR",
@@ -1790,26 +1476,20 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        long[] bank = getBankByBaseRegister(13);
-        Assert.assertEquals(0_010000_000000L, bank[0]);
-        Assert.assertEquals(0_0770000_000000L, bank[1]);
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        long[] bank = getBankByBaseRegister(ip, 13);
+        assertEquals(0_010000_000000L, bank[0]);
+        assertEquals(0_0770000_000000L, bank[1]);
     }
 
     @Test
     public void testAndSetAndSkipExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "CLEAR     + 0",
@@ -1824,26 +1504,20 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        long[] bank = getBankByBaseRegister(2);
-        Assert.assertEquals(0_010000_000000L, bank[0]);
-        Assert.assertEquals(0_0770000_000000L, bank[1]);
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        long[] bank = getBankByBaseRegister(ip, 2);
+        assertEquals(0_010000_000000L, bank[0]);
+        assertEquals(0_0770000_000000L, bank[1]);
     }
 
     @Test
     public void testAndClearAndSkipBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LBU       B13,(LBDIREF$+CLEAR, 0)",
             "          TCS       SET",
@@ -1858,26 +1532,20 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        long[] bank = getBankByBaseRegister(13);
-        Assert.assertEquals(0L, bank[0]);
-        Assert.assertEquals(0_007777_777777L, bank[1]);
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        long[] bank = getBankByBaseRegister(ip, 13);
+        assertEquals(0L, bank[0]);
+        assertEquals(0_007777_777777L, bank[1]);
     }
 
     @Test
     public void testAndClearAndSkipExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "CLEAR     + 0",
@@ -1892,26 +1560,20 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        long[] bank = getBankByBaseRegister(2);
-        Assert.assertEquals(0L, bank[0]);
-        Assert.assertEquals(0_007777_777777L, bank[1]);
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        long[] bank = getBankByBaseRegister(ip, 2);
+        assertEquals(0L, bank[0]);
+        assertEquals(0_007777_777777L, bank[1]);
     }
 
     @Test
     public void testConditionalReplaceBasic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          LBU       B13,(LBDIREF$+DATA1, 0)",
             "          LA,U      A0,010",
@@ -1930,26 +1592,20 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        long[] bank = getBankByBaseRegister(13);
-        Assert.assertEquals(020L, bank[0]);
-        Assert.assertEquals(014L, bank[1]);
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        long[] bank = getBankByBaseRegister(ip, 13);
+        assertEquals(020L, bank[0]);
+        assertEquals(014L, bank[1]);
     }
 
     @Test
     public void testConditionalReplaceBasicBadPP(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'GEN$DEFS'",
             "",
@@ -1963,30 +1619,24 @@ public class Test_TestInstructions extends BaseFunctions {
             "          LA,U      A1,020",
             "          LA,U      A2,030",
             "",
-            "          DR$SETPP03                  . set proc priv 03",
+            "          DR$SETPP  03                . set proc priv 03",
             "          CR        A0,DATA1          . should cause interrupt",
             "          HALT      077               . should not get here",
             "          HALT      076               . should not get here"
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01016, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01016, ip.getLatestStopDetail());
     }
 
     @Test
     public void testConditionalReplaceExtended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA1     + 010",
@@ -2005,26 +1655,20 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        long[] bank = getBankByBaseRegister(2);
-        Assert.assertEquals(020L, bank[0]);
-        Assert.assertEquals(014L, bank[1]);
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        long[] bank = getBankByBaseRegister(ip, 2);
+        assertEquals(020L, bank[0]);
+        assertEquals(014L, bank[1]);
     }
 
     @Test
     public void testReferenceViolationBasic1(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          TZ        DATA              . should skip",
             "          HALT      077               . should skip this",
@@ -2036,23 +1680,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01010, ip.getLatestStopDetail());
     }
 
     @Test
     public void testReferenceViolationBasic2(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(4)",
             "DATA      +0",
@@ -2065,23 +1703,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForBasicMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01010, ip.getLatestStopDetail());
     }
 
     @Test
     public void testReferenceViolationExtended1(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -2095,23 +1727,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01010, ip.getLatestStopDetail());
     }
 
     @Test
     public void testReferenceViolationExtended2(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -2124,23 +1750,17 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01010, ip.getLatestStopDetail());
     }
 
     @Test
     public void testReferenceViolationExtended3(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "$(0)",
             "DATA      + 0",
@@ -2152,10 +1772,11 @@ public class Test_TestInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, true);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01010, ip.getLatestStopDetail());
     }
 }

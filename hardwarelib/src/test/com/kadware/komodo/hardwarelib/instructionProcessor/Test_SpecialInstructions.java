@@ -4,18 +4,9 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import org.junit.After;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -24,21 +15,13 @@ import static org.junit.Assert.assertEquals;
 public class Test_SpecialInstructions extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void nop_basic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -62,25 +45,20 @@ public class Test_SpecialInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(4, _instructionProcessor.getGeneralRegister(2).getH1());
-        assertEquals(6, _instructionProcessor.getGeneralRegister(2).getH2());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(4, ip.getGeneralRegister(2).getH1());
+        assertEquals(6, ip.getGeneralRegister(2).getH2());
     }
 
     @Test
     public void nop_basic_indirect_violation(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -123,24 +101,19 @@ public class Test_SpecialInstructions extends BaseFunctions {
             "          $END      START"
         };
 
-        buildMultiBank(source, true, false);
-        createProcessors();
+        buildMultiBank(source, false, false);
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(01010, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(01010, ip.getLatestStopDetail());
     }
 
     @Test
     public void nop_basic_indirect_noViolation(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -185,26 +158,21 @@ public class Test_SpecialInstructions extends BaseFunctions {
             "          $END      START"
         };
 
-        buildMultiBank(source, true, false);
-        createProcessors();
+        buildMultiBank(source, false, false);
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(4, _instructionProcessor.getGeneralRegister(2).getH1());
-        assertEquals(6, _instructionProcessor.getGeneralRegister(2).getH2());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(4, ip.getGeneralRegister(2).getH1());
+        assertEquals(6, ip.getGeneralRegister(2).getH2());
     }
 
     @Test
     public void nop_extended(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 10 1",
@@ -223,12 +191,14 @@ public class Test_SpecialInstructions extends BaseFunctions {
         };
 
         buildMultiBank(source, false, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(4, _instructionProcessor.getGeneralRegister(2).getH1());
-        assertEquals(6, _instructionProcessor.getGeneralRegister(2).getH2());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(4, ip.getGeneralRegister(2).getH1());
+        assertEquals(6, ip.getGeneralRegister(2).getH2());
     }
 }

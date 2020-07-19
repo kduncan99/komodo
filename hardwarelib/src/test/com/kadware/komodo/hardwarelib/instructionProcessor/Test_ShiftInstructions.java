@@ -4,15 +4,7 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.baselib.GeneralRegisterSet;
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -23,21 +15,13 @@ import static org.junit.Assert.*;
 public class Test_ShiftInstructions extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void singleShiftAlgebraic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -54,24 +38,19 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0_777777_777713L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_777777_777713L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
     @Test
     public void doubleShiftAlgebraic(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -89,25 +68,20 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0_000033_344455L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_566677_700011L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_000033_344455L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_566677_700011L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 
     @Test
     public void singleShiftCircular(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -126,24 +100,19 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0_000001_234500L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_000001_234500L, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
     }
 
     @Test
     public void doubleShiftCircular(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -161,25 +130,20 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0_575306_400000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_000000_024713L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_575306_400000L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_000000_024713L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 
     @Test
     public void singleShiftLogical(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -196,24 +160,19 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0_000024_675433L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_000024_675433L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
     @Test
     public void doubleShiftLogical(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -231,25 +190,20 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0_000777_666555L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_444333_222112L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_000777_666555L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_444333_222112L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 
     @Test
     public void loadShiftAndCount(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -277,33 +231,28 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0_400000_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(0_377777_777777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        assertEquals(0_000000_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        assertEquals(35, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        assertEquals(0_777777_777777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
-        assertEquals(35, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
-        assertEquals(0_222222_222200L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        assertEquals(7, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_400000_000000L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(0_377777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(0_000000_000000L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        assertEquals(35, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertEquals(0_777777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        assertEquals(35, ip.getGeneralRegister(GeneralRegisterSet.A7).getW());
+        assertEquals(0_222222_222200L, ip.getGeneralRegister(GeneralRegisterSet.A8).getW());
+        assertEquals(7, ip.getGeneralRegister(GeneralRegisterSet.A9).getW());
     }
 
     @Test
     public void doubleLoadShiftAndCount(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -336,38 +285,33 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0,_instructionProcessor.getLatestStopDetail());
-        assertEquals(0_261504_340000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A0).getW());
-        assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A1).getW());
-        assertEquals(062, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_377777_777777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
-        assertEquals(0_777777_777777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A4).getW());
-        assertEquals(0, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
-        assertEquals(0_000000_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A6).getW());
-        assertEquals(0_000000_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A7).getW());
-        assertEquals(71, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A8).getW());
-        assertEquals(0_777777_777777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A9).getW());
-        assertEquals(0_777777_777777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A10).getW());
-        assertEquals(71, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A11).getW());
-        assertEquals(0_333444_555666L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A12).getW());
-        assertEquals(0_000000_000000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A13).getW());
-        assertEquals(36, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A14).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0,ip.getLatestStopDetail());
+        assertEquals(0_261504_340000L, ip.getGeneralRegister(GeneralRegisterSet.A0).getW());
+        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A1).getW());
+        assertEquals(062, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_377777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        assertEquals(0_777777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A4).getW());
+        assertEquals(0, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        assertEquals(0_000000_000000L, ip.getGeneralRegister(GeneralRegisterSet.A6).getW());
+        assertEquals(0_000000_000000L, ip.getGeneralRegister(GeneralRegisterSet.A7).getW());
+        assertEquals(71, ip.getGeneralRegister(GeneralRegisterSet.A8).getW());
+        assertEquals(0_777777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A9).getW());
+        assertEquals(0_777777_777777L, ip.getGeneralRegister(GeneralRegisterSet.A10).getW());
+        assertEquals(71, ip.getGeneralRegister(GeneralRegisterSet.A11).getW());
+        assertEquals(0_333444_555666L, ip.getGeneralRegister(GeneralRegisterSet.A12).getW());
+        assertEquals(0_000000_000000L, ip.getGeneralRegister(GeneralRegisterSet.A13).getW());
+        assertEquals(36, ip.getGeneralRegister(GeneralRegisterSet.A14).getW());
     }
 
     @Test
     public void leftSingleShiftCircular(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -384,24 +328,19 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0_544332_277665L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_544332_277665L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
     @Test
     public void leftDoubleShiftCircular(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -423,25 +362,20 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0_000003_333333L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_333333_777777L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_000003_333333L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_333333_777777L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 
     @Test
     public void leftSingleShiftLogical(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -462,24 +396,19 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        assertEquals(0_001233_661570L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(0_001233_661570L, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
     @Test
     public void leftDoubleShiftLogical(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -501,11 +430,13 @@ public class Test_ShiftInstructions extends BaseFunctions {
         };
 
         buildSimple(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0_666555_444333L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A2).getW());
-        assertEquals(0_222112_345000L, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A3).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0_666555_444333L, ip.getGeneralRegister(GeneralRegisterSet.A2).getW());
+        assertEquals(0_222112_345000L, ip.getGeneralRegister(GeneralRegisterSet.A3).getW());
     }
 }

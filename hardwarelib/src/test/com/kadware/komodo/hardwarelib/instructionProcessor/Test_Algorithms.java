@@ -5,18 +5,12 @@
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.GeneralRegisterSet;
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
 import java.util.Arrays;
-import static org.junit.Assert.*;
-import org.junit.*;
+import org.junit.After;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * Unit tests for InstructionProcessor class
@@ -24,21 +18,13 @@ import org.junit.*;
 public class Test_Algorithms extends BaseFunctions {
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
     @Test
     public void factorial(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -124,12 +110,14 @@ public class Test_Algorithms extends BaseFunctions {
         };
 
         buildDualBank(source);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
-        Assert.assertEquals(3628800, _instructionProcessor.getGeneralRegister(GeneralRegisterSet.A5).getW());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+        assertEquals(3628800, ip.getGeneralRegister(GeneralRegisterSet.A5).getW());
     }
 
     /**
@@ -137,14 +125,7 @@ public class Test_Algorithms extends BaseFunctions {
      */
     @Test
     public void sieve(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $EXTEND",
             "          $INFO 1 3",
@@ -240,11 +221,13 @@ public class Test_Algorithms extends BaseFunctions {
         };
 
         buildMultiBank(source, false, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        Assert.assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        Assert.assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
 
         long[] expected = {
             168,    //  number of prime values following
@@ -267,7 +250,7 @@ public class Test_Algorithms extends BaseFunctions {
             947, 953, 967, 971, 977, 983, 991, 997
         };
 
-        long[] result = getBankByBaseRegister(3);
+        long[] result = getBankByBaseRegister(ip, 3);
         assertArrayEquals(Arrays.copyOf(expected, result.length), result);
     }
 }

@@ -1,9 +1,12 @@
 -- TODO InProgress
 
+Need to work on mailslot handling (see Processor.java)
 IP: operations control instructions (and unit tests)
   SEND
   ACK
 
+unit tests for instruction processor
+    When testing for interrupts and codes, use the enums (see Test_AddressSpaceManagementFunctions.java)
 
 -- TODO BUGS
 * kasm
@@ -22,6 +25,8 @@ Coding LBDIREF$+tag creates a relocated word with a base value of tags offset fr
   What should we do about this?
     Maybe... klink should, in this case, clear out the field-descriptor described by the reference
     before integrating the BDI value...
+$PROC and $FUNC source is not emitted to output when desired
+  This is because we only go through the top level source, I guess...?
 
 * hwlib
 ByteChannelModule unit tests - they wait without being notify()able, which slows down IO tests

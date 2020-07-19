@@ -4,15 +4,8 @@
 
 package com.kadware.komodo.hardwarelib.instructionProcessor;
 
-import com.kadware.komodo.baselib.exceptions.BinaryLoadException;
 import com.kadware.komodo.hardwarelib.InstructionProcessor;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
-import com.kadware.komodo.hardwarelib.exceptions.MaxNodesException;
-import com.kadware.komodo.hardwarelib.exceptions.NodeNameConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIConflictException;
-import com.kadware.komodo.hardwarelib.exceptions.UPINotAssignedException;
-import com.kadware.komodo.hardwarelib.exceptions.UPIProcessorTypeException;
-import com.kadware.komodo.hardwarelib.interrupts.MachineInterrupt;
+import com.kadware.komodo.hardwarelib.InventoryManager;
 import org.junit.After;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -40,8 +33,7 @@ public class Test_UPIOperationsControlInstructions extends BaseFunctions {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     @After
-    public void after(
-    ) throws UPINotAssignedException {
+    public void after() {
         clear();
     }
 
@@ -49,14 +41,7 @@ public class Test_UPIOperationsControlInstructions extends BaseFunctions {
 
     @Test
     public void send_to_ourself(
-    ) throws BinaryLoadException,
-             CannotConnectException,
-             MachineInterrupt,
-             MaxNodesException,
-             NodeNameConflictException,
-             UPIConflictException,
-             UPINotAssignedException,
-             UPIProcessorTypeException {
+    ) throws Exception {
         String[] source = {
             "          $INCLUDE 'CHP$DEFS'",
             "",
@@ -68,10 +53,39 @@ public class Test_UPIOperationsControlInstructions extends BaseFunctions {
         };
 
         buildMultiBank(wrapForExtendedMode(source), true, false);
-        createProcessors();
+        createConfiguration();
         ipl(true);
 
-        assertEquals(InstructionProcessor.StopReason.Debug, _instructionProcessor.getLatestStopReason());
-        assertEquals(0, _instructionProcessor.getLatestStopDetail());
+        InstructionProcessor ip = getFirstIP();
+        assertEquals(InstructionProcessor.StopReason.Debug, ip.getLatestStopReason());
+        assertEquals(0, ip.getLatestStopDetail());
+    }
+
+    @Test
+    public void send_to_another_IP(
+    ) throws Exception {
+        String[] source = {
+            "          $INCLUDE 'CHP$DEFS'",
+            "",
+            "IP_UPI    $EQU      7 . hard-coded in InventoryManager.java",
+            "",
+            "CODE",
+            "          SEND      IP_UPI+1 . should cause an interrupt for IP1",
+            "          HALT      0 . should stop here"
+        };
+
+        buildMultiBank(wrapForExtendedMode(source), true, false);
+        createConfiguration(2, 1, 1);
+        ipl(true);
+
+        int ipupi = InventoryManager.FIRST_IP_UPI_INDEX;
+        InstructionProcessor ip0 = InventoryManager.getInstance().getInstructionProcessor(ipupi);
+        InstructionProcessor ip1 = InventoryManager.getInstance().getInstructionProcessor(ipupi + 1);
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip0.getLatestStopReason());
+        assertEquals(0, ip0.getLatestStopDetail());
+
+        assertEquals(InstructionProcessor.StopReason.Debug, ip1.getLatestStopReason());
+        assertEquals(512 + 31, ip1.getLatestStopDetail());
     }
 }
