@@ -156,6 +156,14 @@ public class MainStorageProcessor extends Processor {
         super.dump(writer);
     }
 
+    public long getFixedSize() {
+        return _fixedStorage.getSize();
+    }
+
+    public long getMaxSegments() {
+        return 0x80000000L;
+    }
+
     /**
      * Reallocates an existing dynamic segment
      * If the new storageSize is less than the existing size, the new segment will contain the front portion

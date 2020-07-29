@@ -11,10 +11,8 @@ import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,33 +52,6 @@ public abstract class Processor extends Node implements Worker {
         }
     }
 
-    static class UPIIndexPair {
-        final int _sourceIndex;
-        final int _destinationIndex;
-
-        UPIIndexPair(
-            final int sourceIndex,
-            final int destinationIndex
-        ) {
-            _sourceIndex = sourceIndex;
-            _destinationIndex = destinationIndex;
-        }
-
-        @Override
-        public boolean equals(
-            final Object obj
-        ) {
-            return (obj instanceof UPIIndexPair)
-                && (((UPIIndexPair) obj)._sourceIndex == _sourceIndex)
-                && (((UPIIndexPair) obj)._destinationIndex == _destinationIndex);
-        }
-
-        @Override
-        public int hashCode() {
-            return (_sourceIndex << 16) | _destinationIndex;
-        }
-    }
-
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Class attributes
@@ -111,19 +82,6 @@ public abstract class Processor extends Node implements Worker {
     final Set<Processor> _upiPendingInterrupts = new HashSet<>();
 
     /**
-     * Lookup table of mailbox slots for UPI communication.
-     * Key is the combination of source and destination UPI indices, value is the AbsoluteAddress
-     * in storage where the communication area is located, for messages from the source processor
-     * to the destination processor.
-     * --
-     * Not every combination of source/destination indices are valid, reflecting the fact that
-     * not every combinaion of processors interrupt each other, that broadcast messages exist
-     * where-in the destination is not known to the source, and that in some cases where
-     * paths *do* exist from one processor to another, no communication area is necessary.
-     */
-    private static final Map<UPIIndexPair, AbsoluteAddress> _upiCommunicationLookup = new HashMap<>();
-
-    /**
      * All processors must implement a thread, if for no other reason than to monitor the UPI tables.
      * IPs, IOPs, and SPs will all have something useful to do.
      * MSPs will probably not.
@@ -133,6 +91,8 @@ public abstract class Processor extends Node implements Worker {
 
     protected boolean _isReady;                 //  Processor is ready for work (implies _isRunning)
     protected boolean _isRunning;               //  Processor is running
+
+    protected static ConfigDataBank _configDataBank = null;
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -325,12 +285,6 @@ public abstract class Processor extends Node implements Worker {
     //  Static methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    //TODO need to automate UPI mailslot stuff
-    //  just allocate slots for all possible combinations between IPs, IOPs, and SPs
-    //  however, we cannot do this until we have at least one MSP, and if that one goes back away,
-    //  we have to move the mailslots to another MSP, but if there isn't one, then the mailslots are all wacked.
-    //  ... and, what do we do if one or more IPs are active when we need to wack the mailslots?
-
     /**
      * Retrieves selected processor
      * @return selected instruction processor
@@ -402,6 +356,15 @@ public abstract class Processor extends Node implements Worker {
         }
 
         return new ArraySlice(mspStorage, absoluteAddress._offset + offset, count);
+    }
+
+    /**
+     * Invoked by the SP at some point prior to booting an operating system
+     */
+    protected static void setConfigDataBank(
+        final ConfigDataBank configDataBank
+    ) {
+        _configDataBank = configDataBank;
     }
 
     /**

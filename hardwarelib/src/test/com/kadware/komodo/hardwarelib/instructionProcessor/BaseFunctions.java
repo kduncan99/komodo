@@ -411,7 +411,8 @@ class BaseFunctions {
      *      1 Main Storage Processor
      */
     void createConfiguration(
-    ) throws CannotConnectException,
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
              ChannelModuleIndexConflictException,
              MaxNodesException,
              NodeNameConflictException,
@@ -435,7 +436,8 @@ class BaseFunctions {
         final int ipCount,
         final int iopCount,
         final int mspCount
-    ) throws CannotConnectException,
+    ) throws AddressingExceptionInterrupt,
+             CannotConnectException,
              ChannelModuleIndexConflictException,
              MaxNodesException,
              NodeNameConflictException,
@@ -478,7 +480,9 @@ class BaseFunctions {
             wordChannelModules.add(cm1);
         }
 
-        //TODO create disk
+        //TODO create scratch disk
+        ScratchDiskDevice disk = null;//TODO fix this
+        im.addDevice(disk);
     }
 
 

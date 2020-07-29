@@ -9,6 +9,7 @@ import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.configlib.HardwareConfiguration;
 import com.kadware.komodo.configlib.ProcessorDefinition;
 import com.kadware.komodo.hardwarelib.exceptions.*;
+import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.time.Instant;
@@ -24,6 +25,42 @@ import org.apache.logging.log4j.message.EntryMessage;
 /**
  * Creation and discarding of hardware things (i.e., anything extending Node) must occur via this manager.
  * This is a singleton.
+ *
+ * A note about UPI communication (sends and acks):
+ * This process is used primarily (maybe solely) for starting IOs on the IOPs, and for the IOPs to
+ * indicate when an IO has completed. Nothing else. In order for this to work, a buffer address must be
+ * passed to the IOP, and that address is passed through a mail slot, which is a small packet unique
+ * for each combination of sender/receiver.
+ *
+ * Now, this address really only has to indicate *some* area of memory; the IOP will presume it is a
+ * buffer of long[]s, but it could be any buffer anywhere, insofar as the IOP is concerned, and so far
+ * as the SP and the IPs (which are the only units which initiate IO) are concerned.
+ *
+ * But there is a problem - in a properly functioning system, IOs are instigated by operating system
+ * software, and that software must live within a world of virtual addresses which are translatable
+ * to absolute addresses - and absolute addresses always (presumably) translate to segments and
+ * offsets within one MSP or another.
+ *
+ * Which means, the IO buffer must be presented as an absolute address, which is the only thing which
+ * is comprehensible to all processors as well as to the operating system.
+ *
+ * But... it gets very tricky dealing with mail slot management during configuration management.
+ * Processors come and go, and potentially while the OS is running. This is manageable... but it gets
+ * even more problematic when MSPs come and go - particularly whichever MSP contains the table of
+ * mail slots.
+ *
+ * A similar problem exists with the configuration databank.
+ *
+ * So, the solution? A 'hidden' MSP, accessible via absolute addresses with UPI and segment index
+ * set to zero. This MSP contains the configuration databank, and we will implement the mail slot
+ * table within the configuration databank.
+ *
+ * Any processor can access the configuration databank via the absolute address with UPI 0,
+ * segment index 0, at offset 0, and from there, derive the location of any particular mail slot.
+ * Similarly, the operating system can base that bank, again using the indicated absolute address,
+ * and get all the configuration information *and* the mail slot locations there-by.
+ *
+ * The actual format of the configuration data bank is defined in ConfigDataBank.java.
  */
 @SuppressWarnings("Duplicates")
 public class InventoryManager {
@@ -47,6 +84,38 @@ public class InventoryManager {
         }
     }
 
+//    /**
+//     * Simple pair of UPI indices -
+//     * one representing a source for a SEND or ACK, the other representing the destination.
+//     */
+//    static class UPIIndexPair {
+//        final int _sourceIndex;
+//        final int _destinationIndex;
+//
+//        UPIIndexPair(
+//            final int sourceIndex,
+//            final int destinationIndex
+//        ) {
+//            _sourceIndex = sourceIndex;
+//            _destinationIndex = destinationIndex;
+//        }
+//
+//        @Override
+//        public boolean equals(
+//            final Object obj
+//        ) {
+//            return (obj instanceof UPIIndexPair)
+//                   && (((UPIIndexPair) obj)._sourceIndex == _sourceIndex)
+//                   && (((UPIIndexPair) obj)._destinationIndex == _destinationIndex);
+//        }
+//
+//        @Override
+//        public int hashCode() {
+//            return (_sourceIndex << 16) | _destinationIndex;
+//        }
+//    }
+
+
     //  The following are only useful for the create* routines.
     //  It is highly recommended that these be used for creation of processors, however that is not enforced.
     //  Client code can create any type of processor at any UPI index - we only enforce uniqueness of UPI index and name.
@@ -69,7 +138,6 @@ public class InventoryManager {
     private final Map<Integer, Processor> _processors = new HashMap<>();
 
     private static InventoryManager _instance = null;
-
     private static final Logger LOGGER = LogManager.getLogger(InventoryManager.class.getSimpleName());
 
 
@@ -97,15 +165,26 @@ public class InventoryManager {
     //  Private methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
+    /**
+     * For non-Processor Nodes
+     * @param node node being created or added
+     */
     private void putNode(
         final Node node
     ) {
         _nodes.put(node._name.toUpperCase(), node);
-        if (node instanceof Processor) {
-            Processor processor = (Processor) node;
-            _processors.put(processor._upiIndex, processor);
-            LOGGER.info(String.format("Processor %s inserted at upi %d", processor._name, processor._upiIndex));
-        }
+    }
+
+    /**
+     * For processor nodes
+     * @param processor processor being added
+     */
+    private void putProcessor(
+        final Processor processor
+    ) {
+        putNode(processor);
+        _processors.put(processor._upiIndex, processor);
+        LOGGER.info(String.format("Processor %s inserted at upi %d", processor._name, processor._upiIndex));
     }
 
 
@@ -142,9 +221,10 @@ public class InventoryManager {
                 throw new NodeNameConflictException(processor._name);
             }
 
-            putNode(processor);
+            putProcessor(processor);
             processor.initialize();
         }
+
         LOGGER.traceExit(em);
     }
 
@@ -177,7 +257,7 @@ public class InventoryManager {
                 throw new NodeNameConflictException(processor._name);
             }
 
-            putNode(processor);
+            putProcessor(processor);
             processor.initialize();
         }
 
@@ -194,7 +274,8 @@ public class InventoryManager {
      */
     public void addMainStorageProcessor(
         final MainStorageProcessor processor
-    ) throws NodeNameConflictException,
+    ) throws AddressingExceptionInterrupt,
+             NodeNameConflictException,
              UPIConflictException,
              UPIInvalidException {
         EntryMessage em = LOGGER.traceEntry("name:{} upi:{}", processor._name, processor._upiIndex);
@@ -213,11 +294,20 @@ public class InventoryManager {
                 throw new NodeNameConflictException(processor._name);
             }
 
-            putNode(processor);
+            putProcessor(processor);
             processor.initialize();
         }
 
         LOGGER.traceExit(em);
+    }
+
+    /**
+     * Adds an already-created device to our configuration
+     */
+    public void addDevice(
+        final Device device
+    ) {
+        putNode(device);
     }
 
     /**
@@ -249,7 +339,7 @@ public class InventoryManager {
                 throw new NodeNameConflictException(processor._name);
             }
 
-            putNode(processor);
+            putProcessor(processor);
             processor.initialize();
         }
 
@@ -311,6 +401,7 @@ public class InventoryManager {
                 case Word -> new WordChannelModule(name);
             };
 
+            putNode(chmod);
             Node.connect(iop, cmIndex, chmod);
         }
 
@@ -333,7 +424,7 @@ public class InventoryManager {
             for (int px = 0; px < MAX_IOPS; ++px, ++upiIndex) {
                 if (_processors.get(upiIndex) == null) {
                     InputOutputProcessor proc = new InputOutputProcessor(name, upiIndex);
-                    putNode(proc);
+                    putProcessor(proc);
                     proc.initialize();
                     LOGGER.traceExit(em, proc);
                     return proc;
@@ -359,7 +450,7 @@ public class InventoryManager {
             for (int px = 0; px < MAX_IPS; ++px, ++upiIndex) {
                 if (_processors.get(upiIndex) == null) {
                     InstructionProcessor proc = new InstructionProcessor(name, upiIndex);
-                    putNode(proc);
+                    putProcessor(proc);
                     proc.initialize();
                     LOGGER.traceExit(em, proc);
                     return proc;
@@ -388,7 +479,7 @@ public class InventoryManager {
             for (int px = 0; px < MAX_MSPS; ++px, ++upiIndex) {
                 if (_processors.get(upiIndex) == null) {
                     MainStorageProcessor proc = new MainStorageProcessor(name, upiIndex, fixedStorageSize);
-                    putNode(proc);
+                    putProcessor(proc);
                     proc.initialize();
                     LOGGER.traceExit(em, proc);
                     return proc;
@@ -408,6 +499,7 @@ public class InventoryManager {
      * @return new processor object
      * @throws MaxNodesException if too many processors of this type have been created
      */
+    @SuppressWarnings("UnusedReturnValue")
     public SystemProcessor createSystemProcessor(
         final String name,
         final Integer httpPort,
@@ -421,7 +513,7 @@ public class InventoryManager {
             for (int px = 0; px < MAX_SPS; ++px, ++upiIndex) {
                 if (_processors.get(upiIndex) == null) {
                     SystemProcessor proc = new SystemProcessor(name, httpPort, httpsPort, credentials);
-                    putNode(proc);
+                    putProcessor(proc);
                     proc.initialize();
                     LOGGER.traceExit(em, proc);
                     return proc;

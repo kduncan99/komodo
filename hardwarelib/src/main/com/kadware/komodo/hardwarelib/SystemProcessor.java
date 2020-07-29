@@ -132,107 +132,6 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         super(ProcessorType.SystemProcessor, "SP0", InventoryManager.FIRST_SP_UPI_INDEX);
     }
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Private methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-//    /**
-//     * Establishes and populates a communications area in one of the configured MSPs.
-//     * Should be invoked after clearing the various processors and before IPL.
-//     * The format of the communications area is as follows:
-//     *      +----------+----------+----------+----------+----------+----------+
-//     * +0   |          |          |          |            #Entries            |
-//     *      +----------+----------+----------+----------+----------+----------+
-//     *      |                           First Entry                           |
-//     * +1   |  SOURCE  |   DEST   |          |          |          |          |
-//     *      +----------+----------+----------+----------+----------+----------+
-//     * +2   |                           First Entry                           |
-//     * +3   |       Area for communications from source to destination        |
-//     *      +----------+----------+----------+----------+----------+----------+
-//     *      |                       Subsequent Entries                        |
-//     *      |                               ...                               |
-//     *      +----------+----------+----------+----------+----------+----------+
-//     * #ENTRIES:  Number of 3-word entries in the table.
-//     * SOURCE:    UPI Index of processor sending the interrupt
-//     * DEST:      UPI Index of processor to which the interrupt is sent
-//     *
-//     * It should be noted that not every combination of UPI index pairs are necessary,
-//     * as not all possible paths between types of processors are supported, or implemented.
-//     * Specifically, we allow interrupts from SPs and IPs to IOPs, as well as the reverse,
-//     * and we allow interrupts from SPs to IPs and the reverse.
-//     */
-//    //TODO should this whole area just be part of the partition data bank?
-//    private void establishCommunicationsArea(
-//        final MainStorageProcessor msp,
-//        final int segment,
-//        final int offset
-//    ) throws AddressingExceptionInterrupt {
-//        //  How many communications slots do we need to create?
-//        List<Processor> processors = InventoryManager.getInstance().getProcessors();
-//
-//        int iopCount = 0;
-//        int ipCount = 0;
-//        int spCount = 0;
-//
-//        for (Processor processor : processors) {
-//            switch (processor._Type) {
-//                case InputOutputProcessor:
-//                    iopCount++;
-//                    break;
-//                case InstructionProcessor:
-//                    ipCount++;
-//                    break;
-//                case SystemProcessor:
-//                    spCount++;
-//                    break;
-//            }
-//        }
-//
-//        //  slots from IPs and SPs to IOPs, and back
-//        int entries = 2 * (ipCount + spCount) * iopCount;
-//
-//        //  slots from SPs to IPs
-//        entries += 2 * spCount * ipCount;
-//
-//        int size = 1 + (3 * entries);
-//        ArraySlice commsArea = new ArraySlice(msp.getStorage(segment), offset, size);
-//        commsArea.clear();
-//
-//        commsArea.set(0, entries);
-//        int ax = 1;
-//
-//        for (Processor source : processors) {
-//            if ((source._Type == ProcessorType.InstructionProcessor)
-//                || (source._Type == ProcessorType.SystemProcessor)) {
-//                for (Processor destination : processors) {
-//                    if (destination._Type == ProcessorType.InputOutputProcessor) {
-//                        Word36 w = new Word36();
-//                        w.setS1(source._upiIndex);
-//                        w.setS2(destination._upiIndex);
-//                        commsArea.set(ax, w.getW());
-//                        ax += 3;
-//
-//                        w.setS1(destination._upiIndex);
-//                        w.setS2(source._upiIndex);
-//                        commsArea.set(ax, w.getW());
-//                        ax += 3;
-//                    } else if ((source._Type == ProcessorType.SystemProcessor)
-//                               && (destination._Type == ProcessorType.InstructionProcessor)) {
-//                        Word36 w = new Word36();
-//                        w.setS1(source._upiIndex);
-//                        w.setS2(destination._upiIndex);
-//                        commsArea.set(ax, w.getW());
-//                        ax += 3;
-//
-//                        w.setS1(destination._upiIndex);
-//                        w.setS2(source._upiIndex);
-//                        commsArea.set(ax, w.getW());
-//                        ax += 3;
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Implementations / overrides of abstract base methods
@@ -259,6 +158,8 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
         final BufferedWriter writer
     ) {
         super.dump(writer);
+        //TODO anything local to us
+        //TODO ConfigDataBank if it exists
     }
 
 
@@ -748,8 +649,8 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
 
         //  Create and base the config bank
         //  TODO
-//        if (createConfigBank) {
-//        }
+        if (createConfigBank) {
+        }
 
         //  Set up a small interrupt control stack (ICS).
         int icsFrameSize = 16;
@@ -769,6 +670,11 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
 
         upiSendDirected(instructionProcessorUPI);
         _logger.traceExit(em);
+    }
+
+    void populateConfigDataBank() {
+        ConfigDataBank cdb = new ConfigDataBank();
+
     }
 
     /**
