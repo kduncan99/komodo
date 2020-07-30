@@ -24,9 +24,6 @@ public class Test_DiskDevice {
         }
 
         @Override
-        public boolean canConnect(Node candidateAncestor) { return true; }
-
-        @Override
         public boolean handleIo(IOInfo ioInfo) { return true; }
 
         @Override

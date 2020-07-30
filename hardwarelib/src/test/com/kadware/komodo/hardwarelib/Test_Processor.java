@@ -22,13 +22,6 @@ public class Test_Processor {
         }
 
         @Override
-        public boolean canConnect(
-            final Node ancestor
-        ) {
-            return false;
-        }
-
-        @Override
         public void run() {
             while (!_workerTerminate) {
                 try {

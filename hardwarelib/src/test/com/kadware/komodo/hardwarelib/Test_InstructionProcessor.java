@@ -26,15 +26,6 @@ public class Test_InstructionProcessor {
         return new AccessInfo(_random.nextInt(0x100), _random.nextLong());
     }
 
-    //  Basic Processor tests ------------------------------------------------------------------------------------------------------
-
-    @Test
-    public void canConnect(
-    ) {
-        InstructionProcessor ip = new InstructionProcessor("IP0", InventoryManager.FIRST_IP_UPI_INDEX);
-        assertFalse(ip.canConnect(ip));
-    }
-
     //  Base Register tests --------------------------------------------------------------------------------------------------------
 
     @Test

@@ -9,7 +9,6 @@ import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.configlib.HardwareConfiguration;
 import com.kadware.komodo.configlib.ProcessorDefinition;
 import com.kadware.komodo.hardwarelib.exceptions.*;
-import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.time.Instant;
@@ -18,6 +17,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.EntryMessage;
@@ -25,6 +25,27 @@ import org.apache.logging.log4j.message.EntryMessage;
 /**
  * Creation and discarding of hardware things (i.e., anything extending Node) must occur via this manager.
  * This is a singleton.
+ *
+ * Our hardware model is a simplified version of the legacy 2200 model.
+ * We have one SystemProcessor which does a heck of a lot of stuff, and is required, and There Can Be Only One.
+ * We require 1:n InstructionProcessors
+ *      Each IP runs a separate Java thread, so keep that in mind for performance considerations
+ * We require 1:n InputOutputProcessors
+ *      Each IOP runs a separate Java thread, so keep that in mind for performance considerations
+ * We require 1:n MainStorageProcessors
+ *      Each MSP has a configurably-sized fixed storage bank, and can support up to {n} dynamically-allocated
+ *      additional storage banks, managed by the operating system.
+ * The Processors are all interconnected via the Send/Ack UPI business, which is used mainly for IO.
+ *
+ * Connected to the InputOutputProcessor(s) is/are the ChannelModule(s). The ChannelModule is where data is translated
+ *      (if necessary) from Word36 format to byte format.  We need at least one CM for any byte devices, and one for
+ *      any word devices. We can have more... we impose no architectural limit on max CMs other than the max per IOP
+ *      multiplied by the max number of IOPs.
+ *
+ * We do not implement virtual controller nodes - there seemed to be very little need for doing so.
+ * Devices are 'connected' directly to channel modules, and are addressed via a device index.
+ *
+ * -----
  *
  * A note about UPI communication (sends and acks):
  * This process is used primarily (maybe solely) for starting IOs on the IOPs, and for the IOPs to
@@ -47,16 +68,14 @@ import org.apache.logging.log4j.message.EntryMessage;
  * But... it gets very tricky dealing with mail slot management during configuration management.
  * Processors come and go, and potentially while the OS is running. This is manageable... but it gets
  * even more problematic when MSPs come and go - particularly whichever MSP contains the table of
- * mail slots.
+ * mail slots. A similar problem exists with the configuration databank.
  *
- * A similar problem exists with the configuration databank.
+ * So, the solution? A 'hidden' MSP, accessible via absolute addresses with UPI set to negative one
+ * and segment index set to zero. This virtual MSP contains the configuration databank, and we will
+ * implement the mail slot table within the configuration databank.
  *
- * So, the solution? A 'hidden' MSP, accessible via absolute addresses with UPI and segment index
- * set to zero. This MSP contains the configuration databank, and we will implement the mail slot
- * table within the configuration databank.
- *
- * Any processor can access the configuration databank via the absolute address with UPI 0,
- * segment index 0, at offset 0, and from there, derive the location of any particular mail slot.
+ * Any processor can access the configuration databank via this magic absolute address
+ * and from there, derive the location of any particular mail slot.
  * Similarly, the operating system can base that bank, again using the indicated absolute address,
  * and get all the configuration information *and* the mail slot locations there-by.
  *
@@ -64,6 +83,33 @@ import org.apache.logging.log4j.message.EntryMessage;
  */
 @SuppressWarnings("Duplicates")
 public class InventoryManager {
+
+    public static class ClassPair {
+        public final Class<?> _ancestorClass;
+        public final Class<?> _descendantClass;
+
+        public ClassPair(
+            final Class<?> ancestorClass,
+            final Class<?> descendantClass
+        ) {
+            _ancestorClass = ancestorClass;
+            _descendantClass = descendantClass;
+        }
+
+        @Override
+        public boolean equals(
+            final Object obj
+        ) {
+            return (obj instanceof ClassPair)
+                   && (((ClassPair) obj)._ancestorClass == _ancestorClass)
+                   && (((ClassPair) obj)._descendantClass == _descendantClass);
+        }
+
+        @Override
+        public int hashCode() {
+            return _ancestorClass.hashCode() ^ _descendantClass.hashCode();
+        }
+    }
 
     public static class Counters {
         public final int _inputOutputProcessors;
@@ -84,37 +130,6 @@ public class InventoryManager {
         }
     }
 
-//    /**
-//     * Simple pair of UPI indices -
-//     * one representing a source for a SEND or ACK, the other representing the destination.
-//     */
-//    static class UPIIndexPair {
-//        final int _sourceIndex;
-//        final int _destinationIndex;
-//
-//        UPIIndexPair(
-//            final int sourceIndex,
-//            final int destinationIndex
-//        ) {
-//            _sourceIndex = sourceIndex;
-//            _destinationIndex = destinationIndex;
-//        }
-//
-//        @Override
-//        public boolean equals(
-//            final Object obj
-//        ) {
-//            return (obj instanceof UPIIndexPair)
-//                   && (((UPIIndexPair) obj)._sourceIndex == _sourceIndex)
-//                   && (((UPIIndexPair) obj)._destinationIndex == _destinationIndex);
-//        }
-//
-//        @Override
-//        public int hashCode() {
-//            return (_sourceIndex << 16) | _destinationIndex;
-//        }
-//    }
-
 
     //  The following are only useful for the create* routines.
     //  It is highly recommended that these be used for creation of processors, however that is not enforced.
@@ -133,6 +148,22 @@ public class InventoryManager {
     public final static int LAST_MSP_UPI_INDEX = FIRST_MSP_UPI_INDEX + MAX_MSPS - 1;
     public final static int LAST_IOP_UPI_INDEX = FIRST_IOP_UPI_INDEX + MAX_IOPS - 1;
     public final static int LAST_IP_UPI_INDEX = FIRST_IP_UPI_INDEX + MAX_IPS - 1;
+
+    public final static int MAX_CHANNEL_MODULES_PER_IOP = 6;
+    public final static int FIRST_CHANNEL_MODULE_INDEX = 0;
+    public final static int LAST_CHANNEL_MODULE_INDEX = MAX_CHANNEL_MODULES_PER_IOP;
+    public final static int MAX_DEVICES_PER_CHANNEL_MODULE = 16;
+    public final static int FIRST_DEVICE_INDEX = 0;
+    public final static int LAST_DEVICE_INDEX = MAX_DEVICES_PER_CHANNEL_MODULE;
+
+    private final static List<ClassPair> _connectableClasses = new LinkedList<>();
+    static {
+        _connectableClasses.add(new ClassPair(InputOutputProcessor.class, ByteChannelModule.class));
+        _connectableClasses.add(new ClassPair(InputOutputProcessor.class, WordChannelModule.class));
+        _connectableClasses.add(new ClassPair(ByteChannelModule.class, FileSystemDiskDevice.class));
+        _connectableClasses.add(new ClassPair(ByteChannelModule.class, ScratchDiskDevice.class));
+        _connectableClasses.add(new ClassPair(ByteChannelModule.class, FileSystemTapeDevice.class));
+    }
 
     private final Map<String, Node> _nodes = new HashMap<>();
     private final Map<Integer, Processor> _processors = new HashMap<>();
@@ -274,8 +305,7 @@ public class InventoryManager {
      */
     public void addMainStorageProcessor(
         final MainStorageProcessor processor
-    ) throws AddressingExceptionInterrupt,
-             NodeNameConflictException,
+    ) throws NodeNameConflictException,
              UPIConflictException,
              UPIInvalidException {
         EntryMessage em = LOGGER.traceEntry("name:{} upi:{}", processor._name, processor._upiIndex);
@@ -347,6 +377,16 @@ public class InventoryManager {
     }
 
     /**
+     * Indicates whether this Node can connect as a descendant to the candidate ancestor Node.
+     */
+    public static boolean canConnect(
+        final Node ancestor,
+        final Node descendant
+    ) {
+        return (_connectableClasses.contains(new ClassPair(ancestor.getClass(), descendant.getClass())));
+    }
+
+    /**
      * Clears the configuration cleanly
      */
     public void clearConfiguration() {
@@ -374,6 +414,89 @@ public class InventoryManager {
     }
 
     /**
+     * Connects two nodes as ancestor/descendant, choosing a unique address.
+     * Only one such connection may exist between any two nodes, and only between certain categories.
+     */
+    public static void connect(
+        final Node ancestor,
+        final Node descendant
+    ) throws CannotConnectException,
+             ChannelModuleIndexConflictException,
+             DeviceIndexConflictException,
+             InvalidChannelModuleIndexException,
+             InvalidDeviceIndexException {
+        int nodeIndex = 0;
+        while (ancestor._descendants.containsKey(nodeIndex)) {
+            ++nodeIndex;
+        }
+
+        connect(ancestor, nodeIndex, descendant);
+    }
+
+    /**
+     * Connects two nodes in an ancestor/descendant relationship
+     */
+    public static void connect(
+        final Node ancestor,
+        final int nodeIndex,
+        final Node descendant
+    ) throws CannotConnectException,
+             ChannelModuleIndexConflictException,
+             DeviceIndexConflictException,
+             InvalidChannelModuleIndexException,
+             InvalidDeviceIndexException {
+        EntryMessage em = LOGGER.traceEntry("connect(ancestor={} nodeIndex={} descendant={}",
+                                            ancestor._name,
+                                            nodeIndex,
+                                            descendant._name);
+
+        if (!canConnect(ancestor, descendant)) {
+            throw new CannotConnectException(String.format("Node %s cannot be an ancestor for Node %s",
+                                                           ancestor._name,
+                                                           descendant._name));
+        }
+
+        if (descendant instanceof ChannelModule) {
+            if ((nodeIndex < FIRST_CHANNEL_MODULE_INDEX) || (nodeIndex > LAST_CHANNEL_MODULE_INDEX)) {
+                throw new InvalidChannelModuleIndexException(nodeIndex);
+            }
+
+            if (!descendant._ancestors.isEmpty()) {
+                throw new CannotConnectException(String.format("Node %s is already connected to another node", descendant._name));
+            }
+        } else if (descendant instanceof Device) {
+            if ((nodeIndex < FIRST_DEVICE_INDEX) || (nodeIndex > LAST_DEVICE_INDEX)) {
+                throw new InvalidDeviceIndexException(nodeIndex);
+            }
+        }
+
+        //  Is a descendant already connected at the indicated ancestor address?
+        if (ancestor._descendants.containsKey(nodeIndex)) {
+            if (descendant instanceof ChannelModule) {
+                throw new ChannelModuleIndexConflictException(nodeIndex);
+            } else if (descendant instanceof Device) {
+                throw new DeviceIndexConflictException(nodeIndex);
+            } else {
+                throw new CannotConnectException(String.format("Node %s already has a connection at node address %d",
+                                                               ancestor._name,
+                                                               nodeIndex));
+            }
+        }
+
+        //  Is this pair already connected?
+        if (descendant._ancestors.contains(ancestor)) {
+            throw new CannotConnectException(String.format("Node %s is already an ancestor for Node %s",
+                                                           ancestor._name,
+                                                           descendant._name));
+        }
+
+        //  Create the two-way link
+        ancestor._descendants.put(nodeIndex, descendant);
+        descendant._ancestors.add(ancestor);
+        LOGGER.traceExit(em);
+    }
+
+    /**
      * Creates a new channel module and attaches it to the given iop at the given address
      */
     public ChannelModule createChannelModule(
@@ -383,17 +506,16 @@ public class InventoryManager {
         final int cmIndex
     ) throws CannotConnectException,
              ChannelModuleIndexConflictException,
+             DeviceIndexConflictException,
+             InvalidChannelModuleIndexException,
+             InvalidDeviceIndexException,
              NodeNameConflictException {
         EntryMessage em = LOGGER.traceEntry("type:{} name:{} iop:{} cmIndex:{}", type, name, iop._name, cmIndex);
 
-        ChannelModule chmod = null;
+        ChannelModule chmod;
         synchronized (this) {
             if (_nodes.containsKey(name.toUpperCase())) {
                 throw new NodeNameConflictException(name);
-            }
-
-            if (iop._descendants.containsKey(cmIndex)) {
-                throw new ChannelModuleIndexConflictException(cmIndex);
             }
 
             chmod = switch (type) {
@@ -402,7 +524,7 @@ public class InventoryManager {
             };
 
             putNode(chmod);
-            Node.connect(iop, cmIndex, chmod);
+            connect(iop, cmIndex, chmod);
         }
 
         LOGGER.traceExit(em, chmod);
@@ -566,6 +688,62 @@ public class InventoryManager {
         _nodes.remove(node._name.toUpperCase());
 
         LOGGER.traceExit(em);
+    }
+
+    /**
+     * Disconnects the given nodes
+     */
+    public static void disconnect(
+        final Node ancestor,
+        final Node descendant
+    ) {
+        EntryMessage em = LOGGER.traceEntry("disconnect(ancestor={} descendant={}", ancestor._name, descendant._name);
+
+        descendant._ancestors.remove(ancestor);
+        for (Map.Entry<Integer, Node> entry : ancestor._descendants.entrySet()) {
+            if (entry.getValue() == descendant) {
+                ancestor._descendants.remove(entry.getKey());
+                break;
+            }
+        }
+
+        LOGGER.traceExit(em);
+    }
+
+    /**
+     * Convenience wrapper which disconnects the given node from all of its connected nodes.
+     */
+    public static void disconnect(
+        final Node node
+    ) {
+        disconnectAncestors(node);
+        disconnectDescendants(node);
+    }
+
+    /**
+     * Convenience wrapper which disconnects the given node from all of its ancestor nodes.
+     * Does NOT disconnect any descendent nodes.
+     */
+    public static void disconnectAncestors(
+        final Node descendant
+    ) {
+        Set<Node> ancestors = new HashSet<>(descendant._ancestors);
+        for (Node ancestor : ancestors) {
+            disconnect(ancestor, descendant);
+        }
+    }
+
+    /**
+     * Convenience wrapper which disconnects the given node from all of its descendant nodes.
+     * Does NOT disconnect any ancestor nodes.
+     */
+    public static void disconnectDescendants(
+        final Node ancestor
+    ) {
+        Set<Node> descendants = new HashSet<>(ancestor._descendants.values());
+        for (Node descendant : descendants) {
+            disconnect(ancestor, descendant);
+        }
     }
 
     /**

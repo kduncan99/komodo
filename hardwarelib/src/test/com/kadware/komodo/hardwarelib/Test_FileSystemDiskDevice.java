@@ -179,28 +179,6 @@ public class Test_FileSystemDiskDevice {
     }
 
     @Test
-    public void canConnect_success(
-    ) {
-        ByteChannelModule cm = new ByteChannelModule("CM0");
-        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
-        assertTrue(d.canConnect(cm));
-    }
-
-    @Test
-    public void canConnect_failure(
-    ) {
-        FileSystemDiskDevice d = new FileSystemDiskDevice("DISK0");
-        assertFalse(d.canConnect(new FileSystemDiskDevice("DISK1")));
-        assertFalse(d.canConnect(new FileSystemTapeDevice("TAPE0")));
-        assertFalse(d.canConnect(new WordChannelModule("CM1-1")));
-        assertFalse(d.canConnect(new MainStorageProcessor("MSP0",
-                                                          InventoryManager.FIRST_MSP_UPI_INDEX,
-                                                          1024 * 1024)));
-        assertFalse(d.canConnect(new InputOutputProcessor("IOP0", InventoryManager.FIRST_IOP_UPI_INDEX)));
-        assertFalse(d.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_IP_UPI_INDEX)));
-    }
-
-    @Test
     public void createPack(
     ) throws Exception {
         String fileName = getTestFileName();

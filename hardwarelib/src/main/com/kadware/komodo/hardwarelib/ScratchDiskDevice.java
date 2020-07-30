@@ -40,17 +40,6 @@ public class ScratchDiskDevice extends DiskDevice {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Checks to see whether this node is a valid descendant of the candidate node
-     */
-    @Override
-    public boolean canConnect(
-        final Node candidateAncestor
-    ) {
-        //  We can connect only to Byte channel modules
-        return candidateAncestor instanceof ByteChannelModule;
-    }
-
-    /**
      * We are a byte interface device
      */
     @Override

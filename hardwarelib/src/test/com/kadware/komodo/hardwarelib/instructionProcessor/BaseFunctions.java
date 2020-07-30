@@ -411,9 +411,11 @@ class BaseFunctions {
      *      1 Main Storage Processor
      */
     void createConfiguration(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
+    ) throws CannotConnectException,
              ChannelModuleIndexConflictException,
+             DeviceIndexConflictException,
+             InvalidChannelModuleIndexException,
+             InvalidDeviceIndexException,
              MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,
@@ -436,9 +438,11 @@ class BaseFunctions {
         final int ipCount,
         final int iopCount,
         final int mspCount
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
+    ) throws CannotConnectException,
              ChannelModuleIndexConflictException,
+             DeviceIndexConflictException,
+             InvalidChannelModuleIndexException,
+             InvalidDeviceIndexException,
              MaxNodesException,
              NodeNameConflictException,
              UPIConflictException,

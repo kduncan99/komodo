@@ -413,17 +413,6 @@ public abstract class ChannelModule extends Node implements Worker {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Checks to see whether this node is a valid descendant of the candidate node
-     */
-    @Override
-    public boolean canConnect(
-        final Node ancestor
-    ) {
-        //  We can connect only to IOProcessors
-        return ancestor instanceof InputOutputProcessor;
-    }
-
-    /**
      * Clear list of IO ChannelPrograms.
      * Called during session startup - subclasses may override this if they have any specific work to do.
      * If they do override this, they *must* callback here before returning.

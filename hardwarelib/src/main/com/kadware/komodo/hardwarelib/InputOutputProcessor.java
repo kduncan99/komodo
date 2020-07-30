@@ -48,12 +48,6 @@ public class InputOutputProcessor extends Processor {
     }
 
     /**
-     * We are top-level - there are no ancestors for us
-     */
-    @Override
-    public boolean canConnect(Node ancestor) { return false; }
-
-    /**
      * Nothing to do here - all clearing happens in our subordinate channel modules
      */
     @Override
@@ -155,27 +149,28 @@ public class InputOutputProcessor extends Processor {
             synchronized (_upiPendingInterrupts) {
                 waitFlag = _upiPendingInterrupts.isEmpty();
                 for (Processor source : _upiPendingInterrupts) {
-                    try {
-                        AbsoluteAddress addr = _upiCommunicationLookup.get(new UPIIndexPair(source._upiIndex, this._upiIndex));
-                        MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(addr._upiIndex);
-                        ArraySlice mspStorage = msp.getStorage(addr._segment);
-                        ChannelModule.ChannelProgram channelProgram = ChannelModule.ChannelProgram.create(mspStorage, addr._offset);
-                        boolean started = startIO(source, channelProgram);
-                        if (!started) {
-                            if (source._Type == ProcessorType.SystemProcessor) {
-                                sendList.add(source);
-                            } else {
-                                ++broadcastCount;
-                            }
-                        }
-                        waitFlag = false;
-                        ackList.add(source);
-                    } catch (AddressingExceptionInterrupt
-                        |  UPINotAssignedException
-                        | UPIProcessorTypeException ex) {
-                        //  Shouldn't be possible
-                        LOGGER.catching(ex);
-                    }
+                    //TODO
+//                    try {
+//                        AbsoluteAddress addr = _upiCommunicationLookup.get(new UPIIndexPair(source._upiIndex, this._upiIndex));
+//                        MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(addr._upiIndex);
+//                        ArraySlice mspStorage = msp.getStorage(addr._segment);
+//                        ChannelModule.ChannelProgram channelProgram = ChannelModule.ChannelProgram.create(mspStorage, addr._offset);
+//                        boolean started = startIO(source, channelProgram);
+//                        if (!started) {
+//                            if (source._Type == ProcessorType.SystemProcessor) {
+//                                sendList.add(source);
+//                            } else {
+//                                ++broadcastCount;
+//                            }
+//                        }
+//                        waitFlag = false;
+//                        ackList.add(source);
+//                    } catch (AddressingExceptionInterrupt
+//                        |  UPINotAssignedException
+//                        | UPIProcessorTypeException ex) {
+//                        //  Shouldn't be possible
+//                        LOGGER.catching(ex);
+//                    }
                 }
             }
 

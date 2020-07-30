@@ -5,7 +5,6 @@
 package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
-import com.kadware.komodo.hardwarelib.exceptions.CannotConnectException;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -16,32 +15,9 @@ import java.util.Set;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.message.EntryMessage;
 
 /**
  * Abstract base class for a hardware node (such as a disk or tape device, a controller, or something like that)
- * Although there is nothing explicitly preventing it, the configuration should most definitely not be altered
- * while a session is active.  Add/remove/update components *only* while the OS is stopped.
- *
- * Our hardware model is a simplified version of the legacy 2200 model.
- * We have one SystemProcessor which does a heck of a lot of stuff, and is required, and There Can Be Only One.
- * We require 1:n InstructionProcessors - there is no architectural upper bound other than common sense.
- *      Each IP runs a separate Java thread, so keep that in mind for performance considerations
- * We require 1:n InputOutputProcessors - there is no architectural upper bound other than common sense
- *      Each IOP runs a separate Java thread, so keep that in mind for performance considerations
- * We require 1:n MainStorageProcessors - there is no architectural upper bound other than common sense
- *      Each MSP has a configurably-sized fixed storage bank, and can support up to {n} dynamically-allocated
- *      additional storage banks, managed by the operating system.
- * The Processors are all interconnected via the Send/Ack UPI business, which is used mainly for IO.
- * Previous comments notwithstanding, the InventoryManager does impose upper limits for the create methods.
- *
- * Connected to the InputOutputProcessor(s) is/are the ChannelModule(s). The ChannelModule is where data is translated
- *      (if necessary) from Word36 format to byte format.  We need at least one CM for any byte devices, and one for
- *      any word devices. We can have more... we impose no architectural limit on max CMs.
- *
- * We do not implement virtual controller nodes - there seemed to be very little need for doing so.
- *
- * Devices are 'connected' directly to channel modules, and are addressed via a device index.
  */
 @SuppressWarnings("Duplicates")
 public abstract class Node {
@@ -108,11 +84,6 @@ public abstract class Node {
     Map<Integer, Node> _descendants = new HashMap<>();
 
     /**
-     * Logger only for this class, and only for static methods
-     */
-    private static final Logger LOGGER = LogManager.getLogger(Node.class.getSimpleName());
-
-    /**
      * Logger for all subclasses, for instance methods
      */
     protected final Logger _logger;
@@ -138,11 +109,6 @@ public abstract class Node {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Abstract methods
     //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Indicates whether this Node can connect as a descendant to the candidate ancestor Node.
-     */
-    public abstract boolean canConnect(Node candidate);
 
     /**
      * Invoked when a new session is started by the system processor.
@@ -195,61 +161,6 @@ public abstract class Node {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Connects two nodes as ancestor/descendant, choosing a unique address.
-     * Only one such connection may exist between any two nodes, and only between certain categories.
-     */
-    public static void connect(
-        final Node ancestor,
-        final Node descendant
-    ) throws CannotConnectException {
-        int nodeAddress = 0;
-        while (ancestor._descendants.containsKey(nodeAddress)) {
-            ++nodeAddress;
-        }
-
-        connect(ancestor, nodeAddress, descendant);
-    }
-
-    /**
-     * Connects two nodes in an ancestor/descendant relationship
-     */
-    public static void connect(
-        final Node ancestor,
-        final int nodeAddress,
-        final Node descendant
-    ) throws CannotConnectException {
-        EntryMessage em = LOGGER.traceEntry("connect(ancestor={} nodeAddress={} descendant={}",
-                                            ancestor._name,
-                                            nodeAddress,
-                                            descendant._name);
-
-        if (!descendant.canConnect(ancestor)) {
-            throw new CannotConnectException(String.format("Node %s cannot be an ancestor for Node %s",
-                                                           ancestor._name,
-                                                           descendant._name));
-        }
-
-        //  Is a descendant already connected at the indicated ancestor address?
-        if (ancestor._descendants.containsKey(nodeAddress)) {
-            throw new CannotConnectException(String.format("Node %s already has a connection at node address %d",
-                                                           ancestor._name,
-                                                           nodeAddress));
-        }
-
-        //  Is this pair already connected?
-        if (descendant._ancestors.contains(ancestor)) {
-            throw new CannotConnectException(String.format("Node %s is already an ancestor for Node %s",
-                                                           ancestor._name,
-                                                           descendant._name));
-        }
-
-        //  Create the two-way link
-        ancestor._descendants.put(nodeAddress, descendant);
-        descendant._ancestors.add(ancestor);
-        LOGGER.traceExit(em);
-    }
-
-    /**
      * Deserializes a boolean from the current position in the buffer (see serializeBoolean())
      * For Inquiry operations
      */
@@ -272,37 +183,6 @@ public abstract class Node {
             sb.append(buffer.getChar());
         }
         return sb.toString();
-    }
-
-    /**
-     * Disconnects the given nodes
-     */
-    public static void disconnect(
-        final Node ancestor,
-        final Node descendant
-    ) {
-        EntryMessage em = LOGGER.traceEntry("disconnect(ancestor={} descendant={}", ancestor._name, descendant._name);
-
-        descendant._ancestors.remove(ancestor);
-        for (Map.Entry<Integer, Node> entry : ancestor._descendants.entrySet()) {
-            if (entry.getValue() == descendant) {
-                ancestor._descendants.remove(entry.getKey());
-                break;
-            }
-        }
-
-        LOGGER.traceExit(em);
-    }
-
-    /**
-     * Convenience wrapper which disconnects this node from all of its ancestor nodes.
-     * Does NOT disconnect any desccendent nodes.
-     */
-    public void disconnect() {
-        Set<Node> ancestors = new HashSet<>(_ancestors);
-        for (Node ancestor : ancestors) {
-            disconnect(ancestor, this);
-        }
     }
 
     /**

@@ -306,17 +306,6 @@ public class FileSystemTapeDevice extends TapeDevice {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Checks to see whether this node is a valid descendant of the candidate node
-     */
-    @Override
-    public boolean canConnect(
-        final Node candidateAncestor
-    ) {
-        //  We can connect only to ByteDisk controllers
-        return candidateAncestor instanceof ByteChannelModule;
-    }
-
-    /**
      * For debugging purposes
      */
     @Override

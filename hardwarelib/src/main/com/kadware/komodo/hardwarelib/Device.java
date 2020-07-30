@@ -455,13 +455,6 @@ public abstract class Device extends Node {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
-     * Indicates whether this Node can connect as a descendant to the candidate ancestor Node.
-     * This is an override of Node.canConnect(), and only appears here as an abstract for documentary purposes.
-     */
-    @Override
-    public abstract boolean canConnect(final Node candidate);
-
-    /**
      * Invoked when a new session is started by the system processor.
      * Any classes which have work to do to enter the cleared state should override this.
      */

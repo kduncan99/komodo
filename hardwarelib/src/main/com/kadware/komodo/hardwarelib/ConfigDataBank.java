@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+//  TODO redo all this -
+//      first, establish maximums for number of chmods per IP, and number of devices per chmod
+//      next, add descendant references to containing nodes
+//      finally, populate the whole thing at once, based on the content from the InventoryManager.
 /**
  * Contains the configuration data bank.
  *
@@ -153,8 +157,8 @@ import java.util.Map;
  *
  *  Format of a Channel Module entry:
  *              +----------+----------+----------+----------+----------+----------+
- *     + 0      |                     |   type   |  state   |          |  chmod   |
- *     + 0      |                     |          |          |          |  index   |
+ *     + 0      |                     |   type   |  state   |          |          |
+ *     + 0      |                     |          |          |          |          |
  *              +----------+----------+----------+----------+----------+----------+
  *     + 1      |                       Channel Module name                       |
  *     + 2      |                     6 characters ASCII LJSF                     |
@@ -162,8 +166,8 @@ import java.util.Map;
  *     + 3      |               Operating system state information                |
  *     + 4      |                                                                 |
  *              +----------+----------+----------+----------+----------+----------+
- *     + 5      |                                |  offset from start of CDB of   |
- *              |                                |     containing IOP entry       |
+ *     + 5      |                     |  chmod   |  offset from start of CDB of   |
+ *              |                     |  index   |     containing IOP entry       |
  *              +----------+----------+----------+----------+----------+----------+
  *
  *      state:  00 = unused (remainder of entry is n/a)
@@ -173,6 +177,7 @@ import java.util.Map;
  *      type:   01 = byte channel module
  *              02 = word channel module
  *              (see ChannelModule.java for the corresponding enum)
+ *
  *
  *  Format of a Disk Device entry:
  *              +----------+----------+----------+----------+----------+----------+
@@ -202,6 +207,36 @@ import java.util.Map;
  *              02 = active
  *
  *      type:   (see DiskDevice.java for the corresponding enum)
+ *
+ *
+ *  Format of a Tape Device entry:
+ *              +----------+----------+----------+----------+----------+----------+
+ *     + 0      |                     |   type   |  state   |          |          |
+ *              +----------+----------+----------+----------+----------+----------+
+ *     + 1      |                           Device name                           |
+ *     + 2      |                     6 characters ASCII LJSF                     |
+ *              +----------+----------+----------+----------+----------+----------+
+ *     + 3      |               Operating system state information                |
+ *     + 4      |                                                                 |
+ *              +----------+----------+----------+----------+----------+----------+
+ *     + 5      |                     |  device  |       offset of ancestor       |
+ *              |                     |  index   |      channel module entry      |
+ *              +----------+----------+----------+----------+----------+----------+
+ *     + 6      |                     |  device  |       offset of ancestor       |
+ *              |                     |  index   |      channel module entry      |
+ *              +----------+----------+----------+----------+----------+----------+
+ *     + 7      |                     |  device  |       offset of ancestor       |
+ *              |                     |  index   |      channel module entry      |
+ *              +----------+----------+----------+----------+----------+----------+
+ *     + 8      |                     |  device  |       offset of ancestor       |
+ *              |                     |  index   |      channel module entry      |
+ *              +----------+----------+----------+----------+----------+----------+
+ *
+ *      state:  00 = unused (remainder of entry is n/a)
+ *              01 = inactive (should never be the case)
+ *              02 = active
+ *
+ *      type:   (see TapeDevice.java for the corresponding enum)
  *
  *
  * Notes:
@@ -352,6 +387,70 @@ public class ConfigDataBank {
         return newEntryOffset;
     }
 
+    /**
+     * Given an IOP which contains a ChannelModule, we return the cm index of that chmod.
+     * @throws NotFoundException if the IOP does not have an entry for the channel module
+     */
+    private int findChannelModuleIndex(
+        final ChannelModule channelModule,
+        final InputOutputProcessor containingIOP
+    ) throws NotFoundException {
+        for (Map.Entry<Integer, Node> entry : containingIOP._descendants.entrySet()) {
+            if (entry.getValue() == channelModule) {
+                return entry.getKey();
+            }
+        }
+
+        throw new NotFoundException();
+    }
+
+    /**
+     * Returns a reference to the IOP which contains the given channel module
+     * @return reference to an IOP if the channel module has an ancestor
+     * @throws RuntimeException if the channle module has more than one ancestor
+     */
+    private InputOutputProcessor findContainingInputOutputProcessor(
+        final ChannelModule channelModule
+    ) throws NotFoundException {
+        if (channelModule._ancestors.size() > 2) {
+            throw new RuntimeException("Problem in channel module ancestor set");
+        } else if (channelModule._ancestors.size() == 0) {
+            throw new NotFoundException();
+        }
+
+        Iterator<Node> iter = channelModule._ancestors.iterator();
+        return (InputOutputProcessor) iter.next();
+    }
+
+    /**
+     * Finds the offset from the start of the CDB for the channel module connected to the
+     * InputOutput processor at the given upiIndex, within the channel module slot indicated
+     * by the given channelModuleIndex.
+     */
+    private int findEntryOffsetForChannelModule(
+        final int upiIndex,
+        final int cmIndex
+    ) throws NotFoundException {
+        int iopEntryOffset = findEntryOffsetForProcessor(upiIndex);
+        int refOffset = CHANNEL_MODULE_TABLE_REFERENCE_OFFSET;
+        int entryCount = getTableSize(refOffset);
+        for (int ex = 0; ex < entryCount; ++ex) {
+            int entryOffset = getEntryOffset(refOffset, ex);
+            //  state must be non-zero, and the cm index must match the requested cm index
+            if (Word36.getS3(entryOffset) != 0) {
+                int cmIndexCheck = (int) Word36.getS3(entryOffset + 5);
+                if (cmIndex == cmIndexCheck) {
+                    return entryOffset;
+                }
+            }
+        }
+
+        throw new NotFoundException();
+    }
+
+    /**
+     * Finds the offset from the start of the CDB for the processor indicated by the given UPI index
+     */
     private int findEntryOffsetForProcessor(
         final int upiIndex
     ) throws NotFoundException {
@@ -359,9 +458,13 @@ public class ConfigDataBank {
         int entryCount = getTableSize(refOffset);
         for (int ex = 0; ex < entryCount; ++ex) {
             int entryOffset = getEntryOffset(refOffset, ex);
-            int upiCheck = (int) Word36.getT2(_arraySlice.get(entryOffset));
-            if (upiIndex == upiCheck) {
-                return entryOffset;
+            long entryWord0 = _arraySlice.get(entryOffset);
+            //  state must be non-zero, and the upi index must match the requested index
+            if (Word36.getS3(entryWord0) != 0) {
+                int upiCheck = (int) Word36.getT2(_arraySlice.get(entryOffset));
+                if (upiIndex == upiCheck) {
+                    return entryOffset;
+                }
             }
         }
 
@@ -443,7 +546,8 @@ public class ConfigDataBank {
     }
 
     /**
-     * Adds one or more ChannelModule nodes to the ConfigDataBank
+     * Adds one or more ChannelModule nodes to the ConfigDataBank.
+     * Populate IOPs before populating channel modules.
      */
     private void populate(
         final ChannelModule[] channelModules
@@ -451,25 +555,12 @@ public class ConfigDataBank {
         try {
             int entryOffset = expandTable(CHANNEL_MODULE_TABLE_REFERENCE_OFFSET, channelModules.length);
             for (ChannelModule channelModule : channelModules) {
-                Iterator<Node> iter = channelModule._ancestors.iterator();
-                if (!iter.hasNext()) {
-                    throw new RuntimeException("Channel Module has no ancestor");
-                }
-
-                InputOutputProcessor iop = (InputOutputProcessor) iter.next();
-                int cmIndex = 0;
-                for (Map.Entry<Integer, Node> entry : iop._descendants.entrySet()) {
-                    if (entry.getValue() == iop) {
-                        cmIndex = entry.getKey();
-                        break;
-                    }
-                }
+                InputOutputProcessor iop = findContainingInputOutputProcessor(channelModule);
+                int cmIndex = findChannelModuleIndex(channelModule, iop);
 
                 int iopOffset = findEntryOffsetForProcessor(iop._upiIndex);
 
-                long value = Word36.setS3(0, 1);
-                value = Word36.setS4(value, 01);
-                value = Word36.setS6(value, cmIndex);
+                long value = (((long) channelModule._channelModuleType.getCode()) << 18) | (01 << 12);
                 _arraySlice.set(entryOffset, value);
 
                 String adjustedName = String.format("%-8s", channelModule._name.toUpperCase());
@@ -477,7 +568,9 @@ public class ConfigDataBank {
                 _arraySlice.set(entryOffset + 2, Word36.stringToWordASCII(adjustedName.substring(4, 8)).getW());
                 _arraySlice.set(entryOffset + 3, 0);
                 _arraySlice.set(entryOffset + 4, 0);
-                _arraySlice.set(entryOffset + 5, Word36.setH2(0, iopOffset));
+
+                value = (((long) cmIndex) << 18) | iopOffset;
+                _arraySlice.set(entryOffset + 5, value);
                 entryOffset += CHANNEL_MODULE_ENTRY_SIZE;
             }
         } catch (NotFoundException ex) {
@@ -485,10 +578,17 @@ public class ConfigDataBank {
         }
     }
 
+    /**
+     * Adds device entries for the given devices
+     */
     private void populate(
         final DiskDevice[] devices
     ) {
-        //TODO add entries
+        int entryOffset = expandTable(DISK_DEVICE_TABLE_REFERENCE_OFFSET, devices.length);
+        for (DiskDevice device : devices) {
+            populateDevice(device, device._deviceType.getCode(), entryOffset);
+            entryOffset += DISK_DEVICE_ENTRY_SIZE;
+        }
     }
 
     private void populate(
@@ -532,7 +632,7 @@ public class ConfigDataBank {
     private void populate(
         final Device[] devices  //  TODO make this SymbiontDevice
     ) {
-        //TODO add entries
+        //  TODO
     }
 
     /**
@@ -557,10 +657,63 @@ public class ConfigDataBank {
         }
     }
 
+    /**
+     * Adds device entries for the given devices
+     */
     private void populate(
         final TapeDevice[] devices
     ) {
-        //TODO add entries
+        int entryOffset = expandTable(TAPE_DEVICE_TABLE_REFERENCE_OFFSET, devices.length);
+        for (TapeDevice device : devices) {
+            populateDevice(device, device._deviceType.getCode(), entryOffset);
+            entryOffset += TAPE_DEVICE_ENTRY_SIZE;
+        }
+    }
+
+    /**
+     * Common code for populating all devices
+     * Populate channel modules before populating devices.
+     */
+    private void populateDevice(
+        final Device device,
+        final int deviceType,
+        final int deviceEntryOffset
+    ) {
+        //TODO
+//        try {
+//            int cx = 0;
+//            for (Node ancestor : device._ancestors) {
+//                if (cx < 4) {
+//                    ChannelModule chmod = (ChannelModule) ancestor;
+//                    for (Map.Entry<Integer, Node> entry : chmod._descendants.entrySet()) {
+//                        if (entry.getValue() == device) {
+//                            if (!iter.hasNext()) {
+//                                throw new RuntimeException("Channel Module has no ancestor");
+//                            }
+//
+//                            InputOutputProcessor iop = (InputOutputProcessor) iter.next();
+//                            int cmOffset = findEntryOffsetForChannelModule();
+//                            int devIndex = entry.getKey();
+//                            long value = (((long) devIndex) << 18) | cmOffset;
+//                            _arraySlice.set(deviceEntryOffset + 5, value);
+//                            break;
+//                        }
+//                    }
+//                    ++cx;
+//                }
+//            }
+//
+//            long value = (((long) deviceType) << 18) | (01 << 12);  //  state is 01
+//            _arraySlice.set(deviceEntryOffset, value);
+//
+//            String adjustedName = String.format("%-8s", device._name.toUpperCase());
+//            _arraySlice.set(deviceEntryOffset + 1, Word36.stringToWordASCII(adjustedName.substring(0, 4)).getW());
+//            _arraySlice.set(deviceEntryOffset + 2, Word36.stringToWordASCII(adjustedName.substring(4, 8)).getW());
+//            _arraySlice.set(deviceEntryOffset + 3, 0);
+//            _arraySlice.set(deviceEntryOffset + 4, 0);
+//        } catch (NotFoundException ex) {
+//            throw new RuntimeException("Problem with Device ancestor");
+//        }
     }
 
     /**

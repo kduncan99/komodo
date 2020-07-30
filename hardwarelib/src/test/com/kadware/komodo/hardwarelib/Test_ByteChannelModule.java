@@ -48,9 +48,6 @@ public class Test_ByteChannelModule {
         }
 
         @Override
-        public boolean canConnect(Node ancestor) { return true; }
-
-        @Override
         public boolean handleIo(
             final IOInfo ioInfo
         ) {
@@ -274,9 +271,6 @@ public class Test_ByteChannelModule {
         TestDiskDevice() { super(Type.Disk, Model.None, "DISK0"); }
 
         @Override
-        public boolean canConnect(Node ancestor) { return true; }
-
-        @Override
         public boolean handleIo(
             final IOInfo ioInfo
         ) {
@@ -401,8 +395,9 @@ public class Test_ByteChannelModule {
 
         _cmIndex = Math.abs(_random.nextInt()) % 6;
         _deviceIndex = Math.abs(_random.nextInt() % 16);
-        Node.connect(_iop, _cmIndex, _cm);
-        Node.connect(_cm, _deviceIndex, _device);
+        //TODO fix this
+//        Node.connect(_iop, _cmIndex, _cm);
+//        Node.connect(_cm, _deviceIndex, _device);
         _cm.initialize();
         _device.initialize();
     }
@@ -426,30 +421,6 @@ public class Test_ByteChannelModule {
         assertEquals(Node.NodeCategory.ChannelModule, cm._category);
         assertEquals(ChannelModule.ChannelModuleType.Byte, cm._channelModuleType);
         assertEquals("CM1-01", cm._name);
-    }
-
-    @Test
-    public void canConnect_success(
-    ) throws CannotConnectException,
-             MaxNodesException {
-        setup(Device.Type.Disk);
-        assertTrue(_cm.canConnect(_iop));
-        teardown();
-    }
-
-    @Test
-    public void canConnect_failure(
-    ) throws CannotConnectException,
-             MaxNodesException {
-        setup(Device.Type.Disk);
-        ByteChannelModule cm = new ByteChannelModule("CM1-0");
-        assertFalse(cm.canConnect(new FileSystemDiskDevice("DISK0")));
-        assertFalse(cm.canConnect(new FileSystemTapeDevice("TAPE0")));
-        assertFalse(cm.canConnect(new ByteChannelModule("CM1-0")));
-        assertFalse(cm.canConnect(new WordChannelModule("CM1-1")));
-        assertFalse(cm.canConnect(_msp));
-        assertFalse(cm.canConnect(new InstructionProcessor("IP0", InventoryManager.FIRST_IP_UPI_INDEX)));
-        teardown();
     }
 
     @Test

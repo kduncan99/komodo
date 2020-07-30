@@ -134,18 +134,6 @@ public class MainStorageProcessor extends Processor {
     }
 
     /**
-     * MSPs have no ancestors
-     * @param ancestor candidate ancestor
-     * @return always false
-     */
-    @Override
-    public final boolean canConnect(
-        final Node ancestor
-    ) {
-        return false;
-    }
-
-    /**
      * For debugging
      * @param writer destination for output
      */

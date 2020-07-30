@@ -9896,18 +9896,19 @@ public class InstructionProcessor extends Processor implements Worker {
                         //      Raise the interrupt
                         //      Start the processor
                         if (isStopped()) {
-                            try {
-                                AbsoluteAddress addr =
-                                    _upiCommunicationLookup.get(new UPIIndexPair(sendSource._upiIndex, this._upiIndex));
-                                MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(addr._upiIndex);
-                                ArraySlice mspStorage = msp.getStorage(addr._segment);
-                                ArraySlice packet = mspStorage.copyOfRange(addr._offset, addr._offset + 4);
-                                _baseRegisters[L0_BDT_BASE_REGISTER] = new BaseRegister(packet._array);
-                                raiseInterrupt(new UPIInitialInterrupt());
-                                start();
-                            } catch (AddressingExceptionInterrupt | UPINotAssignedException | UPIProcessorTypeException ex) {
-                                _logger.catching(ex);
-                            }
+                            //TODO
+//                            try {
+//                                AbsoluteAddress addr =
+//                                    _upiCommunicationLookup.get(new UPIIndexPair(sendSource._upiIndex, this._upiIndex));
+//                                MainStorageProcessor msp = InventoryManager.getInstance().getMainStorageProcessor(addr._upiIndex);
+//                                ArraySlice mspStorage = msp.getStorage(addr._segment);
+//                                ArraySlice packet = mspStorage.copyOfRange(addr._offset, addr._offset + 4);
+//                                _baseRegisters[L0_BDT_BASE_REGISTER] = new BaseRegister(packet._array);
+//                                raiseInterrupt(new UPIInitialInterrupt());
+//                                start();
+//                            } catch (AddressingExceptionInterrupt | UPINotAssignedException | UPIProcessorTypeException ex) {
+//                                _logger.catching(ex);
+//                            }
                         } else {
                             _logger.error(String.format("Got a UPI SEND from %s while running", sendSource._name));
                         }
@@ -9986,18 +9987,6 @@ public class InstructionProcessor extends Processor implements Worker {
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Public instance methods
     //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * IPs have no ancestors
-     * @param ancestor proposed ancestor node
-     * @return false always
-     */
-    @Override
-    public boolean canConnect(
-        final Node ancestor
-    ) {
-        return false;
-    }
 
     /**
      * Clears the IP

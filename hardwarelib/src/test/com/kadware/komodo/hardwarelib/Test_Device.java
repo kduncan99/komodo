@@ -23,13 +23,6 @@ public class Test_Device {
         }
 
         @Override
-        public boolean canConnect(
-            final Node candidateAncestor
-        ) {
-            return true;
-        }
-
-        @Override
         public boolean handleIo(IOInfo ioInfo) { return true; }
 
         @Override

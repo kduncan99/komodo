@@ -143,13 +143,6 @@ public class SystemProcessor extends Processor implements JumpKeyPanel {
     @Override public void clear() {}
 
     /**
-     * SPs have no ancestors
-     * @param ancestor candidate ancestor
-     * @return always false
-     */
-    @Override public final boolean canConnect(Node ancestor) { return false; }
-
-    /**
      * For debugging
      * @param writer destination for output
      */
