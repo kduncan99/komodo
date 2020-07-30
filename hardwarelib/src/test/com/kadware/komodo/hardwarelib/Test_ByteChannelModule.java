@@ -374,8 +374,7 @@ public class Test_ByteChannelModule {
 
     private void setup(
         final Device.Type deviceType
-    ) throws CannotConnectException,
-             MaxNodesException {
+    ) throws MaxNodesException {
         //  Create stub nodes and one real channel module
         InventoryManager im = InventoryManager.getInstance();
         im.createSystemProcessor("SP0",
@@ -395,9 +394,11 @@ public class Test_ByteChannelModule {
 
         _cmIndex = Math.abs(_random.nextInt()) % 6;
         _deviceIndex = Math.abs(_random.nextInt() % 16);
-        //TODO fix this
-//        Node.connect(_iop, _cmIndex, _cm);
-//        Node.connect(_cm, _deviceIndex, _device);
+        _iop._descendants.put(_cmIndex, _cm);
+        _cm._ancestors.add(_iop);
+        _cm._descendants.put(_deviceIndex, _device);
+        _device._ancestors.add(_cm);
+
         _cm.initialize();
         _device.initialize();
     }
@@ -449,8 +450,7 @@ public class Test_ByteChannelModule {
 
     @Test
     public void unconfiguredDevice(
-    ) throws CannotConnectException,
-             MaxNodesException {
+    ) throws Exception {
         setup(Device.Type.Disk);
 
         ChannelModule.ChannelProgram cp = new ChannelModule.ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
@@ -470,9 +470,7 @@ public class Test_ByteChannelModule {
 
     @Test
     public void io_formatA(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException {
+    ) throws Exception {
         setup(Device.Type.Tape);
 
         int[] blockSizes = { 28, 56, 112, 224, 448, 896, 1792, 1800 };
@@ -606,8 +604,7 @@ public class Test_ByteChannelModule {
 
     @Test
     public void io_formatA_backward(
-    ) throws CannotConnectException,
-             MaxNodesException {
+    ) throws Exception {
         setup(Device.Type.Tape);
 
         int blockSize = 1800;
@@ -672,9 +669,7 @@ public class Test_ByteChannelModule {
 
     @Test
     public void io_formatB(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException {
+    ) throws Exception {
         setup(Device.Type.Tape);
 
         int[] blockSizes = { 28, 56, 112, 224, 448, 896, 1792, 1800 };
@@ -803,9 +798,7 @@ public class Test_ByteChannelModule {
 
     @Test
     public void io_formatC_oneBlock(
-    ) throws AddressingExceptionInterrupt,
-                 CannotConnectException,
-                 MaxNodesException {
+    ) throws Exception {
         setup(Device.Type.Disk);
 
         //  Populate MSP storage
@@ -879,9 +872,7 @@ public class Test_ByteChannelModule {
 
     @Test
     public void io_formatC_multipleBlocks(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException {
+    ) throws Exception {
         setup(Device.Type.Disk);
 
         int maxBlocks = 16;
@@ -959,9 +950,7 @@ public class Test_ByteChannelModule {
 
     @Test
     public void io_formatC_residual(
-    ) throws AddressingExceptionInterrupt,
-            CannotConnectException,
-            MaxNodesException {
+    ) throws Exception {
         setup(Device.Type.Disk);
 
         int maxBlockSize = 8 * TestDiskDevice.PREP_FACTOR;

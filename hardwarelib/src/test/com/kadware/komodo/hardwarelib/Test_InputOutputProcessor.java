@@ -7,15 +7,15 @@ package com.kadware.komodo.hardwarelib;
 import com.kadware.komodo.baselib.AbsoluteAddress;
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Credentials;
-import com.kadware.komodo.hardwarelib.exceptions.*;
 import com.kadware.komodo.hardwarelib.interrupts.AddressingExceptionInterrupt;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
+import org.junit.After;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -51,21 +51,21 @@ public class Test_InputOutputProcessor {
         void setupUPICommunications(
             final MainStorageProcessor msp
         ) throws AddressingExceptionInterrupt {
-            int slotSize = 2;
-            List<Processor> processors = InventoryManager.getInstance().getProcessors();
-            int processorCount = processors.size();
-            int areas = processorCount * processorCount;
-            int segmentIndex = msp.createSegment(areas * slotSize);
-            int offset = 0;
-            for (Processor source : processors) {
-                for (Processor destination : processors) {
-                    //TODO fix this
+            //  TODO this needs to be done in a method compatible with how the SP would do it
+//            int slotSize = 2;
+//            List<Processor> processors = InventoryManager.getInstance().getProcessors();
+//            int processorCount = processors.size();
+//            int areas = processorCount * processorCount;
+//            int segmentIndex = msp.createSegment(areas * slotSize);
+//            int offset = 0;
+//            for (Processor source : processors) {
+//                for (Processor destination : processors) {
 //                    UPIIndexPair pair = new UPIIndexPair(source._upiIndex, destination._upiIndex);
 //                    AbsoluteAddress addr = new AbsoluteAddress(msp._upiIndex, segmentIndex, offset);
 //                    _upiCommunicationLookup.put(pair, addr);
 //                    offset += slotSize;
-                }
-            }
+//                }
+//            }
         }
     }
 
@@ -187,10 +187,9 @@ public class Test_InputOutputProcessor {
     //  useful methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    private void setup(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException {
+    @Before
+    public void setup(
+    ) throws Exception {
         InventoryManager im = InventoryManager.getInstance();
         TestSystemProcessor sp = new TestSystemProcessor();
         sp.initialize();
@@ -203,16 +202,19 @@ public class Test_InputOutputProcessor {
 
         _cmIndex = Math.abs(_random.nextInt()) % 6;
         _devIndex = Math.abs(_random.nextInt()) % 32;
-        //TODO fix
-//        Node.connect(_iop, _cmIndex, _cm);
-//        Node.connect(_cm, _devIndex, _dev);
+        _iop._descendants.put(_cmIndex, _cm);
+        _cm._ancestors.add(_iop);
+        _cm._descendants.put(_devIndex, _dev);
+        _dev._ancestors.add(_cm);
+
         _cm.initialize();
         _dev.initialize();
 
         sp.setupUPICommunications(_msp);
     }
 
-    private void teardown(
+    @After
+    public void teardown(
     ) {
         _dev.terminate();
         _dev = null;
@@ -234,12 +236,7 @@ public class Test_InputOutputProcessor {
     }
 
     @Test
-    public void threadAlive_true(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException {
-        setup();
-
+    public void threadAlive_true() {
         try {
             Thread.sleep(1000);
         } catch (Exception ex) {
@@ -247,16 +244,10 @@ public class Test_InputOutputProcessor {
         }
 
         assertTrue(_iop._workerThread.isAlive());
-        teardown();
     }
 
     @Test
-    public void unconfiguredChannelModule(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException {
-        setup();
-
+    public void unconfiguredChannelModule() {
         ChannelModule.ChannelProgram cp = new ChannelModule.ChannelProgram.Builder().setIopUpiIndex(_iop._upiIndex)
                                                                                     .setChannelModuleIndex(_cmIndex + 1)
                                                                                     .setDeviceAddress(5)
@@ -269,16 +260,11 @@ public class Test_InputOutputProcessor {
             }
         }
         assertEquals(ChannelModule.ChannelStatus.UnconfiguredChannelModule, cp.getChannelStatus());
-        teardown();
     }
 
     @Test
     public void simpleRead(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException {
-        setup();
-
+    ) throws Exception {
         int blockSize = 224;
         int dataSegment = _msp.createSegment(blockSize);
         ArraySlice dataStorage = _msp.getStorage(dataSegment);
@@ -309,17 +295,13 @@ public class Test_InputOutputProcessor {
 
         assertEquals(ChannelModule.ChannelStatus.Successful, cp.getChannelStatus());
         assertArrayEquals(_cm._lastBuffer._array, dataStorage._array);
-
-        teardown();
     }
+
+    //  TODO do a simple read from some stub IP, via UPI
 
     @Test
     public void simpleWrite(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException {
-        setup();
-
+    ) throws Exception {
         long[] baseData = new long[224];
         for (int bdx = 0; bdx < baseData.length; ++bdx) {
             baseData[bdx] = _random.nextLong() & 0_777777_777777L;
@@ -350,9 +332,9 @@ public class Test_InputOutputProcessor {
         }
         assertEquals(ChannelModule.ChannelStatus.Successful, cp.getChannelStatus());
         assertArrayEquals(baseData, _cm._lastBuffer._array);
-
-        teardown();
     }
+
+    //  TODO do a simple write from some stub IP, via UPI
 
     //TODO need read backward (not backward ACW)
     //TODO need read/write backward, no-increment, and skip ACWs
@@ -360,11 +342,7 @@ public class Test_InputOutputProcessor {
 
     @Test
     public void gatherWrite(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException {
-        setup();
-
+    ) throws Exception {
         long[] baseData0 = new long[80];
         for (int bdx = 0; bdx < baseData0.length; ++bdx) {
             baseData0[bdx] = _random.nextLong() & 0_777777_777777L;
@@ -429,17 +407,10 @@ public class Test_InputOutputProcessor {
         assertArrayEquals(baseData2, Arrays.copyOfRange(_cm._lastBuffer._array,
                                                         baseData0.length + baseData1.length,
                                                         baseData0.length + baseData1.length + baseData2.length));
-
-        teardown();
     }
 
     @Test
-    public void scatterRead(
-    ) throws AddressingExceptionInterrupt,
-             CannotConnectException,
-             MaxNodesException {
-        setup();
+    public void scatterRead() {
         //TODO
-        teardown();
     }
 }
