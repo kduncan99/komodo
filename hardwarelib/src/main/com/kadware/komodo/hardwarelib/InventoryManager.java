@@ -130,10 +130,6 @@ public class InventoryManager {
         }
     }
 
-
-    //  The following are only useful for the create* routines.
-    //  It is highly recommended that these be used for creation of processors, however that is not enforced.
-    //  Client code can create any type of processor at any UPI index - we only enforce uniqueness of UPI index and name.
     public final static int MAX_IOPS = 2;
     public final static int MAX_IPS = 8;
     public final static int MAX_MSPS = 4;
@@ -778,6 +774,20 @@ public class InventoryManager {
     }
 
     /**
+     * Retrieves a container of channel module objects
+     */
+    List<ChannelModule> getChannelModules() {
+        List<ChannelModule> result = new LinkedList<>();
+        for (Node node : _nodes.values()) {
+            if (node instanceof ChannelModule) {
+                result.add((ChannelModule) node);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Tally number of each type of processor in the current configuration
      * @return Counters object
      */
@@ -789,7 +799,7 @@ public class InventoryManager {
         int sps = 0;
 
         for (Processor processor : _processors.values()) {
-            switch (processor._Type) {
+            switch (processor._type) {
                 case InputOutputProcessor -> iops++;
                 case InstructionProcessor -> ips++;
                 case MainStorageProcessor -> msps++;
@@ -798,6 +808,20 @@ public class InventoryManager {
         }
 
         return new Counters(iops, ips, msps, sps);
+    }
+
+    /**
+     * Retrieves a container of device objects
+     */
+    List<Device> getDevices() {
+        List<Device> result = new LinkedList<>();
+        for (Node node : _nodes.values()) {
+            if (node instanceof Device) {
+                result.add((Device) node);
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -825,7 +849,7 @@ public class InventoryManager {
     List<InputOutputProcessor> getInputOutputProcessors() {
         List<InputOutputProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._Type == Processor.ProcessorType.InputOutputProcessor) {
+            if (processor._type == Processor.ProcessorType.InputOutputProcessor) {
                 result.add((InputOutputProcessor) processor);
             }
         }
@@ -857,7 +881,7 @@ public class InventoryManager {
     List<InstructionProcessor> getInstructionProcessors() {
         List<InstructionProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._Type == Processor.ProcessorType.InstructionProcessor) {
+            if (processor._type == Processor.ProcessorType.InstructionProcessor) {
                 result.add((InstructionProcessor) processor);
             }
         }
@@ -889,7 +913,7 @@ public class InventoryManager {
     List<MainStorageProcessor> getMainStorageProcessors() {
         List<MainStorageProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._Type == Processor.ProcessorType.MainStorageProcessor) {
+            if (processor._type == Processor.ProcessorType.MainStorageProcessor) {
                 result.add((MainStorageProcessor) processor);
             }
         }
@@ -944,7 +968,7 @@ public class InventoryManager {
     List<SystemProcessor> getSystemProcessors() {
         List<SystemProcessor> result = new LinkedList<>();
         for (Processor processor : _processors.values()) {
-            if (processor._Type == Processor.ProcessorType.SystemProcessor) {
+            if (processor._type == Processor.ProcessorType.SystemProcessor) {
                 result.add((SystemProcessor) processor);
             }
         }

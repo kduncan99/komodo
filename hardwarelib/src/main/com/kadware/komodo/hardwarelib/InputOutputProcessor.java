@@ -91,7 +91,7 @@ public class InputOutputProcessor extends Processor {
             }
         }
 
-        switch (source._Type) {
+        switch (source._type) {
             case InstructionProcessor:
                 //  The IO was initiated by an IP - send a broadcast.
                 //  An available IP will pick it up, will know it is a signal of a completed IO,

@@ -36,7 +36,6 @@ import com.kadware.komodo.hardwarelib.interrupts.ReferenceViolationInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.SignalInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.SoftwareBreakInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.TestAndSetInterrupt;
-import com.kadware.komodo.hardwarelib.interrupts.UPIInitialInterrupt;
 import com.kadware.komodo.hardwarelib.interrupts.UPINormalInterrupt;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -9872,7 +9871,7 @@ public class InstructionProcessor extends Processor implements Worker {
 
         synchronized (_upiPendingInterrupts) {
             for (Processor sendSource : _upiPendingInterrupts) {
-                switch (sendSource._Type) {
+                switch (sendSource._type) {
                     case InputOutputProcessor:
                         //  UPI Normal (IO completed)
                         //  Ensure we are running, and raise a class 31 interrupt.

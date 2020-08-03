@@ -41,6 +41,6 @@ public class Test_Processor {
         TestProcessor p = new TestProcessor("IP0", InventoryManager.FIRST_IP_UPI_INDEX);
         assertEquals(Node.NodeCategory.Processor, p._category);
         assertEquals("IP0", p._name);
-        assertEquals(Processor.ProcessorType.InstructionProcessor, p._Type);
+        assertEquals(Processor.ProcessorType.InstructionProcessor, p._type);
     }
 }

@@ -491,7 +491,7 @@ public abstract class Device extends Node {
 
     /**
      * Writes IO buffers to the log.
-     * What actually happens is dependant upon the particulars of the various subclasses, so this is abstract
+     * What actually happens is dependent upon the particulars of the various subclasses, so this is abstract
      * @param ioInfo describes the IO buffer(s)
      */
     protected abstract void writeBuffersToLog(IOInfo ioInfo);

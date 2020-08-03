@@ -144,12 +144,20 @@ public class MainStorageProcessor extends Processor {
         super.dump(writer);
     }
 
+    /**
+     * Retrieves the size of the fixed portion of storage, in words
+     */
     public long getFixedSize() {
         return _fixedStorage.getSize();
     }
 
+    /**
+     * Retrieves the number of dynamic segments which may be allocated
+     * This value is one less than the maximum positive integer value
+     * because the segment index is a signed integer, and zero is disallowed.
+     */
     public long getMaxSegments() {
-        return 0x80000000L;
+        return 0x80000000L - 1;
     }
 
     /**

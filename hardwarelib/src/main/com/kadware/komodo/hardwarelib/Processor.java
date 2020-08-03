@@ -59,7 +59,7 @@ public abstract class Processor extends Node implements Worker {
 
     private static final Logger LOGGER = LogManager.getLogger(Processor.class);
 
-    final ProcessorType _Type;
+    final ProcessorType _type;
 
     /**
      * Uniquely identifies each processor in the configuration, in a manner transparent to the configurating entity.
@@ -105,7 +105,7 @@ public abstract class Processor extends Node implements Worker {
         final int upiIndex
     ) {
         super(NodeCategory.Processor, name);
-        _Type = processorType;
+        _type = processorType;
         _upiIndex = upiIndex;
 
         //  Start the processor thread
@@ -146,7 +146,7 @@ public abstract class Processor extends Node implements Worker {
     ) {
         super.dump(writer);
         try {
-            writer.write(String.format("  ProcessorType:%s Running:%s Ready:%s\n", _Type.toString(), _isRunning, _isReady));
+            writer.write(String.format("  ProcessorType:%s Running:%s Ready:%s\n", _type.toString(), _isRunning, _isReady));
 
             StringBuilder sb = new StringBuilder();
             sb.append("  Pending SENDs from: ");
@@ -191,7 +191,6 @@ public abstract class Processor extends Node implements Worker {
         _logger.traceExit(em);
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public final boolean isReady() {
         return _isReady;
     }

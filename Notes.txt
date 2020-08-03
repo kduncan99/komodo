@@ -1,7 +1,8 @@
 -- TODO InProgress
 
-Need to work on mailslot handling (see Processor.java)
-IP: operations control instructions (and unit tests)
+Working on Configuration Data Bank
+Need to work on mailslot handling (per the CDB work)
+IP: operations control instructions (and unit tests) - dependent upon the above
   SEND
   ACK
 
