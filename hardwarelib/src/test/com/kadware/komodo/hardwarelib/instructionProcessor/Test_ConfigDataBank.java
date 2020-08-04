@@ -6,10 +6,17 @@ package com.kadware.komodo.hardwarelib.instructionProcessor;
 
 import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.hardwarelib.ConfigDataBank;
+import com.kadware.komodo.hardwarelib.InputOutputProcessor;
+import com.kadware.komodo.hardwarelib.InstructionProcessor;
+import com.kadware.komodo.hardwarelib.InventoryManager;
+import com.kadware.komodo.hardwarelib.MainStorageProcessor;
+import com.kadware.komodo.hardwarelib.Processor;
+import com.kadware.komodo.hardwarelib.SystemProcessor;
 import com.kadware.komodo.hardwarelib.exceptions.StorageLockException;
 import java.util.Arrays;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +61,20 @@ public class Test_ConfigDataBank extends ConfigDataBank {
     @Before
     public void before() {
         clear();
+    }
+
+    @Test
+    public void test_nameWords() {
+        String name1 = "A";
+        long[] nameWords1 = { 0_101040040040L, 0_040040040040L };
+        String name2 = "abc123";
+        long[] nameWords2 = { 0_101102103061L, 0_062063040040L };
+        String name3 = "oA0123456789";
+        long[] nameWords3 = { 0_117101060061L, 0_062063064065L };
+
+        assertArrayEquals(nameWords1, getNameWords(name1));
+        assertArrayEquals(nameWords2, getNameWords(name2));
+        assertArrayEquals(nameWords3, getNameWords(name3));
     }
 
     @Test
@@ -125,42 +146,70 @@ public class Test_ConfigDataBank extends ConfigDataBank {
         assertEquals(originalDeviceCount, getTableEntryCount(DEVICE_TABLE_REFERENCE_OFFSET));
     }
 
-    //TODO expand some middle table forcing array expansion
+    //TODO expand table ahead of some other non-empty table
+
+    //TODO expand some middle table forcing array expansion, ahead of some other non-empty table
+
+    //TODO populate various entry types
+
+    //TODO establish some mail slots
+
+    //TODO add various entry types
 
     @Test
     public void test_populate(
     ) throws Exception {
-//        InventoryManager im = InventoryManager.getInstance();
-//        im.clearConfiguration();
-//
-//        im.createSystemProcessor("SP0", 0, 0, null);
-//        im.createMainStorageProcessor("MSP0", MainStorageProcessor.MIN_FIXED_SIZE);
-//        im.createMainStorageProcessor("MSP1", MainStorageProcessor.MIN_FIXED_SIZE);
-//        im.createMainStorageProcessor("MSP2", MainStorageProcessor.MIN_FIXED_SIZE);
-//        im.createInstructionProcessor("IP0");
-//        im.createInstructionProcessor("IP1");
-//        im.createInputOutputProcessor("IOP0");
-//
-//        ConfigDataBank cdb = new ConfigDataBank();
-//        cdb.populate();
-//
-//        long mailSlots = InventoryManager.MAX_IOPS * InventoryManager.MAX_IPS;
-//        InventoryManager.Counters counters = im.getCounters();
-//        int mailSlotTableOffset = ConfigDataBank.HEADER_SIZE;
-//
-//        assertEquals(mailSlots, getTableEntryCount(MAIL_SLOT_TABLE_REFERENCE_OFFSET));
-//        assertEquals(mailSlotTableOffset, getTableOffset(MAIL_SLOT_TABLE_REFERENCE_OFFSET));
-//
-//        long[] expectedArray = {
-//            ConfigDataBank.DEFAULT_INITIAL_BANK_SIZE,   //  CDB size
-//            ConfigDataBank.HEADER_SIZE,                 //  CDB usage
-//            (mailSlots << 30) | ConfigDataBank.HEADER_SIZE,                 //  mail slot table ref
-//            ConfigDataBank.HEADER_SIZE,                 //  SP table ref
-//            ConfigDataBank.HEADER_SIZE,                 //  IP table ref
-//            ConfigDataBank.HEADER_SIZE,                 //  IOP table ref
-//            ConfigDataBank.HEADER_SIZE,                 //  MSP table ref
-//            ConfigDataBank.HEADER_SIZE,                 //  CM table ref
-//            ConfigDataBank.HEADER_SIZE,                 //  dev table ref
-//        };
+        InventoryManager im = InventoryManager.getInstance();
+        im.clearConfiguration();
+
+        String sp0Name = "SP0";
+        String msp0Name = "MSP0";
+        String msp1Name = "MSP1";
+        String msp2Name = "MSP2";
+        String ip0Name = "IP0";
+        String ip1Name = "IP1";
+        String iop0Name = "IOP0";
+
+        SystemProcessor sp0 = im.createSystemProcessor(sp0Name, 0, 0, null);
+        MainStorageProcessor msp0 = im.createMainStorageProcessor(msp0Name, MainStorageProcessor.MIN_FIXED_SIZE);
+        MainStorageProcessor msp1 = im.createMainStorageProcessor(msp1Name, MainStorageProcessor.MIN_FIXED_SIZE);
+        MainStorageProcessor msp2 = im.createMainStorageProcessor(msp2Name, MainStorageProcessor.MIN_FIXED_SIZE);
+        InstructionProcessor ip0 = im.createInstructionProcessor(ip0Name);
+        InstructionProcessor ip1 = im.createInstructionProcessor(ip1Name);
+        InputOutputProcessor iop0 = im.createInputOutputProcessor(iop0Name);
+        //TODO chmods and devices
+
+        populate(im);
+        dump(System.out);
+
+        InventoryManager.Counters counters = im.getCounters();
+
+        int expectedMailSlotTableOffset = HEADER_SIZE;
+        int expectedMailSlotEntries = counters._inputOutputProcessors * counters._instructionProcessors;
+        int mailSlotTableSize = expectedMailSlotEntries * MAIL_SLOT_ENTRY_SIZE;
+        assertEquals(expectedMailSlotTableOffset, getTableOffset(MAIL_SLOT_TABLE_REFERENCE_OFFSET));
+        assertEquals(expectedMailSlotEntries, getTableEntryCount(MAIL_SLOT_TABLE_REFERENCE_OFFSET));
+        assertNotEquals(0, findMailSlotEntry(ip0._upiIndex, iop0._upiIndex));
+        assertNotEquals(0, findMailSlotEntry(ip1._upiIndex, iop0._upiIndex));
+
+        int expectedSystemProcessorTableOffset = expectedMailSlotTableOffset + mailSlotTableSize;
+        int expectedSystemProcessorEntries = counters._systemProcessors;
+        int systemProcessorTableSize = expectedSystemProcessorEntries * SYSTEM_PROCESSOR_ENTRY_SIZE;
+        assertEquals(expectedSystemProcessorTableOffset, getTableOffset(SYSTEM_PROCESSOR_TABLE_REFERENCE_OFFSET));
+        assertEquals(expectedSystemProcessorEntries, getTableEntryCount(SYSTEM_PROCESSOR_TABLE_REFERENCE_OFFSET));
+        int sp0EntryOffset = findSystemProcessorEntry(sp0);
+        assertEquals(expectedSystemProcessorTableOffset, sp0EntryOffset);
+        assertEquals(NODE_STATE_ACTIVE, getNodeEntryState(sp0EntryOffset));
+        assertEquals(Processor.ProcessorType.SystemProcessor.getCode(), getNodeEntryType(sp0EntryOffset));
+        assertEquals(0, getNodeEntryModel(sp0EntryOffset));
+        assertArrayEquals(getNameWords(sp0Name), getNodeEntryName(sp0EntryOffset));
+        assertEquals(sp0._upiIndex, getProcessorEntryUPIIndex(sp0EntryOffset));
+
+        //TODO sps
+        //TODO ips
+        //TODO iops
+        //TODO msps
+        //TODO chmdos
+        //TODO devices
     }
 }

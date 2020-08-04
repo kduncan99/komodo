@@ -6,8 +6,8 @@ package com.kadware.komodo.hardwarelib;
 
 import com.kadware.komodo.baselib.ArraySlice;
 import com.kadware.komodo.baselib.Word36;
-import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.hardwarelib.exceptions.StorageLockException;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.HashMap;
@@ -375,7 +375,7 @@ public class ConfigDataBank {
         final long[] words
     ) {
         _arraySlice.set(entryOffset + 1, words[0]);
-        _arraySlice.set(entryOffset + 2, words[0]);
+        _arraySlice.set(entryOffset + 2, words[1]);
     }
 
     protected long[] getNodeEntryOperatingSystemState(
@@ -392,7 +392,7 @@ public class ConfigDataBank {
         final long[] words
     ) {
         _arraySlice.set(entryOffset + 3, words[0]);
-        _arraySlice.set(entryOffset + 4, words[0]);
+        _arraySlice.set(entryOffset + 4, words[1]);
     }
 
     //  processor common stuff -----------------------------------------------------------------------------------------------------
@@ -474,6 +474,14 @@ public class ConfigDataBank {
     protected int getMailSlotEntryDestinationUPIIndex(int entryOffset) { return (int) Word36.getT3(_arraySlice.get(entryOffset)); }
     protected void setMailSlotEntryDestinationUPIIndex(int entryOffset, int upiIndex) { spliceT3(entryOffset, upiIndex); }
 
+    protected void setMailSlotEntryContent(
+        int entryOffset,
+        long[] content
+    ) {
+        _arraySlice.set(entryOffset + 1, content[0]);
+        _arraySlice.set(entryOffset + 2, content[1]);
+    }
+
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  private methods (protected for unit test access)
@@ -515,6 +523,8 @@ public class ConfigDataBank {
             entryOffset = expandTable(MAIL_SLOT_TABLE_REFERENCE_OFFSET, 1);
             setMailSlotEntrySourceUPIIndex(entryOffset, sourceUpiIndex);
             setMailSlotEntryDestinationUPIIndex(entryOffset, destinationUpiIndex);
+            long[] content = { 0, 0 };
+            setMailSlotEntryContent(entryOffset, content);
         }
     }
 
@@ -544,6 +554,7 @@ public class ConfigDataBank {
         final int tableReferenceOffset,
         final int additionalEntries
     ) {
+        System.out.println(String.format("expandTable trOff=%d additional=%d", tableReferenceOffset, additionalEntries));//TODO remove
         if ((tableReferenceOffset < FIRST_TABLE_REFERENCE_OFFSET)
             || (tableReferenceOffset > LAST_TABLE_REFERENCE_OFFSET)) {
             throw new RuntimeException("Invalid reference offset");
@@ -560,6 +571,7 @@ public class ConfigDataBank {
         int entrySize = _referenceOffsetToEntrySize.get(tableReferenceOffset);
         int oldEntryCount = getTableEntryCount(tableReferenceOffset);
         int tableOffset = getTableOffset(tableReferenceOffset);
+        System.out.println(String.format("tableOffset=%012o", tableOffset));//TODO remove
 
         int oldTableSizeWords = oldEntryCount * entrySize;
         int newEntryCount = oldEntryCount + additionalEntries;
@@ -584,6 +596,7 @@ public class ConfigDataBank {
 
         setTableEntryCount(tableReferenceOffset, newEntryCount);
         setArrayUsed(getArrayUsed() + additionalTableSizeWords);
+        System.out.println(String.format("  returning=%012o", tableOffset));//TODO remove
         return newEntryOffset;
     }
 
@@ -1266,6 +1279,22 @@ public class ConfigDataBank {
     //TODO deleteInstructionProcessor(InputOutputProcessor)
     //TODO deleteMainStorageProcessor(InputOutputProcessor)
     //TODO deleteSystemProcessor(InputOutputProcessor)
+
+    public void dump(
+        final PrintStream stream
+    ) {
+        for (int wx = 0; wx < _arraySlice._length; wx += 8) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format(" %08o:", wx));
+            for (int wy = 0; wy < 8; wy++) {
+                int offset = wx + wy;
+                if (offset < _arraySlice._length) {
+                    sb.append(String.format(" %012o", _arraySlice.get(offset)));
+                }
+            }
+            stream.println(sb.toString());
+        }
+    }
 
     /**
      * Clears the CDB and populates it with all of the information currently known to the InventoryManager
