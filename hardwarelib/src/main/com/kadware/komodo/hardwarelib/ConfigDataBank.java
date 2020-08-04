@@ -261,7 +261,7 @@ public class ConfigDataBank {
         _referenceOffsetToEntrySize.put(DEVICE_TABLE_REFERENCE_OFFSET, DEVICE_ENTRY_SIZE);
     }
 
-    private ArraySlice _arraySlice;
+    protected ArraySlice _arraySlice;
 
     public ConfigDataBank() {
         _arraySlice = new ArraySlice(new long[DEFAULT_INITIAL_BANK_SIZE]);
@@ -484,6 +484,11 @@ public class ConfigDataBank {
      */
     protected void clear(
     ) {
+        //  set the header to zeroes, then initialize what needs it
+        for (int wx = 0; wx < HEADER_SIZE; ++wx) {
+            _arraySlice.set(wx, 0L);
+        }
+
         setTestSetCell(0);
         setConfigurationNumber(1);
         updateArraySize();
@@ -519,10 +524,12 @@ public class ConfigDataBank {
     protected void expandArray(
         final int increment
     ) {
-        int newSize = _arraySlice.getSize() + increment;
-        newSize = (newSize & 0377) + 1;
-        _arraySlice = _arraySlice.copyOf(_arraySlice.getSize() + newSize);
-        setArraySize(newSize);
+        if (increment > 0) {
+            int adjustedIncrement = (increment | 1023) + 1;
+            int newSize = _arraySlice.getSize() + adjustedIncrement;
+            _arraySlice = _arraySlice.copyOf(newSize);
+            setArraySize(newSize);
+        }
     }
 
     /**
@@ -560,22 +567,23 @@ public class ConfigDataBank {
             throw new RuntimeException("Invalid additional entries value");
         }
 
-        int newTableSizeWords = newEntryCount * entrySize;
+        int additionalTableSizeWords = newEntryCount * entrySize;
         if (tableReferenceOffset == LAST_TABLE_REFERENCE_OFFSET) {
-            if (tableOffset + newTableSizeWords > _arraySlice.getSize()) {
-                int increment = tableOffset + newTableSizeWords - _arraySlice.getSize();
+            if (tableOffset + additionalTableSizeWords > _arraySlice.getSize()) {
+                int increment = tableOffset + additionalTableSizeWords - _arraySlice.getSize();
                 expandArray(increment);
             }
         } else {
-            shiftTable(tableReferenceOffset + 1, tableOffset + newTableSizeWords);
+            shiftTable(tableReferenceOffset + 1, tableOffset + additionalTableSizeWords);
         }
 
         int newEntryOffset = tableOffset + oldTableSizeWords;
         for (int ex = oldEntryCount; ex < newEntryCount; ++ex) {
-            clearTableEntry(tableOffset, ex);
+            clearTableEntry(tableReferenceOffset, ex);
         }
 
         setTableEntryCount(tableReferenceOffset, newEntryCount);
+        setArrayUsed(getArrayUsed() + additionalTableSizeWords);
         return newEntryOffset;
     }
 
