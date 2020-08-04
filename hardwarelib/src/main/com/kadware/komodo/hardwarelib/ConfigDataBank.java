@@ -223,22 +223,28 @@ import java.util.Map;
 @SuppressWarnings("DuplicatedCode")
 public class ConfigDataBank {
 
-    public static final int DEFAULT_INITIAL_BANK_SIZE = 32 * 1024; //  32k words
+    public static final int DEFAULT_INITIAL_BANK_SIZE = 1024; //  1k words
     public static final int HEADER_SIZE = 32;
 
     protected static final int FIRST_TABLE_REFERENCE_OFFSET = 2;
     protected static final int MAIL_SLOT_TABLE_REFERENCE_OFFSET = 2;
     protected static final int MAIL_SLOT_ENTRY_SIZE = 3;
+
     protected static final int SYSTEM_PROCESSOR_TABLE_REFERENCE_OFFSET = 3;
     protected static final int SYSTEM_PROCESSOR_ENTRY_SIZE = 5;
+
     protected static final int INSTRUCTION_PROCESSOR_TABLE_REFERENCE_OFFSET = 4;
     protected static final int INSTRUCTION_PROCESSOR_ENTRY_SIZE = 5;
+
     protected static final int INPUT_OUTPUT_PROCESSOR_TABLE_REFERENCE_OFFSET = 5;
     protected static final int INPUT_OUTPUT_PROCESSOR_ENTRY_SIZE = 5 + InventoryManager.MAX_CHANNEL_MODULES_PER_IOP;
+
     protected static final int MAIN_STORAGE_PROCESSOR_TABLE_REFERENCE_OFFSET = 6;
     protected static final int MAIN_STORAGE_PROCESSOR_ENTRY_SIZE = 7;
+
     protected static final int CHANNEL_MODULE_TABLE_REFERENCE_OFFSET = 7;
     protected static final int CHANNEL_MODULE_ENTRY_SIZE = 5 + InventoryManager.MAX_DEVICES_PER_CHANNEL_MODULE;
+
     protected static final int DEVICE_TABLE_REFERENCE_OFFSET = 8;
     protected static final int DEVICE_ENTRY_SIZE = 5;
     protected static final int LAST_TABLE_REFERENCE_OFFSET = 8;
@@ -295,13 +301,12 @@ public class ConfigDataBank {
     protected int getTestSetCell() { return (int) Word36.getS1(_arraySlice.get(0)); }
     protected void setTestSetCell(int value) { spliceS1(0 , value); }
 
-    protected int getConfigurationNumber() { return (int) Word36.getH1(_arraySlice.get(0)); }
+    protected int getConfigurationNumber() { return (int) Word36.getH2(_arraySlice.get(0)); }
     protected void incrementConfigurationNumber() { setConfigurationNumber(getConfigurationNumber() + 1); }
     protected void setConfigurationNumber(int value) { spliceH2(0, value); }
 
     protected int getArrayUsed() { return (int) Word36.getH1(_arraySlice.get(1)); }
     protected void setArrayUsed(int value) { spliceH1(1, value); }
-
     protected int getArraySize() { return (int) Word36.getH2(_arraySlice.get(1)); }
     protected void setArraySize(int value) { spliceH2(1, value); }
     protected void updateArraySize() { setArraySize(_arraySlice._length); }
@@ -554,7 +559,6 @@ public class ConfigDataBank {
         final int tableReferenceOffset,
         final int additionalEntries
     ) {
-        System.out.println(String.format("expandTable trOff=%d additional=%d", tableReferenceOffset, additionalEntries));//TODO remove
         if ((tableReferenceOffset < FIRST_TABLE_REFERENCE_OFFSET)
             || (tableReferenceOffset > LAST_TABLE_REFERENCE_OFFSET)) {
             throw new RuntimeException("Invalid reference offset");
@@ -571,7 +575,6 @@ public class ConfigDataBank {
         int entrySize = _referenceOffsetToEntrySize.get(tableReferenceOffset);
         int oldEntryCount = getTableEntryCount(tableReferenceOffset);
         int tableOffset = getTableOffset(tableReferenceOffset);
-        System.out.println(String.format("tableOffset=%012o", tableOffset));//TODO remove
 
         int oldTableSizeWords = oldEntryCount * entrySize;
         int newEntryCount = oldEntryCount + additionalEntries;
@@ -579,14 +582,14 @@ public class ConfigDataBank {
             throw new RuntimeException("Invalid additional entries value");
         }
 
-        int additionalTableSizeWords = newEntryCount * entrySize;
+        int newTableSizeWords = newEntryCount * entrySize;
         if (tableReferenceOffset == LAST_TABLE_REFERENCE_OFFSET) {
-            if (tableOffset + additionalTableSizeWords > _arraySlice.getSize()) {
-                int increment = tableOffset + additionalTableSizeWords - _arraySlice.getSize();
+            if (tableOffset + newTableSizeWords > _arraySlice.getSize()) {
+                int increment = tableOffset + newTableSizeWords - _arraySlice.getSize();
                 expandArray(increment);
             }
         } else {
-            shiftTable(tableReferenceOffset + 1, tableOffset + additionalTableSizeWords);
+            shiftTable(tableReferenceOffset + 1, tableOffset + newTableSizeWords);
         }
 
         int newEntryOffset = tableOffset + oldTableSizeWords;
@@ -595,8 +598,7 @@ public class ConfigDataBank {
         }
 
         setTableEntryCount(tableReferenceOffset, newEntryCount);
-        setArrayUsed(getArrayUsed() + additionalTableSizeWords);
-        System.out.println(String.format("  returning=%012o", tableOffset));//TODO remove
+        setArrayUsed(getArrayUsed() + newTableSizeWords - oldTableSizeWords);
         return newEntryOffset;
     }
 

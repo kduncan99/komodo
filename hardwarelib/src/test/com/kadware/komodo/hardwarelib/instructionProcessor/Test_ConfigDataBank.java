@@ -140,9 +140,30 @@ public class Test_ConfigDataBank extends ConfigDataBank {
         assertEquals(originalArraySize, getArraySize());
         assertEquals(originalArrayUsed + additionalSize, getArrayUsed());
         assertEquals(originalMailSlotOffset, getTableOffset(MAIL_SLOT_TABLE_REFERENCE_OFFSET));
-        assertEquals(5, getTableEntryCount(MAIL_SLOT_TABLE_REFERENCE_OFFSET));
+        assertEquals(additionalEntries, getTableEntryCount(MAIL_SLOT_TABLE_REFERENCE_OFFSET));
 
         assertEquals(originalDeviceOffset + additionalSize, getTableOffset(DEVICE_TABLE_REFERENCE_OFFSET));
+        assertEquals(originalDeviceCount, getTableEntryCount(DEVICE_TABLE_REFERENCE_OFFSET));
+    }
+
+    @Test
+    public void test_expandTableTwice() {
+        int additionalEntries = 5;
+        int additionalSize = additionalEntries * MAIL_SLOT_ENTRY_SIZE;
+        int originalArraySize = getArraySize();
+        int originalArrayUsed = getArrayUsed();
+        int originalMailSlotOffset = getTableOffset(MAIL_SLOT_TABLE_REFERENCE_OFFSET);
+        int originalDeviceOffset = getTableOffset(DEVICE_TABLE_REFERENCE_OFFSET);
+        int originalDeviceCount = getTableEntryCount(DEVICE_TABLE_REFERENCE_OFFSET);
+
+        expandTable(MAIL_SLOT_TABLE_REFERENCE_OFFSET, additionalEntries);
+        expandTable(MAIL_SLOT_TABLE_REFERENCE_OFFSET, additionalEntries);
+        assertEquals(originalArraySize, getArraySize());
+        assertEquals(originalArrayUsed + 2 * additionalSize, getArrayUsed());
+        assertEquals(originalMailSlotOffset, getTableOffset(MAIL_SLOT_TABLE_REFERENCE_OFFSET));
+        assertEquals(2 * additionalEntries, getTableEntryCount(MAIL_SLOT_TABLE_REFERENCE_OFFSET));
+
+        assertEquals(originalDeviceOffset + 2 * additionalSize, getTableOffset(DEVICE_TABLE_REFERENCE_OFFSET));
         assertEquals(originalDeviceCount, getTableEntryCount(DEVICE_TABLE_REFERENCE_OFFSET));
     }
 
@@ -184,6 +205,10 @@ public class Test_ConfigDataBank extends ConfigDataBank {
 
         InventoryManager.Counters counters = im.getCounters();
 
+        assertEquals(0, getTestSetCell());
+        assertEquals(010, getConfigurationNumber());
+        assertEquals(DEFAULT_INITIAL_BANK_SIZE, getArraySize());
+
         int expectedMailSlotTableOffset = HEADER_SIZE;
         int expectedMailSlotEntries = counters._inputOutputProcessors * counters._instructionProcessors;
         int mailSlotTableSize = expectedMailSlotEntries * MAIL_SLOT_ENTRY_SIZE;
@@ -205,11 +230,29 @@ public class Test_ConfigDataBank extends ConfigDataBank {
         assertArrayEquals(getNameWords(sp0Name), getNodeEntryName(sp0EntryOffset));
         assertEquals(sp0._upiIndex, getProcessorEntryUPIIndex(sp0EntryOffset));
 
-        //TODO sps
-        //TODO ips
-        //TODO iops
-        //TODO msps
+        int expectedInstructionProcessorTableOffset = expectedSystemProcessorTableOffset + systemProcessorTableSize;
+        int expectedInstructionProcessorEntries = counters._instructionProcessors;
+        int instructionProcessorTableSize = expectedInstructionProcessorEntries * INSTRUCTION_PROCESSOR_ENTRY_SIZE;
+        assertEquals(expectedInstructionProcessorTableOffset, getTableOffset(INSTRUCTION_PROCESSOR_TABLE_REFERENCE_OFFSET));
+        assertEquals(expectedInstructionProcessorEntries, getTableEntryCount(INSTRUCTION_PROCESSOR_TABLE_REFERENCE_OFFSET));
+        //TODO ips specific info
+
+        int expectedInputOutputProcessorTableOffset = expectedInstructionProcessorTableOffset + instructionProcessorTableSize;
+        int expectedInputOutputProcessorEntries = counters._inputOutputProcessors;
+        int inputOutputProcessorTableSize = expectedInputOutputProcessorEntries * INPUT_OUTPUT_PROCESSOR_ENTRY_SIZE;
+        assertEquals(expectedInputOutputProcessorTableOffset, getTableOffset(INPUT_OUTPUT_PROCESSOR_TABLE_REFERENCE_OFFSET));
+        assertEquals(expectedInputOutputProcessorEntries, getTableEntryCount(INPUT_OUTPUT_PROCESSOR_TABLE_REFERENCE_OFFSET));
+        //TODO iops specific info
+
+        int expectedMainStorageProcessorTableOffset = expectedInputOutputProcessorTableOffset + inputOutputProcessorTableSize;
+        int expectedMainStorageProcessorEntries = counters._mainStorageProcessors;
+        int mainStorageProcessorTableSize = expectedMainStorageProcessorEntries * MAIN_STORAGE_PROCESSOR_ENTRY_SIZE;
+        assertEquals(expectedMainStorageProcessorTableOffset, getTableOffset(MAIN_STORAGE_PROCESSOR_TABLE_REFERENCE_OFFSET));
+        assertEquals(expectedMainStorageProcessorEntries, getTableEntryCount(MAIN_STORAGE_PROCESSOR_TABLE_REFERENCE_OFFSET));
+        //TODO msps specific info
+
         //TODO chmdos
+
         //TODO devices
     }
 }
