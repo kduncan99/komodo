@@ -193,11 +193,17 @@ public class Test_ConfigDataBank extends ConfigDataBank {
 
         SystemProcessor sp0 = im.createSystemProcessor(sp0Name, 0, 0, null);
         MainStorageProcessor msp0 = im.createMainStorageProcessor(msp0Name, MainStorageProcessor.MIN_FIXED_SIZE);
-        MainStorageProcessor msp1 = im.createMainStorageProcessor(msp1Name, MainStorageProcessor.MIN_FIXED_SIZE);
-        MainStorageProcessor msp2 = im.createMainStorageProcessor(msp2Name, MainStorageProcessor.MIN_FIXED_SIZE);
+        MainStorageProcessor msp1 = im.createMainStorageProcessor(msp1Name, 2 * MainStorageProcessor.MIN_FIXED_SIZE);
+        MainStorageProcessor msp2 = im.createMainStorageProcessor(msp2Name, 3 * MainStorageProcessor.MIN_FIXED_SIZE);
         InstructionProcessor ip0 = im.createInstructionProcessor(ip0Name);
         InstructionProcessor ip1 = im.createInstructionProcessor(ip1Name);
         InputOutputProcessor iop0 = im.createInputOutputProcessor(iop0Name);
+        Processor[] activeProcessors = { sp0, ip0, ip1, iop0 };
+        for (Processor proc : activeProcessors) {
+            while (!proc.isReady()) {
+                Thread.onSpinWait();
+            }
+        }
         //TODO chmods and devices
 
         populate(im);
@@ -217,11 +223,13 @@ public class Test_ConfigDataBank extends ConfigDataBank {
         assertNotEquals(0, findMailSlotEntry(ip0._upiIndex, iop0._upiIndex));
         assertNotEquals(0, findMailSlotEntry(ip1._upiIndex, iop0._upiIndex));
 
+        //  SPs
         int expectedSystemProcessorTableOffset = expectedMailSlotTableOffset + mailSlotTableSize;
         int expectedSystemProcessorEntries = counters._systemProcessors;
         int systemProcessorTableSize = expectedSystemProcessorEntries * SYSTEM_PROCESSOR_ENTRY_SIZE;
         assertEquals(expectedSystemProcessorTableOffset, getTableOffset(SYSTEM_PROCESSOR_TABLE_REFERENCE_OFFSET));
         assertEquals(expectedSystemProcessorEntries, getTableEntryCount(SYSTEM_PROCESSOR_TABLE_REFERENCE_OFFSET));
+
         int sp0EntryOffset = findSystemProcessorEntry(sp0);
         assertEquals(expectedSystemProcessorTableOffset, sp0EntryOffset);
         assertEquals(NODE_STATE_ACTIVE, getNodeEntryState(sp0EntryOffset));
@@ -230,26 +238,81 @@ public class Test_ConfigDataBank extends ConfigDataBank {
         assertArrayEquals(getNameWords(sp0Name), getNodeEntryName(sp0EntryOffset));
         assertEquals(sp0._upiIndex, getProcessorEntryUPIIndex(sp0EntryOffset));
 
+        //  IPs
         int expectedInstructionProcessorTableOffset = expectedSystemProcessorTableOffset + systemProcessorTableSize;
         int expectedInstructionProcessorEntries = counters._instructionProcessors;
         int instructionProcessorTableSize = expectedInstructionProcessorEntries * INSTRUCTION_PROCESSOR_ENTRY_SIZE;
         assertEquals(expectedInstructionProcessorTableOffset, getTableOffset(INSTRUCTION_PROCESSOR_TABLE_REFERENCE_OFFSET));
         assertEquals(expectedInstructionProcessorEntries, getTableEntryCount(INSTRUCTION_PROCESSOR_TABLE_REFERENCE_OFFSET));
-        //TODO ips specific info
 
+        int ip0EntryOffset = findInstructionProcessorEntry(ip0);
+        assertEquals(expectedInstructionProcessorTableOffset, ip0EntryOffset);
+        assertEquals(NODE_STATE_ACTIVE, getNodeEntryState(ip0EntryOffset));
+        assertEquals(Processor.ProcessorType.InstructionProcessor.getCode(), getNodeEntryType(ip0EntryOffset));
+        assertEquals(0, getNodeEntryModel(ip0EntryOffset));
+        assertArrayEquals(getNameWords(ip0Name), getNodeEntryName(ip0EntryOffset));
+        assertEquals(ip0._upiIndex, getProcessorEntryUPIIndex(ip0EntryOffset));
+
+        int ip1EntryOffset = findInstructionProcessorEntry(ip1);
+        assertEquals(expectedInstructionProcessorTableOffset + INSTRUCTION_PROCESSOR_ENTRY_SIZE, ip1EntryOffset);
+        assertEquals(NODE_STATE_ACTIVE, getNodeEntryState(ip1EntryOffset));
+        assertEquals(Processor.ProcessorType.InstructionProcessor.getCode(), getNodeEntryType(ip1EntryOffset));
+        assertEquals(0, getNodeEntryModel(ip1EntryOffset));
+        assertArrayEquals(getNameWords(ip1Name), getNodeEntryName(ip1EntryOffset));
+        assertEquals(ip1._upiIndex, getProcessorEntryUPIIndex(ip1EntryOffset));
+
+        //  IOPs
         int expectedInputOutputProcessorTableOffset = expectedInstructionProcessorTableOffset + instructionProcessorTableSize;
         int expectedInputOutputProcessorEntries = counters._inputOutputProcessors;
         int inputOutputProcessorTableSize = expectedInputOutputProcessorEntries * INPUT_OUTPUT_PROCESSOR_ENTRY_SIZE;
         assertEquals(expectedInputOutputProcessorTableOffset, getTableOffset(INPUT_OUTPUT_PROCESSOR_TABLE_REFERENCE_OFFSET));
         assertEquals(expectedInputOutputProcessorEntries, getTableEntryCount(INPUT_OUTPUT_PROCESSOR_TABLE_REFERENCE_OFFSET));
-        //TODO iops specific info
 
+        int iop0EntryOffset = findInputOutputProcessorEntry(iop0);
+        assertEquals(expectedInputOutputProcessorTableOffset, iop0EntryOffset);
+        assertEquals(NODE_STATE_ACTIVE, getNodeEntryState(iop0EntryOffset));
+        assertEquals(Processor.ProcessorType.InputOutputProcessor.getCode(), getNodeEntryType(iop0EntryOffset));
+        assertEquals(0, getNodeEntryModel(iop0EntryOffset));
+        assertArrayEquals(getNameWords(iop0Name), getNodeEntryName(iop0EntryOffset));
+        assertEquals(iop0._upiIndex, getProcessorEntryUPIIndex(iop0EntryOffset));
+        //TODO iops chmod entries
+
+        //  MSPs
         int expectedMainStorageProcessorTableOffset = expectedInputOutputProcessorTableOffset + inputOutputProcessorTableSize;
         int expectedMainStorageProcessorEntries = counters._mainStorageProcessors;
         int mainStorageProcessorTableSize = expectedMainStorageProcessorEntries * MAIN_STORAGE_PROCESSOR_ENTRY_SIZE;
         assertEquals(expectedMainStorageProcessorTableOffset, getTableOffset(MAIN_STORAGE_PROCESSOR_TABLE_REFERENCE_OFFSET));
         assertEquals(expectedMainStorageProcessorEntries, getTableEntryCount(MAIN_STORAGE_PROCESSOR_TABLE_REFERENCE_OFFSET));
-        //TODO msps specific info
+
+        int msp0EntryOffset = findMainStorageProcessorEntry(msp0);
+        assertEquals(expectedMainStorageProcessorTableOffset, msp0EntryOffset);
+        assertEquals(NODE_STATE_INACTIVE, getNodeEntryState(msp0EntryOffset));
+        assertEquals(Processor.ProcessorType.MainStorageProcessor.getCode(), getNodeEntryType(msp0EntryOffset));
+        assertEquals(0, getNodeEntryModel(msp0EntryOffset));
+        assertArrayEquals(getNameWords(msp0Name), getNodeEntryName(msp0EntryOffset));
+        assertEquals(msp0._upiIndex, getProcessorEntryUPIIndex(msp0EntryOffset));
+        assertEquals(MainStorageProcessor.MIN_FIXED_SIZE, getMainStorageProcessorEntryFixedSize(msp0EntryOffset));
+        assertEquals(0x7FFFFFFF, getMainStorageProcessorEntryTotalSegments(msp0EntryOffset));
+
+        int msp1EntryOffset = findMainStorageProcessorEntry(msp1);
+        assertEquals(expectedMainStorageProcessorTableOffset + MAIN_STORAGE_PROCESSOR_ENTRY_SIZE, msp1EntryOffset);
+        assertEquals(NODE_STATE_INACTIVE, getNodeEntryState(msp1EntryOffset));
+        assertEquals(Processor.ProcessorType.MainStorageProcessor.getCode(), getNodeEntryType(msp1EntryOffset));
+        assertEquals(0, getNodeEntryModel(msp1EntryOffset));
+        assertArrayEquals(getNameWords(msp1Name), getNodeEntryName(msp1EntryOffset));
+        assertEquals(msp1._upiIndex, getProcessorEntryUPIIndex(msp1EntryOffset));
+        assertEquals(2 * MainStorageProcessor.MIN_FIXED_SIZE, getMainStorageProcessorEntryFixedSize(msp1EntryOffset));
+        assertEquals(0x7FFFFFFF, getMainStorageProcessorEntryTotalSegments(msp1EntryOffset));
+
+        int msp2EntryOffset = findMainStorageProcessorEntry(msp2);
+        assertEquals(expectedMainStorageProcessorTableOffset + 2 * MAIN_STORAGE_PROCESSOR_ENTRY_SIZE, msp2EntryOffset);
+        assertEquals(NODE_STATE_INACTIVE, getNodeEntryState(msp2EntryOffset));
+        assertEquals(Processor.ProcessorType.MainStorageProcessor.getCode(), getNodeEntryType(msp2EntryOffset));
+        assertEquals(0, getNodeEntryModel(msp2EntryOffset));
+        assertArrayEquals(getNameWords(msp2Name), getNodeEntryName(msp2EntryOffset));
+        assertEquals(msp2._upiIndex, getProcessorEntryUPIIndex(msp2EntryOffset));
+        assertEquals(3 * MainStorageProcessor.MIN_FIXED_SIZE, getMainStorageProcessorEntryFixedSize(msp2EntryOffset));
+        assertEquals(0x7FFFFFFF, getMainStorageProcessorEntryTotalSegments(msp2EntryOffset));
 
         //TODO chmdos
 

@@ -437,9 +437,9 @@ public class ConfigDataBank {
 
     //  specials for MSP -----------------------------------------------------------------------------------------------------------
     protected long getMainStorageProcessorEntryFixedSize(int entryOffset) { return _arraySlice.get(entryOffset + 5); }
-    protected void setMainStorageProcessorEntryFixedSize(int entryOffset, long value) { _arraySlice.set(entryOffset, value); }
+    protected void setMainStorageProcessorEntryFixedSize(int entryOffset, long value) { _arraySlice.set(entryOffset + 5, value); }
     protected long getMainStorageProcessorEntryTotalSegments(int entryOffset) { return _arraySlice.get(entryOffset + 6); }
-    protected void setMainStorageProcessorEntryTotalSegments(int entryOffset, long value) { _arraySlice.set(entryOffset, value); }
+    protected void setMainStorageProcessorEntryTotalSegments(int entryOffset, long value) { _arraySlice.set(entryOffset + 6, value); }
 
     //  specials for channel module ------------------------------------------------------------------------------------------------
     protected boolean getChannelModuleEntryDeviceConnected(
@@ -877,6 +877,7 @@ public class ConfigDataBank {
         final int entryOffset
     ) {
         populateProcessorEntry(iop, entryOffset);
+        setNodeEntryState(entryOffset, iop.isReady() ? NODE_STATE_ACTIVE : NODE_STATE_INACTIVE);
 
         //  Write channel module references
         for (int cmIndex = 0; cmIndex < InventoryManager.MAX_CHANNEL_MODULES_PER_IOP; ++cmIndex) {
@@ -914,6 +915,11 @@ public class ConfigDataBank {
         final int entryOffset
     ) {
         populateProcessorEntry(ip, entryOffset);
+        if (ip._isReady) {
+            setNodeEntryState(entryOffset, ip.isStopped() ? NODE_STATE_ACTIVE : NODE_STATE_RUNNING);
+        } else {
+            setNodeEntryState(entryOffset, NODE_STATE_INACTIVE);
+        }
 
         //  update mail slot table
         int ipUpiIndex = ip._upiIndex;
@@ -937,26 +943,19 @@ public class ConfigDataBank {
         final int entryOffset
     ) {
         populateProcessorEntry(msp, entryOffset);
+        setNodeEntryState(entryOffset, NODE_STATE_INACTIVE);
         setMainStorageProcessorEntryFixedSize(entryOffset, msp.getFixedSize());
         setMainStorageProcessorEntryTotalSegments(entryOffset, msp.getMaxSegments());
     }
 
     /**
-     * Common code for populating a processor entry
+     * Common code for populating a processor entry.
+     * Does NOT populate node state - the individual specific processor invokees must do that.
      */
     protected void populateProcessorEntry(
         final Processor processor,
         final int entryOffset
     ) {
-        int state = NODE_STATE_ACTIVE;
-        if (processor._isReady) {
-            if (processor instanceof InstructionProcessor) {
-                InstructionProcessor ip = (InstructionProcessor) processor;
-                state = ip.isStopped() ? NODE_STATE_ACTIVE : NODE_STATE_RUNNING;
-            }
-        }
-
-        setNodeEntryState(entryOffset, state);
         setNodeEntryType(entryOffset, processor._type.getCode());
         setNodeEntryModel(entryOffset, 0);
         setNodeEntryName(entryOffset, getNameWords(processor._name));
@@ -976,6 +975,7 @@ public class ConfigDataBank {
         final int entryOffset
     ) {
         populateProcessorEntry(sp, entryOffset);
+        setNodeEntryState(entryOffset, sp.isReady() ? NODE_STATE_ACTIVE : NODE_STATE_INACTIVE);
     }
 
     /**
