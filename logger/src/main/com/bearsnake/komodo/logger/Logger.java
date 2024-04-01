@@ -4,7 +4,9 @@
 
 package com.bearsnake.komodo.logger;
 
-public abstract class Logger {
-    public abstract void close();
-    public abstract void log(final Level level, final String message);
+public interface Logger {
+    void close();
+    void log(final Level level, final String message);
+    void setEnabled(final boolean enabled);
+    void setLevel(final Level level);
 }

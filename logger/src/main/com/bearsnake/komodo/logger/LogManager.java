@@ -75,21 +75,39 @@ public class LogManager {
         }
     }
 
-    public static void logFatal(final String source,
+    public static void logDebug(final String source,
                                 final String format,
-                                final Object[]... parameters) {
-        log(Level.Fatal, source, format, parameters);
+                                final Object... parameters) {
+        log(Level.Debug, source, format, parameters);
     }
 
     public static void logError(final String source,
                                 final String format,
-                                final Object[]... parameters) {
+                                final Object... parameters) {
         log(Level.Error, source, format, parameters);
+    }
+
+    public static void logFatal(final String source,
+                                final String format,
+                                final Object... parameters) {
+        log(Level.Fatal, source, format, parameters);
+    }
+
+    public static void logInfo(final String source,
+                               final String format,
+                               final Object... parameters) {
+        log(Level.Info, source, format, parameters);
+    }
+
+    public static void logTrace(final String source,
+                                final String format,
+                                final Object... parameters) {
+        log(Level.Trace, source, format, parameters);
     }
 
     public static void logWarning(final String source,
                                   final String format,
-                                  final Object[]... parameters) {
+                                  final Object... parameters) {
         log(Level.Warning, source, format, parameters);
     }
 }

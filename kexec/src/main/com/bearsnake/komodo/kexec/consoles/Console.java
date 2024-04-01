@@ -4,18 +4,20 @@
 
 package com.bearsnake.komodo.kexec.consoles;
 
+import com.bearsnake.komodo.kexec.exceptions.ConsoleException;
 import java.io.PrintStream;
 
-public abstract class Console {
+public interface Console {
 
-    public abstract void clearReadReplyMessage(MessageId messageId) throws ConsoleException;
-    public abstract void close() throws ConsoleException;
-    public abstract void dump(PrintStream out, String indent);
-    public abstract SolicitedInput pollSolicitedInput() throws ConsoleException;
-    public abstract String pollUnsolicitedInput() throws ConsoleException;
-    public abstract boolean IsConnected();
-    public abstract void reset() throws ConsoleException;
-    public abstract void sendReadOnlyMessage(String text) throws ConsoleException;
-    public abstract void sendSystemMessages(String text1, String text2) throws ConsoleException;
-    public abstract void sendReadReplyMessage(MessageId messageId, String text, int maxReplyLength);
+    void clearReadReplyMessage(MessageId messageId) throws ConsoleException;
+    void close() throws ConsoleException;
+    void dump(PrintStream out, String indent);
+    ConsoleId getConsoleId();
+    SolicitedInput pollSolicitedInput() throws ConsoleException;
+    String pollUnsolicitedInput() throws ConsoleException;
+    boolean IsConnected();
+    void reset() throws ConsoleException;
+    void sendReadOnlyMessage(String text) throws ConsoleException;
+    void sendSystemMessages(String text1, String text2) throws ConsoleException;
+    int sendReadReplyMessage(MessageId messageId, String text, int maxReplyLength) throws ConsoleException;
 }
