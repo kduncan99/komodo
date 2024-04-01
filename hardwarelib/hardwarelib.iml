@@ -8,11 +8,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="kex" />
-    <orderEntry type="module" module-name="baselib" />
-    <orderEntry type="module" module-name="binaries" />
-    <orderEntry type="module" module-name="configlib" />
     <orderEntry type="library" name="lib" level="project" />
-    <orderEntry type="library" name="org.java-websocket:Java-WebSocket:1.4.1" level="project" />
+    <orderEntry type="module" module-name="configlib" />
+    <orderEntry type="module" module-name="oldbaselib" />
+    <orderEntry type="module" module-name="kex" />
   </component>
 </module>
