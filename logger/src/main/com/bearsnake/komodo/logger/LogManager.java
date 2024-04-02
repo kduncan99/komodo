@@ -56,18 +56,18 @@ public class LogManager {
     public static void log(final Level level,
                            final String source,
                            final String format,
-                           final Object[]... parameters) {
+                           final Object... parameters) {
         if (level.ordinal() <= _level.ordinal() && _enabled) {
             var tmStamp = LocalDateTime.now();
             var dtStr = _dateTimeFormat.format(tmStamp);
             var msg = String.format("%s:%s:%s:", dtStr, level._text, source);
-            msg += String.format(format, parameters); // TODO is this a problem?
+            msg += String.format(format, parameters);
 
             synchronized (_loggers) {
                 for (java.util.Map.Entry<Logger, String> entry : _loggers.entrySet()) {
                     var logger = entry.getKey();
                     var loggerSource = entry.getValue();
-                    if (loggerSource == null || loggerSource == source) {
+                    if (loggerSource == null || loggerSource.equals(source)) {
                         logger.log(level, msg);
                     }
                 }
