@@ -24,7 +24,6 @@ public class Exec {
 
     public Exec() {
         _allowRecoveryBoot = false;
-        _executor = new ScheduledThreadPoolExecutor(5);
         _phase = Phase.NotStarted;
 
         _configuration = new Configuration(); // TODO load the thing
@@ -58,6 +57,8 @@ public class Exec {
     }
 
     public void initialize() throws Exception {
+        _configuration = new Configuration();
+        _executor = new ScheduledThreadPoolExecutor((int)_configuration.ExecThreads);
         _consoleManager.initialize();
         _keyinManager.initialize();
     }
