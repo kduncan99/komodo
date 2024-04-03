@@ -16,7 +16,7 @@ public enum StopCode {
     TrackToBeReleasedWasNotAllocated(057),
     NoMainItemLink(057),
     InitializationSystemConfigurationError(064),
-    InitializationSystemLibrariesCorruptOrMissing(044),
+    InitializationSystemLibrariesCorruptOrMissing(064),
     ClearTestSetAttemptedWhenNotSet(066),
     ResourceReleaseFailure(067),
     ActivityIdNoLongerExists(073),
@@ -28,7 +28,10 @@ public enum StopCode {
     SectorToBeReleasedWasNotAllocated(0157),
     IOPacketErrorForSystemIO(0202),
     ErrorInSystemIOTable(0205),
-    InvalidLDAT(0253);
+    LastSystemConsoleDown(0240),
+    InvalidLDAT(0253),
+    InvalidPrepFactor(0265),
+    MassStorageDebug(0266);
 
     private final int _code;
 

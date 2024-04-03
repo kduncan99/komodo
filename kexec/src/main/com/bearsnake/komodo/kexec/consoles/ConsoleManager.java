@@ -6,7 +6,10 @@ package com.bearsnake.komodo.kexec.consoles;
 
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ConsoleException;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -163,7 +166,7 @@ public class ConsoleManager implements Manager, Runnable {
     //     if we can send it to the destination console, do so.
     //     else send it to the primary console.
     //   else send it to all the consoles.
-    private synchronized boolean checkForReadOnlyMessage() {
+    private synchronized boolean checkForReadOnlyMessage() throws KExecException {
         var dropList = new LinkedList<ConsoleId>();
         var iter = _queuedReadOnlyMessages.iterator();
         boolean didSomething = false;
@@ -185,7 +188,7 @@ public class ConsoleManager implements Manager, Runnable {
                     try {
                         _consoles.get(_primaryConsoleId).sendReadOnlyMessage(roMsg.getText());
                     } catch (ConsoleException ex) {
-                        // TODO give up.
+                        // give up.
                         LogManager.logWarning(LOG_SOURCE,
                                               "Lost read-only message:%s", roMsg.getText());
                     }
@@ -206,11 +209,13 @@ public class ConsoleManager implements Manager, Runnable {
             didSomething = true;
         }
 
-        dropList.forEach(this::dropConsole);
+        for (var consId : dropList) {
+            dropConsole(consId);
+        }
         return didSomething;
     }
 
-    private synchronized boolean checkForReadReplyMessage() {
+    private synchronized boolean checkForReadReplyMessage() throws KExecException {
         var dropList = new LinkedList<ConsoleId>();
         var iter = _queuedReadReplyMessages.entrySet().iterator();
         boolean didSomething = false;
@@ -243,11 +248,13 @@ public class ConsoleManager implements Manager, Runnable {
             }
         }
 
-        dropList.forEach(this::dropConsole);
+        for (var consId : dropList) {
+            dropConsole(consId);
+        }
         return didSomething;
     }
 
-    private synchronized boolean checkForSolicitedInput() {
+    private synchronized boolean checkForSolicitedInput() throws KExecException {
         for (var cons : _consoles.values()) {
             try {
                 var solInput = cons.pollSolicitedInput();
@@ -267,7 +274,7 @@ public class ConsoleManager implements Manager, Runnable {
                         return true;
                     }
 
-                    if (Exec.getInstance().getConfiguration().logConsoleMessages() && !rrMsg.doNotLogResponse()) {
+                    if (Exec.getInstance().getConfiguration().LogConsoleMessages && !rrMsg.doNotLogResponse()) {
                         LogManager.logInfo(LOG_SOURCE,
                                            "Msg:%s replyCons:%s %d-%s",
                                            rrMsg.getMessageId().toString(),
@@ -292,7 +299,7 @@ public class ConsoleManager implements Manager, Runnable {
         return false;
     }
 
-    private synchronized boolean checkForUnsolicitedInput() {
+    private synchronized boolean checkForUnsolicitedInput() throws KExecException {
         for (var cons : _consoles.values()) {
             try {
                 var input = cons.pollUnsolicitedInput();
@@ -314,24 +321,33 @@ public class ConsoleManager implements Manager, Runnable {
         return false;
     }
 
-    private void dropConsole(final ConsoleId consoleId) {
-        // TODO
+    private void dropConsole(final ConsoleId consoleId) throws KExecException {
+        // If we are asked to drop the primary console, we have to stop the exec
+        if (consoleId == _primaryConsoleId) {
+            var sc = StopCode.LastSystemConsoleDown;
+            Exec.getInstance().stop(sc);
+            throw new ExecStoppedException(sc);
+        }
     }
 
     @Override
     public void run() {
-        if (!Exec.getInstance().isStopped()) {
-            boolean didSomething = false;
-            synchronized (this) {
-                didSomething |= checkForReadOnlyMessage();
-                didSomething |= checkForReadReplyMessage();
-                didSomething |= checkForSolicitedInput();
-                didSomething |= checkForUnsolicitedInput();
-            }
+        try {
+            if (!Exec.getInstance().isStopped()) {
+                boolean didSomething = false;
+                synchronized (this) {
+                    didSomething |= checkForReadOnlyMessage();
+                    didSomething |= checkForReadReplyMessage();
+                    didSomething |= checkForSolicitedInput();
+                    didSomething |= checkForUnsolicitedInput();
+                }
 
-            if (didSomething && !Exec.getInstance().isStopped()) {
-                run();
+                if (didSomething && !Exec.getInstance().isStopped()) {
+                    run();
+                }
             }
+        } catch (KExecException ex) {
+            // do nothing
         }
     }
 }

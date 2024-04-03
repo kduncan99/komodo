@@ -62,8 +62,9 @@ public class Exec {
         _keyinManager.initialize();
     }
 
-    public void stop() {
-        // TODO
+    public void stop(final StopCode stopCode) {
+        _stopCode = stopCode;
+        _phase = Phase.Stopped;
         _consoleManager.stop();
         _keyinManager.stop();
     }
