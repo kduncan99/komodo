@@ -7,11 +7,14 @@ package com.bearsnake.komodo.kexec.exec;
 import com.bearsnake.komodo.kexec.Configuration;
 import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
+import com.bearsnake.komodo.logger.LogManager;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class Exec {
 
     private static Exec _instance = null;
+    private static final String LOG_SOURCE = "Exec";
 
     private boolean _allowRecoveryBoot;
     private Configuration _configuration;
@@ -45,11 +48,11 @@ public class Exec {
     public boolean isStopped() { return _phase == Phase.Stopped; }
 
     public void boot() throws Exception {
+        _executor = new ScheduledThreadPoolExecutor((int)_configuration.ExecThreads);
         _consoleManager.boot();
         _keyinManager.boot();
         // TODO
     }
-
 
     public void close() {
         _executor.close();
@@ -58,7 +61,6 @@ public class Exec {
 
     public void initialize() throws Exception {
         _configuration = new Configuration();
-        _executor = new ScheduledThreadPoolExecutor((int)_configuration.ExecThreads);
         _consoleManager.initialize();
         _keyinManager.initialize();
     }
@@ -66,6 +68,16 @@ public class Exec {
     public void stop(final StopCode stopCode) {
         _stopCode = stopCode;
         _phase = Phase.Stopped;
+        _executor.shutdownNow();
+        try {
+            if (!_executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                LogManager.logWarning(LOG_SOURCE, "Executor failed to terminate");
+            }
+        } catch (InterruptedException ex) {
+            // nothing to do here
+        }
+        _executor = null;
+
         _consoleManager.stop();
         _keyinManager.stop();
     }
