@@ -4,9 +4,9 @@
 
 package com.bearsnake.komodo.kexec.exceptions;
 
-public class ConsoleException extends KExecException {
+public abstract class KExecException extends Exception {
 
-    public ConsoleException(final String message) {
+    public KExecException(final String message) {
         super(message);
     }
 }
