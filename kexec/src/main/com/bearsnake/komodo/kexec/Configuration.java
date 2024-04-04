@@ -4,6 +4,8 @@
 
 package com.bearsnake.komodo.kexec;
 
+import com.bearsnake.komodo.kexec.exceptions.KExecException;
+
 public class Configuration {
 
     public long AccountInitialReserve            = 10;               // initial reserve for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
@@ -52,4 +54,8 @@ public class Configuration {
     public long UserInitialReserve               = 10;               // initial reserve for SYS$*SEC@USERID$ file
     public String UserAssignMnemonic             = "F";              // assign mnemonic for SYS$*SEC@USERID$ file
     public String WordAddressableDefaultMnemonic = "D";
+
+    public void updateFromFile(final String filename) throws KExecException {
+        // TODO
+    }
 }

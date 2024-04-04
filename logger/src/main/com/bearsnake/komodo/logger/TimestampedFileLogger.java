@@ -5,15 +5,14 @@
 package com.bearsnake.komodo.logger;
 
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class TimestampedFileLogger extends FileLogger {
 
     private boolean _enabled;
     private Level _level;
     private PrintStream _printer;
-    private static final SimpleDateFormat _dateTimeFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
 
     public TimestampedFileLogger(final String fileNamePrefix) {
         super(generateFileName(fileNamePrefix));
@@ -31,8 +30,9 @@ public class TimestampedFileLogger extends FileLogger {
     }
 
     private static String generateFileName(final String fileNamePrefix) {
-        var tmStamp = LocalDateTime.now();
-        var dtStr = _dateTimeFormat.format(tmStamp);
+        var dateTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+        String dtStr = dateTime.format(formatter);
         return String.format("%s-%s.log", fileNamePrefix, dtStr);
     }
 

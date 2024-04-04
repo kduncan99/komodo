@@ -17,6 +17,7 @@ public enum StopCode {
     NoMainItemLink(057),
     InitializationSystemConfigurationError(064),
     InitializationSystemLibrariesCorruptOrMissing(064),
+    PanicDumpFailed(064),
     ClearTestSetAttemptedWhenNotSet(066),
     ResourceReleaseFailure(067),
     ActivityIdNoLongerExists(073),

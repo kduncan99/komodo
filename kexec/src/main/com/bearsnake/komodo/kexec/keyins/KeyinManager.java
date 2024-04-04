@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
+import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
@@ -42,8 +43,12 @@ public class KeyinManager implements Manager, Runnable {
     }
 
     @Override
-    public void boot() throws Exception {
+    public void boot() throws KExecException {
         _postedKeyins.clear();
+        Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
+                                                                THREAD_DELAY,
+                                                                THREAD_DELAY,
+                                                                TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -52,12 +57,7 @@ public class KeyinManager implements Manager, Runnable {
     }
 
     @Override
-    public void initialize() throws Exception {
-        Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
-                                                                THREAD_DELAY,
-                                                                THREAD_DELAY,
-                                                                TimeUnit.MILLISECONDS);
-    }
+    public void initialize() {}
 
     @Override
     public void stop() {

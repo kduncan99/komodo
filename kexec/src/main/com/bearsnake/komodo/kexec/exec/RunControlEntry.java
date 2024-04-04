@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.exec;
 
 import com.bearsnake.komodo.baselib.Word36;
+import java.io.PrintStream;
 
 public abstract class RunControlEntry {
 
@@ -52,6 +53,11 @@ public abstract class RunControlEntry {
     public void setImpliedQualifier(final String qualifier) { _impliedQualifier = qualifier; }
     public void setRunConditionWord(final long value) { _runConditionWord.setW(value); }
     public void setRunConditionWord(final Word36 value) { _runConditionWord = value; }
+
+    public void dump(final PrintStream out,
+                     final String indent) {
+        // TODO
+    }
 
     public void postToTailSheet(final String message) {
         // TODO

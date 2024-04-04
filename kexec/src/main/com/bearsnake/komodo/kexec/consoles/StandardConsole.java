@@ -26,10 +26,6 @@ public class StandardConsole implements Console, Runnable {
 
     public StandardConsole() {
         _consoleId = new ConsoleId(1);
-        Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
-                                                                THREAD_DELAY,
-                                                                THREAD_DELAY,
-                                                                TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -105,6 +101,10 @@ public class StandardConsole implements Console, Runnable {
     @Override
     public void reset() throws ConsoleException {
         System.out.println("** CONSOLE RESET **");
+        Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
+                                                                THREAD_DELAY,
+                                                                THREAD_DELAY,
+                                                                TimeUnit.MILLISECONDS);
     }
 
     @Override

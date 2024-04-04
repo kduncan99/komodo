@@ -57,6 +57,11 @@ public class ConsoleManager implements Manager, Runnable {
 
         _queuedReadOnlyMessages.clear();
         _queuedReadReplyMessages.clear();
+
+        Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
+                                                                THREAD_DELAY,
+                                                                THREAD_DELAY,
+                                                                TimeUnit.MILLISECONDS);
     }
 
     public synchronized void dump(final PrintStream out,
@@ -103,11 +108,6 @@ public class ConsoleManager implements Manager, Runnable {
         var primary = new StandardConsole();
         _consoles.put(primary.getConsoleId(), primary);
         _primaryConsoleId = primary.getConsoleId();
-
-        Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
-                                                                THREAD_DELAY,
-                                                                THREAD_DELAY,
-                                                                TimeUnit.MILLISECONDS);
     }
 
     public void sendReadOnlyMessage(final ReadOnlyMessage message) {
