@@ -9,6 +9,7 @@ import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
 import com.bearsnake.komodo.logger.TimestampedFileLogger;
+import java.io.FileNotFoundException;
 
 public class Main {
 
@@ -149,9 +150,15 @@ public class Main {
             }
         }
 
-        LogManager.clear();
-        LogManager.register(new TimestampedFileLogger("kexec"));
-        LogManager.setGlobalLevel(Level.All);//TODO configurable
+        try {
+            LogManager.clear();
+            var logger = new TimestampedFileLogger("kexec");
+            logger.setLevel(Level.All);
+            LogManager.register(logger);
+            LogManager.setGlobalLevel(Level.All);//TODO configurable
+        } catch (FileNotFoundException ex) {
+            System.err.printf("Cannot open log file:%s\n", ex);
+        }
 
         run(context, cfg);
 

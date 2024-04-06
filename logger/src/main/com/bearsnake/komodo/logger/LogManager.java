@@ -4,8 +4,8 @@
 
 package com.bearsnake.komodo.logger;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 
 public class LogManager {
@@ -13,7 +13,7 @@ public class LogManager {
     private static boolean _enabled = true;
     private static Level _level = Level.Error;
     private static final HashMap<Logger, String> _loggers = new HashMap<>();
-    private static final SimpleDateFormat _dateTimeFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
+    private static final DateTimeFormatter _dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
     public static void close() {
         synchronized (_loggers) {
@@ -58,8 +58,8 @@ public class LogManager {
                            final String format,
                            final Object... parameters) {
         if (level.ordinal() <= _level.ordinal() && _enabled) {
-            var tmStamp = LocalDateTime.now();
-            var dtStr = _dateTimeFormat.format(tmStamp);
+            var dateTime = LocalDateTime.now();
+            var dtStr = _dateTimeFormatter.format(dateTime);
             var msg = String.format("%s:%s:%s:", dtStr, level._text, source);
             msg += String.format(format, parameters);
 

@@ -76,6 +76,7 @@ public class Exec {
     public void setConfiguration(final Configuration config) { _configuration = config; }
 
     public void boot() throws KExecException {
+        LogManager.logTrace(LOG_SOURCE, "boot");
         _phase = Phase.Booted;
         _stopFlag = false;
         _executor = new ScheduledThreadPoolExecutor((int)_configuration.ExecThreads);

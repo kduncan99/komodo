@@ -4,52 +4,41 @@
 
 package com.bearsnake.komodo.logger;
 
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 
-public class FileLogger implements Logger {
+public class FileLogger extends Logger {
 
-    private boolean _enabled;
-    private Level _level;
     private PrintStream _printer;
 
-    public FileLogger(final String fileName) {
-        _enabled = true;
-        _level = Level.Error;
+    public FileLogger(final String fileName) throws FileNotFoundException {
+        super();
+        _printer = new PrintStream(fileName);
     }
 
     public FileLogger(final String fileName,
-                      final Level level) {
-        _enabled = true;
-        _level = Level.Error;
+                      final Level level) throws FileNotFoundException {
+        super(level);
+        _printer = new PrintStream(fileName);
     }
 
     public FileLogger(final String fileName,
                       final boolean enabled,
-                      final Level level) {
-        _enabled = enabled;
-        _level = level;
+                      final Level level) throws FileNotFoundException {
+        super(enabled, level);
+        _printer = new PrintStream(fileName);
     }
 
     @Override
-    public void close() {
+    public final void close() {
         _printer.close();
         _printer = null;
     }
 
     @Override
-    public void log(Level level, String message) {
+    public final void log(Level level, String message) {
         if (_printer != null && level.ordinal() <= _level.ordinal() && _enabled) {
             _printer.println(message);
         }
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        _enabled = enabled;
-    }
-
-    @Override
-    public void setLevel(Level level) {
-        _level = level;
     }
 }

@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.logger;
 
-public class ConsoleLogger implements Logger {
+public class ConsoleLogger extends Logger {
 
     private boolean _enabled;
     private Level _level;
@@ -35,15 +35,5 @@ public class ConsoleLogger implements Logger {
         if (level.ordinal() <= _level.ordinal() && _enabled) {
             System.out.println(message);
         }
-    }
-
-    @Override
-    public void setEnabled(boolean enabled) {
-        _enabled = enabled;
-    }
-
-    @Override
-    public void setLevel(Level level) {
-        _level = level;
     }
 }
