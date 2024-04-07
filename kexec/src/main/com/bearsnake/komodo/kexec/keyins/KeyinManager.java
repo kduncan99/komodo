@@ -29,6 +29,7 @@ public class KeyinManager implements Manager, Runnable {
 
     private static final HashMap<String, Class<?>> _handlerClasses = new HashMap<>();
     static {
+        _handlerClasses.put(DKeyinHandler.COMMAND.toUpperCase(), DKeyinHandler.class);
         _handlerClasses.put(StopKeyinHandler.COMMAND.toUpperCase(), StopKeyinHandler.class);
     }
 
@@ -53,12 +54,14 @@ public class KeyinManager implements Manager, Runnable {
                 try {
                     Constructor<?> ctor = clazz.getConstructor(ConsoleId.class, String.class, String.class);
                     var kh = (KeyinHandler)ctor.newInstance(pk.getConsoleIdentifier(), options, arguments);
+                    LogManager.logInfo(LOG_SOURCE, "Scheduling %s keyin", kh.getCommand());
                     Exec.getInstance().getExecutor().schedule(kh, 0, TimeUnit.MILLISECONDS);
                 } catch (IllegalAccessException |
                          InvocationTargetException |
                          InstantiationException |
                          NoSuchMethodException ex) {
-                    // TODO
+                    LogManager.logCatching(LOG_SOURCE, ex);
+                    Exec.getInstance().stop(StopCode.ExecContingencyHandler);
                 }
             } else {
                 // TODO look for registered keyins

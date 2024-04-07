@@ -335,7 +335,7 @@ public class ConsoleManager implements Manager, Runnable {
             // trap door - exec is stopped
         } catch (Throwable t) {
             LogManager.logCatching(LOG_SOURCE, t);
-            Exec.getInstance().stop(StopCode.ExecActivityTakenToEMode);
+            Exec.getInstance().stop(StopCode.ExecContingencyHandler);
         }
     }
 }
