@@ -8,6 +8,7 @@ import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
@@ -77,7 +78,12 @@ public class KeyinManager implements Manager, Runnable {
 
     @Override
     public synchronized void run() {
-        checkPostedKeyins();
-        pruneOldKeyins();
+        try {
+            checkPostedKeyins();
+            pruneOldKeyins();
+        } catch (Throwable t) {
+            LogManager.logCatching(LOG_SOURCE, t);
+            Exec.getInstance().stop(StopCode.ExecActivityTakenToEMode);
+        }
     }
 }

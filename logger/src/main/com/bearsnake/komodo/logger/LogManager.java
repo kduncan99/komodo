@@ -75,6 +75,14 @@ public class LogManager {
         }
     }
 
+    public static void logCatching(final String source,
+                                   final Throwable t) {
+        log(Level.Error, source, "Caught Exception:%s", t.toString());
+        for (var stEntry : t.getStackTrace()) {
+            log(Level.Trace, source, stEntry.toString());
+        }
+    }
+
     public static void logDebug(final String source,
                                 final String format,
                                 final Object... parameters) {

@@ -176,8 +176,8 @@ public class ConsoleManager implements Manager, Runnable {
         var iter = _queuedReadOnlyMessages.iterator();
         while (iter.hasNext() && !Exec.getInstance().isStopped()) {
             var roMsg = iter.next();
-            if ((roMsg.getRouting().getW() == 0) && !dropList.contains(roMsg.getRouting())) {
-                var cons = _consoles.get(roMsg.getRouting());
+            if (roMsg.getRouting() == null) {
+                var cons = _consoles.get(_primaryConsoleId);
                 var sent = false;
                 if (cons != null) {
                     try {
@@ -325,7 +325,7 @@ public class ConsoleManager implements Manager, Runnable {
     }
 
     @Override
-    public synchronized void run() {
+    public void run() {
         try {
             checkForReadOnlyMessage();
             checkForReadReplyMessage();
@@ -333,6 +333,9 @@ public class ConsoleManager implements Manager, Runnable {
             checkForUnsolicitedInput();
         } catch (KExecException ex) {
             // trap door - exec is stopped
+        } catch (Throwable t) {
+            LogManager.logCatching(LOG_SOURCE, t);
+            Exec.getInstance().stop(StopCode.ExecActivityTakenToEMode);
         }
     }
 }

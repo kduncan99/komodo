@@ -6,7 +6,9 @@ package com.bearsnake.komodo.kexec.exec;
 
 import com.bearsnake.komodo.kexec.Configuration;
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
+import com.bearsnake.komodo.kexec.consoles.ReadOnlyMessage;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
 import com.bearsnake.komodo.logger.LogManager;
@@ -14,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -41,6 +44,7 @@ public class Exec {
     public static final int JumpKeyIndex_17 = 16;
     public static final int JumpKeyIndex_18 = 17;
 
+    private static final DateTimeFormatter _dateTimeMsgFormat = DateTimeFormatter.ofPattern("EEE dd MMM yyyy HH:mm:ss");
     private static final SimpleDateFormat _dumpFileNameFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
     private static Exec _instance = null;
     private static final String LOG_SOURCE = "Exec";
@@ -51,6 +55,7 @@ public class Exec {
     private final boolean[] _jumpKeys;
     private final LinkedList<Manager> _managers = new LinkedList<>();
     private Phase _phase;
+    private ExecRunControlEntry _runControlEntry;
     private final HashMap<String, RunControlEntry> _runControlEntries = new HashMap<>(); // keyed by RunId
     private StopCode _stopCode;
     private boolean _stopFlag = false;
@@ -84,15 +89,38 @@ public class Exec {
         LogManager.logTrace(LOG_SOURCE, "boot");
         _phase = Phase.Booted;
         _stopFlag = false;
+
+        _runControlEntries.clear();
+        _runControlEntry = new ExecRunControlEntry(_configuration.MasterAccountId);
+        _runControlEntries.put(_runControlEntry._runId, _runControlEntry);
+        if (!_jumpKeys[JumpKeyIndex_9] && !_jumpKeys[JumpKeyIndex_13]) {
+            // TODO populate rce's with entries from backlog and SMOQUE
+            //   well, at some point. probably not here.
+        }
+
         _executor = new ScheduledThreadPoolExecutor((int)_configuration.ExecThreads);
+        _executor.setRemoveOnCancelPolicy(true);
         for (var m : _managers) {
             m.boot();
         }
+
+        // TODO
+        sendExecReadOnlyMessage("KEXEC Version (?)", null);
+        displayDateAndTime();
+
+        LogManager.logTrace(LOG_SOURCE, "boot complete");
     }
 
     public void close() {
         _executor.close();
         _executor = null;
+    }
+
+    public void displayDateAndTime() {
+        var dateTime = LocalDateTime.now();
+        String dtStr = dateTime.format(_dateTimeMsgFormat);
+        var msg = String.format("The current date and time is %s", dtStr);
+        sendExecReadOnlyMessage(msg, null);
     }
 
     public void dump(final boolean verbose) {
@@ -161,6 +189,78 @@ public class Exec {
         return (_phase != Phase.Stopped) && (_phase != Phase.NotStarted);
     }
 
+    public void sendExecReadOnlyMessage(final String message,
+                                        final ConsoleId routing) {
+        var romsg = new ReadOnlyMessage(_runControlEntry, routing, null, message, true);
+        _consoleManager.sendReadOnlyMessage(romsg);
+    }
+
+    /*
+
+func (e *Exec) SendExecReadReplyMessage(
+	message string,
+	maxReplyChars int,
+	routing *kexec.ConsoleIdentifier,
+) (string, error) {
+	consMsg := kexec.ConsoleReadReplyMessage{
+		Source:         e.runControlEntry,
+		Routing:        routing,
+		Text:           message,
+		DoNotEmitRunId: true,
+		MaxReplyLength: maxReplyChars,
+	}
+
+	err := e.consoleMgr.SendReadReplyMessage(&consMsg)
+	if err != nil {
+		return "", err
+	}
+
+	return consMsg.Reply, nil
+}
+
+func (e *Exec) SendExecRestrictedReadReplyMessage(
+	message string,
+	accepted []string,
+	routing *kexec.ConsoleIdentifier,
+) (string, error) {
+	if len(accepted) == 0 {
+		return "", fmt.Errorf("bad accepted list")
+	}
+
+	maxReplyLen := 0
+	for _, acceptString := range accepted {
+		if maxReplyLen < len(acceptString) {
+			maxReplyLen = len(acceptString)
+		}
+	}
+
+	consMsg := kexec.ConsoleReadReplyMessage{
+		Source:         e.runControlEntry,
+		Routing:        routing,
+		Text:           message,
+		DoNotEmitRunId: true,
+		MaxReplyLength: maxReplyLen,
+	}
+
+	done := false
+	for !done {
+		err := e.consoleMgr.SendReadReplyMessage(&consMsg)
+		if err != nil {
+			return "", err
+		}
+
+		resp := strings.ToUpper(consMsg.Reply)
+		for _, acceptString := range accepted {
+			if acceptString == resp {
+				done = true
+				break
+			}
+		}
+	}
+
+	return strings.ToUpper(consMsg.Reply), nil
+}
+     */
     public void stop(final StopCode stopCode) {
         LogManager.logTrace(LOG_SOURCE, "stop(%s)", stopCode);
         _stopCode = stopCode;
