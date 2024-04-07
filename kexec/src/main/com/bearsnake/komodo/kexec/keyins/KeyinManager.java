@@ -12,6 +12,8 @@ import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -27,7 +29,7 @@ public class KeyinManager implements Manager, Runnable {
 
     private static final HashMap<String, Class<?>> _handlerClasses = new HashMap<>();
     static {
-        _handlerClasses.put(StopKeyinHandler.COMMAND, StopKeyinHandler.class);
+        _handlerClasses.put(StopKeyinHandler.COMMAND.toUpperCase(), StopKeyinHandler.class);
     }
 
     public KeyinManager(){
@@ -41,8 +43,28 @@ public class KeyinManager implements Manager, Runnable {
 
     private void checkPostedKeyins() {
         for (var pk : _postedKeyins) {
-            // TODO
+            var split = pk.getText().split( " ", 2);
+            var subSplit = split[0].split(",", 2);
+            var cmd = subSplit[0].toUpperCase();
+            var options = subSplit.length > 1 ? subSplit[1] : null;
+            var arguments = split.length > 1 ? split[1] : null;
+            var clazz = _handlerClasses.get(cmd);
+            if (clazz != null) {
+                try {
+                    Constructor<?> ctor = clazz.getConstructor(ConsoleId.class, String.class, String.class);
+                    var kh = (KeyinHandler)ctor.newInstance(pk.getConsoleIdentifier(), options, arguments);
+                    Exec.getInstance().getExecutor().schedule(kh, 0, TimeUnit.MILLISECONDS);
+                } catch (IllegalAccessException |
+                         InvocationTargetException |
+                         InstantiationException |
+                         NoSuchMethodException ex) {
+                    // TODO
+                }
+            } else {
+                // TODO look for registered keyins
+            }
         }
+        _postedKeyins.clear();
     }
 
     private void pruneOldKeyins() {

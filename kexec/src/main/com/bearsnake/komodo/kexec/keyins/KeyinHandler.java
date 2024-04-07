@@ -6,10 +6,8 @@ package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import java.time.LocalDateTime;
-import java.time.chrono.MinguoChronology;
-import java.time.temporal.ChronoUnit;
 
-public abstract class KeyinHandler {
+public abstract class KeyinHandler implements Runnable {
 
     protected final String _arguments;
     protected final String _options;
@@ -32,7 +30,6 @@ public abstract class KeyinHandler {
     public String getOptions() { return _options; }
     public abstract String[] getHelp();
     public LocalDateTime getTimeFinished() { return _timeFinished; }
-    public abstract void invoke();
     public abstract boolean isAllowed();
     public boolean isDone() { return _timeFinished != null; }
 
