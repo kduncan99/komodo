@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 public class KeyinManager implements Manager, Runnable {
 
-    private static final long THREAD_DELAY = 100;
+    private static final long THREAD_DELAY = 50;
     private static final String LOG_SOURCE = "KeyinMgr";
 
     private final LinkedList<KeyinHandler> _postedKeyinHandlers = new LinkedList<>();
@@ -30,6 +30,9 @@ public class KeyinManager implements Manager, Runnable {
     private static final HashMap<String, Class<?>> _handlerClasses = new HashMap<>();
     static {
         _handlerClasses.put(DKeyinHandler.COMMAND.toUpperCase(), DKeyinHandler.class);
+        _handlerClasses.put(CJKeyinHandler.COMMAND.toUpperCase(), CJKeyinHandler.class);
+        _handlerClasses.put(DJKeyinHandler.COMMAND.toUpperCase(), DJKeyinHandler.class);
+        _handlerClasses.put(SJKeyinHandler.COMMAND.toUpperCase(), SJKeyinHandler.class);
         _handlerClasses.put(StopKeyinHandler.COMMAND.toUpperCase(), StopKeyinHandler.class);
     }
 
@@ -54,6 +57,12 @@ public class KeyinManager implements Manager, Runnable {
                 try {
                     Constructor<?> ctor = clazz.getConstructor(ConsoleId.class, String.class, String.class);
                     var kh = (KeyinHandler)ctor.newInstance(pk.getConsoleIdentifier(), options, arguments);
+                    if (!kh.checkSyntax()) {
+                        var msg = String.format("Syntax error in %s keyin", kh.getCommand());
+                        Exec.getInstance().sendExecReadOnlyMessage(msg, kh._source);
+                        continue;
+                    }
+
                     LogManager.logInfo(LOG_SOURCE, "Scheduling %s keyin", kh.getCommand());
                     Exec.getInstance().getExecutor().schedule(kh, 0, TimeUnit.MILLISECONDS);
                 } catch (IllegalAccessException |

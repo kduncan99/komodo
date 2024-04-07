@@ -9,27 +9,20 @@ import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.logger.LogManager;
 
-public class DKeyinHandler extends KeyinHandler implements Runnable {
+public class SJKeyinHandler extends JumpKeyHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
-        "D",
-        "Displays system date and time",
+        "SJ[,ALL]",
+        "SJ {key}[,...]",
+        "Sets the indicated jump keys",
     };
 
-    public static final String COMMAND = "D";
+    public static final String COMMAND = "SJ";
 
-    public DKeyinHandler(final ConsoleId source,
-                         final String options,
-                         final String arguments) {
+    public SJKeyinHandler(final ConsoleId source,
+                          final String options,
+                          final String arguments) {
         super(source, options, arguments);
-    }
-
-    @Override
-    public void abort(){}
-
-    @Override
-    public boolean checkSyntax() {
-        return _options == null && _arguments == null;
     }
 
     @Override
@@ -39,14 +32,9 @@ public class DKeyinHandler extends KeyinHandler implements Runnable {
     public String[] getHelp() { return HELP_TEXT; }
 
     @Override
-    public boolean isAllowed() {
-        return true;
-    }
-
-    @Override
     public void run() {
         try {
-            Exec.getInstance().displayDateAndTime();
+            process(true);
         } catch (Throwable t) {
             LogManager.logCatching(COMMAND, t);
             Exec.getInstance().stop(StopCode.ExecContingencyHandler);

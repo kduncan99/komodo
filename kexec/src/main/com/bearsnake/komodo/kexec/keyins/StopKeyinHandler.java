@@ -28,7 +28,7 @@ public class StopKeyinHandler extends KeyinHandler implements Runnable {
 
     @Override
     public boolean checkSyntax() {
-        return _options.isBlank() && _arguments.isBlank();
+        return _options == null && _arguments == null;
     }
 
     @Override

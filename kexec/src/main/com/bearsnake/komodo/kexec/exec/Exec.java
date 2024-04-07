@@ -79,11 +79,13 @@ public class Exec {
     public KeyinManager getKeyinManager() { return _keyinManager; }
     public Phase getPhase() { return _phase; }
     public StopCode getStopCode() { return _stopCode; }
+    public boolean isJumpKeySet(final int jumpKey) { return _jumpKeys[jumpKey - 1]; }
     public boolean isRecoveryBootAllowed() { return _allowRecoveryBoot; }
     public boolean isStopped() { return _phase == Phase.Stopped; }
     public synchronized void managerRegister(final Manager m) { _managers.add(m); }
     public synchronized void managerUnregister(final Manager m) { _managers.remove(m); }
     public void setConfiguration(final Configuration config) { _configuration = config; }
+    public void setJumpKeyValue(final int jumpKey, final boolean value) { _jumpKeys[jumpKey - 1] = value; }
 
     public void boot() throws KExecException {
         LogManager.logTrace(LOG_SOURCE, "boot");
