@@ -8,6 +8,8 @@ import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.logger.LogManager;
+
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -17,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class KeyinManager implements Manager, Runnable {
 
     private static final long THREAD_DELAY = 100;
+    private static final String LOG_SOURCE = "KeyinMgr";
 
     private final LinkedList<KeyinHandler> _postedKeyinHandlers = new LinkedList<>();
     private final LinkedList<PostedKeyin> _postedKeyins = new LinkedList<>();
@@ -24,6 +27,10 @@ public class KeyinManager implements Manager, Runnable {
     private static final HashMap<String, Class<?>> _handlerClasses = new HashMap<>();
     static {
         _handlerClasses.put(StopKeyinHandler.COMMAND, StopKeyinHandler.class);
+    }
+
+    public KeyinManager(){
+        Exec.getInstance().managerRegister(this);
     }
 
     public synchronized void postKeyin(final ConsoleId source,
@@ -44,6 +51,7 @@ public class KeyinManager implements Manager, Runnable {
 
     @Override
     public void boot() throws KExecException {
+        LogManager.logTrace(LOG_SOURCE, "boot()");
         _postedKeyins.clear();
         Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
                                                                 THREAD_DELAY,
@@ -57,20 +65,19 @@ public class KeyinManager implements Manager, Runnable {
     }
 
     @Override
-    public void initialize() {}
+    public void initialize() {
+        LogManager.logTrace(LOG_SOURCE, "initialize()");
+    }
 
     @Override
-    public void stop() {
+    public synchronized void stop() {
+        LogManager.logTrace(LOG_SOURCE, "stop()");
         // nothing to do... i think.
     }
 
     @Override
-    public void run() {
-        if (!Exec.getInstance().isStopped()) {
-            synchronized (this) {
-                checkPostedKeyins();
-                pruneOldKeyins();
-            }
-        }
+    public synchronized void run() {
+        checkPostedKeyins();
+        pruneOldKeyins();
     }
 }

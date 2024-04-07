@@ -17,5 +17,5 @@ public interface Manager {
     void initialize() throws KExecException;
 
     // Invoked for all managers when the exec stops
-    void stop() throws KExecException;
+    void stop();
 }

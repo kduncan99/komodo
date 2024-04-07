@@ -26,9 +26,12 @@ public class ConsoleManager implements Manager, Runnable {
     private final LinkedList<ReadOnlyMessage> _queuedReadOnlyMessages = new LinkedList<>();
     private final HashMap<MessageId, ReadReplyMessage> _queuedReadReplyMessages = new HashMap<>();
 
-    public ConsoleManager() {}
+    public ConsoleManager() {
+        Exec.getInstance().managerRegister(this);
+    }
 
     public void boot() {
+        LogManager.logTrace(LOG_SOURCE, "boot()");
         var iter = _consoles.entrySet().iterator();
         while (iter.hasNext()) {
             var entry = iter.next();
@@ -104,6 +107,7 @@ public class ConsoleManager implements Manager, Runnable {
     }
 
     public void initialize() {
+        LogManager.logTrace(LOG_SOURCE, "initialize()");
         _consoles.clear();
         var primary = new StandardConsole();
         _consoles.put(primary.getConsoleId(), primary);
@@ -154,6 +158,7 @@ public class ConsoleManager implements Manager, Runnable {
     }
 
     public synchronized void stop() {
+        LogManager.logTrace(LOG_SOURCE, "stop()");
         for (var rrMsg : _queuedReadReplyMessages.values()) {
             if (!rrMsg.isCanceled() && !rrMsg.hasResponse()) {
                 rrMsg.setIsCanceled();
@@ -166,10 +171,9 @@ public class ConsoleManager implements Manager, Runnable {
     //     if we can send it to the destination console, do so.
     //     else send it to the primary console.
     //   else send it to all the consoles.
-    private synchronized boolean checkForReadOnlyMessage() throws KExecException {
+    private synchronized void checkForReadOnlyMessage() throws KExecException {
         var dropList = new LinkedList<ConsoleId>();
         var iter = _queuedReadOnlyMessages.iterator();
-        boolean didSomething = false;
         while (iter.hasNext() && !Exec.getInstance().isStopped()) {
             var roMsg = iter.next();
             if ((roMsg.getRouting().getW() == 0) && !dropList.contains(roMsg.getRouting())) {
@@ -206,19 +210,16 @@ public class ConsoleManager implements Manager, Runnable {
             }
 
             iter.remove();
-            didSomething = true;
         }
 
         for (var consId : dropList) {
             dropConsole(consId);
         }
-        return didSomething;
     }
 
-    private synchronized boolean checkForReadReplyMessage() throws KExecException {
+    private synchronized void checkForReadReplyMessage() throws KExecException {
         var dropList = new LinkedList<ConsoleId>();
         var iter = _queuedReadReplyMessages.entrySet().iterator();
-        boolean didSomething = false;
         while (iter.hasNext() && !Exec.getInstance().isStopped()) {
             var entry = iter.next();
             var rrMsg = entry.getValue();
@@ -243,18 +244,15 @@ public class ConsoleManager implements Manager, Runnable {
                 } catch (ConsoleException ex) {
                     dropList.add(rrMsg.getRouting());
                 }
-
-                didSomething = true;
             }
         }
 
         for (var consId : dropList) {
             dropConsole(consId);
         }
-        return didSomething;
     }
 
-    private synchronized boolean checkForSolicitedInput() throws KExecException {
+    private synchronized void checkForSolicitedInput() throws KExecException {
         for (var cons : _consoles.values()) {
             try {
                 var solInput = cons.pollSolicitedInput();
@@ -263,7 +261,7 @@ public class ConsoleManager implements Manager, Runnable {
                         LogManager.logWarning(LOG_SOURCE,
                                               "Received solicited input for unknown message %s",
                                               solInput.getMessageId().toString());
-                        return true;
+                        return;
                     }
 
                     var rrMsg = _queuedReadReplyMessages.get(solInput.getMessageId());
@@ -271,7 +269,7 @@ public class ConsoleManager implements Manager, Runnable {
                         LogManager.logWarning(LOG_SOURCE,
                                               "Received solicited input for replied message %s",
                                               solInput.getMessageId().toString());
-                        return true;
+                        return;
                     }
 
                     if (Exec.getInstance().getConfiguration().LogConsoleMessages && !rrMsg.doNotLogResponse()) {
@@ -284,7 +282,7 @@ public class ConsoleManager implements Manager, Runnable {
                     }
 
                     _queuedReadReplyMessages.remove(rrMsg.getMessageId());
-                    return true;
+                    return;
                 }
             } catch (ConsoleException ex) {
                 dropConsole(cons.getConsoleId());
@@ -295,18 +293,16 @@ public class ConsoleManager implements Manager, Runnable {
                 break;
             }
         }
-
-        return false;
     }
 
-    private synchronized boolean checkForUnsolicitedInput() throws KExecException {
+    private synchronized void checkForUnsolicitedInput() throws KExecException {
         for (var cons : _consoles.values()) {
             try {
                 var input = cons.pollUnsolicitedInput();
                 if (input != null) {
                     // send the raw input to the keyin manager
                     Exec.getInstance().getKeyinManager().postKeyin(cons.getConsoleId(), input);
-                    return true;
+                    return;
                 }
             } catch (ConsoleException ex) {
                 dropConsole(cons.getConsoleId());
@@ -317,8 +313,6 @@ public class ConsoleManager implements Manager, Runnable {
                 break;
             }
         }
-
-        return false;
     }
 
     private void dropConsole(final ConsoleId consoleId) throws KExecException {
@@ -331,23 +325,14 @@ public class ConsoleManager implements Manager, Runnable {
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         try {
-            if (!Exec.getInstance().isStopped()) {
-                boolean didSomething = false;
-                synchronized (this) {
-                    didSomething |= checkForReadOnlyMessage();
-                    didSomething |= checkForReadReplyMessage();
-                    didSomething |= checkForSolicitedInput();
-                    didSomething |= checkForUnsolicitedInput();
-                }
-
-                if (didSomething && !Exec.getInstance().isStopped()) {
-                    run();
-                }
-            }
+            checkForReadOnlyMessage();
+            checkForReadReplyMessage();
+            checkForSolicitedInput();
+            checkForUnsolicitedInput();
         } catch (KExecException ex) {
-            // do nothing
+            // trap door - exec is stopped
         }
     }
 }

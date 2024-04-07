@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.exec;
 
 import com.bearsnake.komodo.kexec.Configuration;
+import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
@@ -14,6 +15,7 @@ import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -46,7 +48,8 @@ public class Exec {
     private boolean _allowRecoveryBoot;
     private Configuration _configuration;
     private ScheduledThreadPoolExecutor _executor;
-    private boolean[] _jumpKeys = new boolean[36];
+    private final boolean[] _jumpKeys;
+    private final LinkedList<Manager> _managers = new LinkedList<>();
     private Phase _phase;
     private final HashMap<String, RunControlEntry> _runControlEntries = new HashMap<>(); // keyed by RunId
     private StopCode _stopCode;
@@ -59,9 +62,9 @@ public class Exec {
         _jumpKeys = jumpKeyTable;
         _allowRecoveryBoot = false;
         _phase = Phase.NotStarted;
+        _instance = this;
         _consoleManager = new ConsoleManager();
         _keyinManager = new KeyinManager();
-        _instance = this;
     }
 
     public Configuration getConfiguration() { return _configuration; }
@@ -73,6 +76,8 @@ public class Exec {
     public StopCode getStopCode() { return _stopCode; }
     public boolean isRecoveryBootAllowed() { return _allowRecoveryBoot; }
     public boolean isStopped() { return _phase == Phase.Stopped; }
+    public synchronized void managerRegister(final Manager m) { _managers.add(m); }
+    public synchronized void managerUnregister(final Manager m) { _managers.remove(m); }
     public void setConfiguration(final Configuration config) { _configuration = config; }
 
     public void boot() throws KExecException {
@@ -80,9 +85,9 @@ public class Exec {
         _phase = Phase.Booted;
         _stopFlag = false;
         _executor = new ScheduledThreadPoolExecutor((int)_configuration.ExecThreads);
-        _consoleManager.boot();
-        _keyinManager.boot();
-        // TODO
+        for (var m : _managers) {
+            m.boot();
+        }
     }
 
     public void close() {
@@ -147,9 +152,9 @@ public class Exec {
     }
 
     public void initialize() throws KExecException {
-        _configuration = new Configuration();
-        _consoleManager.initialize();
-        _keyinManager.initialize();
+        for (var m : _managers) {
+            m.initialize();
+        }
     }
 
     public boolean isRunning() {
@@ -157,6 +162,7 @@ public class Exec {
     }
 
     public void stop(final StopCode stopCode) {
+        LogManager.logTrace(LOG_SOURCE, "stop(%s)", stopCode);
         _stopCode = stopCode;
         _stopFlag = true;
         _phase = Phase.Stopped;
@@ -169,8 +175,8 @@ public class Exec {
             // nothing to do here
         }
         _executor = null;
-
-        _consoleManager.stop();
-        _keyinManager.stop();
+        for (var m : _managers) {
+            m.stop();
+        }
     }
 }
