@@ -25,25 +25,6 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("resource")
 public class Exec {
 
-    public static final int JumpKeyIndex_1 = 0;
-    public static final int JumpKeyIndex_2 = 1;
-    public static final int JumpKeyIndex_3 = 2;
-    public static final int JumpKeyIndex_4 = 3;
-    public static final int JumpKeyIndex_5 = 4;
-    public static final int JumpKeyIndex_6 = 5;
-    public static final int JumpKeyIndex_7 = 6;
-    public static final int JumpKeyIndex_8 = 7;
-    public static final int JumpKeyIndex_9 = 8;
-    public static final int JumpKeyIndex_10 = 9;
-    public static final int JumpKeyIndex_11 = 10;
-    public static final int JumpKeyIndex_12 = 11;
-    public static final int JumpKeyIndex_13 = 12;
-    public static final int JumpKeyIndex_14 = 13;
-    public static final int JumpKeyIndex_15 = 14;
-    public static final int JumpKeyIndex_16 = 15;
-    public static final int JumpKeyIndex_17 = 16;
-    public static final int JumpKeyIndex_18 = 17;
-
     private static final DateTimeFormatter _dateTimeMsgFormat = DateTimeFormatter.ofPattern("EEE dd MMM yyyy HH:mm:ss");
     private static final SimpleDateFormat _dumpFileNameFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
     private static Exec _instance = null;
@@ -95,7 +76,7 @@ public class Exec {
         _runControlEntries.clear();
         _runControlEntry = new ExecRunControlEntry(_configuration.MasterAccountId);
         _runControlEntries.put(_runControlEntry._runId, _runControlEntry);
-        if (!_jumpKeys[JumpKeyIndex_9] && !_jumpKeys[JumpKeyIndex_13]) {
+        if (!isJumpKeySet(9) && !isJumpKeySet(13)) {
             // TODO populate rce's with entries from backlog and SMOQUE
             //   well, at some point. probably not here.
         }
@@ -142,9 +123,9 @@ public class Exec {
         }
 
         out.println("Exec Dump ----------------------------------------------------");
-        out.printf("  Phase:      %s\n", _phase);
-        out.printf("  Stopped:    %s\n", _stopFlag);
-        out.printf("  StopCode:   %s\n", _stopCode);
+        out.printf("  Phase:          %s\n", _phase);
+        out.printf("  Stopped:        %s\n", _stopFlag);
+        out.printf("  StopCode:       %s\n", _stopCode);
 
         var jkStr = new StringBuilder();
         for (var jkx = 0; jkx < 36; jkx++) {
@@ -152,35 +133,28 @@ public class Exec {
                 jkStr.append(jkx + 1).append(" ");
             }
         }
-        out.printf("  JumpKeys:   %s\n", jkStr);
+        out.printf("  JumpKeys:       %s\n", jkStr);
+        out.printf("  Allow Recovery: %s\n", _allowRecoveryBoot);
+
+        if (_executor != null) {
+            out.printf("  Activities (cpSize=%d active=%d tasks=%d comp=%d):\n",
+                       _executor.getCorePoolSize(),
+                       _executor.getActiveCount(),
+                       _executor.getTaskCount(),
+                       _executor.getCompletedTaskCount());
+            if (verbose) {
+                _executor.getQueue().forEach(q -> out.printf("    %s\n", q.toString()));
+            }
+        }
+
         out.println("  Run Control Entries:");
         for (var rce : _runControlEntries.values()) {
-            rce.dump(out, "    ");
+            rce.dump(out, "    ", verbose);
         }
-        /*
-	_, _ = fmt.Fprintf(dumpFile, "  Run Control Entries:\n")
-	for _, rce := range e.runControlTable {
-		rce.Dump(dumpFile, "    ")
-	}
 
-	// TODO something different when fullFlag is set
-
-	e.consoleMgr.Dump(dumpFile, "")
-	e.keyinMgr.Dump(dumpFile, "")
-	e.nodeMgr.Dump(dumpFile, "")
-	e.facMgr.Dump(dumpFile, "")
-	e.mfdMgr.Dump(dumpFile, "")
-
-	// TODO run control table, etc
-
-	err = dumpFile.Close()
-	if err != nil {
-		err := fmt.Errorf("cannot close dump file:%v\n", err)
-		return "", err
-	}
-
-	return fileName, nil
- */
+        for (var m : _managers) {
+            m.dump(out, "  ", verbose);
+        }
     }
 
     public void initialize() throws KExecException {

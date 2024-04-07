@@ -94,9 +94,9 @@ public class Main {
 
         int session = 0;
         while (true) {
-            if (context._jumpKeys[Exec.JumpKeyIndex_2]) {
+            if (e.isJumpKeySet(2)) {
                 System.out.println("::Performing pre-boot system dump...");
-                e.dump(context._jumpKeys[Exec.JumpKeyIndex_6]);
+                e.dump(e.isJumpKeySet(6));
             }
 
             System.out.printf("::Starting KEXEC session %d...\n", session);
@@ -116,12 +116,13 @@ public class Main {
             }
 
             System.out.printf("::System error %03o terminated session %03o\n", e.getStopCode().getCode(), session);
-            if (context._jumpKeys[Exec.JumpKeyIndex_3]) {
+            if (e.isJumpKeySet(3)) {
                 System.out.println("::Auto-recovery inhibited - producing final post-mortem dump...");
-                e.dump(context._jumpKeys[Exec.JumpKeyIndex_6]);
+                e.dump(e.isJumpKeySet(6));
                 break;
             } else if (!e.isRecoveryBootAllowed()) {
-                System.out.println("::Exec recovery is not possible");
+                System.out.println("::Exec recovery is not possible - producing post-mortem dump...");
+                e.dump(e.isJumpKeySet(6));
                 break;
             }
 

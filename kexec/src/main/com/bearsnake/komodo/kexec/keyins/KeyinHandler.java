@@ -37,4 +37,20 @@ public abstract class KeyinHandler implements Runnable {
         _timeFinished = LocalDateTime.now();
         _timeToPrune = _timeFinished.plusMinutes(5);
     }
+
+    @Override
+    public synchronized String toString() {
+        var sb = new StringBuilder();
+        sb.append(getCommand());
+        if (_options != null) {
+            sb.append(",").append(_options);
+        }
+        if (_arguments != null) {
+            sb.append(" ").append(_arguments);
+        }
+        if (_timeFinished != null) {
+            sb.append(" (FINISHED)");
+        }
+        return sb.toString();
+    }
 }

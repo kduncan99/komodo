@@ -64,6 +64,7 @@ public class KeyinManager implements Manager, Runnable {
                     }
 
                     LogManager.logInfo(LOG_SOURCE, "Scheduling %s keyin", kh.getCommand());
+                    _postedKeyinHandlers.add(kh);
                     Exec.getInstance().getExecutor().schedule(kh, 0, TimeUnit.MILLISECONDS);
                 } catch (IllegalAccessException |
                          InvocationTargetException |
@@ -81,7 +82,7 @@ public class KeyinManager implements Manager, Runnable {
 
     private void pruneOldKeyins() {
         var now = LocalDateTime.now();
-        _postedKeyinHandlers.removeIf(pkh -> now.isAfter(pkh._timeToPrune));
+        _postedKeyinHandlers.removeIf(pkh -> pkh._timeToPrune != null && now.isAfter(pkh._timeToPrune));
     }
 
     @Override
@@ -95,8 +96,19 @@ public class KeyinManager implements Manager, Runnable {
     }
 
     @Override
-    public void dump(PrintStream out, String indent) {
-        // TODO
+    public synchronized void dump(final PrintStream out,
+                                  final String indent,
+                                  final boolean verbose) {
+        out.printf("%sKeyinManager ********************************\n", indent);
+
+        out.printf("%s  Posted:\n", indent);
+        for (var k : _postedKeyins) {
+            out.printf("%s    %s:%s\n", indent, k.getConsoleIdentifier().toString(), k.getText());
+        }
+        out.printf("%s  Recent Handlers:\n", indent);
+        for (var kh : _postedKeyinHandlers) {
+            out.printf("%s    %s\n", indent, kh.toString());
+        }
     }
 
     @Override

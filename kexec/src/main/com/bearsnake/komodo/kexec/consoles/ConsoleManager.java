@@ -9,6 +9,7 @@ import com.bearsnake.komodo.kexec.exceptions.ConsoleException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.PrintStream;
@@ -30,6 +31,7 @@ public class ConsoleManager implements Manager, Runnable {
         Exec.getInstance().managerRegister(this);
     }
 
+    @Override
     public void boot() {
         LogManager.logTrace(LOG_SOURCE, "boot()");
         var iter = _consoles.entrySet().iterator();
@@ -67,11 +69,13 @@ public class ConsoleManager implements Manager, Runnable {
                                                                 TimeUnit.MILLISECONDS);
     }
 
+    @Override
     public synchronized void dump(final PrintStream out,
-                                  final String indent) {
+                                  final String indent,
+                                  final boolean verbose) {
         out.printf("%sConsoleManager ********************************\n", indent);
 
-        out.println("%s  Queued Read-only messages:");
+        out.printf("%s  Queued Read-only messages:\n", indent);
         for (var msg : _queuedReadOnlyMessages) {
             out.printf("%s    src:%s [%s] rte:%s %s\n",
                        indent,
@@ -81,7 +85,7 @@ public class ConsoleManager implements Manager, Runnable {
                        msg.getText());
         }
 
-        out.println("%s  Queued Read-reply messages:");
+        out.printf("%s  Queued Read-reply messages:\n", indent);
         for (var msg : _queuedReadReplyMessages.values()) {
             out.printf("%s    src:%s [%s] rte:%s %s resp:%s cons:%s consIdx:%d cancel:%s\n",
                        indent,
@@ -106,6 +110,7 @@ public class ConsoleManager implements Manager, Runnable {
         }
     }
 
+    @Override
     public void initialize() {
         LogManager.logTrace(LOG_SOURCE, "initialize()");
         _consoles.clear();
@@ -119,7 +124,7 @@ public class ConsoleManager implements Manager, Runnable {
                             "Queueing ReadOnly %s*%s",
                             message.getSource().getRunId(),
                             message.getText());
-        if (!message.getSource().isExec()) {
+        if (message.getSource().getRunType() != RunType.Exec) {
             message.getSource().postToTailSheet(message.getText());
         }
 
@@ -136,7 +141,7 @@ public class ConsoleManager implements Manager, Runnable {
                             "Queueing ReadReply %s*%s",
                             message.getSource().getRunId(),
                             message.getText());
-        if (!message.getSource().isExec()) {
+        if (message.getSource().getRunType() != RunType.Exec) {
             message.getSource().postToTailSheet(message.getText());
         }
 
@@ -157,6 +162,7 @@ public class ConsoleManager implements Manager, Runnable {
         }
     }
 
+    @Override
     public synchronized void stop() {
         LogManager.logTrace(LOG_SOURCE, "stop()");
         for (var rrMsg : _queuedReadReplyMessages.values()) {
