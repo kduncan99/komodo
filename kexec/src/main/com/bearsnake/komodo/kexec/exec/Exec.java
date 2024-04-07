@@ -126,9 +126,11 @@ public class Exec {
     }
 
     public void dump(final boolean verbose) {
-        var now = LocalDateTime.now();
-        var filename = String.format("kexec-%s.dump", _dumpFileNameFormat.format(now));
-        PrintStream out = null;
+        var dateTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+        String dtStr = dateTime.format(formatter);
+        var filename = String.format("kexec-%s.dump", dtStr);
+        PrintStream out;
         try {
             out = new PrintStream(filename);
         } catch (FileNotFoundException ex) {
