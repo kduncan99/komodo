@@ -38,7 +38,7 @@ public class TestFileAllocationSet {
     }
 
     @Test
-    public void testMergeAheadNonContiguous() {
+    public void testMergeAheadNonContiguousFileAddress() {
         var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
 
         var region = new TrackRegion(20, 10);
@@ -47,7 +47,7 @@ public class TestFileAllocationSet {
         fas.mergeIntoFileAllocationSet(fa);
 
         var newRegion = new TrackRegion(10, 2);
-        var newHWTid = new HardwareTrackId(02, 900);
+        var newHWTid = new HardwareTrackId(02, 990);
         var newFA = new FileAllocation(newRegion, newHWTid);
         fas.mergeIntoFileAllocationSet(newFA);
 
@@ -88,7 +88,7 @@ public class TestFileAllocationSet {
     }
 
     @Test
-    public void testMergeBehindNonContiguous() {
+    public void testMergeBehindNonContiguousFileAddress() {
         var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
 
         var region = new TrackRegion(20, 5);
@@ -97,7 +97,59 @@ public class TestFileAllocationSet {
         fas.mergeIntoFileAllocationSet(fa);
 
         var newRegion = new TrackRegion(30, 2);
-        var newHWTid = new HardwareTrackId(02, 900);
+        var newHWTid = new HardwareTrackId(02, 1010);
+        var newFA = new FileAllocation(newRegion, newHWTid);
+        fas.mergeIntoFileAllocationSet(newFA);
+
+        var allocs = fas.getFileAllocations();
+        assertEquals(2, allocs.size());
+
+        var chk0 = allocs.get(0);
+        assertEquals(region, chk0.getFileRegion());
+        assertEquals(hwTid, chk0.getHardwareTrackId());
+
+        var chk1 = allocs.get(1);
+        assertEquals(newRegion, chk1.getFileRegion());
+        assertEquals(newHWTid, chk1.getHardwareTrackId());
+    }
+
+    @Test
+    public void testMergeBehindNonContiguousDifferentLDAT() {
+        var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
+
+        var region = new TrackRegion(20, 10);
+        var hwTid = new HardwareTrackId(02, 1000);
+        var fa = new FileAllocation(region, hwTid);
+        fas.mergeIntoFileAllocationSet(fa);
+
+        var newRegion = new TrackRegion(30, 2);
+        var newHWTid = new HardwareTrackId(03, 1010);
+        var newFA = new FileAllocation(newRegion, newHWTid);
+        fas.mergeIntoFileAllocationSet(newFA);
+
+        var allocs = fas.getFileAllocations();
+        assertEquals(2, allocs.size());
+
+        var chk0 = allocs.get(0);
+        assertEquals(region, chk0.getFileRegion());
+        assertEquals(hwTid, chk0.getHardwareTrackId());
+
+        var chk1 = allocs.get(1);
+        assertEquals(newRegion, chk1.getFileRegion());
+        assertEquals(newHWTid, chk1.getHardwareTrackId());
+    }
+
+    @Test
+    public void testMergeBehindNonContiguousPhysical() {
+        var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
+
+        var region = new TrackRegion(20, 10);
+        var hwTid = new HardwareTrackId(02, 1000);
+        var fa = new FileAllocation(region, hwTid);
+        fas.mergeIntoFileAllocationSet(fa);
+
+        var newRegion = new TrackRegion(30, 2);
+        var newHWTid = new HardwareTrackId(02, 1021);
         var newFA = new FileAllocation(newRegion, newHWTid);
         fas.mergeIntoFileAllocationSet(newFA);
 
