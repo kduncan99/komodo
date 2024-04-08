@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Unit tests for com.bearsnake.komodo.baselib.Word36 class
  */
-public class Test_Word36 {
+public class TestWord36 {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Instance method tests

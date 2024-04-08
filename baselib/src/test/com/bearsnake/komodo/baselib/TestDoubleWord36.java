@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Unit tests for Word36 class
  */
-public class Test_DoubleWord36 {
+public class TestDoubleWord36 {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Instance method tests

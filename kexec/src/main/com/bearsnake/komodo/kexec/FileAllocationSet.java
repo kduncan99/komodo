@@ -31,6 +31,9 @@ public class FileAllocationSet {
         return _fileAllocations.isEmpty() ? -1 : _fileAllocations.getLast().getFileRegion().getHighestTrack();
     }
 
+    // For unit testing
+    LinkedList<FileAllocation> getFileAllocations() { return _fileAllocations; }
+
     /**
      * Extracts the allocation (combination of file-relative track id and track count) described by
      * the given region from this file allocation set.
