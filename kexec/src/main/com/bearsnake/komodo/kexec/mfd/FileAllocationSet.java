@@ -2,10 +2,11 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kexec;
+package com.bearsnake.komodo.kexec.mfd;
 
 import static com.bearsnake.komodo.kexec.exec.Exec.INVALID_LDAT;
-import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
+
+import com.bearsnake.komodo.kexec.HardwareTrackId;
 
 import java.util.LinkedList;
 
@@ -43,7 +44,7 @@ public class FileAllocationSet {
      * @return HardwareTrackId containing the LDAT index and devivce-relative track ID describing the
      * physical location of the first track in the requested region.
      */
-    public synchronized HardwareTrackId extractRegionFromFileAllocationSet(final TrackRegion region) {
+    public synchronized HardwareTrackId extractRegionFromFileAllocationSet(final LogicalTrackExtent region) {
         for (int fax = 0; fax < _fileAllocations.size(); ++fax) {
             var fa = _fileAllocations.get(fax);
             var faRegion = fa.getFileRegion();
@@ -78,7 +79,7 @@ public class FileAllocationSet {
                     // with tracks remaining ahead and behind
                     var newTrackId = entryLimit;
                     var newTrackCount = allocLimit - entryLimit;
-                    var newRegion = new TrackRegion(newTrackId, newTrackCount);
+                    var newRegion = new LogicalTrackExtent(newTrackId, newTrackCount);
                     var newDevTrkId = hwTrk.getTrackId() + (newTrackId - faRegion.getTrackId());
                     var newHWTrkId = new HardwareTrackId(ldat, newDevTrkId);
                     var newAlloc = new FileAllocation(newRegion, newHWTrkId);
@@ -100,40 +101,20 @@ public class FileAllocationSet {
         var newHWTrk = newEntry.getHardwareTrackId();
         for (int fax = 0; fax < _fileAllocations.size(); fax++) {
             var fa = _fileAllocations.get(fax);
-            var faRegion = fa.getFileRegion();
-            var faHWTrk = fa.getHardwareTrackId();
-
-            if (newRegion.getTrackId() < faRegion.getTrackId()) {
-                // the new entry appears before the indexed entry and after the previous entry...
-                // if they are the same LDAT, see whether we need to merge the entries.
-                if (newHWTrk.getLDATIndex() == faHWTrk.getLDATIndex()) {
-                    var next = newRegion.getTrackId() + newRegion.getTrackCount();
-                    if (next == faRegion.getTrackId()) {
-                        // merge them
-                        faRegion.setTrackId(newRegion.getTrackId());
-                        faRegion.addToTrackCount(newRegion.getTrackCount());
-                        faHWTrk.setTrackId(newHWTrk.getTrackId());
-                        _isUpdated = true;
-                        return;
-                    }
-                }
-
-                // the new entry is not contiguous with the previous entry, nor with the next.
-                // splice it in place as a separate entry.
-                _fileAllocations.add(fax, newEntry);
+            if (fa.merge(newEntry)) {
                 _isUpdated = true;
                 return;
             }
 
-            // If the new entry is on the same pack as the indexed entry, see if the new entry is contiguous
-            // with the end of the indexed entry
-            if (newHWTrk.getLDATIndex() == faHWTrk.getLDATIndex()) {
-                var next = faRegion.getTrackId() + faRegion.getTrackCount();
-                if (next == newRegion.getTrackId()) {
-                    faRegion.addToTrackCount(newRegion.getTrackCount());
-                    _isUpdated = true;
-                    return;
-                }
+            var faRegion = fa.getFileRegion();
+            var faHWTrk = fa.getHardwareTrackId();
+            if (newRegion.getTrackId() < faRegion.getTrackId()) {
+                // the new entry appears before the indexed entry and after the previous entry,
+                // and is not contiguous with the previous entry, nor with the next.
+                // splice it in place as a separate entry.
+                _fileAllocations.add(fax, newEntry);
+                _isUpdated = true;
+                return;
             }
         }
 

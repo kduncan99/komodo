@@ -21,6 +21,18 @@ public class HardwareTrackId {
     public void setLDATIndex(long value) { _ldatIndex = value; }
     public void setTrackId(long value) { _trackId = value; }
 
+    /**
+     * Returns true if this track ID follows the previous track ID, by the given track count
+     * @param previous previous track ID
+     * @param previousTrackCount number of tracks which exist beginning with the previous track ID,
+     *                           and leading up to, but not including, our track ID.
+     */
+    public boolean isContiguousTo(final HardwareTrackId previous,
+                                  final long previousTrackCount) {
+        return (_ldatIndex == previous._ldatIndex)
+            && (_trackId == previous._trackId + previousTrackCount);
+    }
+
     @Override
     public boolean equals(final Object obj) {
         return (obj instanceof HardwareTrackId ht)
