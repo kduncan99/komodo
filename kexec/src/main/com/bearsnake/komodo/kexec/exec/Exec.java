@@ -25,6 +25,8 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("resource")
 public class Exec {
 
+    public static final long INVALID_LDAT = 0_400000;
+
     private static final DateTimeFormatter _dateTimeMsgFormat = DateTimeFormatter.ofPattern("EEE dd MMM yyyy HH:mm:ss");
     private static final SimpleDateFormat _dumpFileNameFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
     private static Exec _instance = null;
