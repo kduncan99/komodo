@@ -21,6 +21,14 @@ public class FileAllocation {
     public HardwareTrackId getHardwareTrackId() { return _hardwareTrackId; }
 
     /**
+     * Returns true if this entry contains the indicated file-relative trackID
+     * @param trackId file-relative track id
+     */
+    public boolean containsFileRelativeTrack(final long trackId) {
+        return (_logicalExtent.getTrackId() <= trackId) && (_logicalExtent.getHighestTrack() >= trackId);
+    }
+
+    /**
      * Returns true if this file allocation is both logically and physically contiguous to (following)
      * the potential previous entry.
      * It is logically contiguous if the logical first track of this object is the next logical track

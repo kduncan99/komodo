@@ -25,15 +25,13 @@ public class FileAllocationSet {
     }
 
     public MFDRelativeAddress getDadItem0Address() { return _dadItem0Address; }
+    LinkedList<FileAllocation> getFileAllocations() { return _fileAllocations; }
     public MFDRelativeAddress getMainItem0Address() { return _mainItem0Address; }
     public boolean isUpdated() { return _isUpdated; }
 
     public synchronized long getHighestTrackAllocated() {
         return _fileAllocations.isEmpty() ? -1 : _fileAllocations.getLast().getFileRegion().getHighestTrack();
     }
-
-    // For unit testing
-    LinkedList<FileAllocation> getFileAllocations() { return _fileAllocations; }
 
     /**
      * Extracts the allocation (combination of file-relative track id and track count) described by
@@ -123,53 +121,41 @@ public class FileAllocationSet {
         _isUpdated = true;
     }
 
-    /*
-    // FindPrecedingAllocation retrieves the FileAllocation which immediately precedes or contains the
-// indicated file-relative track id. If we return nil, there is no such FileAllocation.
-    func (fas *FileAllocationSet) FindPrecedingAllocation(
-    fileTrackId hardware.TrackId,
-        ) (alloc *FileAllocation) {
-        alloc = nil
-        for _, fa := range fas.FileAllocations {
-            if fileTrackId >= fa.FileRegion.TrackId {
-                alloc = fa
-            } else {
-                break
-            }
-        }
-        return
-    }
-
-    // GetHighestTrackAssigned finds that value from the FileAllocationSet
-    func (fas *FileAllocationSet) GetHighestTrackAssigned() hardware.TrackId {
-        entryCount := len(fas.FileAllocations)
-        if entryCount == 0 {
-            return 0
-        } else {
-            last := entryCount - 1
-            fAlloc := fas.FileAllocations[last]
-            return fAlloc.FileRegion.TrackId + hardware.TrackId(fAlloc.FileRegion.TrackCount) - 1
-        }
-    }
-
-    // resolveFileRelativeTrackId converts a file-relative track id (file-relative sector address * 28,
-// or file-relative word address * 1792) to the LDAT index of the pack which contains that track,
-// and to the corresponding device/pack-relative track ID.
-// If we return false, no allocation exists (the space has not (yet) been allocated).
-    func (fas *FileAllocationSet) resolveFileRelativeTrackId(
-    fileTrackId hardware.TrackId,
-        ) (LDATIndex, hardware.TrackId, bool) {
-        for _, fa := range fas.FileAllocations {
-            highestAllocTrack := hardware.TrackId(uint64(fa.FileRegion.TrackId) + uint64(fa.FileRegion.TrackCount) - 1)
-            if fileTrackId >= fa.FileRegion.TrackId && fileTrackId <= highestAllocTrack {
-                offset := fileTrackId - fa.FileRegion.TrackId
-                return fa.LDATIndex, fa.DeviceTrackId + offset, true
-            } else if highestAllocTrack < fileTrackId {
-                break
-            }
-        }
-
-        return 0, 0, false
-    }
+    /**
+     *  TODO change name to findContainingAllocation()
+     * Finds the FileAllocation entry which contains the indicated file-relative track id.
+     * @param fileTrackId file-relative track id we are interested in
+     * @return containing FileAllocation entry, or nil if the track is not allocated
      */
+    public synchronized FileAllocation findPrecedingAllocation(final long fileTrackId) {
+        return _fileAllocations.stream()
+                               .filter(fa -> fa.containsFileRelativeTrack(fileTrackId))
+                               .findFirst()
+                               .orElse(null);
+    }
+
+    /**
+     * Finds the track ID of the highest file-relative track.
+     * @return highest track ID, or null if no tracks are allocated.
+     */
+    public synchronized Long getHighestTrackAssigned() {
+        return _fileAllocations.isEmpty() ? null : _fileAllocations.getLast().getFileRegion().getHighestTrack();
+    }
+
+    /**
+     * Converts the file-relative track ID to the corresponding pack LDAT and device track.
+     * @param fileRelativeTrackId file-relative track ID
+     * @return HardwareTrackId containing LDAT index and device track if the track is allocated, else null.
+     */
+    public synchronized HardwareTrackId resolveFileRelativeTrackId(final long fileRelativeTrackId) {
+        for (var fa : _fileAllocations) {
+            if (fa.containsFileRelativeTrack(fileRelativeTrackId)) {
+                long offset = fileRelativeTrackId - fa.getFileRegion().getTrackId();
+                var hwTid = fa.getHardwareTrackId();
+                return new HardwareTrackId(hwTid.getLDATIndex(), hwTid.getTrackId() + offset);
+            }
+        }
+
+        return null;
+    }
 }

@@ -16,7 +16,7 @@ import java.math.BigInteger;
  * Do NOT change this.
  */
 @SuppressWarnings("Duplicates")
-public class Word36 {
+public class Word36 implements Comparable<Word36> {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes
@@ -1053,5 +1053,10 @@ public class Word36 {
                              ASCII_FROM_FIELDATA[(int) getS4(value)],
                              ASCII_FROM_FIELDATA[(int) getS5(value)],
                              ASCII_FROM_FIELDATA[(int) getS6(value)]);
+    }
+
+    @Override
+    public int compareTo(Word36 obj) {
+        return Long.compare(getW(), obj.getW());
     }
 }

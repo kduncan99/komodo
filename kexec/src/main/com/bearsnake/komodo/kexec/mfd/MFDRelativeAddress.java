@@ -45,4 +45,9 @@ public class MFDRelativeAddress {
     public void setLDATIndex(long value) { _value = (value & 0777777) | ((value & 07777) << 18); }
     public void setTrackId(long value) { _value = (value & 07777000077) | ((value & 07777) << 6); }
     public void setSectorId(long value) { _value = (value & 07777777700) | (value & 077); }
+
+    @Override
+    public String toString() {
+        return String.format("%012o", _value);
+    }
 }
