@@ -4,8 +4,6 @@
 
 package com.bearsnake.komodo.kexec.mfd;
 
-import com.bearsnake.komodo.baselib.Word36BaseSlice;
-import com.bearsnake.komodo.baselib.Word36Slice;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
