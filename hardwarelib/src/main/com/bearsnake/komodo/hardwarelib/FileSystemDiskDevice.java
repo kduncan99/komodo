@@ -6,6 +6,7 @@ package com.bearsnake.komodo.hardwarelib;
 
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileSystems;
 
@@ -16,11 +17,14 @@ import static java.nio.file.StandardOpenOption.WRITE;
 /**
  * A virtual disk which stores data in the host filesystem.
  * We assume blocks of 4k, so all block ids refer to 4k blocks.
+ * Reads will get a newly-allocated buffer in the packet on successful return.
+ * size considering our fixed block size, and the number of blocks requested.
+ * Writes must provide a properly-sized buffer accounting for the fixed block size and number of blocks requested.
  */
 public abstract class FileSystemDiskDevice extends Device {
 
     private static final int BLOCK_SIZE = 4096;
-
+    private static final int MAX_BLOCK_COUNT = Integer.MAX_VALUE / 4096;
     private FileChannel _channel;
     private boolean _isReady = false;
     private boolean _writeProtected = false;
@@ -100,7 +104,7 @@ public abstract class FileSystemDiskDevice extends Device {
 
         try {
             var path = FileSystems.getDefault().getPath(packet.getMountInfo().getFileName());
-            if (packet._mountInfo.getWriteProtected()) {
+            if (packet.getMountInfo().getWriteProtected()) {
                 _channel = FileChannel.open(path, CREATE, READ);
             } else {
                 _channel = FileChannel.open(path, CREATE, READ, WRITE);
@@ -111,36 +115,36 @@ public abstract class FileSystemDiskDevice extends Device {
             return;
         }
 
-        _writeProtected = packet._mountInfo.getWriteProtected();
+        _writeProtected = packet.getMountInfo().getWriteProtected();
         packet.setStatus(IoStatus.Complete);
     }
 
     private synchronized void doRead(final DiskIoPacket packet) {
-        if (packet._buffer == null) {
-            packet.setStatus(IoStatus.InvalidPacket);
-            return;
-        }
-
         if (!_isReady) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
 
-        if (packet._buffer.capacity() != BLOCK_SIZE) {
-            packet.setStatus(IoStatus.InvalidBufferSize);
+        long blockCount = packet.getBlockCount();
+        long blockId = packet.getBlockId();
+
+        if ((blockId < 0) || (blockId >= MAX_BLOCK_COUNT)) {
+            packet.setStatus(IoStatus.InvalidBlockId);
             return;
         }
 
-        try {
-            var blocks = _channel.size() / BLOCK_SIZE;
-            if ((packet._blockId < 0) || (packet._blockId >= blocks)) {
-                packet.setStatus(IoStatus.InvalidBlockId);
-                return;
-            }
+        if ((blockCount < 0) || (blockId + blockCount > MAX_BLOCK_COUNT)) {
+            packet.setStatus(IoStatus.InvalidBlockCount);
+            return;
+        }
 
-            var offset = packet._blockId * BLOCK_SIZE;
-            var bytes = _channel.read(packet._buffer, offset);
-            if (bytes != BLOCK_SIZE) {
+        int transferSize = (int)(blockCount * BLOCK_SIZE);
+        var buffer = ByteBuffer.allocate(transferSize);
+
+        try {
+            _channel.position(packet.getBlockId() * BLOCK_SIZE);
+            var bytes = _channel.read(buffer, packet.getBlockId() * BLOCK_SIZE);
+            if (bytes != transferSize) {
                 packet.setStatus(IoStatus.SystemError);
                 return;
             }
@@ -150,6 +154,7 @@ public abstract class FileSystemDiskDevice extends Device {
             return;
         }
 
+        packet.setBuffer(buffer);
         packet.setStatus(IoStatus.Complete);
     }
 
@@ -180,11 +185,6 @@ public abstract class FileSystemDiskDevice extends Device {
     }
 
     private synchronized void doWrite(final DiskIoPacket packet) {
-        if (packet._buffer == null) {
-            packet.setStatus(IoStatus.InvalidPacket);
-            return;
-        }
-
         if (!_isReady) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
@@ -195,21 +195,31 @@ public abstract class FileSystemDiskDevice extends Device {
             return;
         }
 
-        if (packet._buffer.capacity() != BLOCK_SIZE) {
-            packet.setStatus(IoStatus.InvalidBufferSize);
+        long blockCount = packet.getBlockCount();
+        long blockId = packet.getBlockId();
+
+        if ((blockId < 0) || (blockId >= MAX_BLOCK_COUNT)) {
+            packet.setStatus(IoStatus.InvalidBlockId);
             return;
         }
 
-        try {
-            var blocks = _channel.size() / BLOCK_SIZE;
-            if ((packet._blockId < 0) || (packet._blockId >= blocks)) {
-                packet.setStatus(IoStatus.InvalidBlockId);
-                return;
-            }
+        if ((blockCount < 0) || (blockId + blockCount > MAX_BLOCK_COUNT)) {
+            packet.setStatus(IoStatus.InvalidBlockCount);
+            return;
+        }
 
-            var offset = packet._blockId * BLOCK_SIZE;
-            var bytes = _channel.read(packet._buffer, offset);
-            if (bytes != BLOCK_SIZE) {
+        ByteBuffer buffer = packet.getBuffer();
+        int transferSize = (int)(blockCount * BLOCK_SIZE);
+        if (packet.getBuffer().capacity() != transferSize) {
+            packet.setStatus(IoStatus.InvalidBufferSize);
+            return;
+        }
+        buffer.reset();
+
+        try {
+            _channel.position(packet.getBlockId() * BLOCK_SIZE);
+            var bytes = _channel.write(buffer, packet.getBlockId() * BLOCK_SIZE);
+            if (bytes != transferSize) {
                 packet.setStatus(IoStatus.SystemError);
                 return;
             }

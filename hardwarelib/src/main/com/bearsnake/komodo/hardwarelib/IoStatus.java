@@ -12,6 +12,7 @@ public enum IoStatus {
     // -- //
     AtLoadPoint,
     InvalidChannelProgram,
+    DataException, // something in the device meta-data is bad
     DeviceDoesNotExist,
     DeviceIsDown,
     DeviceIsNotAccessible,
@@ -20,6 +21,7 @@ public enum IoStatus {
     EndOfFile,
     EndOfTape,
     InternalError,
+    InvalidBlockCount,
     InvalidBlockId,
     InvalidBufferSize,
     InvalidFunction,

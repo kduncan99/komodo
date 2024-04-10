@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("resource")
 public class Exec {
 
     public static final long INVALID_LDAT = 0_400000;

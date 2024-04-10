@@ -40,7 +40,7 @@ public class DiskIoPacket extends IoPacket {
             var isWriteProtected = bb.getInt() != 0;
             var blockSize = bb.getInt();
             var blockCount = bb.getLong();
-            return new Info(blockSize, blockCount, isMounted, isReady, isWriteProtected)
+            return new Info(blockSize, blockCount, isMounted, isReady, isWriteProtected);
         }
 
         public void serialize(final ByteBuffer bb) {
@@ -52,17 +52,17 @@ public class DiskIoPacket extends IoPacket {
         }
     }
 
-    public long _blockId;
-    public ByteBuffer _buffer;
-    public MountInfo _mountInfo;
-    public boolean _removable;
+    private long _blockId;
+    private long _blockCount;
+    private ByteBuffer _buffer;
+    private MountInfo _mountInfo;
 
+    public long getBlockCount() { return _blockCount; }
     public long getBlockId() { return _blockId; }
     public ByteBuffer getBuffer() { return _buffer; }
     public MountInfo getMountInfo() { return _mountInfo; }
-    public boolean getRemovable() { return _removable; }
+    public DiskIoPacket setBlockCount(final long blockCount) { _blockCount = blockCount; return this; }
     public DiskIoPacket setBlockId(final long blockId) { _blockId = blockId; return this; }
     public DiskIoPacket setBuffer(final ByteBuffer buffer) { _buffer = buffer; return this; }
     public DiskIoPacket setMountInfo(final MountInfo mountInfo) { _mountInfo = mountInfo; return this; }
-    public DiskIoPacket setRemovable(final boolean removable) { _removable = removable; return this; }
 }
