@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.hardwarelib;
 
+import java.io.PrintStream;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class Node {
@@ -19,9 +20,18 @@ public abstract class Node {
         _nodeName = nodeName;
     }
 
-    public final int getNodeIdentifier() { return _nodeIdentifier; }
-    public final String getNodeName() { return _nodeName; }
     public abstract NodeCategory getNodeCategory();
 
+    public final int getNodeIdentifier() { return _nodeIdentifier; }
+    public final String getNodeName() { return _nodeName; }
     public final void setLogIos(final boolean flag) { _logIos = flag; }
+
+    public void dump(final PrintStream out,
+                     final String indent) {
+        out.printf("%s%s id:%d %-6s\n",
+                   indent,
+                   _nodeName,
+                   _nodeIdentifier,
+                   getNodeCategory());
+    }
 }
