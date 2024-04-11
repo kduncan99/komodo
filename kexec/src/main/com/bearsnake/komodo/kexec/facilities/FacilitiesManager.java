@@ -4,7 +4,10 @@
 
 package com.bearsnake.komodo.kexec.facilities;
 
+import com.bearsnake.komodo.hardwarelib.Channel;
+import com.bearsnake.komodo.hardwarelib.Device;
 import com.bearsnake.komodo.hardwarelib.DiskChannel;
+import com.bearsnake.komodo.hardwarelib.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemDiskDevice;
 import com.bearsnake.komodo.hardwarelib.Node;
 import com.bearsnake.komodo.hardwarelib.TapeChannel;
@@ -19,6 +22,7 @@ import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class FacilitiesManager implements Manager {
 
@@ -31,6 +35,9 @@ public class FacilitiesManager implements Manager {
     // It is loaded at initialization(), and will remain unchanged during the application existence.
     private final HashMap<Integer, Node> _nodeGraph = new HashMap<>();
 
+    // Paths to devices - key is device node, value is list of channel nodes
+    private final HashMap<Device, HashSet<Channel>> _nodePaths = new HashMap<>();
+
     public FacilitiesManager() {
         Exec.getInstance().managerRegister(this);
     }
@@ -40,9 +47,14 @@ public class FacilitiesManager implements Manager {
     // -------------------------------------------------------------------------
 
     @Override
-    public void boot() {
-        LogManager.logTrace(LOG_SOURCE, "boot()");
-        // TODO
+    public void boot(final boolean recoveryBoot) {
+        LogManager.logTrace(LOG_SOURCE, "boot(%d)", recoveryBoot);
+
+        for (var node : _nodeGraph.values()) {
+            if (node instanceof DiskDevice dd) {
+
+            }
+        }
     }
 
     @Override
@@ -101,6 +113,20 @@ public class FacilitiesManager implements Manager {
         var tch = new TapeChannel("CHTAPE");
         tch.attach(tape0);
         tch.attach(tape1);
+
+        // Build paths
+        for (var node : _nodeGraph.values()) {
+            if (node instanceof Device dev) {
+                _nodePaths.put(dev, new HashSet<>());
+            }
+        }
+        for (var node : _nodeGraph.values()) {
+            if (node instanceof Channel chan) {
+                for (var dev : chan.getDevices()) {
+                    _nodePaths.get(dev).add(chan);
+                }
+            }
+        }
     }
 
     @Override
