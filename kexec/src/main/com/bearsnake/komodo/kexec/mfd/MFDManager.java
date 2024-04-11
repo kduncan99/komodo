@@ -4,7 +4,8 @@
 
 package com.bearsnake.komodo.kexec.mfd;
 
-import com.bearsnake.komodo.kexec.HardwareTrackId;
+import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
@@ -20,8 +21,7 @@ public class MFDManager implements Manager {
 
     private static final String LOG_SOURCE = "MFDMgr";
 
-    private final HashMap<MFDRelativeAddress, FileAllocationSet> _acceleratedFileAllocations = new HashMap<>();
-    private final HashMap<MFDRelativeAddress, Word36BaseSlice> _cachedMFDTracks = new HashMap<>();
+    private final HashMap<MFDRelativeAddress, ArraySlice> _cachedMFDTracks = new HashMap<>();
     private final HashMap<String, MFDRelativeAddress> _fileMainItemLookupTable = new HashMap<>();
     private final TreeSet<MFDRelativeAddress> _freeMFDSectors = new TreeSet<>();
 
@@ -81,12 +81,12 @@ public class MFDManager implements Manager {
 
                             for (int wy = 0; wy < 7; wy++) {
                                 sb.append(" ");
-                                sb.append(String.format(trackData.getWord36(wbase + wx + wy).toStringFromFieldata()));
+                                sb.append(String.format(Word36.toStringFromFieldata(trackData._array[wbase + wx + wy])));
                             }
 
                             for (int wy = 0; wy < 7; wy++) {
                                 sb.append(" ");
-                                sb.append(String.format(trackData.getWord36(wbase + wx + wy).toStringFromASCII()));
+                                sb.append(String.format(Word36.toStringFromFieldata(trackData._array[wbase + wx + wy])));
                             }
 
                             out.printf("%s    %s\n", indent, sb);
@@ -116,16 +116,6 @@ public class MFDManager implements Manager {
 
             if (!sb.isEmpty()) {
                 out.printf("%s    %s\n", indent, sb);
-            }
-
-            // Accelerated file information
-            out.printf("%s  Accelerated files:\n", indent);
-            for (var e : _acceleratedFileAllocations.entrySet()) {
-                var prefix = e.getKey().toString();
-                for (var fa : e.getValue().getFileAllocations()) {
-                    out.printf("%s    %s: %s\n", indent, prefix, fa.toString());
-                    prefix = "              ";
-                }
             }
         }
 
@@ -1550,31 +1540,6 @@ func (mgr *MFDManager) SetFileCycleRange(
         }
      */
 
-    /**
-     * Given the MFD-relative address of a main item sector 0 for a file cycle,
-     * we translate the given file-relative track id to an LDAT and physical device track.
-     * @param mainItem0Address main item address of file cycle
-     * @param fileTrackId file-relative track id
-     * @return HardwareTrackId object if the given track is allocated, else null
-     * @throws ExecStoppedException if the main item is not accelerated (generally meaning it is not assigned)
-     */
-    private synchronized HardwareTrackId convertFileRelativeTrackId(
-        final MFDRelativeAddress mainItem0Address,
-        final long fileTrackId
-    ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE, "convertFileRelativeTrackId(%s, %d)", mainItem0Address.toString(), fileTrackId);
-        var fa = _acceleratedFileAllocations.get(mainItem0Address);
-        if (fa == null) {
-            LogManager.logFatal(LOG_SOURCE, "mainItem0 is not accelerated");
-            Exec.getInstance().stop(StopCode.DirectoryErrors);
-            throw new ExecStoppedException();
-        }
-
-        var hwTid = fa.resolveFileRelativeTrackId(fileTrackId);
-        LogManager.logTrace(LOG_SOURCE, "returning %s", hwTid);
-        return hwTid;
-    }
-
     /*
     // dropFileCycle this is where the hard work gets done for dropping a file cycle.
 // Caller must be very sure that this file is accelerated into our table.
@@ -1910,7 +1875,7 @@ func (mgr *MFDManager) SetFileCycleRange(
     }
     */
 
-    private Word36Slice getMFDSector(final MFDRelativeAddress address) throws ExecStoppedException {
+    private ArraySlice getMFDSector(final MFDRelativeAddress address) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "getMFDSector(%s)", address.toString());
 
         var trackAddr = new MFDRelativeAddress(address.getLDATIndex(), address.getTrackId(), 0);
@@ -1921,7 +1886,7 @@ func (mgr *MFDManager) SetFileCycleRange(
             throw new ExecStoppedException();
         }
 
-        return new Word36Slice(mfdTrack, (int)(28 * address.getSectorId()), 28);
+        return new ArraySlice(mfdTrack, (int)(28 * address.getSectorId()), 28);
     }
 
     /*

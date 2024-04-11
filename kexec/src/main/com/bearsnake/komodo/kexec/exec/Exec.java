@@ -10,6 +10,7 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
 import com.bearsnake.komodo.kexec.consoles.ReadOnlyMessage;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
+import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.FileNotFoundException;
@@ -43,6 +44,7 @@ public class Exec {
     private boolean _stopFlag = false;
 
     private ConsoleManager _consoleManager;
+    private FacilitiesManager _facilitiesManager;
     private KeyinManager _keyinManager;
 
     public Exec(final boolean[] jumpKeyTable) {
@@ -50,7 +52,9 @@ public class Exec {
         _allowRecoveryBoot = false;
         _phase = Phase.NotStarted;
         _instance = this;
+
         _consoleManager = new ConsoleManager();
+        _facilitiesManager = new FacilitiesManager();
         _keyinManager = new KeyinManager();
     }
 
@@ -75,14 +79,14 @@ public class Exec {
         _stopFlag = false;
 
         _runControlEntries.clear();
-        _runControlEntry = new ExecRunControlEntry(_configuration.MasterAccountId);
+        _runControlEntry = new ExecRunControlEntry(_configuration.getMasterAccountId());
         _runControlEntries.put(_runControlEntry._runId, _runControlEntry);
         if (!isJumpKeySet(9) && !isJumpKeySet(13)) {
             // TODO populate rce's with entries from backlog and SMOQUE
             //   well, at some point. probably not here.
         }
 
-        _executor = new ScheduledThreadPoolExecutor((int)_configuration.ExecThreads);
+        _executor = new ScheduledThreadPoolExecutor((int)_configuration.getExecThreadPoolSize());
         _executor.setRemoveOnCancelPolicy(true);
         for (var m : _managers) {
             m.boot();

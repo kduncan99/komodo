@@ -4,27 +4,30 @@
 
 package com.bearsnake.komodo.kexec;
 
+import com.bearsnake.komodo.hardwarelib.Node;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
+
+import java.util.HashMap;
 
 public class Configuration {
 
     public long AccountInitialReserve            = 10;               // initial reserve for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
     public String AccountAssignMnemonic          = "F";              // assign mnemonic for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
     public String DLOCAssignMnemonic             = "F";              // assign mnemonic for SYS$*DLOC$ file
-    public long ExecThreads                      = 25;               // number of threads in Exec thread pool
+    private int _execThreadPoolSize              = 25;               // number of threads in Exec thread pool
     public boolean FilesPrivateByAccount         = true;             // if false, files are private by project-id
     public long GenFInitialReserve               = 128;              // initial reserve for SYS$*GENF$ file
     public String GenFAssignMnemonic             = "F";              // assign mnemonic for SYS$*GENF$ file
     public long LibInitialReserve                = 128;              // initial reserve for SYS$*LIB$ file
     public String LibAssignMnemonic              = "F";              // assign mnemonic for SYS$*LIB$ file
     public long LibMaximumSize                   = 9999;             // max granules for SYS$*LIB$ file
-    public boolean LogConsoleMessages            = true;
+    private boolean _logConsoleMessages          = true;
     public boolean LogIOs                        = true;
-    public String MasterAccountId                = "SYSTEM";         // could be empty, in which case operator is prompted when ACCOUNT$R1 is created
+    private String _masterAccountId              = "SYSTEM";         // could be empty, in which case operator is prompted when ACCOUNT$R1 is created
     public String MassStorageDefaultMnemonic     = "F";              // Usually 'F'
-    public long MaxCards                         = 256;
+    private long _maxCards                       = 256;
     public long MaxGranules                      = 256;              // max granules if not specified on @ASG or @CAT
-    public long MaxPages                         = 256;
+    private long _maxPages                       = 256;
     public String OverheadAccountId              = "INSTALLATION";   // account ID for overhead runs such as SYS and ROLOUT/ROLBACK
     public String OverheadUserId                 = "INSTALLATION";   // User ID for overhead runs
     public String PrivilegedAccountId            = "123456";         // account ID which can override reading tape label blocks
@@ -54,6 +57,12 @@ public class Configuration {
     public long UserInitialReserve               = 10;               // initial reserve for SYS$*SEC@USERID$ file
     public String UserAssignMnemonic             = "F";              // assign mnemonic for SYS$*SEC@USERID$ file
     public String WordAddressableDefaultMnemonic = "D";
+
+    public int getExecThreadPoolSize() { return _execThreadPoolSize; }
+    public boolean getLogConsoleMessages() { return _logConsoleMessages; }
+    public String getMasterAccountId() { return _masterAccountId; }
+    public long getMaxCards() { return _maxCards; }
+    public long getMaxPages() { return _maxPages; }
 
     public void updateFromFile(final String filename) throws KExecException {
         // TODO

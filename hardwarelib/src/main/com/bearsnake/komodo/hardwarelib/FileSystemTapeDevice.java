@@ -6,6 +6,7 @@ package com.bearsnake.komodo.hardwarelib;
 
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileSystems;
 
@@ -18,11 +19,10 @@ import static java.nio.file.StandardOpenOption.WRITE;
  * We support multiple versions/layouts of tape blocks.
  * Writes must provide a buffer containing the exact block of data to be written.
  */
-public abstract class FileSystemTapeDevice extends Device {
+public class FileSystemTapeDevice extends TapeDevice {
 
     private boolean _canRead = false;
     private FileChannel _channel;
-    private boolean _isReady = false;
     private boolean _writeProtected = false;
     private FSTapeTranslator _translator;
 
@@ -31,8 +31,15 @@ public abstract class FileSystemTapeDevice extends Device {
     }
 
     @Override
-    public final DeviceType getDeviceType() {
-        return DeviceType.TapeDevice;
+    public void dump(final PrintStream out,
+                     final String indent) {
+        super.dump(out, indent);
+        out.printf("%s      %s:%s:%s\n", indent, getDeviceType(), getDeviceModel(), getInfo());
+    }
+
+    @Override
+    public final DeviceModel getDeviceModel() {
+        return DeviceModel.FileSystemTape;
     }
 
     @Override
@@ -83,9 +90,13 @@ public abstract class FileSystemTapeDevice extends Device {
         }
     }
 
-    private synchronized void doGetInfo(final TapeIoPacket packet) {
+    private TapeInfo getInfo() {
         boolean isMounted = _channel != null;
-        var info = new TapeIoPacket.Info(isMounted, _isReady, _writeProtected);
+        return new TapeInfo(isMounted, isReady(), _writeProtected);
+    }
+
+    private synchronized void doGetInfo(final TapeIoPacket packet) {
+        var info = getInfo();
         packet.getBuffer().reset();
         info.serialize(packet.getBuffer());
         packet.setStatus(IoStatus.Complete);
@@ -122,7 +133,7 @@ public abstract class FileSystemTapeDevice extends Device {
     }
 
     private synchronized void doMoveBackward(final TapeIoPacket packet) {
-        if (!_isReady) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
@@ -152,7 +163,7 @@ public abstract class FileSystemTapeDevice extends Device {
     }
 
     private synchronized void doMoveForward(final TapeIoPacket packet) {
-        if (!_isReady) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
@@ -187,7 +198,7 @@ public abstract class FileSystemTapeDevice extends Device {
             return;
         }
 
-        if (!_isReady) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
@@ -220,7 +231,7 @@ public abstract class FileSystemTapeDevice extends Device {
             return;
         }
 
-        if (!_isReady) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
@@ -251,7 +262,7 @@ public abstract class FileSystemTapeDevice extends Device {
     }
 
     private synchronized void doReset(final TapeIoPacket packet) {
-        if (!_isReady) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
@@ -262,14 +273,14 @@ public abstract class FileSystemTapeDevice extends Device {
             LogManager.logError(_nodeName, "Error closing file:%s", ex);
         }
         _channel = null;
-        _isReady = false;
+        setIsReady(false);
         packet.setStatus(IoStatus.Complete);
 
         packet.setStatus(IoStatus.Complete);
     }
 
     private synchronized void doRewind(final TapeIoPacket packet) {
-        if (!_isReady) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
@@ -285,7 +296,7 @@ public abstract class FileSystemTapeDevice extends Device {
     }
 
     private synchronized void doRewindAndUnload(final TapeIoPacket packet) {
-        if (!_isReady) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
@@ -298,7 +309,7 @@ public abstract class FileSystemTapeDevice extends Device {
         }
 
         _channel = null;
-        _isReady = false;
+        setIsReady(false);
         packet.setStatus(IoStatus.Complete);
     }
 
@@ -316,7 +327,7 @@ public abstract class FileSystemTapeDevice extends Device {
         }
 
         _channel = null;
-        _isReady = false;
+        setIsReady(false);
         packet.setStatus(IoStatus.Complete);
     }
 
@@ -326,7 +337,7 @@ public abstract class FileSystemTapeDevice extends Device {
             return;
         }
 
-        if (!_isReady) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
@@ -354,7 +365,7 @@ public abstract class FileSystemTapeDevice extends Device {
             return;
         }
 
-        if (!_isReady) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }

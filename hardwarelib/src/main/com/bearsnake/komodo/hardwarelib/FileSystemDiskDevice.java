@@ -6,6 +6,7 @@ package com.bearsnake.komodo.hardwarelib;
 
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileSystems;
@@ -21,25 +22,42 @@ import static java.nio.file.StandardOpenOption.WRITE;
  * size considering our fixed block size, and the number of blocks requested.
  * Writes must provide a properly-sized buffer accounting for the fixed block size and number of blocks requested.
  */
-public abstract class FileSystemDiskDevice extends Device {
+public class FileSystemDiskDevice extends DiskDevice {
 
     private static final int BLOCK_SIZE = 4096;
     private static final int MAX_BLOCK_COUNT = Integer.MAX_VALUE / 4096;
     private FileChannel _channel;
-    private boolean _isReady = false;
     private boolean _writeProtected = false;
 
+    // Normal constructor
     public FileSystemDiskDevice(final String nodeName) {
         super(nodeName);
     }
 
-    @Override
-    public final DeviceType getDeviceType() {
-        return DeviceType.DiskDevice;
+    // Auto-mount constructor
+    public FileSystemDiskDevice(final String nodeName,
+                                final String fileName,
+                                final boolean writeProtected) {
+        super(nodeName);
+        var mi = new IoPacket.MountInfo(fileName, writeProtected);
+        var pkt = new DiskIoPacket().setMountInfo(mi);
+        doMount(pkt);
     }
 
     @Override
-    public void startIo(final IoPacket packet) {
+    public void dump(final PrintStream out,
+                     final String indent) {
+        super.dump(out, indent);
+        out.printf("%s      %s:%s:%s\n", indent, getDeviceType(), getDeviceModel(), getInfo());
+    }
+
+    @Override
+    public final DeviceModel getDeviceModel() {
+        return DeviceModel.FileSystemDisk;
+    }
+
+    @Override
+    public synchronized void startIo(final IoPacket packet) {
         if (_logIos) {
             LogManager.logTrace(_nodeName, "startIo(%s)", packet.toString());
         }
@@ -74,7 +92,7 @@ public abstract class FileSystemDiskDevice extends Device {
         }
     }
 
-    private synchronized void doGetInfo(final DiskIoPacket packet) {
+    private DiskInfo getInfo() {
         boolean isMounted = _channel != null;
         int blockCount = 0;
         try {
@@ -85,13 +103,17 @@ public abstract class FileSystemDiskDevice extends Device {
             // do nothing
         }
 
-        var info = new DiskIoPacket.Info(BLOCK_SIZE, blockCount, isMounted, _isReady, _writeProtected);
+        return new DiskInfo(BLOCK_SIZE, blockCount, isMounted, isReady(), _writeProtected);
+    }
+
+    private void doGetInfo(final DiskIoPacket packet) {
+        var info = getInfo();
         packet.getBuffer().reset();
         info.serialize(packet.getBuffer());
         packet.setStatus(IoStatus.Complete);
     }
 
-    private synchronized void doMount(final DiskIoPacket packet) {
+    private void doMount(final DiskIoPacket packet) {
         if (packet.getMountInfo() == null) {
             packet.setStatus(IoStatus.InvalidPacket);
             return;
@@ -119,8 +141,8 @@ public abstract class FileSystemDiskDevice extends Device {
         packet.setStatus(IoStatus.Complete);
     }
 
-    private synchronized void doRead(final DiskIoPacket packet) {
-        if (!_isReady) {
+    private void doRead(final DiskIoPacket packet) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
@@ -158,8 +180,8 @@ public abstract class FileSystemDiskDevice extends Device {
         packet.setStatus(IoStatus.Complete);
     }
 
-    private synchronized void doReset(final DiskIoPacket packet) {
-        if (!_isReady) {
+    private void doReset(final DiskIoPacket packet) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }
@@ -167,7 +189,12 @@ public abstract class FileSystemDiskDevice extends Device {
         packet.setStatus(IoStatus.Complete);
     }
 
-    private synchronized void doUnmount(final DiskIoPacket packet) {
+    private void doUnmount(final DiskIoPacket packet) {
+        if (packet.getMountInfo() == null) {
+            packet.setStatus(IoStatus.InvalidPacket);
+            return;
+        }
+
         if (_channel == null) {
             packet.setStatus(IoStatus.MediaNotMounted);
             return;
@@ -180,12 +207,12 @@ public abstract class FileSystemDiskDevice extends Device {
         }
 
         _channel = null;
-        _isReady = false;
+        setIsReady(false);
         packet.setStatus(IoStatus.Complete);
     }
 
-    private synchronized void doWrite(final DiskIoPacket packet) {
-        if (!_isReady) {
+    private void doWrite(final DiskIoPacket packet) {
+        if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
         }

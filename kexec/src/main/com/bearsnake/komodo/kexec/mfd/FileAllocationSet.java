@@ -25,7 +25,7 @@ public class FileAllocationSet {
     }
 
     public MFDRelativeAddress getDadItem0Address() { return _dadItem0Address; }
-    LinkedList<FileAllocation> getFileAllocations() { return _fileAllocations; }
+    public LinkedList<FileAllocation> getFileAllocations() { return _fileAllocations; }
     public MFDRelativeAddress getMainItem0Address() { return _mainItem0Address; }
     public boolean isUpdated() { return _isUpdated; }
 
