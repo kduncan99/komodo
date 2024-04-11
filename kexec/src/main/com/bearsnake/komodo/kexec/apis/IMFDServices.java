@@ -7,7 +7,7 @@ package com.bearsnake.komodo.kexec.apis;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
 
-public interface IMFDManager {
+public interface IMFDServices {
 
     void recoverMassStorage() throws ExecStoppedException;
     void setFileToBeDeleted(MFDRelativeAddress mainItem0Address);

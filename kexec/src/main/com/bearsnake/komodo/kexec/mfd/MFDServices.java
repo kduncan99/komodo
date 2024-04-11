@@ -1,11 +1,11 @@
 package com.bearsnake.komodo.kexec.mfd;
 
-import com.bearsnake.komodo.kexec.apis.IMFDManager;
+import com.bearsnake.komodo.kexec.apis.IMFDServices;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 
-public class MFDServices implements IMFDManager {
+public class MFDServices implements IMFDServices {
 
     private static final String LOG_SOURCE = MFDManager.LOG_SOURCE;
 

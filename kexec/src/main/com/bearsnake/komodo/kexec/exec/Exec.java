@@ -11,7 +11,7 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
 import com.bearsnake.komodo.kexec.consoles.ReadOnlyMessage;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
-import com.bearsnake.komodo.kexec.keyins.KeyinManager;
+import com.bearsnake.komodo.kexec.keyins.KeyinServices;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -45,7 +45,7 @@ public class Exec {
 
     private ConsoleManager _consoleManager;
     private FacilitiesManager _facilitiesManager;
-    private KeyinManager _keyinManager;
+    private KeyinServices _keyinManager;
 
     public Exec(final boolean[] jumpKeyTable) {
         _jumpKeys = jumpKeyTable;
@@ -55,21 +55,21 @@ public class Exec {
 
         _consoleManager = new ConsoleManager();
         _facilitiesManager = new FacilitiesManager();
-        _keyinManager = new KeyinManager();
+        _keyinManager = new KeyinServices();
     }
 
     public Configuration getConfiguration() { return _configuration; }
     public ConsoleManager getConsoleManager() { return _consoleManager; }
     public ScheduledThreadPoolExecutor getExecutor() { return _executor; }
     public static Exec getInstance() { return _instance; }
-    public KeyinManager getKeyinManager() { return _keyinManager; }
+    public KeyinServices getKeyinManager() { return _keyinManager; }
     public Phase getPhase() { return _phase; }
     public StopCode getStopCode() { return _stopCode; }
     public boolean isJumpKeySet(final int jumpKey) { return _jumpKeys[jumpKey - 1]; }
     public boolean isRecoveryBootAllowed() { return _allowRecoveryBoot; }
     public boolean isStopped() { return _phase == Phase.Stopped; }
-    public synchronized void managerRegister(final Manager m) { _managers.add(m); }
-    public synchronized void managerUnregister(final Manager m) { _managers.remove(m); }
+    public synchronized void managerRegister(final Manager manager) { _managers.add(manager); }
+    public synchronized void managerUnregister(final Manager manager) { _managers.remove(manager); }
     public void setConfiguration(final Configuration config) { _configuration = config; }
     public void setJumpKeyValue(final int jumpKey, final boolean value) { _jumpKeys[jumpKey - 1] = value; }
 

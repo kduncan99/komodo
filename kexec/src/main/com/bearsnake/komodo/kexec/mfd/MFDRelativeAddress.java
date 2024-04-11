@@ -4,8 +4,6 @@
 
 package com.bearsnake.komodo.kexec.mfd;
 
-import com.bearsnake.komodo.baselib.Word36;
-
 /**
  * Describes an MFD file-relative address. The address refers to a particular directory sector.
  * These addresses are essentially the same thing as any file-relative address for a sector addressable file.
@@ -16,7 +14,7 @@ import com.bearsnake.komodo.baselib.Word36;
  *      note that this is *not* any indication of where the track is physically located on the pack
  *   SS is the sector number within the track, from 000 to 077.
  */
-public class MFDRelativeAddress {
+public class MFDRelativeAddress implements Comparable<MFDRelativeAddress> {
 
     private long _value;
 
@@ -49,5 +47,10 @@ public class MFDRelativeAddress {
     @Override
     public String toString() {
         return String.format("%012o", _value);
+    }
+
+    @Override
+    public int compareTo(MFDRelativeAddress obj) {
+        return Long.compare(_value, obj._value);
     }
 }

@@ -31,7 +31,7 @@ public class DiskChannel extends Channel {
         if (!_devices.containsKey(nodeIdentifier)) {
             ioPacket.setStatus(IoStatus.DeviceIsNotAttached);
         } else {
-            ((Device)_devices.get(nodeIdentifier)).startIo(ioPacket);
+            (_devices.get(nodeIdentifier)).startIo(ioPacket);
         }
     }
 }
