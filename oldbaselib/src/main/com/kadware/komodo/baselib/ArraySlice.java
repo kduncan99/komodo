@@ -138,11 +138,10 @@ public class ArraySlice {
     public boolean equals(
         final Object obj
     ) {
-        if (obj instanceof ArraySlice) {
-            ArraySlice asObj = (ArraySlice) obj;
-            if (asObj._length == _length) {
-                for (int objx = asObj._offset, thisx = _offset, x = 0; x < asObj._length; ++objx, ++thisx, ++x) {
-                    if (asObj._array[objx] != _array[thisx]) {
+        if (obj instanceof ArraySlice as) {
+            if (as._length == _length) {
+                for (int objx = as._offset, thisx = _offset, x = 0; x < as._length; ++objx, ++thisx, ++x) {
+                    if (as._array[objx] != _array[thisx]) {
                         return false;
                     }
                 }
