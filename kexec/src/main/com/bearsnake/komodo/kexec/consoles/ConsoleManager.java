@@ -32,7 +32,7 @@ public class ConsoleManager implements Manager, Runnable {
     }
 
     @Override
-    public void boot() {
+    public void boot(final boolean recoveryBoot) {
         LogManager.logTrace(LOG_SOURCE, "boot()");
         var iter = _consoles.entrySet().iterator();
         while (iter.hasNext()) {
@@ -278,7 +278,7 @@ public class ConsoleManager implements Manager, Runnable {
                         return;
                     }
 
-                    if (Exec.getInstance().getConfiguration().LogConsoleMessages && !rrMsg.doNotLogResponse()) {
+                    if (Exec.getInstance().getConfiguration().getLogConsoleMessages() && !rrMsg.doNotLogResponse()) {
                         LogManager.logInfo(LOG_SOURCE,
                                            "Msg:%s replyCons:%s %d-%s",
                                            rrMsg.getMessageId().toString(),
@@ -326,7 +326,7 @@ public class ConsoleManager implements Manager, Runnable {
         if (consoleId == _primaryConsoleId) {
             var sc = StopCode.LastSystemConsoleDown;
             Exec.getInstance().stop(sc);
-            throw new ExecStoppedException(sc);
+            throw new ExecStoppedException();
         }
     }
 

@@ -41,8 +41,8 @@ public class MFDManager implements Manager {
     // -------------------------------------------------------------------------
 
     @Override
-    public void boot() {
-        LogManager.logTrace(LOG_SOURCE, "boot()");
+    public void boot(final boolean recoveryBoot) {
+        LogManager.logTrace(LOG_SOURCE, "boot(%d)", recoveryBoot);
         // TODO
     }
 

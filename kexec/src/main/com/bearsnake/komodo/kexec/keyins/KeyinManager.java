@@ -86,8 +86,8 @@ public class KeyinManager implements Manager, Runnable {
     }
 
     @Override
-    public void boot() throws KExecException {
-        LogManager.logTrace(LOG_SOURCE, "boot()");
+    public void boot(final boolean recoveryBoot) throws KExecException {
+        LogManager.logTrace(LOG_SOURCE, "boot(%d)", recoveryBoot);
         _postedKeyins.clear();
         Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
                                                                 THREAD_DELAY,

@@ -73,7 +73,7 @@ public class Exec {
     public void setConfiguration(final Configuration config) { _configuration = config; }
     public void setJumpKeyValue(final int jumpKey, final boolean value) { _jumpKeys[jumpKey - 1] = value; }
 
-    public void boot() throws KExecException {
+    public void boot(final boolean recoveryBoot) throws KExecException {
         LogManager.logTrace(LOG_SOURCE, "boot");
         _phase = Phase.Booted;
         _stopFlag = false;
@@ -89,7 +89,7 @@ public class Exec {
         _executor = new ScheduledThreadPoolExecutor((int)_configuration.getExecThreadPoolSize());
         _executor.setRemoveOnCancelPolicy(true);
         for (var m : _managers) {
-            m.boot();
+            m.boot(recoveryBoot);
         }
 
         // TODO

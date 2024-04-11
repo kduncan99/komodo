@@ -101,7 +101,7 @@ public class Main {
 
             System.out.printf("::Starting KEXEC session %d...\n", session);
             try {
-                e.boot();
+                e.boot(session > 0);
             } catch (KExecException ex) {
                 System.out.printf("::Cannot boot exec:%s\n", ex.getMessage());
                 break;

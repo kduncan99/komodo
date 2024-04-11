@@ -11,7 +11,7 @@ import java.io.PrintStream;
 // or which needs to be dump()ed whenever the exec is dump()ed.
 public interface Manager {
     // Invoked for all managers when the exec boots
-    void boot() throws KExecException;
+    void boot(boolean recoveryBoot) throws KExecException;
 
     void dump(PrintStream out, String indent, boolean verbose);
 

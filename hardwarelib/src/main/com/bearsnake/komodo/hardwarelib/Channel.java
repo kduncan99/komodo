@@ -5,11 +5,12 @@
 package com.bearsnake.komodo.hardwarelib;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 public abstract class Channel extends Node {
 
     // key is node identifier
-    protected final HashMap<Integer, Node> _devices = new HashMap<>();
+    protected final HashMap<Integer, Device> _devices = new HashMap<>();
 
     public Channel(final String nodeName) {
         super(nodeName);
@@ -25,6 +26,7 @@ public abstract class Channel extends Node {
 
     public abstract boolean canAttach(final Device device);
     public abstract ChannelType getChannelType();
+    public HashSet<Device> getDevices() { return new HashSet<>(_devices.values()); }
     public abstract void routeIo(final int nodeIdentifier, final IoPacket ioPacket);
 
     @Override

@@ -41,8 +41,8 @@ public abstract class RunControlEntry {
         _runId = runId;
         _userId = userId;
 
-        _cardLimit = Exec.getInstance().getConfiguration().MaxCards;
-        _pageLimit = Exec.getInstance().getConfiguration().MaxPages;
+        _cardLimit = Exec.getInstance().getConfiguration().getMaxCards();
+        _pageLimit = Exec.getInstance().getConfiguration().getMaxPages();
 
         _defaultQualifier = projectId;
         _impliedQualifier = projectId;
