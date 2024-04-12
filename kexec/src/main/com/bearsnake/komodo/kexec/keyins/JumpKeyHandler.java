@@ -46,31 +46,6 @@ public abstract class JumpKeyHandler extends KeyinHandler {
         }
     }
 
-    protected final void displayJumpKeys(final ConsoleId source) {
-        var sb = new StringBuilder();
-        var anySet = false;
-        for (int jk = 1; jk <= 36; ++jk) {
-            if (Exec.getInstance().isJumpKeySet(jk)) {
-                anySet = true;
-                if (sb.isEmpty()) {
-                    sb.append("Jump Keys Set: ").append(jk);
-                } else {
-                    sb.append(",").append(jk);
-                    if (sb.length() > 60) {
-                        Exec.getInstance().sendExecReadOnlyMessage(sb.toString(), source);
-                        sb.setLength(0);
-                    }
-                }
-            }
-        }
-
-        if (!anySet) {
-            Exec.getInstance().sendExecReadOnlyMessage("Jump Keys Set: <none>", source);
-        } else if (!sb.isEmpty()) {
-            Exec.getInstance().sendExecReadOnlyMessage(sb.toString(), source);
-        }
-    }
-
     @Override
     public final boolean isAllowed() {
         return true;
@@ -84,7 +59,7 @@ public abstract class JumpKeyHandler extends KeyinHandler {
         }
 
         if (Exec.getInstance().isRunning()) {
-            displayJumpKeys(_source);
+            Exec.getInstance().displayJumpKeys(_source);
         }
     }
 

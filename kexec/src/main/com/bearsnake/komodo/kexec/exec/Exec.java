@@ -26,6 +26,10 @@ import java.util.concurrent.TimeUnit;
 public class Exec {
 
     public static final long INVALID_LDAT = 0_400000;
+    public static final int EXEC_VERSION = 1;
+    public static final int EXEC_RELEASE = 1;
+    public static final String EXEC_PATCH = "";
+    public static final String VERSION_STRING = String.format("%dR%d%s", EXEC_VERSION, EXEC_RELEASE, EXEC_PATCH);
 
     private static final DateTimeFormatter _dateTimeMsgFormat = DateTimeFormatter.ofPattern("EEE dd MMM yyyy HH:mm:ss");
     private static final SimpleDateFormat _dumpFileNameFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
@@ -40,6 +44,7 @@ public class Exec {
     private Phase _phase;
     private ExecRunControlEntry _runControlEntry;
     private final HashMap<String, RunControlEntry> _runControlEntries = new HashMap<>(); // keyed by RunId
+    private int _session = 0;
     private StopCode _stopCode;
     private boolean _stopFlag = false;
 
@@ -73,10 +78,12 @@ public class Exec {
     public void setConfiguration(final Configuration config) { _configuration = config; }
     public void setJumpKeyValue(final int jumpKey, final boolean value) { _jumpKeys[jumpKey - 1] = value; }
 
-    public void boot(final boolean recoveryBoot) throws KExecException {
+    public void boot(final boolean recoveryBoot,
+                     final int session) throws KExecException {
         LogManager.logTrace(LOG_SOURCE, "boot");
         _phase = Phase.Booted;
         _stopFlag = false;
+        _session = session;
 
         _runControlEntries.clear();
         _runControlEntry = new ExecRunControlEntry(_configuration.getMasterAccountId());
@@ -92,9 +99,10 @@ public class Exec {
             m.boot(recoveryBoot);
         }
 
-        // TODO
-        sendExecReadOnlyMessage("KEXEC Version (?)", null);
+        var msg = String.format("KEXEC Version %s Session %03o started", VERSION_STRING, _session);
+        sendExecReadOnlyMessage(msg, null);
         displayDateAndTime();
+        displayJumpKeys(null);
 
         LogManager.logTrace(LOG_SOURCE, "boot complete");
     }
@@ -109,6 +117,31 @@ public class Exec {
         String dtStr = dateTime.format(_dateTimeMsgFormat);
         var msg = String.format("The current date and time is %s", dtStr);
         sendExecReadOnlyMessage(msg, null);
+    }
+
+    public void displayJumpKeys(final ConsoleId source) {
+        var sb = new StringBuilder();
+        var anySet = false;
+        for (int jk = 1; jk <= 36; ++jk) {
+            if (isJumpKeySet(jk)) {
+                anySet = true;
+                if (sb.isEmpty()) {
+                    sb.append("Jump Keys Set: ").append(jk);
+                } else {
+                    sb.append(",").append(jk);
+                    if (sb.length() > 60) {
+                        sendExecReadOnlyMessage(sb.toString(), source);
+                        sb.setLength(0);
+                    }
+                }
+            }
+        }
+
+        if (!anySet) {
+            sendExecReadOnlyMessage("Jump Keys Set: <none>", source);
+        } else if (!sb.isEmpty()) {
+            sendExecReadOnlyMessage(sb.toString(), source);
+        }
     }
 
     public void dump(final boolean verbose) {

@@ -17,5 +17,8 @@ public abstract class NodeInfo {
 
     public NodeInfo(final Node node) {
         _node = node;
+        _nodeStatus = NodeStatus.Up;
     }
+
+    public abstract String toString();
 }

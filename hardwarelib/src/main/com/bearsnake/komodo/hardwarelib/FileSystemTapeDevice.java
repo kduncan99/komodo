@@ -6,7 +6,6 @@ package com.bearsnake.komodo.hardwarelib;
 
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileSystems;
 
@@ -28,13 +27,6 @@ public class FileSystemTapeDevice extends TapeDevice {
 
     public FileSystemTapeDevice(final String nodeName) {
         super(nodeName);
-    }
-
-    @Override
-    public void dump(final PrintStream out,
-                     final String indent) {
-        super.dump(out, indent);
-        out.printf("%s      %s:%s:%s\n", indent, getDeviceType(), getDeviceModel(), getInfo());
     }
 
     @Override
@@ -90,10 +82,25 @@ public class FileSystemTapeDevice extends TapeDevice {
         }
     }
 
+    @Override
+    public synchronized String toString() {
+        return String.format("%s %s:%s:%s mnt:%s rdy:%s wp:%s",
+                             getNodeName(),
+                             getNodeCategory(),
+                             getDeviceType(),
+                             getDeviceModel(),
+                             isMounted(),
+                             isReady(),
+                             isWriteProtected());
+    }
+
     private TapeInfo getInfo() {
         boolean isMounted = _channel != null;
         return new TapeInfo(isMounted, isReady(), _writeProtected);
     }
+
+    public boolean isMounted() { return _channel != null; }
+    public boolean isWriteProtected() { return _writeProtected; }
 
     private synchronized void doGetInfo(final TapeIoPacket packet) {
         var info = getInfo();

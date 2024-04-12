@@ -40,7 +40,7 @@ public class FacilitiesManager implements Manager {
 
     @Override
     public void boot(final boolean recoveryBoot) {
-        LogManager.logTrace(LOG_SOURCE, "boot(%d)", recoveryBoot);
+        LogManager.logTrace(LOG_SOURCE, "boot(%s)", recoveryBoot);
 
         for (var ni : _nodeGraph.values()) {
             // TODO

@@ -101,7 +101,8 @@ public class Main {
 
             System.out.printf("::Starting KEXEC session %d...\n", session);
             try {
-                e.boot(session > 0);
+                boolean recovery = session > 0;
+                e.boot(recovery, session);
             } catch (KExecException ex) {
                 System.out.printf("::Cannot boot exec:%s\n", ex.getMessage());
                 break;
@@ -115,7 +116,11 @@ public class Main {
                 }
             }
 
-            System.out.printf("::System error %03o terminated session %03o\n", e.getStopCode().getCode(), session);
+            System.out.printf("::System error %03o (%s) terminated session %03o\n",
+                              e.getStopCode().getCode(),
+                              e.getStopCode(),
+                              session);
+
             if (e.isJumpKeySet(3)) {
                 System.out.println("::Auto-recovery inhibited - producing final post-mortem dump...");
                 e.dump(e.isJumpKeySet(6));

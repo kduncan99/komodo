@@ -6,7 +6,6 @@ package com.bearsnake.komodo.hardwarelib;
 
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileSystems;
@@ -42,13 +41,6 @@ public class FileSystemDiskDevice extends DiskDevice {
         var mi = new IoPacket.MountInfo(fileName, writeProtected);
         var pkt = new DiskIoPacket().setMountInfo(mi);
         doMount(pkt);
-    }
-
-    @Override
-    public void dump(final PrintStream out,
-                     final String indent) {
-        super.dump(out, indent);
-        out.printf("%s      %s:%s:%s\n", indent, getDeviceType(), getDeviceModel(), getInfo());
     }
 
     @Override
@@ -92,6 +84,18 @@ public class FileSystemDiskDevice extends DiskDevice {
         }
     }
 
+    @Override
+    public synchronized String toString() {
+        return String.format("%s %s:%s:%s mnt:%s rdy:%s wp:%s",
+                             getNodeName(),
+                             getNodeCategory(),
+                             getDeviceType(),
+                             getDeviceModel(),
+                             isMounted(),
+                             isReady(),
+                             isWriteProtected());
+    }
+
     private DiskInfo getInfo() {
         boolean isMounted = _channel != null;
         int blockCount = 0;
@@ -105,6 +109,9 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         return new DiskInfo(BLOCK_SIZE, blockCount, isMounted, isReady(), _writeProtected);
     }
+
+    public boolean isMounted() { return _channel != null; }
+    public boolean isWriteProtected() { return _writeProtected; }
 
     private void doGetInfo(final DiskIoPacket packet) {
         var info = getInfo();

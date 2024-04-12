@@ -31,4 +31,9 @@ public abstract class Channel extends Node {
 
     @Override
     public NodeCategory getNodeCategory() { return NodeCategory.Channel; }
+
+    @Override
+    public synchronized String toString() {
+        return String.format("%s %s:%s", getNodeName(), getNodeCategory(), getChannelType());
+    }
 }

@@ -33,7 +33,7 @@ public class DJKeyinHandler extends JumpKeyHandler implements Runnable {
     @Override
     public void run() {
         try {
-            displayJumpKeys(_source);
+            Exec.getInstance().displayJumpKeys(_source);
         } catch (Throwable t) {
             LogManager.logCatching(COMMAND, t);
             Exec.getInstance().stop(StopCode.ExecContingencyHandler);
