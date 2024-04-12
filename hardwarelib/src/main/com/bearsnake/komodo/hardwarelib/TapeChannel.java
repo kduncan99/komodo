@@ -4,8 +4,6 @@
 
 package com.bearsnake.komodo.hardwarelib;
 
-import com.bearsnake.komodo.logger.LogManager;
-
 public class TapeChannel extends Channel {
 
     public TapeChannel(final String nodeName) {
@@ -24,14 +22,7 @@ public class TapeChannel extends Channel {
 
     @Override
     public void routeIo(final int nodeIdentifier,
-                        final IoPacket ioPacket) {
-        if (_logIos) {
-            LogManager.logTrace(_nodeName, "routeIo(%d,%s)", nodeIdentifier, ioPacket.toString());
-        }
-        if (!_devices.containsKey(nodeIdentifier)) {
-            ioPacket.setStatus(IoStatus.DeviceIsNotAttached);
-        } else {
-            ((Device)_devices.get(nodeIdentifier)).startIo(ioPacket);
-        }
+                        final ChannelProgram channelProgram) {
+        // TODO
     }
 }

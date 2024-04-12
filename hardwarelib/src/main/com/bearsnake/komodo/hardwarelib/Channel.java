@@ -27,7 +27,7 @@ public abstract class Channel extends Node {
     public abstract boolean canAttach(final Device device);
     public abstract ChannelType getChannelType();
     public HashSet<Device> getDevices() { return new HashSet<>(_devices.values()); }
-    public abstract void routeIo(final int nodeIdentifier, final IoPacket ioPacket);
+    public abstract void routeIo(int nodeIdentifier, ChannelProgram channelProgram);
 
     @Override
     public NodeCategory getNodeCategory() { return NodeCategory.Channel; }
