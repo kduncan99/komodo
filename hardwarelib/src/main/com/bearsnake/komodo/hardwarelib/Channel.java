@@ -10,7 +10,7 @@ import java.util.HashSet;
 public abstract class Channel extends Node {
 
     // key is node identifier
-    protected final HashMap<Integer, Device> _devices = new HashMap<>();
+    private final HashMap<Integer, Device> _devices = new HashMap<>();
 
     public Channel(final String nodeName) {
         super(nodeName);
@@ -25,15 +25,24 @@ public abstract class Channel extends Node {
     }
 
     public abstract boolean canAttach(final Device device);
+    public abstract void doRead(ChannelProgram channelProgram, Device device);
+    public abstract void doWrite(ChannelProgram channelProgram, Device device);
     public abstract ChannelType getChannelType();
     public HashSet<Device> getDevices() { return new HashSet<>(_devices.values()); }
-    public abstract void routeIo(int nodeIdentifier, ChannelProgram channelProgram);
 
     @Override
     public NodeCategory getNodeCategory() { return NodeCategory.Channel; }
 
-    @Override
-    public synchronized String toString() {
-        return String.format("%s %s:%s", getNodeName(), getNodeCategory(), getChannelType());
+    public void routeIo(final ChannelProgram channelProgram) {
+        var dev = _devices.get(channelProgram._nodeIdentifier);
+        if (dev == null) {
+            channelProgram.setIoStatus(IoStatus.DeviceIsNotAttached);
+        } else {
+            switch (channelProgram._function) {
+            case Read -> doRead(channelProgram, dev);
+            case Write -> doWrite(channelProgram, dev);
+            default -> channelProgram.setIoStatus(IoStatus.InvalidFunction);
+            }
+        }
     }
 }

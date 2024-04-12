@@ -79,9 +79,6 @@ public class FileSystemDiskDevice extends DiskDevice {
         if (_logIos) {
             LogManager.logTrace(_nodeName, "startIo status=%s", packet.getStatus());
         }
-        if (packet.getListener() != null) {
-            packet.getListener().ioComplete(packet);
-        }
     }
 
     @Override
@@ -96,7 +93,8 @@ public class FileSystemDiskDevice extends DiskDevice {
                              isWriteProtected());
     }
 
-    private DiskInfo getInfo() {
+    @Override
+    public DiskInfo getInfo() {
         boolean isMounted = _channel != null;
         int blockCount = 0;
         try {

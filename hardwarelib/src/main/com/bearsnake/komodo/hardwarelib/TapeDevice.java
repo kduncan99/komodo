@@ -14,4 +14,6 @@ public abstract class TapeDevice extends Device {
     public final DeviceType getDeviceType() {
         return DeviceType.TapeDevice;
     }
+
+    public abstract TapeInfo getInfo();
 }

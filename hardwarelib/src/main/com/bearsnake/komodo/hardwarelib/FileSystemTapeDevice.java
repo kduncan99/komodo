@@ -77,9 +77,6 @@ public class FileSystemTapeDevice extends TapeDevice {
         if (_logIos) {
             LogManager.logTrace(_nodeName, "startIo status=%s", packet.getStatus());
         }
-        if (packet.getListener() != null) {
-            packet.getListener().ioComplete(packet);
-        }
     }
 
     @Override
@@ -94,7 +91,8 @@ public class FileSystemTapeDevice extends TapeDevice {
                              isWriteProtected());
     }
 
-    private TapeInfo getInfo() {
+    @Override
+    public TapeInfo getInfo() {
         boolean isMounted = _channel != null;
         return new TapeInfo(isMounted, isReady(), _writeProtected);
     }

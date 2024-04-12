@@ -24,14 +24,11 @@ public abstract class IoPacket {
     }
 
     private IoFunction _function;
-    private IoListener _listener;
     private IoStatus _status;
 
     public IoFunction getFunction() { return _function; }
-    public IoListener getListener() { return _listener; }
     public IoStatus getStatus() { return _status; }
     public IoPacket setFunction(final IoFunction function) { _function = function; return this; }
-    public IoPacket setListener(final IoListener listener) { _listener = listener; return this; }
     public IoPacket setStatus(final IoStatus status) { _status = status; return this; }
 
     @Override

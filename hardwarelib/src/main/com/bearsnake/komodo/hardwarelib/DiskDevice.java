@@ -14,4 +14,6 @@ public abstract class DiskDevice extends Device {
     public final DeviceType getDeviceType() {
         return DeviceType.DiskDevice;
     }
+
+    public abstract DiskInfo getInfo();
 }

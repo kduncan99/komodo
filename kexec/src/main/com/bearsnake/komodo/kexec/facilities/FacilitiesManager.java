@@ -58,7 +58,7 @@ public class FacilitiesManager implements Manager {
         out.printf("%s  Node Graph:\n", indent);
         var subIndent = indent + "    ";
         for (var ni : _nodeGraph.values()) {
-            out.printf("%s    %s\n", indent, ni.toString());
+            out.printf("%s%s\n", subIndent, ni.toString());
         }
 
         if (verbose) {

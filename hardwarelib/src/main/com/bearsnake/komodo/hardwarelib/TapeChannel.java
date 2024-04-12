@@ -16,13 +16,19 @@ public class TapeChannel extends Channel {
     }
 
     @Override
-    public ChannelType getChannelType() {
-        return ChannelType.TapeChannel;
+    public void doRead(final ChannelProgram channelProgram,
+                       final Device device) {
+        // TODO
     }
 
     @Override
-    public void routeIo(final int nodeIdentifier,
-                        final ChannelProgram channelProgram) {
+    public void doWrite(final ChannelProgram channelProgram,
+                        final Device device) {
         // TODO
+    }
+
+    @Override
+    public ChannelType getChannelType() {
+        return ChannelType.TapeChannel;
     }
 }
