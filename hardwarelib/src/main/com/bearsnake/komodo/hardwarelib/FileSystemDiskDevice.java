@@ -41,6 +41,9 @@ public class FileSystemDiskDevice extends DiskDevice {
         var mi = new IoPacket.MountInfo(fileName, writeProtected);
         var pkt = new DiskIoPacket().setMountInfo(mi);
         doMount(pkt);
+        if (pkt.getStatus() == IoStatus.Complete) {
+            setIsReady(true);
+        }
     }
 
     @Override
@@ -57,20 +60,13 @@ public class FileSystemDiskDevice extends DiskDevice {
         if (packet instanceof DiskIoPacket diskPacket) {
             packet.setStatus(IoStatus.InProgress);
             switch (packet.getFunction()) {
-            case GetInfo:
-                doGetInfo(diskPacket);
-            case Mount:
-                doMount(diskPacket);
-            case Read:
-                doRead(diskPacket);
-            case Reset:
-                doReset(diskPacket);
-            case Unmount:
-                doUnmount(diskPacket);
-            case Write:
-                doWrite(diskPacket);
-            default:
-                packet.setStatus(IoStatus.InvalidFunction);
+            case GetInfo -> doGetInfo(diskPacket);
+            case Mount -> doMount(diskPacket);
+            case Read -> doRead(diskPacket);
+            case Reset -> doReset(diskPacket);
+            case Unmount -> doUnmount(diskPacket);
+            case Write -> doWrite(diskPacket);
+            default -> packet.setStatus(IoStatus.InvalidFunction);
             }
         } else {
             packet.setStatus(IoStatus.InvalidPacket);
@@ -124,8 +120,8 @@ public class FileSystemDiskDevice extends DiskDevice {
             return;
         }
 
-        if (_channel == null) {
-            packet.setStatus(IoStatus.MediaNotMounted);
+        if (_channel != null) {
+            packet.setStatus(IoStatus.MediaAlreadyMounted);
             return;
         }
 

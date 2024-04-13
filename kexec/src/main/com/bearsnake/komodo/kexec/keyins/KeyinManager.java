@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
-public class KeyinServices implements Manager, IKeyinServices, Runnable {
+public class KeyinManager implements Manager, IKeyinServices, Runnable {
 
     private static final long THREAD_DELAY = 50;
     private static final String LOG_SOURCE = "KeyinMgr";
@@ -37,7 +37,7 @@ public class KeyinServices implements Manager, IKeyinServices, Runnable {
         _handlerClasses.put(StopKeyinHandler.COMMAND.toUpperCase(), StopKeyinHandler.class);
     }
 
-    public KeyinServices(){
+    public KeyinManager(){
         Exec.getInstance().managerRegister(this);
     }
 
@@ -94,6 +94,7 @@ public class KeyinServices implements Manager, IKeyinServices, Runnable {
                                                                 THREAD_DELAY,
                                                                 THREAD_DELAY,
                                                                 TimeUnit.MILLISECONDS);
+        LogManager.logTrace(LOG_SOURCE, "boot complete", recoveryBoot);
     }
 
     @Override

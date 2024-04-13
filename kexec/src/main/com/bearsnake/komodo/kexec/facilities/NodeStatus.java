@@ -15,4 +15,6 @@ public enum NodeStatus {
     NodeStatus(final String displayString) {
         _displayString = displayString;
     }
+
+    public String getDisplayString() { return _displayString; }
 }

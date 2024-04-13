@@ -12,6 +12,8 @@ public class TapeIoPacket extends IoPacket {
     public int _bytesTransferred;
     public MountInfo _mountInfo;
 
+    public TapeIoPacket() {}
+
     public ByteBuffer getBuffer() { return _buffer; }
     public int getBytesTransferred() { return _bytesTransferred; }
     public MountInfo getMountInfo() { return _mountInfo; }

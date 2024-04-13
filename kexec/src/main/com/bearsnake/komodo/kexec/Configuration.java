@@ -22,7 +22,7 @@ public class Configuration {
     public String LibAssignMnemonic              = "F";              // assign mnemonic for SYS$*LIB$ file
     public long LibMaximumSize                   = 9999;             // max granules for SYS$*LIB$ file
     private boolean _logConsoleMessages          = true;
-    public boolean LogIOs                        = true;
+    private boolean _logIOs                      = true;
     private String _masterAccountId              = "SYSTEM";         // could be empty, in which case operator is prompted when ACCOUNT$R1 is created
     public String MassStorageDefaultMnemonic     = "F";              // Usually 'F'
     private long _maxCards                       = 256;
@@ -60,6 +60,7 @@ public class Configuration {
 
     public int getExecThreadPoolSize() { return _execThreadPoolSize; }
     public boolean getLogConsoleMessages() { return _logConsoleMessages; }
+    public boolean getLogIos() { return _logIOs; }
     public String getMasterAccountId() { return _masterAccountId; }
     public long getMaxCards() { return _maxCards; }
     public long getMaxPages() { return _maxPages; }

@@ -25,6 +25,28 @@ public class DiskChannel extends Channel {
             return;
         }
 
+        for (var cw : channelProgram._controlWords) {
+            if ((cw._transferCount <= 0) || ((cw._transferCount & 0x01) != 0)) {
+                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
+                return;
+            }
+
+            if ((cw._bufferOffset < 0) || (cw._bufferOffset >= cw._buffer.getSize())) {
+                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
+                return;
+            }
+
+            if ((cw._direction == ChannelProgram.Direction.Increment)
+                && (cw._bufferOffset + cw._transferCount > cw._buffer.getSize())) {
+                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
+                return;
+            } else if ((cw._direction == ChannelProgram.Direction.Decrement)
+                && (cw._bufferOffset + 1 - cw._transferCount < 0)) {
+                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
+                return;
+            }
+        }
+
         int totalWordCount = 0;
         for (var cw : channelProgram._controlWords) {
             if ((cw._transferCount <= 0) || ((cw._transferCount & 0x01) != 0)) {
@@ -53,12 +75,14 @@ public class DiskChannel extends Channel {
         var diskInfo = ((DiskDevice)device).getInfo();
         var wordsPerBlock = (diskInfo.getBlockSize() / 128) * 28;
         var totalBlockCount = totalWordCount / wordsPerBlock;
+        if (totalWordCount % wordsPerBlock > 0) {
+            totalBlockCount++;
+        }
 
-        var ioPkt = new DiskIoPacket().setBlockId(channelProgram._blockId)
-                                      .setBlockCount(totalBlockCount);
-
-        totalBlockCount++;
-        ioPkt.setBlockCount(totalBlockCount).setFunction(IoFunction.Read);
+        var ioPkt = new DiskIoPacket();
+        ioPkt.setBlockId(channelProgram._blockId)
+             .setBlockCount(totalBlockCount)
+             .setFunction(IoFunction.Read);
         device.startIo(ioPkt);
         if (ioPkt.getStatus() != IoStatus.Complete) {
             channelProgram.setIoStatus(ioPkt.getStatus());
@@ -206,13 +230,5 @@ public class DiskChannel extends Channel {
     @Override
     public ChannelType getChannelType() {
         return ChannelType.DiskChannel;
-    }
-
-    @Override
-    public synchronized String toString() {
-        return String.format("%s %s:%s",
-                             getNodeName(),
-                             getNodeCategory(),
-                             getChannelType());
     }
 }

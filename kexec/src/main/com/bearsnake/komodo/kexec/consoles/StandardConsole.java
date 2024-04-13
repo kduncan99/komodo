@@ -7,6 +7,7 @@ package com.bearsnake.komodo.kexec.consoles;
 import com.bearsnake.komodo.kexec.exceptions.ConsoleException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 
+import com.bearsnake.komodo.logger.LogManager;
 import java.io.PrintStream;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class StandardConsole implements Console, Runnable {
 
     private static final long THREAD_DELAY = 100; // how often do we run the thread in msecs
+    private static final String LOG_SOURCE = "StdCons";
 
     private final ConsoleId _consoleId;
     private final ReadReplyInfo[] _activeReadReplyMessages = new ReadReplyInfo[10];
@@ -30,14 +32,17 @@ public class StandardConsole implements Console, Runnable {
 
     @Override
     public synchronized void clearReadReplyMessage(MessageId messageId) throws ConsoleException {
+        LogManager.logTrace(LOG_SOURCE, "clearReadReplyMessage(%s)", messageId);
         for (int mx = 0; mx < 10; mx++) {
             if ((_activeReadReplyMessages[mx] != null)
                 && (_activeReadReplyMessages[mx]._messageId.equals(messageId))) {
                 _activeReadReplyMessages[mx] = null;
+                LogManager.logTrace(LOG_SOURCE, "clearReadReplyMessage exit");
                 return;
             }
         }
 
+        LogManager.logTrace(LOG_SOURCE, "clearReadReplyMessage not found");
         throw new ConsoleException(String.format("Message %s not found", messageId));
     }
 
@@ -73,15 +78,16 @@ public class StandardConsole implements Console, Runnable {
     @Override public ConsoleId getConsoleId() { return _consoleId; }
 
     @Override
-    public synchronized SolicitedInput pollSolicitedInput() throws ConsoleException {
+    public SolicitedInput pollSolicitedInput() throws ConsoleException {
         SolicitedInput result = null;
         if (_pendingReplyIndex != null) {
-            var rrMsg = _activeReadReplyMessages[_pendingReplyIndex];
-            System.out.printf("  %s\n", rrMsg._originalMessage);
-            result = new SolicitedInput(rrMsg._messageId, _pendingReplyIndex, rrMsg._response);
+            synchronized (this) { // TODO synchronizing here might deadlock, but I don't know how...
+                var rrMsg = _activeReadReplyMessages[_pendingReplyIndex];
+                result = new SolicitedInput(rrMsg._messageId, _pendingReplyIndex, rrMsg._response);
 
-            _activeReadReplyMessages[_pendingReplyIndex] = null;
-            _pendingReplyIndex = null;
+                _activeReadReplyMessages[_pendingReplyIndex] = null;
+                _pendingReplyIndex = null;
+            }
         }
         return result;
     }
@@ -140,56 +146,60 @@ public class StandardConsole implements Console, Runnable {
      */
     @Override
     public synchronized void run() {
-        if (_scanner.hasNext()) {
-            // read input if there is any to be read, but ignore it if the previous input is still pending.
-            var input = _scanner.nextLine();
-            if (_pendingReplyIndex != null || _pendingUnsolicitedInput != null) {
-                return;
-            }
-
-            // if the input is empty (all spaces is considered empty) ignore it.
-            input = input.trim();
-            if (input.isEmpty()) {
-                return;
-            }
-
-            // solicited input?
-            if (Character.isDigit(input.charAt(0))) {
-                var mx = Integer.parseInt(input.substring(0, 1));
-                if (_activeReadReplyMessages[mx] == null) {
-                    System.out.printf("** MESSAGE %d DOES NOT EXIST **\n", mx);
+        try {
+            if (_scanner.hasNext()) {
+                // read input if there is any to be read, but ignore it if the previous input is still pending.
+                var input = _scanner.nextLine();
+                if (_pendingReplyIndex != null || _pendingUnsolicitedInput != null) {
                     return;
                 }
 
-                if (input.length() == 1) {
-                    _activeReadReplyMessages[mx]._response = "";
+                // if the input is empty (all spaces is considered empty) ignore it.
+                input = input.trim();
+                if (input.isEmpty()) {
+                    return;
+                }
+
+                // solicited input?
+                if (Character.isDigit(input.charAt(0))) {
+                    var mx = Integer.parseInt(input.substring(0, 1));
+                    if (_activeReadReplyMessages[mx] == null) {
+                        System.out.printf("** MESSAGE %d DOES NOT EXIST **\n", mx);
+                        return;
+                    }
+
+                    if (input.length() == 1) {
+                        _activeReadReplyMessages[mx]._response = "";
+                        _pendingReplyIndex = mx;
+                        return;
+                    }
+
+                    if (input.charAt(1) != ' ') {
+                        System.out.println("** INVALID INPUT **");
+                        return;
+                    }
+
+                    var cx = 2;
+                    while (input.charAt(cx) == ' ') {
+                        cx++;
+                    }
+
+                    var response = input.substring(cx);
+                    if (response.length() > _activeReadReplyMessages[mx]._maxReplyLength) {
+                        System.out.println("** RESPONSE IS TOO LONG **");
+                        return;
+                    }
+
+                    _activeReadReplyMessages[mx]._response = response;
                     _pendingReplyIndex = mx;
                     return;
                 }
 
-                if (input.charAt(1) != ' ') {
-                    System.out.println("** INVALID INPUT **");
-                    return;
-                }
-
-                var cx = 2;
-                while (input.charAt(cx) == ' ') {
-                    cx++;
-                }
-
-                var response = input.substring(cx);
-                if (response.length() > _activeReadReplyMessages[mx]._maxReplyLength) {
-                    System.out.println("** RESPONSE IS TOO LONG **");
-                    return;
-                }
-
-                _activeReadReplyMessages[mx]._response = response;
-                _pendingReplyIndex = mx;
-                return;
+                // unsolicited input...
+                _pendingUnsolicitedInput = input;
             }
-
-            // unsolicited input...
-            _pendingUnsolicitedInput = input;
+        } catch (Throwable t) {
+            System.out.printf("--- %s ---\n", t);
         }
     }
 }

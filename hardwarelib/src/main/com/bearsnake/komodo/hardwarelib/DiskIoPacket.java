@@ -13,6 +13,8 @@ public class DiskIoPacket extends IoPacket {
     private ByteBuffer _buffer;
     private MountInfo _mountInfo;
 
+    public DiskIoPacket() {}
+
     public long getBlockCount() { return _blockCount; }
     public long getBlockId() { return _blockId; }
     public ByteBuffer getBuffer() { return _buffer; }

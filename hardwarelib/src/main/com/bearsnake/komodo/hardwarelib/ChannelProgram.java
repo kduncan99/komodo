@@ -55,4 +55,9 @@ public class ChannelProgram {
     public ChannelProgram setIoStatus(IoStatus value) { _ioStatus = value; return this; }
     public ChannelProgram setNodeIdentifier(int value)  { _nodeIdentifier = value; return this; }
     public ChannelProgram setWordsTransferred(int value) { _wordsTransferred = value; return this; }
+
+    @Override
+    public String toString() {
+        return String.format("Node:%d Func:%s BlkId:%d", _nodeIdentifier, _function, _blockId);
+    }
 }

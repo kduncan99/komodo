@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.facilities;
 
 import com.bearsnake.komodo.hardwarelib.Channel;
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.apis.IFacilitiesServices;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.mfd.FileAllocationSet;
 import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
@@ -42,9 +43,17 @@ public class FacilitiesManager implements Manager {
     public void boot(final boolean recoveryBoot) {
         LogManager.logTrace(LOG_SOURCE, "boot(%s)", recoveryBoot);
 
+        // update verbosity of nodes
         for (var ni : _nodeGraph.values()) {
-            // TODO
+            ni._node.setLogIos(Exec.getInstance().getConfiguration().getLogIos());
         }
+
+        // clear cached disk labels
+        for (var ni : _nodeGraph.values()) {
+            ni._mediaInfo = null;
+        }
+
+        LogManager.logTrace(LOG_SOURCE, "boot complete");
     }
 
     @Override
@@ -96,4 +105,6 @@ public class FacilitiesManager implements Manager {
     public synchronized void stop() {
         LogManager.logTrace(LOG_SOURCE, "stop()");
     }
+
+    public IFacilitiesServices getFacilityServices() { return _services; }
 }

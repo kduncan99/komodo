@@ -9,9 +9,11 @@ import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
 import com.bearsnake.komodo.kexec.consoles.ReadOnlyMessage;
+import com.bearsnake.komodo.kexec.consoles.ReadReplyMessage;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
-import com.bearsnake.komodo.kexec.keyins.KeyinServices;
+import com.bearsnake.komodo.kexec.keyins.KeyinManager;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -50,7 +52,7 @@ public class Exec {
 
     private ConsoleManager _consoleManager;
     private FacilitiesManager _facilitiesManager;
-    private KeyinServices _keyinManager;
+    private KeyinManager _keyinManager;
 
     public Exec(final boolean[] jumpKeyTable) {
         _jumpKeys = jumpKeyTable;
@@ -60,14 +62,14 @@ public class Exec {
 
         _consoleManager = new ConsoleManager();
         _facilitiesManager = new FacilitiesManager();
-        _keyinManager = new KeyinServices();
+        _keyinManager = new KeyinManager();
     }
 
     public Configuration getConfiguration() { return _configuration; }
     public ConsoleManager getConsoleManager() { return _consoleManager; }
     public ScheduledThreadPoolExecutor getExecutor() { return _executor; }
     public static Exec getInstance() { return _instance; }
-    public KeyinServices getKeyinManager() { return _keyinManager; }
+    public KeyinManager getKeyinManager() { return _keyinManager; }
     public Phase getPhase() { return _phase; }
     public StopCode getStopCode() { return _stopCode; }
     public boolean isJumpKeySet(final int jumpKey) { return _jumpKeys[jumpKey - 1]; }
@@ -88,13 +90,10 @@ public class Exec {
         _runControlEntries.clear();
         _runControlEntry = new ExecRunControlEntry(_configuration.getMasterAccountId());
         _runControlEntries.put(_runControlEntry._runId, _runControlEntry);
-        if (!isJumpKeySet(9) && !isJumpKeySet(13)) {
-            // TODO populate rce's with entries from backlog and SMOQUE
-            //   well, at some point. probably not here.
-        }
 
         _executor = new ScheduledThreadPoolExecutor((int)_configuration.getExecThreadPoolSize());
         _executor.setRemoveOnCancelPolicy(true);
+
         for (var m : _managers) {
             m.boot(recoveryBoot);
         }
@@ -103,6 +102,30 @@ public class Exec {
         sendExecReadOnlyMessage(msg, null);
         displayDateAndTime();
         displayJumpKeys(null);
+
+        // allow the operator to modify the configuration
+        if (!recoveryBoot || Exec.getInstance().isJumpKeySet(1)) {
+            msg = "Modify config then enter DONE";
+            var candidates = new String[]{"DONE"};
+            sendExecRestrictedReadReplyMessage(msg, candidates, null);
+        }
+
+        if (Exec.getInstance().isJumpKeySet(13)) {
+            msg = "JK13 set during boot - Continue? Y/N";
+            var candidates = new String[]{"Y", "N"};
+            var response = sendExecRestrictedReadReplyMessage(msg, candidates, null);
+            if (response.equals("N")) {
+                Exec.getInstance().stop(StopCode.ConsoleResponseRequiresReboot);
+                throw new ExecStoppedException();
+            }
+        }
+
+        _facilitiesManager.getFacilityServices().startup();
+
+        if (!isJumpKeySet(9) && !isJumpKeySet(13)) {
+            // TODO populate rce's with entries from backlog and SMOQUE
+            //   well, at some point. probably not here.
+        }
 
         LogManager.logTrace(LOG_SOURCE, "boot complete");
     }
@@ -211,72 +234,71 @@ public class Exec {
         _consoleManager.sendReadOnlyMessage(romsg);
     }
 
-    /*
+    public String sendExecReadReplyMessage(
+        final String message,
+        final int maxReplyChars,
+        final ConsoleId routing
+    ) throws ExecStoppedException {
+        var rrmsg = new ReadReplyMessage(_runControlEntry,
+                                         routing,
+                                         null,
+                                         message,
+                                         true,
+                                         false,
+                                         maxReplyChars);
 
-func (e *Exec) SendExecReadReplyMessage(
-	message string,
-	maxReplyChars int,
-	routing *kexec.ConsoleIdentifier,
-) (string, error) {
-	consMsg := kexec.ConsoleReadReplyMessage{
-		Source:         e.runControlEntry,
-		Routing:        routing,
-		Text:           message,
-		DoNotEmitRunId: true,
-		MaxReplyLength: maxReplyChars,
-	}
+        _consoleManager.sendReadReplyMessage(rrmsg);
+        if (rrmsg.isCanceled()) {
+            LogManager.logError(LOG_SOURCE, "Console message is canceled");
+            throw new ExecStoppedException();
+        }
 
-	err := e.consoleMgr.SendReadReplyMessage(&consMsg)
-	if err != nil {
-		return "", err
-	}
+        return rrmsg.getResponse();
+    }
 
-	return consMsg.Reply, nil
-}
+    public String sendExecRestrictedReadReplyMessage(final String message,
+                                                     final String[] candidates,
+                                                     final ConsoleId routing) throws ExecStoppedException {
+        if (candidates.length == 0) {
+            LogManager.logFatal(LOG_SOURCE, "sendExecRestrictedReadReplyMessage:Empty candidates list");
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
 
-func (e *Exec) SendExecRestrictedReadReplyMessage(
-	message string,
-	accepted []string,
-	routing *kexec.ConsoleIdentifier,
-) (string, error) {
-	if len(accepted) == 0 {
-		return "", fmt.Errorf("bad accepted list")
-	}
+        int maxReplyLen = 0;
+        for (var cand : candidates) {
+            if (maxReplyLen < cand.length()) {
+                maxReplyLen = cand.length();
+            }
+        }
 
-	maxReplyLen := 0
-	for _, acceptString := range accepted {
-		if maxReplyLen < len(acceptString) {
-			maxReplyLen = len(acceptString)
-		}
-	}
+        var rrmsg = new ReadReplyMessage(_runControlEntry,
+                                         routing,
+                                         null,
+                                         message,
+                                         true,
+                                         false,
+                                         maxReplyLen);
+        var done = false;
+        while (!done) {
+            _consoleManager.sendReadReplyMessage(rrmsg);
+            if (rrmsg.isCanceled()) {
+                LogManager.logError(LOG_SOURCE, "Console message is canceled");
+                throw new ExecStoppedException();
+            }
 
-	consMsg := kexec.ConsoleReadReplyMessage{
-		Source:         e.runControlEntry,
-		Routing:        routing,
-		Text:           message,
-		DoNotEmitRunId: true,
-		MaxReplyLength: maxReplyLen,
-	}
+            var response = rrmsg.getResponse().toUpperCase();
+            for (var cand : candidates) {
+                if (cand.toUpperCase().equals(response)) {
+                    done = true;
+                    break;
+                }
+            }
+        }
 
-	done := false
-	for !done {
-		err := e.consoleMgr.SendReadReplyMessage(&consMsg)
-		if err != nil {
-			return "", err
-		}
+        return rrmsg.getResponse().toUpperCase();
+    }
 
-		resp := strings.ToUpper(consMsg.Reply)
-		for _, acceptString := range accepted {
-			if acceptString == resp {
-				done = true
-				break
-			}
-		}
-	}
-
-	return strings.ToUpper(consMsg.Reply), nil
-}
-     */
     public void stop(final StopCode stopCode) {
         LogManager.logTrace(LOG_SOURCE, "stop(%s)", stopCode);
         _stopCode = stopCode;

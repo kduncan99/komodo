@@ -67,6 +67,7 @@ public class ConsoleManager implements Manager, Runnable {
                                                                 THREAD_DELAY,
                                                                 THREAD_DELAY,
                                                                 TimeUnit.MILLISECONDS);
+        LogManager.logTrace(LOG_SOURCE, "boot complete", recoveryBoot);
     }
 
     @Override
@@ -81,7 +82,7 @@ public class ConsoleManager implements Manager, Runnable {
                        indent,
                        msg.getSource().getRunId(),
                        msg.getRunId(),
-                       msg.getRouting().toString(),
+                       msg.getRouting() == null ? "<no routing>" : msg.getRouting().toString(),
                        msg.getText());
         }
 
@@ -151,7 +152,7 @@ public class ConsoleManager implements Manager, Runnable {
 
         while (!message.hasResponse() && !message.isCanceled()) {
             try {
-                Thread.sleep(100);
+                Thread.sleep(1000);
             } catch (InterruptedException ex) {
                 // nothing to do
             }
@@ -278,6 +279,7 @@ public class ConsoleManager implements Manager, Runnable {
                         return;
                     }
 
+                    rrMsg.setResponse(solInput.getText());
                     if (Exec.getInstance().getConfiguration().getLogConsoleMessages() && !rrMsg.doNotLogResponse()) {
                         LogManager.logInfo(LOG_SOURCE,
                                            "Msg:%s replyCons:%s %d-%s",

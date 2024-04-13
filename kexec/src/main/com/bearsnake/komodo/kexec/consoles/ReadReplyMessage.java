@@ -23,14 +23,13 @@ public class ReadReplyMessage {
     private String _response;
 
     public ReadReplyMessage(final RunControlEntry source,
-                            final MessageId messageId,
                             final ConsoleId routing,
                             final String runId,
                             final String text,
                             final boolean doNotEmitRunId,
                             final boolean doNotLogResponse,
                             final int maxReplyLength) {
-        _messageId = messageId;
+        _messageId = new MessageId();
         _source = source;
         _routing = routing;
         _runId = runId;

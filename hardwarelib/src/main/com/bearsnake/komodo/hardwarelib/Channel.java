@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.hardwarelib;
 
+import com.bearsnake.komodo.logger.LogManager;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -34,6 +35,8 @@ public abstract class Channel extends Node {
     public NodeCategory getNodeCategory() { return NodeCategory.Channel; }
 
     public void routeIo(final ChannelProgram channelProgram) {
+        LogManager.logTrace(getNodeName(), "routeIo(%s)", channelProgram.toString());
+
         var dev = _devices.get(channelProgram._nodeIdentifier);
         if (dev == null) {
             channelProgram.setIoStatus(IoStatus.DeviceIsNotAttached);
@@ -44,5 +47,15 @@ public abstract class Channel extends Node {
             default -> channelProgram.setIoStatus(IoStatus.InvalidFunction);
             }
         }
+
+        LogManager.logTrace(getNodeName(), "routeIo(): %s", channelProgram._ioStatus);
+    }
+
+    @Override
+    public synchronized String toString() {
+        return String.format("%s %s:%s",
+                             getNodeName(),
+                             getNodeCategory(),
+                             getChannelType());
     }
 }
