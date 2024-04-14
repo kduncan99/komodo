@@ -13,8 +13,8 @@ import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 public class ConsoleManager implements Manager, Runnable {
@@ -22,10 +22,11 @@ public class ConsoleManager implements Manager, Runnable {
     private static final String LOG_SOURCE = "ConsMgr";
     private static final long THREAD_DELAY = 50; // how often do we run the thread in msecs
 
-    private final HashMap<ConsoleId, Console> _consoles = new HashMap<>();
+    private final ConcurrentHashMap<ConsoleId, Console> _consoles = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedQueue<ConsoleId> _dropConsoleList = new ConcurrentLinkedQueue<>();
     private ConsoleId _primaryConsoleId;
-    private final LinkedList<ReadOnlyMessage> _queuedReadOnlyMessages = new LinkedList<>();
-    private final HashMap<MessageId, ReadReplyMessage> _queuedReadReplyMessages = new HashMap<>();
+    private final ConcurrentLinkedQueue<ReadOnlyMessage> _queuedReadOnlyMessages = new ConcurrentLinkedQueue<>();
+    private final ConcurrentHashMap<MessageId, ReadReplyMessage> _queuedReadReplyMessages = new ConcurrentHashMap<>();
 
     public ConsoleManager() {
         Exec.getInstance().managerRegister(this);
@@ -71,9 +72,9 @@ public class ConsoleManager implements Manager, Runnable {
     }
 
     @Override
-    public synchronized void dump(final PrintStream out,
-                                  final String indent,
-                                  final boolean verbose) {
+    public void dump(final PrintStream out,
+                     final String indent,
+                     final boolean verbose) {
         out.printf("%sConsoleManager ********************************\n", indent);
 
         out.printf("%s  Queued Read-only messages:\n", indent);
@@ -129,9 +130,7 @@ public class ConsoleManager implements Manager, Runnable {
             message.getSource().postToTailSheet(message.getText());
         }
 
-        synchronized(this) {
-            _queuedReadOnlyMessages.add(message);
-        }
+        _queuedReadOnlyMessages.add(message);
     }
 
     /**
@@ -146,10 +145,7 @@ public class ConsoleManager implements Manager, Runnable {
             message.getSource().postToTailSheet(message.getText());
         }
 
-        synchronized(this) {
-            _queuedReadReplyMessages.put(message.getMessageId(), message);
-        }
-
+        _queuedReadReplyMessages.put(message.getMessageId(), message);
         while (!message.hasResponse() && !message.isCanceled()) {
             try {
                 Thread.sleep(1000);
@@ -164,12 +160,13 @@ public class ConsoleManager implements Manager, Runnable {
     }
 
     @Override
-    public synchronized void stop() {
+    public void stop() {
         LogManager.logTrace(LOG_SOURCE, "stop()");
-        for (var rrMsg : _queuedReadReplyMessages.values()) {
-            if (!rrMsg.isCanceled() && !rrMsg.hasResponse()) {
-                rrMsg.setIsCanceled();
-            }
+        synchronized (_queuedReadReplyMessages) {
+            _queuedReadReplyMessages.values()
+                                    .stream()
+                                    .filter(rrMsg -> !rrMsg.isCanceled() && !rrMsg.hasResponse())
+                                    .forEach(ReadReplyMessage::setIsCanceled);
         }
     }
 
@@ -178,63 +175,71 @@ public class ConsoleManager implements Manager, Runnable {
     //     if we can send it to the destination console, do so.
     //     else send it to the primary console.
     //   else send it to all the consoles.
-    private synchronized void checkForReadOnlyMessage() throws KExecException {
-        var dropList = new LinkedList<ConsoleId>();
-        var iter = _queuedReadOnlyMessages.iterator();
-        while (iter.hasNext() && !Exec.getInstance().isStopped()) {
-            var roMsg = iter.next();
+    private void checkForReadOnlyMessage() throws KExecException {
+        while (true) {
+            ReadOnlyMessage roMsg = null;
+            synchronized (_queuedReadOnlyMessages) {
+                roMsg = _queuedReadOnlyMessages.poll();
+            }
+            if (roMsg == null) {
+                return;
+            }
+
             if (roMsg.getRouting() == null) {
-                var cons = _consoles.get(_primaryConsoleId);
+                // no routing was specified for the message - send it to all consoles.
+                for (Console cons : _consoles.values()) {
+                    try {
+                        cons.sendReadOnlyMessage(roMsg.getText());
+                    } catch (ConsoleException ex) {
+                        _dropConsoleList.add(cons.getConsoleId());
+                    }
+                }
+            } else {
+                // routing was specified - send it to the indicated console if possible,
+                // else send it to the primary console.
                 var sent = false;
-                if (cons != null) {
+                var consId = roMsg.getRouting();
+                var cons = _consoles.get(consId);
+                if (cons != null && !_dropConsoleList.contains(consId)) {
                     try {
                         cons.sendReadOnlyMessage(roMsg.getText());
                         sent = true;
                     } catch (ConsoleException ex) {
-                        dropList.add(cons.getConsoleId());
+                        _dropConsoleList.add(consId);
                     }
                 }
 
                 if (!sent) {
+                    cons = _consoles.get(_primaryConsoleId);
                     try {
-                        _consoles.get(_primaryConsoleId).sendReadOnlyMessage(roMsg.getText());
+                        cons.sendReadOnlyMessage(roMsg.getText());
                     } catch (ConsoleException ex) {
-                        // give up.
-                        LogManager.logWarning(LOG_SOURCE,
-                                              "Lost read-only message:%s", roMsg.getText());
-                    }
-                }
-            } else {
-                for (var cons : _consoles.values()) {
-                    if (!dropList.contains(cons.getConsoleId())) {
-                        try {
-                            cons.sendReadOnlyMessage(roMsg.getText());
-                        } catch (ConsoleException ex) {
-                            dropList.add(cons.getConsoleId());
-                        }
+                        _dropConsoleList.add(_primaryConsoleId);
                     }
                 }
             }
-
-            iter.remove();
-        }
-
-        for (var consId : dropList) {
-            dropConsole(consId);
         }
     }
 
-    private synchronized void checkForReadReplyMessage() throws KExecException {
-        var dropList = new LinkedList<ConsoleId>();
+    // Iterate over the queued RR messages.
+    // For any message which has not been assigned to a particular console:
+    //   if there is routing:
+    //     if we can assign and send it to the destination console, do so,
+    //       if that fails, assign and send it to the primary console.
+    //     else assign and send it to the primary console.
+    //   otherwise (no routing):
+    //     send it to all consoles (other than primary) as read-only,
+    //       and assign and sent it to the primary console.
+    private void checkForReadReplyMessage() throws KExecException {
         var iter = _queuedReadReplyMessages.entrySet().iterator();
         while (iter.hasNext() && !Exec.getInstance().isStopped()) {
             var entry = iter.next();
             var rrMsg = entry.getValue();
             if (!rrMsg.isAssignedToConsole()) {
-                ConsoleId selectedConsoleId = null;
-                Console selectedConsole = null;
+                ConsoleId selectedConsoleId;
+                Console selectedConsole;
                 if (rrMsg.getRouting() != null
-                    && !dropList.contains(rrMsg.getRouting())
+                    && !_dropConsoleList.contains(rrMsg.getRouting())
                     && _consoles.containsKey(rrMsg.getRouting())) {
                     selectedConsoleId = rrMsg.getRouting();
                 } else {
@@ -249,17 +254,14 @@ public class ConsoleManager implements Manager, Runnable {
                     rrMsg.setResponseConsoleId(selectedConsoleId);
                     rrMsg.setResponseConsoleMessageIndex(msgIndex);
                 } catch (ConsoleException ex) {
-                    dropList.add(rrMsg.getRouting());
+                    _dropConsoleList.add(rrMsg.getRouting());
                 }
             }
         }
-
-        for (var consId : dropList) {
-            dropConsole(consId);
-        }
     }
 
-    private synchronized void checkForSolicitedInput() throws KExecException {
+    // iterates over the known consoles, polling for a response to a particular read-reply message.
+    private void checkForSolicitedInput() throws KExecException {
         for (var cons : _consoles.values()) {
             try {
                 var solInput = cons.pollSolicitedInput();
@@ -293,8 +295,7 @@ public class ConsoleManager implements Manager, Runnable {
                     return;
                 }
             } catch (ConsoleException ex) {
-                dropConsole(cons.getConsoleId());
-                break;
+                _dropConsoleList.add(cons.getConsoleId());
             }
 
             if (Exec.getInstance().isStopped()) {
@@ -303,18 +304,17 @@ public class ConsoleManager implements Manager, Runnable {
         }
     }
 
-    private synchronized void checkForUnsolicitedInput() throws KExecException {
+    // iterates over the known consoles looking for unsolicited input
+    private void checkForUnsolicitedInput() throws KExecException {
         for (var cons : _consoles.values()) {
             try {
                 var input = cons.pollUnsolicitedInput();
                 if (input != null) {
-                    // send the raw input to the keyin manager
                     Exec.getInstance().getKeyinManager().postKeyin(cons.getConsoleId(), input);
                     return;
                 }
             } catch (ConsoleException ex) {
-                dropConsole(cons.getConsoleId());
-                break;
+                _dropConsoleList.add(cons.getConsoleId());
             }
 
             if (Exec.getInstance().isStopped()) {
@@ -323,12 +323,20 @@ public class ConsoleManager implements Manager, Runnable {
         }
     }
 
-    private void dropConsole(final ConsoleId consoleId) throws KExecException {
+    private void dropConsoles() throws KExecException {
+        // Process the drop console list.
         // If we are asked to drop the primary console, we have to stop the exec
-        if (consoleId == _primaryConsoleId) {
-            var sc = StopCode.LastSystemConsoleDown;
-            Exec.getInstance().stop(sc);
-            throw new ExecStoppedException();
+        while (!_dropConsoleList.isEmpty()) {
+            var consoleId = _dropConsoleList.poll();
+            if (consoleId == _primaryConsoleId) {
+                var sc = StopCode.LastSystemConsoleDown;
+                Exec.getInstance().stop(sc);
+                throw new ExecStoppedException();
+            }
+
+            var cons = _consoles.remove(consoleId);
+            cons.reset();
+            LogManager.logWarning(LOG_SOURCE, "Dropping console %s", consoleId.toString());
         }
     }
 
@@ -339,9 +347,14 @@ public class ConsoleManager implements Manager, Runnable {
             checkForReadReplyMessage();
             checkForSolicitedInput();
             checkForUnsolicitedInput();
+            dropConsoles();
         } catch (KExecException ex) {
-            // trap door - exec is stopped
+            // trap door - exec is stopped.
+            // we don't need to do anything here, but we do need to avoid throwing the exception.
         } catch (Throwable t) {
+            // Something very unexpected went wrong.
+            // We need to avoid throwing the exception (which would cause all sorts of shenanigans),
+            // but we do need to bring the exec to a screeching halt.
             LogManager.logCatching(LOG_SOURCE, t);
             Exec.getInstance().stop(StopCode.ExecContingencyHandler);
         }

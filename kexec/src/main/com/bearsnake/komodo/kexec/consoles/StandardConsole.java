@@ -31,7 +31,7 @@ public class StandardConsole implements Console, Runnable {
     }
 
     @Override
-    public synchronized void clearReadReplyMessage(MessageId messageId) throws ConsoleException {
+    public void clearReadReplyMessage(MessageId messageId) throws ConsoleException {
         LogManager.logTrace(LOG_SOURCE, "clearReadReplyMessage(%s)", messageId);
         for (int mx = 0; mx < 10; mx++) {
             if ((_activeReadReplyMessages[mx] != null)
@@ -52,7 +52,7 @@ public class StandardConsole implements Console, Runnable {
     }
 
     @Override
-    public synchronized void dump(PrintStream out, String indent) {
+    public void dump(PrintStream out, String indent) {
         out.printf("%sConsole %s(%s) StandardConsole\n", indent, _consoleId.toStringFromFieldata(), _consoleId);
         if (_pendingUnsolicitedInput != null) {
             out.printf("%spending input:%s\n", indent, _pendingUnsolicitedInput);
@@ -124,16 +124,18 @@ public class StandardConsole implements Console, Runnable {
     }
 
     @Override
-    public synchronized int sendReadReplyMessage(MessageId messageId,
-                                                 String text,
-                                                 int maxReplyLength) throws ConsoleException {
-        for (int mx = 0; mx < 10; mx++) {
-            if (_activeReadReplyMessages[mx] == null) {
-                _activeReadReplyMessages[mx] = new ReadReplyInfo(messageId,
-                                                                 text,
-                                                                 maxReplyLength);
-                System.out.printf("%d-%s\n", mx, text);
-                return mx;
+    public int sendReadReplyMessage(MessageId messageId,
+                                    String text,
+                                    int maxReplyLength) throws ConsoleException {
+        synchronized (_activeReadReplyMessages) {
+            for (int mx = 0; mx < 10; mx++) {
+                if (_activeReadReplyMessages[mx] == null) {
+                    _activeReadReplyMessages[mx] = new ReadReplyInfo(messageId,
+                                                                     text,
+                                                                     maxReplyLength);
+                    System.out.printf("%d-%s\n", mx, text);
+                    return mx;
+                }
             }
         }
 
@@ -145,7 +147,7 @@ public class StandardConsole implements Console, Runnable {
      * Async thread which handles interaction with stdin/stdout
      */
     @Override
-    public synchronized void run() {
+    public void run() {
         try {
             if (_scanner.hasNext()) {
                 // read input if there is any to be read, but ignore it if the previous input is still pending.
