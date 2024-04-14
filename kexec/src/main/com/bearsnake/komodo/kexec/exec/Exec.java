@@ -70,6 +70,7 @@ public class Exec {
     public ScheduledThreadPoolExecutor getExecutor() { return _executor; }
     public static Exec getInstance() { return _instance; }
     public KeyinManager getKeyinManager() { return _keyinManager; }
+    public FacilitiesManager getFacilitiesManager() { return _facilitiesManager; }
     public Phase getPhase() { return _phase; }
     public StopCode getStopCode() { return _stopCode; }
     public boolean isJumpKeySet(final int jumpKey) { return _jumpKeys[jumpKey - 1]; }
@@ -120,7 +121,7 @@ public class Exec {
             }
         }
 
-        _facilitiesManager.getFacilityServices().startup();
+        _facilitiesManager.startup();
 
         if (!isJumpKeySet(9) && !isJumpKeySet(13)) {
             // TODO populate rce's with entries from backlog and SMOQUE
@@ -229,6 +230,43 @@ public class Exec {
 
     public boolean isRunning() {
         return (_phase != Phase.Stopped) && (_phase != Phase.NotStarted);
+    }
+
+    public static boolean isValidDeviceName(final String deviceName) {
+        if (deviceName.isEmpty() || deviceName.length() > 6) {
+            return false;
+        }
+
+        for (var ch : deviceName.getBytes()) {
+            if ((ch < 'A' || ch > 'Z') && (ch < '0' || ch > '9')) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean isValidPackName(final String packName) {
+        if (packName.isEmpty() || packName.length() > 6) {
+            return false;
+        }
+
+        for (var ch : packName.getBytes()) {
+            if ((ch < 'A' || ch > 'Z') && (ch < '0' || ch > '9')) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean isValidPrepFactor(int value) {
+        return (value == 28)
+            || (value == 56)
+            || (value == 112)
+            || (value == 224)
+            || (value == 448)
+            || (value == 1792);
     }
 
     public void sendExecReadOnlyMessage(final String message,

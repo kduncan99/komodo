@@ -105,7 +105,7 @@ public class FacilitiesCore {
 
         var packName = Word36.toStringFromASCII(label._array[1]) + Word36.toStringFromASCII(label._array[2]);
         packName = packName.substring(0, 6).trim();
-        if (!_mgr._services.isValidPackName(packName)) {
+        if (!Exec.isValidPackName(packName)) {
             var msg = String.format("Pack on %s has an invalid pack name", nodeInfo._node.getNodeName());
             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
             return pi;
@@ -114,7 +114,7 @@ public class FacilitiesCore {
         pi.setPackName(packName);
 
         var prepFactor = (int)Word36.getH2(label._array[4]);
-        if (!_mgr._services.isValidPrepFactor(prepFactor)) {
+        if (!Exec.isValidPrepFactor(prepFactor)) {
             var msg = String.format("Pack on %s has an invalid prep factor: %d",
                                     nodeInfo._node.getNodeName(),
                                     prepFactor);

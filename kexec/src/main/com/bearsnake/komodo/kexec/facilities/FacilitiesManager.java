@@ -4,9 +4,15 @@
 
 package com.bearsnake.komodo.kexec.facilities;
 
+import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.hardwarelib.Channel;
+import com.bearsnake.komodo.hardwarelib.ChannelProgram;
+import com.bearsnake.komodo.hardwarelib.DiskDevice;
+import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.kexec.Manager;
-import com.bearsnake.komodo.kexec.apis.IFacilitiesServices;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exceptions.KExecException;
+import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.mfd.FileAllocationSet;
 import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
@@ -20,7 +26,6 @@ public class FacilitiesManager implements Manager {
     static final String LOG_SOURCE = "FacMgr";
 
     final FacilitiesCore _core;
-    final FacilitiesServices _services;
 
     // All assigned disk files are recorded here so that we can easily access and manage the file allocations.
     final HashMap<MFDRelativeAddress, FileAllocationSet> _acceleratedFileAllocations = new HashMap<>();
@@ -31,7 +36,6 @@ public class FacilitiesManager implements Manager {
 
     public FacilitiesManager() {
         _core = new FacilitiesCore(this);
-        _services = new FacilitiesServices(this);
         Exec.getInstance().managerRegister(this);
     }
 
@@ -101,10 +105,63 @@ public class FacilitiesManager implements Manager {
         }
     }
 
+    public void startup() throws KExecException {
+        LogManager.logTrace(LOG_SOURCE, "startup()");
+
+        // read disk labels
+        var diskLabel = new ArraySlice(new long[28]);
+        var cw = new ChannelProgram.ControlWord().setBuffer(diskLabel)
+                                                 .setBufferOffset(0)
+                                                 .setTransferCount(28)
+                                                 .setDirection(ChannelProgram.Direction.Increment);
+        var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
+                                     .setBlockId(0)
+                                     .addControlWord(cw);
+        for (var ni : _nodeGraph.values()) {
+            if ((ni._nodeStatus == NodeStatus.Up)
+                || (ni._nodeStatus == NodeStatus.Suspended)
+                || ni._nodeStatus == NodeStatus.Reserved) {
+                if ((ni instanceof DeviceNodeInfo dni) && (ni._node instanceof DiskDevice dd)) {
+                    try {
+                        var chan = _core.selectRoute(dd);
+                        cp.setNodeIdentifier(dd.getNodeIdentifier());
+                        chan.routeIo(cp);
+                        if (cp._ioStatus != IoStatus.Complete) {
+                            var msg = String.format("IO Error reading pack label on device %s", dd.getNodeName());
+                            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+
+                            LogManager.logInfo(LOG_SOURCE, "IO error device %s:%s",
+                                               dd.getNodeName(),
+                                               cp._ioStatus);
+
+                            dni._nodeStatus = NodeStatus.Down;
+                            msg = _core.getNodeStatusString(dd.getNodeIdentifier());
+                            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+                            continue;
+                        }
+
+                        var pi = _core.loadDiskPackInfo(dni, diskLabel);
+                        if (!pi._isPrepped) {
+                            dni._nodeStatus = NodeStatus.Down;
+                            var msg = _core.getNodeStatusString(dd.getNodeIdentifier());
+                            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+                        }
+                    } catch (ExecStoppedException ex) {
+                        return;
+                    } catch (NoRouteForIOException ex) {
+                        LogManager.logInfo(LOG_SOURCE, "No route to device %s", dd.getNodeName());
+                    }
+                }
+            }
+        }
+
+        // TODO
+
+        LogManager.logTrace(LOG_SOURCE, "boot complete");
+    }
+
     @Override
     public synchronized void stop() {
         LogManager.logTrace(LOG_SOURCE, "stop()");
     }
-
-    public IFacilitiesServices getFacilityServices() { return _services; }
 }

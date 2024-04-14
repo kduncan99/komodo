@@ -5,7 +5,6 @@
 package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.kexec.Manager;
-import com.bearsnake.komodo.kexec.apis.IKeyinServices;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
@@ -21,7 +20,7 @@ import java.util.LinkedList;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class KeyinManager implements Manager, IKeyinServices, Runnable {
+public class KeyinManager implements Manager, Runnable {
 
     private static final long THREAD_DELAY = 50;
     private static final String LOG_SOURCE = "KeyinMgr";
