@@ -18,6 +18,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class KeyinManager implements Manager, IKeyinServices, Runnable {
@@ -28,7 +29,7 @@ public class KeyinManager implements Manager, IKeyinServices, Runnable {
     private final LinkedList<KeyinHandler> _postedKeyinHandlers = new LinkedList<>();
     private final LinkedList<PostedKeyin> _postedKeyins = new LinkedList<>();
 
-    private static final HashMap<String, Class<?>> _handlerClasses = new HashMap<>();
+    static final HashMap<String, Class<?>> _handlerClasses = new HashMap<>();
     static {
         _handlerClasses.put(CJKeyinHandler.COMMAND.toUpperCase(), CJKeyinHandler.class);
         _handlerClasses.put(DKeyinHandler.COMMAND.toUpperCase(), DKeyinHandler.class);
@@ -60,6 +61,12 @@ public class KeyinManager implements Manager, IKeyinServices, Runnable {
                 try {
                     Constructor<?> ctor = clazz.getConstructor(ConsoleId.class, String.class, String.class);
                     var kh = (KeyinHandler)ctor.newInstance(pk.getConsoleIdentifier(), options, arguments);
+                    if (Objects.equals(kh._options, "?") || Objects.equals(kh._arguments, "?")) {
+                        var msg = kh.getHelp()[0];
+                        Exec.getInstance().sendExecReadOnlyMessage(msg, kh._source);
+                        continue;
+                    }
+
                     if (!kh.checkSyntax()) {
                         var msg = String.format("Syntax error in %s keyin", kh.getCommand());
                         Exec.getInstance().sendExecReadOnlyMessage(msg, kh._source);
