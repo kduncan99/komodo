@@ -8,18 +8,17 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.logger.LogManager;
-import java.util.Objects;
 
-public class DUKeyinHandler extends KeyinHandler implements Runnable {
+public class LGKeyinHandler extends KeyinHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
-        "DU MP",
-        "Creates a system dump file",
+        "LG {message}",
+        "Creates an entry in the system log",
     };
 
-    public static final String COMMAND = "DU";
+    public static final String COMMAND = "LG";
 
-    public DUKeyinHandler(final ConsoleId source,
+    public LGKeyinHandler(final ConsoleId source,
                           final String options,
                           final String arguments) {
         super(source, options, arguments);
@@ -30,7 +29,7 @@ public class DUKeyinHandler extends KeyinHandler implements Runnable {
 
     @Override
     public boolean checkSyntax() {
-        return _options == null && _arguments != null && _arguments.equalsIgnoreCase("MP");
+        return _options == null && _arguments != null;
     }
 
     @Override
@@ -47,13 +46,8 @@ public class DUKeyinHandler extends KeyinHandler implements Runnable {
     @Override
     public void run() {
         try {
-            var filename = Exec.getInstance().dump(true);
-            String msg;
-            if (filename == null) {
-                msg = "Failed to create system dump";
-            } else {
-                msg = "Created system dump file " + filename;
-            }
+            LogManager.logInfo(COMMAND, "%s", _arguments);
+            var msg = "Log entry created";
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
         } catch (Throwable t) {
             LogManager.logCatching(COMMAND, t);

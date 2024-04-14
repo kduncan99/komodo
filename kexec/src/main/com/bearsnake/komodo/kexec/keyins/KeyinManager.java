@@ -34,6 +34,7 @@ public class KeyinManager implements Manager, IKeyinServices, Runnable {
         _handlerClasses.put(DKeyinHandler.COMMAND.toUpperCase(), DKeyinHandler.class);
         _handlerClasses.put(DJKeyinHandler.COMMAND.toUpperCase(), DJKeyinHandler.class);
         _handlerClasses.put(DUKeyinHandler.COMMAND.toUpperCase(), DUKeyinHandler.class);
+        _handlerClasses.put(LGKeyinHandler.COMMAND.toUpperCase(), LGKeyinHandler.class);
         _handlerClasses.put(SJKeyinHandler.COMMAND.toUpperCase(), SJKeyinHandler.class);
         _handlerClasses.put(StopKeyinHandler.COMMAND.toUpperCase(), StopKeyinHandler.class);
     }
