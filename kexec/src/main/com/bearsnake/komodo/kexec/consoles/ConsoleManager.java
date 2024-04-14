@@ -93,7 +93,7 @@ public class ConsoleManager implements Manager, Runnable {
                        indent,
                        msg.getSource().getRunId(),
                        msg.getRunId(),
-                       msg.getRouting().toString(),
+                       msg.getRouting() == null ? "<none>" : msg.getRouting().toString(),
                        msg.getText(),
                        msg.getRouting(),
                        msg.getResponseConsoleId().toString(),

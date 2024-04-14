@@ -167,7 +167,7 @@ public class Exec {
         }
     }
 
-    public void dump(final boolean verbose) {
+    public String dump(final boolean verbose) {
         var dateTime = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
         String dtStr = dateTime.format(formatter);
@@ -180,7 +180,7 @@ public class Exec {
             if (isRunning()) {
                 stop(StopCode.PanicDumpFailed);
             }
-            return;
+            return null;
         }
 
         out.println("Exec Dump ----------------------------------------------------");
@@ -216,6 +216,9 @@ public class Exec {
         for (var m : _managers) {
             m.dump(out, "  ", verbose);
         }
+
+        out.close();
+        return filename;
     }
 
     public void initialize() throws KExecException {
