@@ -10,6 +10,7 @@ import com.bearsnake.komodo.kexec.facilities.ChannelNodeInfo;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 
 public abstract class FacHandler extends KeyinHandler {
@@ -21,6 +22,10 @@ public abstract class FacHandler extends KeyinHandler {
                       final String arguments) {
         super(source, options, arguments);
         _facMgr = Exec.getInstance().getFacilitiesManager();
+    }
+
+    protected void displayStatusForNode(final NodeInfo nodeInfo) {
+        displayStatusForNodes(Collections.singletonList(nodeInfo));
     }
 
     protected void displayStatusForNodes(final Collection<NodeInfo> nodeInfos) {
@@ -74,7 +79,8 @@ public abstract class FacHandler extends KeyinHandler {
     }
 
     protected Collection<NodeInfo> getNodeInfoListForChannel() {
-        if (!Exec.isValidNodeName(_arguments)) {
+        var chName = _arguments.toUpperCase();
+        if (!Exec.isValidNodeName(chName)) {
             var msg = "SYNTAX ERROR";
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
             return null;
@@ -82,7 +88,7 @@ public abstract class FacHandler extends KeyinHandler {
 
         var ni = _facMgr.getNodeInfo(_arguments);
         if (!(ni instanceof ChannelNodeInfo cni)) {
-            var msg = String.format("%s is not a configured channel", _arguments.toUpperCase());
+            var msg = String.format("%s is not a configured channel", chName);
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
             return null;
         }
