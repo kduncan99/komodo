@@ -26,7 +26,7 @@ public abstract class NodeInfo {
     public NodeStatus getNodeStatus() { return _nodeStatus; }
     public MediaInfo getMediaInfo() { return _mediaInfo; }
     public RunControlEntry getAssignedTo() { return _assignedTo; }
-    public void setStatus(final NodeStatus status) { _nodeStatus = status; }
+    public void setNodeStatus(final NodeStatus status) { _nodeStatus = status; }
 
     public abstract String toString();
 }

@@ -77,22 +77,29 @@ public class UPKeyinHandler extends FacHandler implements Runnable {
             return;
         }
 
-        nodeInfos.forEach(ni -> ni.setStatus(NodeStatus.Up));
+        nodeInfos.forEach(ni -> ni.setNodeStatus(NodeStatus.Up));
         displayStatusForNodes(nodeInfos);
         // TODO how do we initiate scan of fixed disk(s) - send device ready?
     }
 
     private void processNode() {
-        var devName = _arguments.toUpperCase();
-        var ni = _facMgr.getNodeInfo(devName);
-        if (!(ni instanceof DeviceNodeInfo)) {
-            var msg = String.format("%s is not a configured device", devName);
+        var nodeName = _arguments.toUpperCase();
+        var ni = _facMgr.getNodeInfo(nodeName);
+        if (ni == null) {
+            var msg = String.format("%s is not a configured node", nodeName);
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
             return;
         }
 
-        ni.setStatus(NodeStatus.Up);
+        if (ni.getNodeStatus() == NodeStatus.Up) {
+            var msg = String.format("%s is already up", ni.getNode().getNodeName());
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+            return;
+        }
+
+        ni.setNodeStatus(NodeStatus.Up);
         displayStatusForNode(ni);
         // TODO how do we initiate scan of fixed disk - send device ready?
+        // TODO also - did we just open up paths to any devices... if so, are they disks?
     }
 }

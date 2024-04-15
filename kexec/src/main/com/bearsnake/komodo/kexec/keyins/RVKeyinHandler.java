@@ -97,7 +97,7 @@ public class RVKeyinHandler extends FacHandler implements Runnable {
                     } else {
                         runsToAbort.add(rce);
                     }
-                } else if ((node instanceof TapeDevice) && (rce != null)) {
+                } else if (node instanceof TapeDevice) {
                     if (rce.getRunType() == RunType.Exec) {
                         // TODO something special here, it's probably an audit tape or something like that
                     } else {
@@ -113,7 +113,7 @@ public class RVKeyinHandler extends FacHandler implements Runnable {
             }
         }
 
-        nodeInfos.forEach(ni -> ni.setStatus(NodeStatus.Reserved));
+        nodeInfos.forEach(ni -> ni.setNodeStatus(NodeStatus.Reserved));
         displayStatusForNodes(nodeInfos);
         if (requiresStop) {
             Exec.getInstance().stop(StopCode.ConsoleResponseRequiresReboot);
@@ -129,29 +129,37 @@ public class RVKeyinHandler extends FacHandler implements Runnable {
             return;
         }
 
+        if (ni.getNodeStatus() == NodeStatus.Reserved) {
+            var msg = String.format("%s is already reserved", ni.getNode().getNodeName());
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+            return;
+        }
+
         var requiresStop = false;
-        var node = (Device) ni.getNode();
-        var rce = ni.getAssignedTo();
-        if (rce != null) {
-            if (node instanceof DiskDevice) {
-                if (rce.getRunType() == RunType.Exec) {
-                    if (!verifyOperation(node)) {
-                        return;
+        if (ni.getNodeStatus() != NodeStatus.Down) {
+            var node = (Device) ni.getNode();
+            var rce = ni.getAssignedTo();
+            if (rce != null) {
+                if (node instanceof DiskDevice) {
+                    if (rce.getRunType() == RunType.Exec) {
+                        if (!verifyOperation(node)) {
+                            return;
+                        }
+                        requiresStop = true;
+                    } else {
+                        // TODO abort the run
                     }
-                    requiresStop = true;
-                } else {
-                    // TODO abort the run
-                }
-            } else if ((node instanceof TapeDevice) && (rce != null)) {
-                if (rce.getRunType() == RunType.Exec) {
-                    // TODO something special here, it's probably an audit tape or something like that
-                } else {
-                    // TODO abort the run
+                } else if (node instanceof TapeDevice) {
+                    if (rce.getRunType() == RunType.Exec) {
+                        // TODO something special here, it's probably an audit tape or something like that
+                    } else {
+                        // TODO abort the run
+                    }
                 }
             }
         }
 
-        ni.setStatus(NodeStatus.Reserved);
+        ni.setNodeStatus(NodeStatus.Reserved);
         displayStatusForNode(ni);
         if (requiresStop) {
             Exec.getInstance().stop(StopCode.ConsoleResponseRequiresReboot);

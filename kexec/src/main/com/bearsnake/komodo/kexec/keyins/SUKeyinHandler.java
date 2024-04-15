@@ -4,16 +4,21 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
+import com.bearsnake.komodo.hardwarelib.Device;
+import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.hardwarelib.DiskDevice;
+import com.bearsnake.komodo.hardwarelib.NodeCategory;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.kexec.facilities.DeviceNodeInfo;
+import com.bearsnake.komodo.kexec.facilities.NodeStatus;
 import com.bearsnake.komodo.logger.LogManager;
 
 public class SUKeyinHandler extends FacHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
-        "SU node_name[,...]",
+        "SU[,ALL] node_name",
         "Makes devices available for use, however space cannot be allocated.",
     };
 
@@ -57,25 +62,57 @@ public class SUKeyinHandler extends FacHandler implements Runnable {
     }
 
     private void process() {
-        var nodeInfos = getNodeInfoList();
+        if (_options != null) {
+            processAll();
+        } else {
+            processNode();
+        }
+    }
+
+    private void processAll() {
+        var nodeInfos = getNodeInfoListForChannel();
         if (nodeInfos == null) {
             return;
         }
 
-        var error = false;
         for (var ni : nodeInfos) {
-            if (!(ni.getNode() instanceof DiskDevice)) {
-                var msg = String.format("SU not allowed for %s", ni.getNode().getNodeName());
+            if (((Device)ni.getNode()).getDeviceType() != DeviceType.DiskDevice) {
+                var msg = String.format("SU keyin not allowed for %s", ni.getNode().getNodeName());
                 Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
-                error = true;
+                return;
             }
         }
-        if (error) {
+
+        nodeInfos.forEach(ni -> ni.setNodeStatus(NodeStatus.Suspended));
+        displayStatusForNodes(nodeInfos);
+        // TODO For devices which were DN or RV...
+        //  how do we initiate scan of fixed disk(s) - send device ready?
+    }
+
+    private void processNode() {
+        var devName = _arguments.toUpperCase();
+        var ni = _facMgr.getNodeInfo(devName);
+        if (!(ni instanceof DeviceNodeInfo)) {
+            var msg = String.format("%s is not a configured device", devName);
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
             return;
         }
 
-        // TODO
+        if (((Device)ni.getNode()).getDeviceType() != DeviceType.DiskDevice) {
+            var msg = String.format("SU keyin not allowed for %s", ni.getNode().getNodeName());
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+            return;
+        }
 
-        displayStatusForNodes(nodeInfos);
+        if (ni.getNodeStatus() == NodeStatus.Suspended) {
+            var msg = String.format("%s is already suspended", ni.getNode().getNodeName());
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+            return;
+        }
+
+        var wasUnavailable = ni.getNodeStatus() == NodeStatus.Down || ni.getNodeStatus() == NodeStatus.Reserved;
+        ni.setNodeStatus(NodeStatus.Suspended);
+        displayStatusForNode(ni);
+        // TODO for wasUnavailable - how do we initiate scan of fixed disk - send device ready?
     }
 }
