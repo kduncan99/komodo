@@ -7,13 +7,16 @@ package com.bearsnake.komodo.kexec.facilities;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.hardwarelib.Channel;
 import com.bearsnake.komodo.hardwarelib.ChannelProgram;
+import com.bearsnake.komodo.hardwarelib.Device;
 import com.bearsnake.komodo.hardwarelib.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
+import com.bearsnake.komodo.hardwarelib.NodeCategory;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.mfd.FileAllocationSet;
 import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
 import com.bearsnake.komodo.logger.LogManager;
@@ -105,7 +108,61 @@ public class FacilitiesManager implements Manager {
         }
     }
 
-    public void startup() throws KExecException {
+    @Override
+    public synchronized void stop() {
+        LogManager.logTrace(LOG_SOURCE, "stop()");
+    }
+
+    // -------------------------------------------------------------------------
+    // Services interface
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns the facilities NodeInfo for the given node.
+     * @param nodeName name of the node - we'd prefer it to be uppercase, but whatever...
+     * @return NodeInfo of the node if it is configured, else null
+     */
+    public NodeInfo getNodeInfo(final String nodeName) {
+        return _nodeGraph.values()
+                         .stream()
+                         .filter(ni -> ni._node.getNodeName().equalsIgnoreCase(nodeName))
+                         .findFirst()
+                         .orElse(null);
+
+    }
+
+    /**
+     * Routes an IO described by a channel program.
+     * For the case where some portion of the Exec needs to do device-specific IO.
+     * @param channelProgram IO description
+     */
+    public void routeIo(final ChannelProgram channelProgram) throws ExecStoppedException, NoRouteForIOException {
+        var nodeInfo = _nodeGraph.get(channelProgram._nodeIdentifier);
+        if (nodeInfo == null) {
+            LogManager.logFatal(LOG_SOURCE,
+                                "Node %d from channel program is not configured",
+                                channelProgram._nodeIdentifier);
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
+
+        var node = nodeInfo.getNode();
+        if (node.getNodeCategory() != NodeCategory.Device) {
+            LogManager.logFatal(LOG_SOURCE,
+                                "Node %d from channel program is not a device",
+                                channelProgram._nodeIdentifier);
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
+
+        var chan = _core.selectRoute((Device) node);
+        chan.routeIo(channelProgram);
+    }
+
+    /**
+     * Invoked by Exec after boot() has been called for all managers.
+     */
+    public void startup() {
         LogManager.logTrace(LOG_SOURCE, "startup()");
 
         // read disk labels
@@ -158,10 +215,5 @@ public class FacilitiesManager implements Manager {
         // TODO
 
         LogManager.logTrace(LOG_SOURCE, "boot complete");
-    }
-
-    @Override
-    public synchronized void stop() {
-        LogManager.logTrace(LOG_SOURCE, "stop()");
     }
 }

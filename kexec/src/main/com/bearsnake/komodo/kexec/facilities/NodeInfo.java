@@ -20,5 +20,9 @@ public abstract class NodeInfo {
         _nodeStatus = NodeStatus.Up;
     }
 
+    public Node getNode() { return _node; }
+    public NodeStatus getNodeStatus() { return _nodeStatus; }
+    public MediaInfo getMediaInfo() { return _mediaInfo; }
+
     public abstract String toString();
 }

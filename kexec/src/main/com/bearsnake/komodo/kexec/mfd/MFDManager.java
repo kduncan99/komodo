@@ -20,6 +20,7 @@ import java.util.TreeSet;
 public class MFDManager implements Manager {
 
     static final String LOG_SOURCE = "MFDMgr";
+    public static final long INVALID_LINK = 0_400000_000000L;
 
     final HashMap<MFDRelativeAddress, ArraySlice> _cachedMFDTracks = new HashMap<>();
     final HashMap<String, MFDRelativeAddress> _fileMainItemLookupTable = new HashMap<>();

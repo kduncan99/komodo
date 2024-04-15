@@ -16,8 +16,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 public class KeyinManager implements Manager, Runnable {
@@ -25,8 +25,8 @@ public class KeyinManager implements Manager, Runnable {
     private static final long THREAD_DELAY = 50;
     private static final String LOG_SOURCE = "KeyinMgr";
 
-    private final LinkedList<KeyinHandler> _postedKeyinHandlers = new LinkedList<>();
-    private final LinkedList<PostedKeyin> _postedKeyins = new LinkedList<>();
+    private final ConcurrentLinkedQueue<KeyinHandler> _postedKeyinHandlers = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<PostedKeyin> _postedKeyins = new ConcurrentLinkedQueue<>();
 
     static final HashMap<String, Class<?>> _handlerClasses = new HashMap<>();
     static {
@@ -35,6 +35,7 @@ public class KeyinManager implements Manager, Runnable {
         _handlerClasses.put(DJKeyinHandler.COMMAND.toUpperCase(), DJKeyinHandler.class);
         _handlerClasses.put(DUKeyinHandler.COMMAND.toUpperCase(), DUKeyinHandler.class);
         _handlerClasses.put(LGKeyinHandler.COMMAND.toUpperCase(), LGKeyinHandler.class);
+        _handlerClasses.put(PREPKeyinHandler.COMMAND.toUpperCase(), PREPKeyinHandler.class);
         _handlerClasses.put(SJKeyinHandler.COMMAND.toUpperCase(), SJKeyinHandler.class);
         _handlerClasses.put(StopKeyinHandler.COMMAND.toUpperCase(), StopKeyinHandler.class);
     }
@@ -49,7 +50,8 @@ public class KeyinManager implements Manager, Runnable {
     }
 
     private void checkPostedKeyins() {
-        for (var pk : _postedKeyins) {
+        while (!_postedKeyins.isEmpty()) {
+            var pk = _postedKeyins.poll();
             var split = pk.getText().split( " ", 2);
             var subSplit = split[0].split(",", 2);
             var cmd = subSplit[0].toUpperCase();
@@ -57,6 +59,7 @@ public class KeyinManager implements Manager, Runnable {
             var arguments = split.length > 1 ? split[1] : null;
             var clazz = _handlerClasses.get(cmd);
             if (clazz != null) {
+                // this is an intrinsic exec keyin
                 try {
                     Constructor<?> ctor = clazz.getConstructor(ConsoleId.class, String.class, String.class);
                     var kh = (KeyinHandler)ctor.newInstance(pk.getConsoleIdentifier(), options, arguments);
@@ -81,12 +84,18 @@ public class KeyinManager implements Manager, Runnable {
                          NoSuchMethodException ex) {
                     LogManager.logCatching(LOG_SOURCE, ex);
                     Exec.getInstance().stop(StopCode.ExecContingencyHandler);
+                    return;
                 }
+
+                continue;
             } else {
                 // TODO look for registered keyins
             }
+
+            // not intrinsic, not registered
+            var msg = String.format("Keyin not registered: %s", cmd);
+            Exec.getInstance().sendExecReadOnlyMessage(msg, pk.getConsoleIdentifier());
         }
-        _postedKeyins.clear();
     }
 
     private void pruneOldKeyins() {
@@ -106,9 +115,9 @@ public class KeyinManager implements Manager, Runnable {
     }
 
     @Override
-    public synchronized void dump(final PrintStream out,
-                                  final String indent,
-                                  final boolean verbose) {
+    public void dump(final PrintStream out,
+                     final String indent,
+                     final boolean verbose) {
         out.printf("%sKeyinManager ********************************\n", indent);
 
         out.printf("%s  Posted:\n", indent);
@@ -127,13 +136,13 @@ public class KeyinManager implements Manager, Runnable {
     }
 
     @Override
-    public synchronized void stop() {
+    public void stop() {
         LogManager.logTrace(LOG_SOURCE, "stop()");
         // nothing to do... i think.
     }
 
     @Override
-    public synchronized void run() {
+    public void run() {
         try {
             checkPostedKeyins();
             pruneOldKeyins();

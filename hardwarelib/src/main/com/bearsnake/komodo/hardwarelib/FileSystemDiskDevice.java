@@ -24,7 +24,7 @@ import static java.nio.file.StandardOpenOption.WRITE;
 public class FileSystemDiskDevice extends DiskDevice {
 
     private static final int BLOCK_SIZE = 4096;
-    private static final int MAX_BLOCK_COUNT = Integer.MAX_VALUE / 4096;
+    private static final int MAX_BLOCK_COUNT = 262143; // could be Integer.MAX_VALUE / 4096;
     private FileChannel _channel;
     private boolean _writeProtected = false;
 
@@ -101,7 +101,7 @@ public class FileSystemDiskDevice extends DiskDevice {
             // do nothing
         }
 
-        return new DiskInfo(BLOCK_SIZE, blockCount, isMounted, isReady(), _writeProtected);
+        return new DiskInfo(BLOCK_SIZE, blockCount, MAX_BLOCK_COUNT, isMounted, isReady(), _writeProtected);
     }
 
     public boolean isMounted() { return _channel != null; }
