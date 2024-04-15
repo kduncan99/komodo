@@ -9,11 +9,9 @@ import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.hardwarelib.Channel;
 import com.bearsnake.komodo.hardwarelib.Device;
 import com.bearsnake.komodo.hardwarelib.DiskChannel;
-import com.bearsnake.komodo.hardwarelib.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemDiskDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemTapeDevice;
 import com.bearsnake.komodo.hardwarelib.TapeChannel;
-import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
@@ -55,42 +53,6 @@ public class FacilitiesCore {
         var hwTid = fa.resolveFileRelativeTrackId(fileTrackId);
         LogManager.logTrace(LOG_SOURCE, "returning %s", hwTid);
         return hwTid;
-    }
-
-    String getNodeStatusString(final int nodeIdentifier) throws ExecStoppedException {
-        var ni = _mgr._nodeGraph.get(nodeIdentifier);
-        if (ni == null) {
-            LogManager.logFatal(LOG_SOURCE, "getNodeStatusString nodeIdentifier %d not found", nodeIdentifier);
-            Exec.getInstance().stop(StopCode.FacilitiesComplex);
-            throw new ExecStoppedException();
-        }
-
-        var sb = new StringBuilder();
-        sb.append(ni._node.getNodeName()).append("     ").setLength(6);
-        sb.append(" ").append(ni._nodeStatus.getDisplayString());
-        sb.append(isDeviceAccessible(nodeIdentifier) ? "   " : " NA");
-
-        if (ni._node instanceof DiskDevice) {
-            // TODO [[*] [R|F] PACKID pack-id]
-        } else if (ni._node instanceof TapeDevice) {
-            // TODO [* RUNID run-id REEL reel [RING|NORING] [POS [*]ffff[+|-][*]bbbbbb | POS LOST]]
-        }
-
-        return sb.toString();
-    }
-
-    boolean isDeviceAccessible(final int nodeIdentifier) {
-        var ni = _mgr._nodeGraph.get(nodeIdentifier);
-        if (ni instanceof DeviceNodeInfo dni) {
-            for (var chan : dni._routes) {
-                var cni = _mgr._nodeGraph.get(chan.getNodeIdentifier());
-                if (cni != null && cni._nodeStatus == NodeStatus.Up) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     PackInfo loadDiskPackInfo(final DeviceNodeInfo nodeInfo,

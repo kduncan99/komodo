@@ -232,7 +232,7 @@ public class Exec {
         return (_phase != Phase.Stopped) && (_phase != Phase.NotStarted);
     }
 
-    public static boolean isValidDeviceName(final String deviceName) {
+    public static boolean isValidNodeName(final String deviceName) {
         if (deviceName.isEmpty() || deviceName.length() > 6) {
             return false;
         }

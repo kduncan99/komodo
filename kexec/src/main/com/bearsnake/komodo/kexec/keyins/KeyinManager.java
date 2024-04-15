@@ -33,10 +33,15 @@ public class KeyinManager implements Manager, Runnable {
         _handlerClasses.put(CJKeyinHandler.COMMAND.toUpperCase(), CJKeyinHandler.class);
         _handlerClasses.put(DKeyinHandler.COMMAND.toUpperCase(), DKeyinHandler.class);
         _handlerClasses.put(DJKeyinHandler.COMMAND.toUpperCase(), DJKeyinHandler.class);
+        _handlerClasses.put(DNKeyinHandler.COMMAND.toUpperCase(), DNKeyinHandler.class);
         _handlerClasses.put(DUKeyinHandler.COMMAND.toUpperCase(), DUKeyinHandler.class);
+        _handlerClasses.put(FSKeyinHandler.COMMAND.toUpperCase(), FSKeyinHandler.class);
         _handlerClasses.put(LGKeyinHandler.COMMAND.toUpperCase(), LGKeyinHandler.class);
         _handlerClasses.put(PREPKeyinHandler.COMMAND.toUpperCase(), PREPKeyinHandler.class);
+        _handlerClasses.put(RVKeyinHandler.COMMAND.toUpperCase(), RVKeyinHandler.class);
         _handlerClasses.put(SJKeyinHandler.COMMAND.toUpperCase(), SJKeyinHandler.class);
+        _handlerClasses.put(SUKeyinHandler.COMMAND.toUpperCase(), SUKeyinHandler.class);
+        _handlerClasses.put(UPKeyinHandler.COMMAND.toUpperCase(), UPKeyinHandler.class);
         _handlerClasses.put(StopKeyinHandler.COMMAND.toUpperCase(), StopKeyinHandler.class);
     }
 

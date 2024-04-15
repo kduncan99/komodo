@@ -121,7 +121,7 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
             return;
         }
 
-        if (!Exec.isValidDeviceName(_deviceName)) {
+        if (!Exec.isValidNodeName(_deviceName)) {
             var msg = "Invalid device name on PREP keyin";
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
             return;

@@ -8,12 +8,13 @@ import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.hardwarelib.Channel;
 import com.bearsnake.komodo.hardwarelib.ChannelProgram;
 import com.bearsnake.komodo.hardwarelib.Device;
+import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.hardwarelib.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.hardwarelib.NodeCategory;
+import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
-import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
@@ -22,7 +23,10 @@ import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 public class FacilitiesManager implements Manager {
 
@@ -132,6 +136,94 @@ public class FacilitiesManager implements Manager {
     }
 
     /**
+     * Returns a collection of NodeInfo objects of all the nodes of a particular category
+     * @param category category of interest
+     * @return collection
+     */
+    public Collection<NodeInfo> getNodeInfos(final NodeCategory category) {
+        return _nodeGraph.values()
+                         .stream()
+                         .filter(ni -> ni._node.getNodeCategory() == category)
+                         .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    /**
+     * Returns a collection of NodeInfo objects of all the device nodes of a particular type
+     * @param deviceType device type of interest
+     * @return collection
+     */
+    public Collection<NodeInfo> getNodeInfos(final DeviceType deviceType) {
+        return _nodeGraph.values()
+                         .stream()
+                         .filter(ni -> (ni.getNode() instanceof Device dev) && (dev.getDeviceType() == deviceType))
+                         .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    /**
+     * Returns a collection of the NodeInfo objects associated with the nodes
+     * which are accessible via the channel indicated by channelInfo.
+     * @param channelInfo indicates the channel of interest
+     * @return list of NodeInfo objects
+     */
+    public Collection<NodeInfo> getNodeInfosForChannel(final ChannelNodeInfo channelInfo) {
+        LinkedList<DeviceNodeInfo> list;
+        var chan = (Channel)channelInfo.getNode();
+        return _nodeGraph.values()
+                         .stream()
+                         .filter(ni -> (ni instanceof DeviceNodeInfo dni) && dni._routes.contains(chan))
+                         .map(ni -> (DeviceNodeInfo) ni)
+                         .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    /**
+     * Produces a string suitable for display node status upon the console
+     * @param nodeIdentifier nodeIdentifier of the node we are interested in
+     * @return string
+     * @throws ExecStoppedException
+     */
+    public String getNodeStatusString(final int nodeIdentifier) throws ExecStoppedException {
+        var ni = _nodeGraph.get(nodeIdentifier);
+        if (ni == null) {
+            LogManager.logFatal(LOG_SOURCE, "getNodeStatusString nodeIdentifier %d not found", nodeIdentifier);
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
+
+        var sb = new StringBuilder();
+        sb.append(ni._node.getNodeName()).append("     ").setLength(6);
+        sb.append(" ").append(ni._nodeStatus.getDisplayString());
+        sb.append(isDeviceAccessible(nodeIdentifier) ? "   " : " NA");
+
+        if (ni._node instanceof DiskDevice) {
+            // TODO [[*] [R|F] PACKID pack-id]
+        } else if (ni._node instanceof TapeDevice) {
+            // TODO [* RUNID run-id REEL reel [RING|NORING] [POS [*]ffff[+|-][*]bbbbbb | POS LOST]]
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Indicates whether the device with the given identifier is accessible
+     * (it has at least one channel path for which the channel is not DN).
+     * @param nodeIdentifier identifier of the device
+     * @return true if the device is accessible
+     */
+    public boolean isDeviceAccessible(final int nodeIdentifier) {
+        var ni = _nodeGraph.get(nodeIdentifier);
+        if (ni instanceof DeviceNodeInfo dni) {
+            for (var chan : dni._routes) {
+                var cni = _nodeGraph.get(chan.getNodeIdentifier());
+                if (cni != null && cni._nodeStatus == NodeStatus.Up) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Routes an IO described by a channel program.
      * For the case where some portion of the Exec needs to do device-specific IO.
      * @param channelProgram IO description
@@ -192,7 +284,7 @@ public class FacilitiesManager implements Manager {
                                                cp._ioStatus);
 
                             dni._nodeStatus = NodeStatus.Down;
-                            msg = _core.getNodeStatusString(dd.getNodeIdentifier());
+                            msg = getNodeStatusString(dd.getNodeIdentifier());
                             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
                             continue;
                         }
@@ -200,7 +292,7 @@ public class FacilitiesManager implements Manager {
                         var pi = _core.loadDiskPackInfo(dni, diskLabel);
                         if (!pi._isPrepped) {
                             dni._nodeStatus = NodeStatus.Down;
-                            var msg = _core.getNodeStatusString(dd.getNodeIdentifier());
+                            var msg = getNodeStatusString(dd.getNodeIdentifier());
                             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
                         }
                     } catch (ExecStoppedException ex) {

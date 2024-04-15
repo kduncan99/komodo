@@ -12,7 +12,7 @@ import com.bearsnake.komodo.logger.LogManager;
 public class CJKeyinHandler extends JumpKeyHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
-        "CJ[,ALL]",
+        "CJ[,ALL]", // TODO "ALL" should be an argument, not an option
         "CJ {key}[,...]",
         "Clears the indicated jump keys",
     };
