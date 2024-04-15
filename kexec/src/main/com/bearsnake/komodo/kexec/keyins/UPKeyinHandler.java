@@ -7,16 +7,14 @@ package com.bearsnake.komodo.kexec.keyins;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
-import com.bearsnake.komodo.kexec.facilities.NodeInfo;
+import com.bearsnake.komodo.kexec.facilities.DeviceNodeInfo;
+import com.bearsnake.komodo.kexec.facilities.NodeStatus;
 import com.bearsnake.komodo.logger.LogManager;
-import java.util.Collection;
-import java.util.LinkedList;
 
 public class UPKeyinHandler extends FacHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
-        "UP node_name[,...]",
-        "UP,ALL channel_name",
+        "UP[,ALL] node_name",
         "Makes channel and nodes available for use.",
         "Space can be allocated on disk drives.",
         "Devices attached to a specified channel are accessible via that channel."
@@ -39,7 +37,7 @@ public class UPKeyinHandler extends FacHandler implements Runnable {
             return false;
         }
 
-        return (_arguments != null);
+        return (_arguments != null) && Exec.isValidNodeName(_arguments.toUpperCase());
     }
 
     @Override
@@ -66,29 +64,35 @@ public class UPKeyinHandler extends FacHandler implements Runnable {
     }
 
     private void process() {
-        if (_options.equalsIgnoreCase("ALL")) {
+        if (_options != null) {
             processAll();
         } else {
-            processList();
+            processNode();
         }
     }
 
     private void processAll() {
         var nodeInfos = getNodeInfoListForChannel();
-
-        // TODO
-
-        displayStatusForNodes(nodeInfos);
-    }
-
-    private void processList() {
-        var nodeInfos = getNodeInfoList();
         if (nodeInfos == null) {
             return;
         }
 
-        // TODO
-
+        nodeInfos.forEach(ni -> ni.setStatus(NodeStatus.Up));
         displayStatusForNodes(nodeInfos);
+        // TODO how do we initiate scan of fixed disk(s) - send device ready?
+    }
+
+    private void processNode() {
+        var devName = _arguments.toUpperCase();
+        var ni = _facMgr.getNodeInfo(devName);
+        if (!(ni instanceof DeviceNodeInfo)) {
+            var msg = String.format("%s is not a configured device", devName);
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+            return;
+        }
+
+        ni.setStatus(NodeStatus.Up);
+        displayStatusForNode(ni);
+        // TODO how do we initiate scan of fixed disk - send device ready?
     }
 }

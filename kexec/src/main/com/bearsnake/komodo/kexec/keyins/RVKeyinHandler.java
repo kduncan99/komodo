@@ -69,11 +69,6 @@ public class RVKeyinHandler extends FacHandler implements Runnable {
     }
 
     private void process() {
-        var nodeInfos = getNodeInfoList();
-        if (nodeInfos == null) {
-            return;
-        }
-
         if (_options != null) {
             processAll();
         } else {
