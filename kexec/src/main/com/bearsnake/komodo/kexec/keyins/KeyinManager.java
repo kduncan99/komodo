@@ -30,18 +30,74 @@ public class KeyinManager implements Manager, Runnable {
 
     static final HashMap<String, Class<?>> _handlerClasses = new HashMap<>();
     static {
+        // AP
+        // AT
+        // B
+        // BL
         _handlerClasses.put(CJKeyinHandler.COMMAND.toUpperCase(), CJKeyinHandler.class);
+        // CK
+        // CS
+        // CTL
         _handlerClasses.put(DKeyinHandler.COMMAND.toUpperCase(), DKeyinHandler.class);
+        // DC
+        // DISPLVL
         _handlerClasses.put(DJKeyinHandler.COMMAND.toUpperCase(), DJKeyinHandler.class);
         _handlerClasses.put(DNKeyinHandler.COMMAND.toUpperCase(), DNKeyinHandler.class);
         _handlerClasses.put(DUKeyinHandler.COMMAND.toUpperCase(), DUKeyinHandler.class);
+        // E
+        // ERUNS
+        // FA
+        // FB
+        // FC
+        // FF
         _handlerClasses.put(FSKeyinHandler.COMMAND.toUpperCase(), FSKeyinHandler.class);
+        // HU
+        // II
+        // IN
+        // IT
+        // JH
+        // KEYINS
+        // LB
+        // LC
         _handlerClasses.put(LGKeyinHandler.COMMAND.toUpperCase(), LGKeyinHandler.class);
+        // MD
+        // MR
+        // MS
+        // MU
+        // PATHS
+        // PM
+        // PR
         _handlerClasses.put(PREPKeyinHandler.COMMAND.toUpperCase(), PREPKeyinHandler.class);
+        // RC
+        // RD
+        // RE
+        // RL
+        // RM
+        // RP
+        // RS
         _handlerClasses.put(RVKeyinHandler.COMMAND.toUpperCase(), RVKeyinHandler.class);
+        // SEC
         _handlerClasses.put(SJKeyinHandler.COMMAND.toUpperCase(), SJKeyinHandler.class);
+        // SM
+        // SP
+        // SQ
+        // SR
+        // SS
+        // ST
         _handlerClasses.put(SUKeyinHandler.COMMAND.toUpperCase(), SUKeyinHandler.class);
+        // SV
+        // SX
+        // T
+        // TB
+        // TF
+        // TIP
+        // TIPSS
+        // TM
+        // TP
+        // TS
+        // UL
         _handlerClasses.put(UPKeyinHandler.COMMAND.toUpperCase(), UPKeyinHandler.class);
+        // X
         _handlerClasses.put(StopKeyinHandler.COMMAND.toUpperCase(), StopKeyinHandler.class);
     }
 
