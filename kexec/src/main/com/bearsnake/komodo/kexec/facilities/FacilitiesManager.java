@@ -28,6 +28,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
+// TODO NOTE:
+// To create a file on a fixed pack, use the @ASG or @CAT statement without including any pack-id field.
+// To create a file on one or more removable packs, include one or more device identifiers on the pack-id field.
+
 public class FacilitiesManager implements Manager {
 
     static final String LOG_SOURCE = "FacMgr";

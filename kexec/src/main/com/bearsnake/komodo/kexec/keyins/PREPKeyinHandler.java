@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.baselib.PrepFactor;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.hardwarelib.ChannelProgram;
 import com.bearsnake.komodo.hardwarelib.Device;
@@ -147,7 +148,6 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
         }
 
         var ddInfo = device.getInfo();
-        var nodeId = device.getNodeIdentifier();
 
         if (!ddInfo.isReady()) {
             var msg = nodeInfo.getNode().getNodeName() + " is not ready";
@@ -164,7 +164,7 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
         // TODO call facilities to @ASG the device, then pass the device name to the sub-methods
         // TODO see if there is already a label, and if so prompt the operator
 
-        var prepFactor = DiskDevice.getPrepFactorForBlockSize(ddInfo.getBlockSize());
+        var prepFactor = PrepFactor.getPrepFactorFromBlockSize(ddInfo.getBlockSize());
         var blocksPerTrack = 1792 / prepFactor;
         var capacity = ddInfo.getMaxBlockCount();
         var firstDirectoryTrackAddress = 1;
@@ -292,7 +292,7 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
         var cw = new ChannelProgram.ControlWord().setBuffer(new ArraySlice(label))
                                                  .setDirection(ChannelProgram.Direction.Increment)
                                                  .setBufferOffset(0)
-                                                 .setTransferCount(DiskDevice.getPrepFactorForBlockSize(blockSize));
+                                                 .setTransferCount(PrepFactor.getPrepFactorFromBlockSize(blockSize));
         var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
                                      .setNodeIdentifier(device.getNodeIdentifier())
                                      .setBlockId(0)
