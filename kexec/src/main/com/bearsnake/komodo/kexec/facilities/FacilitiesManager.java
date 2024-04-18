@@ -229,11 +229,11 @@ public class FacilitiesManager implements Manager {
      * @param channelProgram IO description
      */
     public void routeIo(final ChannelProgram channelProgram) throws ExecStoppedException, NoRouteForIOException {
-        var nodeInfo = _nodeGraph.get(channelProgram._nodeIdentifier);
+        var nodeInfo = _nodeGraph.get(channelProgram.getNodeIdentifier());
         if (nodeInfo == null) {
             LogManager.logFatal(LOG_SOURCE,
                                 "Node %d from channel program is not configured",
-                                channelProgram._nodeIdentifier);
+                                channelProgram.getNodeIdentifier());
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
@@ -242,7 +242,7 @@ public class FacilitiesManager implements Manager {
         if (node.getNodeCategory() != NodeCategory.Device) {
             LogManager.logFatal(LOG_SOURCE,
                                 "Node %d from channel program is not a device",
-                                channelProgram._nodeIdentifier);
+                                channelProgram.getNodeIdentifier());
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
@@ -275,13 +275,13 @@ public class FacilitiesManager implements Manager {
                         var chan = _core.selectRoute(dd);
                         cp.setNodeIdentifier(dd.getNodeIdentifier());
                         chan.routeIo(cp);
-                        if (cp._ioStatus != IoStatus.Complete) {
+                        if (cp.getIoStatus() != IoStatus.Complete) {
                             var msg = String.format("IO Error reading pack label on device %s", dd.getNodeName());
                             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
 
                             LogManager.logInfo(LOG_SOURCE, "IO error device %s:%s",
                                                dd.getNodeName(),
-                                               cp._ioStatus);
+                                               cp.getIoStatus());
 
                             dni._nodeStatus = NodeStatus.Down;
                             msg = getNodeStatusString(dd.getNodeIdentifier());

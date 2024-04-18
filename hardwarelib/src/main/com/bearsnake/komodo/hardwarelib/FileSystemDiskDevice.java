@@ -78,7 +78,7 @@ public class FileSystemDiskDevice extends DiskDevice {
     }
 
     @Override
-    public synchronized String toString() {
+    public String toString() {
         return String.format("%s %s:%s:%s mnt:%s rdy:%s wp:%s",
                              getNodeName(),
                              getNodeCategory(),
@@ -109,7 +109,7 @@ public class FileSystemDiskDevice extends DiskDevice {
 
     private void doGetInfo(final DiskIoPacket packet) {
         var info = getInfo();
-        packet.getBuffer().reset();
+        packet.getBuffer().clear();
         info.serialize(packet.getBuffer());
         packet.setStatus(IoStatus.Complete);
     }
@@ -165,7 +165,6 @@ public class FileSystemDiskDevice extends DiskDevice {
         var buffer = ByteBuffer.allocate(transferSize);
 
         try {
-            _channel.position(packet.getBlockId() * BLOCK_SIZE);
             var bytes = _channel.read(buffer, packet.getBlockId() * BLOCK_SIZE);
             if (bytes != transferSize) {
                 packet.setStatus(IoStatus.SystemError);
@@ -242,10 +241,9 @@ public class FileSystemDiskDevice extends DiskDevice {
             packet.setStatus(IoStatus.InvalidBufferSize);
             return;
         }
-        buffer.reset();
+        buffer.rewind();
 
         try {
-            _channel.position(packet.getBlockId() * BLOCK_SIZE);
             var bytes = _channel.write(buffer, packet.getBlockId() * BLOCK_SIZE);
             if (bytes != transferSize) {
                 packet.setStatus(IoStatus.SystemError);

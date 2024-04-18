@@ -42,12 +42,18 @@ public class ChannelProgram {
         public ControlWord setTransferCount(int value) { _transferCount = value; return this; }
     }
 
-    public long _blockId;
-    public final LinkedList<ControlWord> _controlWords = new LinkedList<>();
-    public Function _function;
-    public IoStatus _ioStatus;
-    public int _nodeIdentifier;
-    public int _wordsTransferred;
+    long _blockId;
+    final LinkedList<ControlWord> _controlWords = new LinkedList<>();
+    Function _function;
+    IoStatus _ioStatus;
+    int _nodeIdentifier;
+    int _wordsTransferred;
+
+    public long getBlockId() { return _blockId; }
+    public Function getFunction() { return _function; }
+    public IoStatus getIoStatus() { return _ioStatus; }
+    public int getNodeIdentifier() { return _nodeIdentifier; }
+    public int getWordsTransferred() { return _wordsTransferred; }
 
     public ChannelProgram addControlWord(ControlWord value) { _controlWords.add(value); return this; }
     public ChannelProgram setBlockId(long value) { _blockId = value; return this; }
@@ -58,6 +64,11 @@ public class ChannelProgram {
 
     @Override
     public String toString() {
-        return String.format("Node:%d Func:%s BlkId:%d", _nodeIdentifier, _function, _blockId);
+        var sb = new StringBuilder();
+        sb.append(String.format("Node:%d Func:%s BlkId:%d", _nodeIdentifier, _function, _blockId));
+        for (var cw : _controlWords) {
+            sb.append(String.format(" [%s off:%d xfr:%d]", cw._direction, cw._bufferOffset, cw._transferCount));
+        }
+        return sb.toString();
     }
 }

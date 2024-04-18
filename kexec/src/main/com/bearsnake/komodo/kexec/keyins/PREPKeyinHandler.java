@@ -86,7 +86,7 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
                                      .addControlWord(cw);
         try {
             Exec.getInstance().getFacilitiesManager().routeIo(cp);
-            if (cp._ioStatus == IoStatus.Complete) {
+            if (cp.getIoStatus() == IoStatus.Complete) {
                 if (Word36.toStringFromASCII(label[0]).equals("VOL1")) {
                     // pack already has a label - ask the operator if we really want to prep the pack
                     var existing = Word36.toStringFromASCII(label[1])
@@ -231,18 +231,24 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
         w36.setT3(prepFactor);
         sector1.set(010, w36.getW());
 
-        // TODO use facilities to write the directory track
         var cw = new ChannelProgram.ControlWord().setBuffer(dirTrackSlice)
                                                  .setDirection(ChannelProgram.Direction.Increment)
                                                  .setBufferOffset(0)
-                                                 .setTransferCount(28);
+                                                 .setTransferCount(1792);
         var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
                                      .setNodeIdentifier(device.getNodeIdentifier())
                                      .setBlockId(directoryTrackBlockAddress)
                                      .addControlWord(cw);
+
+        boolean err = false;
         try {
             Exec.getInstance().getFacilitiesManager().routeIo(cp);
+            err = cp.getIoStatus() != IoStatus.Complete;
         } catch (KExecException ex) {
+            err = true;
+        }
+
+        if (err) {
             var msg = String.format("IO error writing directory track to %s", device.getNodeCategory());
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
             return false;
@@ -251,12 +257,15 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
         return true;
     }
 
-    private boolean writeLabel(final Device device,
+    private boolean writeLabel(final DiskDevice device,
                                final String packName,
                                final int prepFactor,
                                final long capacity,
                                final long firstDirectoryTrackAddress) {
-        var label = new long[28];
+        // We are potentially writing to space which has never yet been written to.
+        // For this reason, we need to write an entire block.
+        var blockSize = device.getInfo().getBlockSize();
+        var label = new long[blockSize];
         label[0] = Word36.stringToWordASCII("VOL1").getW();
 
         var paddedPack = String.format("%-8s", packName);
@@ -280,18 +289,23 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
 
         label[016] = capacity;
 
-        // TODO use facilities to write the label
         var cw = new ChannelProgram.ControlWord().setBuffer(new ArraySlice(label))
                                                  .setDirection(ChannelProgram.Direction.Increment)
                                                  .setBufferOffset(0)
-                                                 .setTransferCount(28);
+                                                 .setTransferCount(DiskDevice.getPrepFactorForBlockSize(blockSize));
         var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
                                      .setNodeIdentifier(device.getNodeIdentifier())
                                      .setBlockId(0)
                                      .addControlWord(cw);
+        boolean err = false;
         try {
             Exec.getInstance().getFacilitiesManager().routeIo(cp);
+            err = cp.getIoStatus() != IoStatus.Complete;
         } catch (KExecException ex) {
+            err = true;
+        }
+
+        if (err) {
             var msg = String.format("IO error writing label to %s", device.getNodeCategory());
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
             return false;

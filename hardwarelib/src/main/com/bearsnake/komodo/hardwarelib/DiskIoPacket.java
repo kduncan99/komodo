@@ -23,4 +23,9 @@ public class DiskIoPacket extends IoPacket {
     public DiskIoPacket setBlockId(final long blockId) { _blockId = blockId; return this; }
     public DiskIoPacket setBuffer(final ByteBuffer buffer) { _buffer = buffer; return this; }
     public DiskIoPacket setMountInfo(final MountInfo mountInfo) { _mountInfo = mountInfo; return this; }
+
+    @Override
+    public String toString() {
+        return String.format("%s blkId:%d blks:%d", getFunction(), _blockId, _blockCount);
+    }
 }

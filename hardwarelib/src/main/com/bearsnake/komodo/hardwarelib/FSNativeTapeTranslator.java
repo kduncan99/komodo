@@ -35,7 +35,7 @@ public class FSNativeTapeTranslator extends FSTapeTranslator {
     }
 
     private int readControlWord() throws IOException {
-        _controlWordBuffer.reset();
+        _controlWordBuffer.clear();
         int bytes = _channel.read(_controlWordBuffer);
         if (bytes < _controlWordBuffer.capacity()) {
             throw new EOFException();
@@ -44,7 +44,7 @@ public class FSNativeTapeTranslator extends FSTapeTranslator {
     }
 
     private void writeControlWord(final int controlWord) throws IOException {
-        _controlWordBuffer.reset();
+        _controlWordBuffer.rewind();
         _controlWordBuffer.putInt(controlWord);
         int bytes = _channel.write(_controlWordBuffer);
         if (bytes < _controlWordBuffer.capacity()) {
@@ -139,7 +139,7 @@ public class FSNativeTapeTranslator extends FSTapeTranslator {
         int cw = bb.capacity();
         writeControlWord(cw);
         if (cw > 0) {
-            bb.reset();
+            bb.rewind();
             bytes = _channel.write(bb);
             if (bytes < cw) {
                 throw new IOException("Insufficient bytes written");

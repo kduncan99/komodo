@@ -102,7 +102,7 @@ public class FileSystemTapeDevice extends TapeDevice {
 
     private synchronized void doGetInfo(final TapeIoPacket packet) {
         var info = getInfo();
-        packet.getBuffer().reset();
+        packet.getBuffer().clear();
         info.serialize(packet.getBuffer());
         packet.setStatus(IoStatus.Complete);
     }
