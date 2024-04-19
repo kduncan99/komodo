@@ -19,8 +19,20 @@ public class Interpreter {
 
     private static final Map<String, Handler> HANDLERS = new HashMap<>();
     static {
+        // ADD
+        // ASG
+        // BRKPT
+        // CAT
+        // CKPT
+        // FREE
         HANDLERS.put("LOG", new LogHandler());
+        // MODE
         HANDLERS.put("QUAL", new QualHandler());
+        // RSTRT
+        // START
+        // SYM
+        // SYMCN
+        // USE
     }
 
     public void handleControlStatement(
