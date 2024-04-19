@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 public class Exec {
 
@@ -232,6 +233,17 @@ public class Exec {
         return (_phase != Phase.Stopped) && (_phase != Phase.NotStarted);
     }
 
+    public static boolean isValidFilename(final String filename) {
+        if ((filename.isEmpty()) || (filename.length() > 12)) {
+            return false;
+        }
+        return IntStream.range(0, filename.length()).allMatch(chx -> isValidFilenameChar(filename.charAt(chx)));
+    }
+
+    public static boolean isValidFilenameChar(final char ch) {
+        return (ch >= 'A' && ch <= 'Z') || ch == '-' || ch == '$';
+    }
+
     public static boolean isValidNodeName(final String deviceName) {
         if (deviceName.isEmpty() || deviceName.length() > 6) {
             return false;
@@ -267,6 +279,17 @@ public class Exec {
             || (value == 224)
             || (value == 448)
             || (value == 1792);
+    }
+
+    public static boolean isValidQualifier(final String qualifier) {
+        if ((qualifier.isEmpty()) || (qualifier.length() > 12)) {
+            return false;
+        }
+        return IntStream.range(0, qualifier.length()).allMatch(chx -> isValidQualifierChar(qualifier.charAt(chx)));
+    }
+
+    public static boolean isValidQualifierChar(final char ch) {
+        return (ch >= 'A' && ch <= 'Z') || ch == '-' || ch == '$';
     }
 
     public void sendExecReadOnlyMessage(final String message,

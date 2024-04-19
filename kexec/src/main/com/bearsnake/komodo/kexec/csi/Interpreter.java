@@ -15,11 +15,12 @@ import java.util.Map;
 
 public class Interpreter {
 
-    private static final String LOG_SOURCE = "CSI";
+    static final String LOG_SOURCE = "CSI";
 
     private static final Map<String, Handler> HANDLERS = new HashMap<>();
     static {
         HANDLERS.put("LOG", new LogHandler());
+        HANDLERS.put("QUAL", new QualHandler());
     }
 
     public void handleControlStatement(

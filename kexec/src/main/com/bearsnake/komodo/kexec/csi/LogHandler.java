@@ -18,21 +18,18 @@ class LogHandler extends Handler {
     @Override
     public void handle(final HandlerPacket hp) {
         if (!cleanOptions(hp) || (hp._optionWord != 0)) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-            hp._statement._resultCode = 0_400000_000000L;
+            postSyntaxError(hp);
             return;
         }
 
         if (hp._statement._operandFields.size() != 1) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-            hp._statement._resultCode = 0_400000_000000L;
+            postSyntaxError(hp);
             return;
         }
 
         var opField = hp._statement._operandFields.get(0);
         if (opField.size() != 1) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-            hp._statement._resultCode = 0_400000_000000L;
+            postSyntaxError(hp);
             return;
         }
 
