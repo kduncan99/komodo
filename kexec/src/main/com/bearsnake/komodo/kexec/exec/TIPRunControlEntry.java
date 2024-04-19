@@ -6,13 +6,12 @@ package com.bearsnake.komodo.kexec.exec;
 
 public class TIPRunControlEntry extends RunControlEntry {
 
-    public TIPRunControlEntry(RunType runType,
-                              String runId,
+    public TIPRunControlEntry(String runId,
                               String originalRunId,
                               String projectId,
                               String accountId,
                               String userId) {
-        super(runType, runId, originalRunId, projectId, accountId, userId);
+        super(RunType.TIP, runId, originalRunId, projectId, accountId, userId);
     }
 
     @Override public final boolean isFinished() { return false; } // TODO

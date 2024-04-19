@@ -23,6 +23,12 @@ public class FacStatusResult {
             _code = code;
             _parameters = parameters;
         }
+
+        @Override
+        public String toString() {
+            var fsMsg = FacStatusMessages.get(_code);
+            return fsMsg.getTemplate();//TODO do this better
+        }
     }
 
     private final List<MessageInstance> _errors = new LinkedList<>();
@@ -44,5 +50,11 @@ public class FacStatusResult {
         case Info -> _infos.add(inst);
         case Warning -> _warnings.add(inst);
         }
+    }
+
+    public void dump() {
+        _infos.stream().map(MessageInstance::toString).forEach(System.out::println);
+        _warnings.stream().map(MessageInstance::toString).forEach(System.out::println);
+        _errors.stream().map(MessageInstance::toString).forEach(System.out::println);
     }
 }

@@ -80,7 +80,7 @@ public class Interpreter {
      * We do not check image length here - that must be dealt with at a higher level.
      * @return ParseStatement object
      */
-    public ParsedStatement parseControlStatement(
+    public static ParsedStatement parseControlStatement(
         final RunControlEntry runControlEntry,
         final String statement
     ) {
@@ -114,7 +114,7 @@ public class Interpreter {
         p.skipSpaces();
         String ident = null;
         try {
-            ident = p.parseIdentifier(6);
+            ident = p.parseIdentifier(6, ":, ");
         } catch (Parser.SyntaxException ex) {
             ps._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
             ps._resultCode = 0_400000_000000L;
@@ -142,7 +142,7 @@ public class Interpreter {
             ps._label = ident.toUpperCase();
             p.skipSpaces();
             try {
-                ident = p.parseIdentifier(6);
+                ident = p.parseIdentifier(6, ":, ");
             } catch (Parser.SyntaxException ex) {
                 ps._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
                 ps._resultCode = 0_400000_000000L;
@@ -175,6 +175,7 @@ public class Interpreter {
                     LogManager.logTrace(LOG_SOURCE, "parseControlStatement stat=%012o", ps._resultCode);
                     return ps;
                 } else {
+                    p.skipNext();
                     p.skipSpaces();
                 }
             }

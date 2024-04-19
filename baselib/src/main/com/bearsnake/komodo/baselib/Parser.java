@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.baselib;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -45,11 +46,17 @@ public class Parser {
         _index = 0;
     }
 
-    public void setTerminators(final String terminators) {
+    public Collection<Character> getTerminators() { return _terminators; }
+    public int getIndex() { return _index; }
+    public String getText() { return _text; }
+
+    public Parser setIndex(final int value) { _index = value; return this; }
+    public Parser setTerminators(final String terminators) {
         _terminators.clear();
         for (var ch : terminators.toCharArray()) {
             _terminators.add(ch);
         }
+        return this;
     }
 
     public static boolean isIdentifierCharacter(final char ch) {
@@ -73,18 +80,28 @@ public class Parser {
         }
     }
 
-    public String parseIdentifier(final int maxChars) throws NotFoundException, SyntaxException {
+    public String parseIdentifier(final int maxChars,
+                                  final String cutSet) throws NotFoundException, SyntaxException {
         if (!Character.isAlphabetic(peekNext())) {
             throw new NotFoundException();
         }
 
         var sb = new StringBuilder();
         sb.append(next());
-        while (isIdentifierCharacter(peekNext())) {
-            if (sb.length() == maxChars) {
+        while (!atEnd()) {
+            var ch = peekNext();
+            if (charInSequence(ch, cutSet)) {
+                break;
+            } else if (!isIdentifierCharacter(ch)) {
                 throw new SyntaxException();
             }
             sb.append(next());
+        }
+
+        if (sb.isEmpty()) {
+            throw new NotFoundException();
+        } else if (sb.length() > maxChars) {
+            throw new SyntaxException();
         }
 
         return sb.toString();
@@ -98,7 +115,7 @@ public class Parser {
 
     public String parseUntil(final String cutSet) {
         var sb = new StringBuilder();
-        while (charInSequence(peekNext(), cutSet)) {
+        while (!atEnd() && !charInSequence(peekNext(), cutSet)) {
             sb.append(next());
         }
         return sb.toString();
@@ -133,7 +150,11 @@ public class Parser {
             if (_terminators.contains(ch)) {
                 break;
             } else if ((ch < '0') || (ch > '9')) {
-                throw new SyntaxException();
+                if (found) {
+                    throw new SyntaxException();
+                } else {
+                    throw new NotFoundException();
+                }
             } else {
                 value = value * 10 + (ch - '0');
                 _index++;
@@ -149,8 +170,7 @@ public class Parser {
     }
 
     public long parseUnsignedHexInteger() throws NotFoundException, SyntaxException {
-        if (!_text.substring(_index).startsWith("0x")
-            && !_text.substring(_index).startsWith("0X")) {
+        if (!parseToken("0x") && !parseToken("0X")) {
             throw new NotFoundException();
         }
 
@@ -178,7 +198,7 @@ public class Parser {
         }
 
         if (!found) {
-            throw new SyntaxException();
+            throw new NotFoundException();
         }
 
         return value;
