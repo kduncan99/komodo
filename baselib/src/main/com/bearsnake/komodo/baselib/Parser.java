@@ -6,6 +6,7 @@ package com.bearsnake.komodo.baselib;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 public class Parser {
 
@@ -35,6 +36,10 @@ public class Parser {
     private int _index;
     private Set<Character> _terminators = Collections.singleton(' ');
 
+    private static boolean charInSequence(final char ch, final CharSequence seq) {
+        return IntStream.range(0, seq.length()).anyMatch(sx -> ch == seq.charAt(sx));
+    }
+
     public Parser(final String text) {
         _text = text;
         _index = 0;
@@ -45,6 +50,10 @@ public class Parser {
         for (var ch : terminators.toCharArray()) {
             _terminators.add(ch);
         }
+    }
+
+    public static boolean isIdentifierCharacter(final char ch) {
+        return Character.isAlphabetic(ch) || Character.isDigit(ch);
     }
 
     public boolean atEnd() {
@@ -58,6 +67,58 @@ public class Parser {
     public boolean parseChar(final char ch) {
         if (!atEnd() && _text.charAt(_index) == ch) {
             _index++;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public String parseIdentifier(final int maxChars) throws NotFoundException, SyntaxException {
+        if (!Character.isAlphabetic(peekNext())) {
+            throw new NotFoundException();
+        }
+
+        var sb = new StringBuilder();
+        sb.append(next());
+        while (isIdentifierCharacter(peekNext())) {
+            if (sb.length() == maxChars) {
+                throw new SyntaxException();
+            }
+            sb.append(next());
+        }
+
+        return sb.toString();
+    }
+
+    public String parseRemaining() {
+        var str = _text.substring(_index);
+        _index = _text.length();
+        return str;
+    }
+
+    public String parseUntil(final String cutSet) {
+        var sb = new StringBuilder();
+        while (charInSequence(peekNext(), cutSet)) {
+            sb.append(next());
+        }
+        return sb.toString();
+    }
+
+    public char peekNext() {
+        return atEnd() ? 0 : _text.charAt(_index);
+    }
+
+    public char parseOneOf(final String chars) {
+        if (!atEnd() && charInSequence(peekNext(), chars)) {
+            return next();
+        } else {
+            return 0;
+        }
+    }
+
+    public boolean parseToken(final String token) {
+        if (_text.substring(_index).startsWith(token)) {
+            _index += token.length();
             return true;
         } else {
             return false;
@@ -143,7 +204,7 @@ public class Parser {
         return value;
     }
 
-    public long parseInteger() throws NotFoundException, SyntaxException {
+    public long parseUnsignedInteger() throws NotFoundException, SyntaxException {
         try {
             return parseUnsignedHexInteger();
         } catch (NotFoundException ex) {
@@ -159,29 +220,14 @@ public class Parser {
         return parseUnsignedDecimalInteger();
     }
 
-    public char peekNext() {
-        return atEnd() ? 0 : _text.charAt(_index);
-    }
-
-    public char parseOneOf(final String chars) {
-        if (!atEnd() && chars.contains(_text.substring(_index, _index + 1))) {
-            return _text.charAt(_index++);
-        } else {
-            return 0;
-        }
-    }
-
-    public boolean parseToken(final String token) {
-        if (_text.substring(_index).startsWith(token)) {
-            _index += token.length();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public void rewind() {
         _index = 0;
+    }
+
+    public void skipNext() {
+        if (!atEnd()) {
+            _index++;
+        }
     }
 
     public void skipSpaces() {

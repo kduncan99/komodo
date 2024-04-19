@@ -78,6 +78,33 @@ public class Word36 implements Comparable<Word36> {
     public static final Word36 W36_POSITIVE_ONE  = new Word36(POSITIVE_ONE);
     public static final Word36 W36_POSITIVE_ZERO = new Word36(POSITIVE_ZERO);
 
+    public static final long A_OPTION = 1L << 25;
+    public static final long B_OPTION = 1L << 24;
+    public static final long C_OPTION = 1L << 23;
+    public static final long D_OPTION = 1L << 22;
+    public static final long E_OPTION = 1L << 21;
+    public static final long F_OPTION = 1L << 20;
+    public static final long G_OPTION = 1L << 19;
+    public static final long H_OPTION = 1L << 18;
+    public static final long I_OPTION = 1L << 17;
+    public static final long J_OPTION = 1L << 16;
+    public static final long K_OPTION = 1L << 15;
+    public static final long L_OPTION = 1L << 14;
+    public static final long M_OPTION = 1L << 13;
+    public static final long N_OPTION = 1L << 12;
+    public static final long O_OPTION = 1L << 11;
+    public static final long P_OPTION = 1L << 10;
+    public static final long Q_OPTION = 1L << 9;
+    public static final long R_OPTION = 1L << 8;
+    public static final long S_OPTION = 1L << 7;
+    public static final long T_OPTION = 1L << 6;
+    public static final long U_OPTION = 1L << 5;
+    public static final long V_OPTION = 1L << 4;
+    public static final long W_OPTION = 1L << 3;
+    public static final long X_OPTION = 1L << 2;
+    public static final long Y_OPTION = 1L << 1;
+    public static final long Z_OPTION = 1L;
+
     public static final long MASK_B0        = 1L << 35;
     public static final long MASK_B1        = 1L << 34;
     public static final long MASK_B2        = 1L << 33;
