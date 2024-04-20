@@ -21,6 +21,9 @@ class QualHandler extends Handler {
     public boolean allowTIP() { return true; }
 
     @Override
+    public String getCommand() { return "QUAL"; }
+
+    @Override
     public void handle(final HandlerPacket hp) {
         if (cleanOptions(hp)) {
             postSyntaxError(hp);
@@ -72,8 +75,8 @@ class QualHandler extends Handler {
                 if (hp._sourceIsExecRequest) {
                     hp._runControlEntry.postContingency(012, 04, 040);
                 }
-                hp._statement._facStatusResult.postMessage(FacStatusCode.DirectoryOrQualifierMustAppear, null);
-                hp._statement._resultCode |= 0_600000_000000L;
+                hp._statement._facStatusResult.postMessage(FacStatusCode.DirectoryOrQualifierMustAppear);
+                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
 
@@ -89,8 +92,8 @@ class QualHandler extends Handler {
                 if (hp._sourceIsExecRequest) {
                     hp._runControlEntry.postContingency(012, 04, 040);
                 }
-                hp._statement._facStatusResult.postMessage(FacStatusCode.DirectoryOrQualifierMustAppear, null);
-                hp._statement._resultCode |= 0_600000_000000L;
+                hp._statement._facStatusResult.postMessage(FacStatusCode.DirectoryOrQualifierMustAppear);
+                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
 
@@ -106,8 +109,8 @@ class QualHandler extends Handler {
                 if (hp._sourceIsExecRequest) {
                     hp._runControlEntry.postContingency(012, 04, 040);
                 }
-                hp._statement._facStatusResult.postMessage(FacStatusCode.DirectoryAndQualifierMayNotAppear, null);
-                hp._statement._resultCode |= 0_600000_000000L;
+                hp._statement._facStatusResult.postMessage(FacStatusCode.DirectoryAndQualifierMayNotAppear);
+                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
 
@@ -125,7 +128,7 @@ class QualHandler extends Handler {
             }
 
             hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalOptionCombination, new String[]{ "D", "R" });
-            hp._statement._resultCode |= 0_600000_000000L;
+            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
         }
     }
 }

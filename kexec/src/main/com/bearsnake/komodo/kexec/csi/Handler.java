@@ -8,11 +8,14 @@ import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.logger.LogManager;
 
+import java.util.List;
+
 abstract class Handler {
 
     abstract boolean allowCSF();
     abstract boolean allowCSI();
     abstract boolean allowTIP();
+    abstract String getCommand();
     abstract void handle(final HandlerPacket hp);
 
     /**
@@ -32,7 +35,7 @@ abstract class Handler {
             if (((bit & hp._optionWord) != 0) && ((bit & allowedOptions) == 0)) {
                 var params = new String[]{ String.format("%c", letter) };
                 hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalOption, params);
-                hp._statement._resultCode |= 0_400000_400000L;
+                hp._statement._facStatusResult.mergeStatusBits(0_400000_400000L);
                 result = false;
             }
 
@@ -71,7 +74,7 @@ abstract class Handler {
                 } else {
                     var params = new String[]{ String.format("%c", previousLetterSet), String.format("%c", letter) };
                     hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalOptionCombination, params);
-                    hp._statement._resultCode |= 0_400000_400000L;
+                    hp._statement._facStatusResult.mergeStatusBits(0_400000_400000L);
                     result = false;
                     // stop now - only report first of the potential conflicts
                     break;
@@ -119,8 +122,34 @@ abstract class Handler {
         return true;
     }
 
-    protected void postSyntaxError(final HandlerPacket hp) {
-        hp._statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-        hp._statement._resultCode |= 0_400000_000000L;
+    /**
+     * Returns a particular subfield of the operands if it was specified.
+     * Saves calling code a little bit of annoyance
+     * @param operands list of operand fields
+     * @param fieldIndex index of operand field
+     * @param subFieldIndex index of operand subfield
+     * @return content of indicated subfield if it exists, else null
+     */
+    protected String getSubField(final List<List<String>>operands,
+                                 final int fieldIndex,
+                                 final int subFieldIndex) {
+        if (fieldIndex <= operands.size()) {
+            var fld = operands.get(fieldIndex);
+            if (subFieldIndex <= fld.size()) {
+                return fld.get(subFieldIndex);
+            }
+        }
+        return null;
+    }
+
+    protected void postComplete(
+        final HandlerPacket hp
+    ) {
+        hp._statement._facStatusResult.postMessage(FacStatusCode.Complete, new String[]{ getCommand() });
+    }
+
+    protected static void postSyntaxError(final HandlerPacket hp) {
+        hp._statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage);
+        hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
     }
 }

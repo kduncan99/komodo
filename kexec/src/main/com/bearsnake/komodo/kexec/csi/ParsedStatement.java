@@ -15,7 +15,5 @@ public class ParsedStatement {
     public String _mnemonic;
     public final List<String> _optionsFields = new LinkedList<>();
     public final List<List<String>> _operandFields = new LinkedList<>();
-
     public FacStatusResult _facStatusResult = new FacStatusResult();
-    public long _resultCode = 0;
 }

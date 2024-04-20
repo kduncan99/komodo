@@ -33,8 +33,11 @@ public enum FacStatusCode {
 
     // Errors
     MnemonicIsNotConfigured(0201033),
+    UnitNameIsNotConfigured(0201133),
     IllegalOptionCombination(0201433),
     IllegalOption(0201533),
+    UnitIsNotReserved(02031330),
+    UnitIsNotUpOrReserved(0203333),
     AssignMnemonicTooLong(0240733),
     AssignMnemonicMustBeSpecifiedWithPackId(0241033),
     AssignMnemonicMustBeWordAddressable(0241133),
@@ -53,7 +56,9 @@ public enum FacStatusCode {
     ReadWriteKeysNeeded(0246433),
     IllegalMaxGranules(0247333),
     MaximumIsLessThanInitialReserve(0247433),
+    MaximumNumberOfPackIdsExceeded(0247633),
     IOptionOnlyAllowed(0250733),
+    PackIdIsRequired(0251633),
     PlacementFieldNotAllowed(0252133),
     IncorrectPrivacyKey(0252533),
     IncorrectReadKey(0253333),

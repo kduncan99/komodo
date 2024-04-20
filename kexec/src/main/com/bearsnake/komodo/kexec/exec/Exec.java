@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.exec;
 
+import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.Configuration;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
@@ -265,6 +266,24 @@ public class Exec {
 
         for (var ch : packName.getBytes()) {
             if ((ch < 'A' || ch > 'Z') && (ch < '0' || ch > '9')) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean isValidReadWriteKey(final String key) {
+        if (key.isEmpty() || key.length() > 6) {
+            return false;
+        }
+
+        for (int ch : key.getBytes()) {
+            // any fieldata character is allowed excepting period, comma, semicolon, slash, and blank
+            if ((ch > 127) || Word36.FIELDATA_FROM_ASCII[ch] == 005) {
+                return false;
+            }
+            if (ch == '.' || ch == ',' || ch == ';' || ch == '/') {
                 return false;
             }
         }

@@ -17,6 +17,7 @@ import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.RunControlEntry;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.mfd.FileAllocationSet;
 import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
@@ -124,6 +125,26 @@ public class FacilitiesManager implements Manager {
     // -------------------------------------------------------------------------
     // Services interface
     // -------------------------------------------------------------------------
+
+    public void assignDiskUnitToRun(
+        final RunControlEntry runControlEntry,
+        final long nodeIdentifier,
+        final String packName,
+        final boolean releaseOnTaskEnd,
+        final boolean doNotHoldRun,
+        final FacStatusResult fsResult
+    ) {
+        // assign the unit to the run - do not wait on it
+        // TODO
+
+        // compare pack names - if there is a mismatch, consult the operator.
+        // if the destination pack is not prepped, then that is a different type of mismatch - consult the operator.
+        // If the operator is upset about it, un-assign the unit from the run and post appropriate status.
+        // TODO
+
+        // add fac item to the run
+        // TODO
+    }
 
     /**
      * Returns the facilities NodeInfo for the given node.

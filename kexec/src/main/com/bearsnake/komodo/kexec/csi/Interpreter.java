@@ -8,6 +8,7 @@ import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.exec.RunControlEntry;
 import com.bearsnake.komodo.kexec.exec.TIPRunControlEntry;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
+import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.logger.LogManager;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ public class Interpreter {
     private static final Map<String, Handler> HANDLERS = new HashMap<>();
     static {
         // ADD
-        HANDLERS.put("ASG", new AsgHandler());
+        addHandler(new AsgHandler());
         // BRKPT
         // CAT
         // CKPT
@@ -34,10 +35,10 @@ public class Interpreter {
         // ENDX
         // FREE
         // HDG
-        HANDLERS.put("LOG", new LogHandler());
+        addHandler(new LogHandler());
         // MODE
         // MSG
-        HANDLERS.put("QUAL", new QualHandler());
+        addHandler(new QualHandler());
         // RSTRT
         // SETC
         // START
@@ -45,6 +46,10 @@ public class Interpreter {
         // SYMCN
         // USE
         // XQT
+    }
+
+    private static void addHandler(final Handler handler) {
+        HANDLERS.put(handler.getCommand(), handler);
     }
 
     public void handleControlStatement(
@@ -61,32 +66,32 @@ public class Interpreter {
                                   runControlEntry.getRunId(),
                                   statement._originalStatement);
             runControlEntry.postContingency(012, 04, 040);
-            statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-            statement._resultCode = 0_400000_000000L;
+            statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage);
+            hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
         } else if ((source == StatementSource.ER_CSI) && !handler.allowCSI()) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] %s not allowed for ER CSI$",
                                   runControlEntry.getRunId(),
                                   statement._mnemonic);
             runControlEntry.postContingency(012, 04, 042);
-            statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement, null);
-            statement._resultCode = 0_400000_000000L;
+            statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement);
+            hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
         } else if ((source == StatementSource.ER_CSF) && !handler.allowCSF()) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] %s not allowed for ER CSF$",
                                   runControlEntry.getRunId(),
                                   statement._mnemonic);
             runControlEntry.postContingency(012, 04, 042);
-            statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement, null);
-            statement._resultCode = 0_400000_000000L;
+            statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement);
+            hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
         } else if ((runControlEntry instanceof TIPRunControlEntry) && !handler.allowTIP()) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] %s not allowed in TIP program",
                                   runControlEntry.getRunId(),
                                   statement._mnemonic);
             runControlEntry.postContingency(012, 04, 042);
-            statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement, null);
-            statement._resultCode = 0_400000_000000L;
+            statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement);
+            hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
         } else {
             handler.handle(hp);
         }
@@ -94,7 +99,7 @@ public class Interpreter {
         LogManager.logTrace(LOG_SOURCE,
                             "HandleControlStatement [%s] returning code %012o",
                             runControlEntry.getRunId(),
-                            statement._resultCode);
+                            statement._facStatusResult.getStatusWord());
     }
 
     /**
@@ -140,10 +145,7 @@ public class Interpreter {
         if (p.atEnd() || !p.parseChar('@')) {
             LogManager.logWarning(LOG_SOURCE, "[%s] statement does not begin with '@'", runControlEntry.getRunId());
             runControlEntry.postContingency(012, 04, 040);
-
-            ps._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-            ps._resultCode = 0_400000_000000L;
-            LogManager.logTrace(LOG_SOURCE, "parseControlStatement stat=%012o", ps._resultCode);
+            postSyntaxError(ps._facStatusResult);
             return ps;
         }
 
@@ -155,18 +157,14 @@ public class Interpreter {
         try {
             ident = p.parseIdentifier(6, ":, ");
         } catch (Parser.SyntaxException ex) {
-            ps._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-            ps._resultCode = 0_400000_000000L;
-            LogManager.logTrace(LOG_SOURCE, "parseControlStatement stat=%012o", ps._resultCode);
+            postSyntaxError(ps._facStatusResult);
             return ps;
         } catch (Parser.NotFoundException ex) {
             // we have neither a label nor a command.
             // the only other thing we can accept here is trailing whitespace.
             p.skipSpaces();
             if (!p.atEnd()) {
-                ps._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-                ps._resultCode = 0_400000_000000L;
-                LogManager.logTrace(LOG_SOURCE, "parseControlStatement stat=%012o", ps._resultCode);
+                postSyntaxError(ps._facStatusResult);
             } else {
                 LogManager.logTrace(LOG_SOURCE, "empty statement");
             }
@@ -183,15 +181,11 @@ public class Interpreter {
             try {
                 ident = p.parseIdentifier(6, ":, ");
             } catch (Parser.SyntaxException ex) {
-                ps._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-                ps._resultCode = 0_400000_000000L;
-                LogManager.logTrace(LOG_SOURCE, "parseControlStatement stat=%012o", ps._resultCode);
+                postSyntaxError(ps._facStatusResult);
                 return ps;
             } catch (Parser.NotFoundException ex) {
                 if (!p.atEnd()) {
-                    ps._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-                    ps._resultCode = 0_400000_000000L;
-                    LogManager.logTrace(LOG_SOURCE, "parseControlStatement stat=%012o", ps._resultCode);
+                    postSyntaxError(ps._facStatusResult);
                 } else {
                     LogManager.logTrace(LOG_SOURCE, "empty statement");
                 }
@@ -209,9 +203,7 @@ public class Interpreter {
                 if (p.atEnd() || p.peekNext() == ' ') {
                     break;
                 } else if (p.peekNext() == ',') {
-                    ps._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage, null);
-                    ps._resultCode = 0_400000_000000L;
-                    LogManager.logTrace(LOG_SOURCE, "parseControlStatement stat=%012o", ps._resultCode);
+                    postSyntaxError(ps._facStatusResult);
                     return ps;
                 } else {
                     p.skipNext();
@@ -261,5 +253,11 @@ public class Interpreter {
 
         LogManager.logTrace(LOG_SOURCE, "ParseControlStatement exit");
         return ps;
+    }
+
+    private static void postSyntaxError(final FacStatusResult fsr) {
+        fsr.postMessage(FacStatusCode.SyntaxErrorInImage);
+        fsr.mergeStatusBits(0_400000_000000L);
+        LogManager.logTrace(LOG_SOURCE, "parseControlStatement stat=%012o", fsr.getStatusWord());
     }
 }
