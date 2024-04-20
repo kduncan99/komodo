@@ -25,7 +25,6 @@ class QualHandler extends Handler {
         }
 
         if (!checkIllegalOptions(hp, Word36.D_OPTION | Word36.R_OPTION)) {
-            hp._statement._resultCode = 0_600000_000000L;
             return;
         }
 
@@ -40,7 +39,7 @@ class QualHandler extends Handler {
 
         String qualifier = null;
         if (hp._statement._operandFields.size() == 1) {
-            if (hp._statement._operandFields.get(0).size() != 1) {
+            if (hp._statement._operandFields.getFirst().size() != 1) {
                 LogManager.logInfo(Interpreter.LOG_SOURCE,
                                    "[%s] Too many operand subfields:%s",
                                    hp._runControlEntry.getRunId(),
@@ -49,7 +48,7 @@ class QualHandler extends Handler {
                 return;
             }
 
-            qualifier = hp._statement._operandFields.get(0).get(0);
+            qualifier = hp._statement._operandFields.getFirst().getFirst();
             if (!Exec.isValidQualifier(qualifier)) {
                 LogManager.logInfo(Interpreter.LOG_SOURCE,
                                    "[%s] Invalid qualifier:%s",

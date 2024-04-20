@@ -27,12 +27,12 @@ class LogHandler extends Handler {
             return;
         }
 
-        var opField = hp._statement._operandFields.get(0);
+        var opField = hp._statement._operandFields.getFirst();
         if (opField.size() != 1) {
             postSyntaxError(hp);
             return;
         }
 
-        LogManager.logInfo(hp._runControlEntry.getRunId(), opField.get(0));
+        LogManager.logInfo(hp._runControlEntry.getRunId(), opField.getFirst());
     }
 }

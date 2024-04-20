@@ -13,6 +13,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+// Control Statement Interpreter main routine.
+// Calling code should first invoke parseControlStatement(), and if that works out, should subsequently
+// invoke handleControlStatement().
+// This code does not handle certain run-oriented statements such as @RUN, @FIN, @TEST, @JUMP, etc.
+// nor does it handle @FILE, @ENDF, or @EOF.
 public class Interpreter {
 
     static final String LOG_SOURCE = "CSI";
@@ -20,7 +25,7 @@ public class Interpreter {
     private static final Map<String, Handler> HANDLERS = new HashMap<>();
     static {
         // ADD
-        // ASG
+        HANDLERS.put("ASG", new AsgHandler());
         // BRKPT
         // CAT
         // CKPT
