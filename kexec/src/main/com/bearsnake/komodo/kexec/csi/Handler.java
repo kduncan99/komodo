@@ -12,6 +12,7 @@ abstract class Handler {
 
     abstract boolean allowCSF();
     abstract boolean allowCSI();
+    abstract boolean allowTIP();
     abstract void handle(final HandlerPacket hp);
 
     /**

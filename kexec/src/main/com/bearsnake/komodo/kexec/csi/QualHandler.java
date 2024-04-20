@@ -18,6 +18,9 @@ class QualHandler extends Handler {
     public boolean allowCSI() { return true; }
 
     @Override
+    public boolean allowTIP() { return true; }
+
+    @Override
     public void handle(final HandlerPacket hp) {
         if (cleanOptions(hp)) {
             postSyntaxError(hp);

@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.exec.RunControlEntry;
+import com.bearsnake.komodo.kexec.exec.TIPRunControlEntry;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.logger.LogManager;
 import java.util.Collections;
@@ -16,8 +17,8 @@ import java.util.Map;
 // Control Statement Interpreter main routine.
 // Calling code should first invoke parseControlStatement(), and if that works out, should subsequently
 // invoke handleControlStatement().
-// This code does not handle certain run-oriented statements such as @RUN, @FIN, @TEST, @JUMP, etc.
-// nor does it handle @FILE, @ENDF, or @EOF.
+// This code does not handle certain run-oriented statements such as
+//  @RUN, @FIN, @PASSWD, @TEST, @JUMP, @SETC, etc.
 public class Interpreter {
 
     static final String LOG_SOURCE = "CSI";
@@ -29,15 +30,21 @@ public class Interpreter {
         // BRKPT
         // CAT
         // CKPT
+        // END
+        // ENDX
         // FREE
+        // HDG
         HANDLERS.put("LOG", new LogHandler());
         // MODE
+        // MSG
         HANDLERS.put("QUAL", new QualHandler());
         // RSTRT
+        // SETC
         // START
         // SYM
         // SYMCN
         // USE
+        // XQT
     }
 
     public void handleControlStatement(
@@ -59,6 +66,22 @@ public class Interpreter {
         } else if ((source == StatementSource.ER_CSI) && !handler.allowCSI()) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] %s not allowed for ER CSI$",
+                                  runControlEntry.getRunId(),
+                                  statement._mnemonic);
+            runControlEntry.postContingency(012, 04, 042);
+            statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement, null);
+            statement._resultCode = 0_400000_000000L;
+        } else if ((source == StatementSource.ER_CSF) && !handler.allowCSF()) {
+            LogManager.logWarning(LOG_SOURCE,
+                                  "[%s] %s not allowed for ER CSF$",
+                                  runControlEntry.getRunId(),
+                                  statement._mnemonic);
+            runControlEntry.postContingency(012, 04, 042);
+            statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement, null);
+            statement._resultCode = 0_400000_000000L;
+        } else if ((runControlEntry instanceof TIPRunControlEntry) && !handler.allowTIP()) {
+            LogManager.logWarning(LOG_SOURCE,
+                                  "[%s] %s not allowed in TIP program",
                                   runControlEntry.getRunId(),
                                   statement._mnemonic);
             runControlEntry.postContingency(012, 04, 042);
@@ -86,13 +109,11 @@ public class Interpreter {
      *      '@' [wsp] ''' [wsp] [ label ':' ]
      *                    [wsp] mnemonic [',' [wsp] option_field]
      *                    wsp arbitrary-string
-     *
      * option_field:
      *      subfield [ '/' [wsp] subfield ]...
      * field:
      *      subfield [ '/' [wsp] subfield ]...
      * wsp is whitespace, and is usually optional
-     *
      * We do not handle continuation characters here - that must be dealt with at a higher level,
      * with the fully-composed multi-line statement passed to us as a single string.
      * We do not check image length here - that must be dealt with at a higher level.

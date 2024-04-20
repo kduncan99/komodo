@@ -16,6 +16,9 @@ class LogHandler extends Handler {
     public boolean allowCSI() { return false; }
 
     @Override
+    public boolean allowTIP() { return true; }
+
+    @Override
     public void handle(final HandlerPacket hp) {
         if (!cleanOptions(hp) || (hp._optionWord != 0)) {
             postSyntaxError(hp);
