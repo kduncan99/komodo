@@ -14,9 +14,9 @@ public class FileSpecification {
     private final String _qualifier;
 
     // specified filename - this is the only item which is non-optional
-    private final String _fileName;
+    private final String _filename;
 
-    private final FileCycleSpecification _fileCycleSpec;
+    private final FileCycleSpecification _fileCycleSpecification;
     private final String _readKey;
     private final String _writeKey;
 
@@ -28,11 +28,19 @@ public class FileSpecification {
         final String writeKey
     ) {
         _qualifier = qualifier;
-        _fileName = fileName;
-        _fileCycleSpec = fileCycle;
+        _filename = fileName;
+        _fileCycleSpecification = fileCycle;
         _readKey = readKey;
         _writeKey = writeKey;
     }
+
+    public final FileCycleSpecification getFileCycleSpecification() { return _fileCycleSpecification; }
+    public final String getFilename() { return _filename; }
+    public final String getQualifier() { return _qualifier; }
+    public final String getReadKey() { return _readKey; }
+    public final String getWriteKey() { return _writeKey; }
+    public final boolean hasFileCycleSpecification() { return _fileCycleSpecification != null; }
+    public final boolean hasQualifier() { return _qualifier != null; }
 
     /**
      * parses a FileSpecification object from the given text.
@@ -105,9 +113,9 @@ public class FileSpecification {
         if (_qualifier != null) {
             sb.append(_qualifier).append('*');
         }
-        sb.append(_fileName);
-        if (_fileCycleSpec != null) {
-            sb.append('(').append(_fileCycleSpec.getCycle()).append(')');
+        sb.append(_filename);
+        if (_fileCycleSpecification != null) {
+            sb.append('(').append(_fileCycleSpecification.getCycle()).append(')');
         }
         if ((_readKey != null) || (_writeKey != null)) {
             sb.append("/");

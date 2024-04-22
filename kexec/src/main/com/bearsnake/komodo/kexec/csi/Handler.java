@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.logger.LogManager;
 
@@ -16,7 +17,7 @@ abstract class Handler {
     abstract boolean allowCSI();
     abstract boolean allowTIP();
     abstract String getCommand();
-    abstract void handle(final HandlerPacket hp);
+    abstract void handle(final HandlerPacket hp) throws ExecStoppedException;
 
     /**
      * Compares the options word in the handler packet to the allowed options word,

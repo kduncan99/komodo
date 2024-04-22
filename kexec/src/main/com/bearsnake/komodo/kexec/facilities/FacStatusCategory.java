@@ -5,7 +5,18 @@
 package com.bearsnake.komodo.kexec.facilities;
 
 public enum FacStatusCategory {
-    Info,
-    Warning,
-    Error,
+    Info("I"),
+    Warning("W"),
+    Error("E");
+
+    private final String _token;
+
+    FacStatusCategory(final String ch) {
+        _token = ch;
+    }
+
+    @Override
+    public String toString() {
+        return _token;
+    }
 }

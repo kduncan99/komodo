@@ -13,25 +13,26 @@ import com.bearsnake.komodo.hardwarelib.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.hardwarelib.NodeCategory;
 import com.bearsnake.komodo.hardwarelib.TapeDevice;
+import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.RunControlEntry;
+import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.mfd.FileAllocationSet;
 import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
-
-// TODO NOTE:
-// To create a file on a fixed pack, use the @ASG or @CAT statement without including any pack-id field.
-// To create a file on one or more removable packs, include one or more device identifiers on the pack-id field.
 
 public class FacilitiesManager implements Manager {
 
@@ -126,24 +127,150 @@ public class FacilitiesManager implements Manager {
     // Services interface
     // -------------------------------------------------------------------------
 
-    public void assignDiskUnitToRun(
+    /**
+     * For assigning a (reserved) disk to a run.
+     * This assignment can only be temporary, and the device must be reserved.
+     * @param runControlEntry describes the run
+     * @param fileSpecification describes the file name
+     * @param nodeIdentifier node identifier of the device
+     * @param packName pack name requested for the device
+     * @param releaseOnTaskEnd I-option on assign
+     * @param doNotHoldRun Z-option on assign
+     * @param fsResult fac status result
+     * @return true if we are successful
+     * @throws ExecStoppedException if the exec is stopped
+     */
+    public boolean assignDiskUnitToRun(
         final RunControlEntry runControlEntry,
-        final long nodeIdentifier,
+        final FileSpecification fileSpecification,
+        final int nodeIdentifier,
         final String packName,
         final boolean releaseOnTaskEnd,
         final boolean doNotHoldRun,
         final FacStatusResult fsResult
-    ) {
-        // assign the unit to the run - do not wait on it
-        // TODO
+    ) throws ExecStoppedException {
+        var nodeInfo = _nodeGraph.get(nodeIdentifier);
+        if (nodeInfo == null) {
+            LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Cannot find node %012o", nodeIdentifier);
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
+
+        var node = nodeInfo.getNode();
+        if ((node.getNodeCategory() != NodeCategory.Device) || ((Device)node).getDeviceType() != DeviceType.DiskDevice) {
+            LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Node %012o is not a disk device", nodeIdentifier);
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
+
+        var disk = (DiskDevice)node;
+        if (nodeInfo.getNodeStatus() != NodeStatus.Reserved) {
+            var params = new String[]{ nodeInfo.getNode().getNodeName() };
+            fsResult.postMessage(FacStatusCode.UnitIsNotReserved, params );
+            fsResult.mergeStatusBits(0_600000_000000L);
+            return false;
+        }
+
+        // Add facilities item to the run
+        var effectiveFileSpec = resolveQualifier(fileSpecification, runControlEntry);
+        var facItem = new AbsoluteDiskItem(node, packName);
+        facItem.setQualifier(effectiveFileSpec.getQualifier())
+               .setFilename(effectiveFileSpec.getFilename())
+               .setIsTemporary(true);
+        if (effectiveFileSpec.hasFileCycleSpecification()) {
+            var fcSpec = effectiveFileSpec.getFileCycleSpecification();
+            if (fcSpec.isAbsolute()) {
+                facItem.setAbsoluteCycle(fcSpec.getCycle());
+            } else if (fcSpec.isRelative()) {
+                facItem.setRelativeCycle(fcSpec.getCycle());
+            }
+        }
+
+        // If there is a facilities item in the rce which matches the file specification, and it does not refer
+        //  to an absolute assign of this same unit, post an error and return false
+        // If there is any facilities item in the rce which refers to this unit, post a warning (already assigned)
+        //  otherwise add a new facilities item to the rce
+        // If the filename portion of the new facilities item is not unique to the run, post a warning
+        //  (filename not unique)
+        var facItems = runControlEntry.getFacilityItemTable();
+        synchronized (facItems) {
+            for (var fi : facItems._content) {
+                // TODO note special case where one activity is in the process of assigning, and another activity
+                //  comes in with the same idea...
+            }
+        }
+
+        // Wait for the unit if necessary...
+        var startTime = Instant.now();
+        var nextMessageTime = startTime.plusSeconds(120);
+        while (true) {
+            if (!Exec.getInstance().isRunning()) {
+                throw new ExecStoppedException();
+            }
+            runControlEntry.incrementWaitingForPeripheral();
+            synchronized (nodeInfo) {
+                if (nodeInfo._assignedTo == null) {
+                    nodeInfo._assignedTo = runControlEntry;
+                    facItem.setIsAssigned(true);
+                    runControlEntry.decrementWaitingForPeripheral();
+                    break;
+                }
+            }
+
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                // do nothing
+            }
+
+            var now = Instant.now();
+            if (now.isAfter(nextMessageTime)) {
+                nextMessageTime = nextMessageTime.plusSeconds(120);
+                if (!runControlEntry.hasTask()
+                    && ((runControlEntry.getRunType() == RunType.Batch) || (runControlEntry.getRunType() == RunType.Demand))) {
+                    long minutes = Duration.between(now, startTime).getSeconds() / 60;
+                    var params = new Object[]{ runControlEntry.getRunId(), minutes };
+                    var facMsg = new FacStatusMessageInstance(FacStatusCode.RunHeldForDiskUnitAvailability, params);
+                    runControlEntry.postToPrint(facMsg.toString(), 1);
+                }
+            }
+        }
+
+        var msg = String.format("Load %s %s %s",
+                                packName,
+                                disk.getNodeName(),
+                                runControlEntry.getRunId());
+        Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+
+        while (!disk.isReady()) {
+            if (!Exec.getInstance().isRunning()) {
+                throw new ExecStoppedException();
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                // do nothing
+            }
+        }
 
         // compare pack names - if there is a mismatch, consult the operator.
-        // if the destination pack is not prepped, then that is a different type of mismatch - consult the operator.
         // If the operator is upset about it, un-assign the unit from the run and post appropriate status.
-        // TODO
+        var currentPackName = nodeInfo.getMediaInfo().getMediaName();
+        if (currentPackName != null && !currentPackName.equals(packName)) {
+            var candidates = new String[]{ "Y", "N" };
+            msg = String.format("Allow %s as substitute pack on %s YN?", currentPackName, nodeInfo.getNode().getNodeName());
+            var response = Exec.getInstance().sendExecRestrictedReadReplyMessage(msg, candidates, null);
+            if (!response.equals("Y")) {
+                // TODO lose fac item
+                nodeInfo._assignedTo = null;
+                var params = new String[]{ packName };
+                fsResult.postMessage(FacStatusCode.OperatorDoesNotAllowAbsoluteAssign, params);
+                fsResult.mergeStatusBits(0_400000_000000L);
+                return false;
+            }
+        }
 
-        // add fac item to the run
-        // TODO
+        return true;
     }
 
     /**
@@ -332,5 +459,20 @@ public class FacilitiesManager implements Manager {
         // TODO
 
         LogManager.logTrace(LOG_SOURCE, "boot complete");
+    }
+
+    // -------------------------------------------------------------------------
+    // Core
+    // -------------------------------------------------------------------------
+
+    private FileSpecification resolveQualifier(
+        final FileSpecification initialSpec,
+        final RunControlEntry runControlEntry
+    ) {
+        return new FileSpecification(runControlEntry.getEffectiveQualifier(initialSpec),
+                                     initialSpec.getFilename(),
+                                     initialSpec.getFileCycleSpecification(),
+                                     initialSpec.getReadKey(),
+                                     initialSpec.getWriteKey());
     }
 }

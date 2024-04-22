@@ -54,23 +54,23 @@ public class FacStatusMessage {
     static {
         putInfo(FacStatusCode.Complete, "%s complete");
         putInfo(FacStatusCode.DeviceIsSelected,  "%s is selected %s %s %s");
-        putInfo(FacStatusCode.RunHeldForCacheControl, "Run %s held for control of caching for %s min.");
-	    putInfo(FacStatusCode.RunHeldForComGroup, "Run %s held for com group availability for %s min.");
-        putInfo(FacStatusCode.RunHeldForComLine, "Run %s held for com line availability for %s min.");
-        putInfo(FacStatusCode.RunHeldForDevice, "Run %s held for unit for %s device assign for %s min.");
-        putInfo(FacStatusCode.RunHeldForDisketteMount, "Run %s held for diskette to be mounted for %s min.");
-        putInfo(FacStatusCode.RunHeldForDisketteUnitAvailability, "Run %s held for diskette unit availability for %s min.");
-        putInfo(FacStatusCode.RunHeldForDiskPackMount, "Run %s held for disk pack to be mounted for %s min.");
-        putInfo(FacStatusCode.RunHeldForDiskUnitAvailability, "Run %s held for disk unit availability for %s min.");
-        putInfo(FacStatusCode.RunHeldForExclusiveFileUseRelease, "Run %s held for exclusive file use release for %s min.");
-        putInfo(FacStatusCode.RunHeldForFileCycleConflict, "Run %s held for file cycle conflict for %s min.");
-        putInfo(FacStatusCode.RunHeldForMassStorageSpace, "Run %s held for mass storage space for %s min.");
-        putInfo(FacStatusCode.RunHeldForNeedOfExclusiveUse, "Run %s held for need of exclusive use for %s min.");
-        putInfo(FacStatusCode.RunHeldForPack, "Run %s held for pack availability for %s min.");
-        putInfo(FacStatusCode.RunHeldForReel, "Run %s held for reel availability for %s min.");
-        putInfo(FacStatusCode.RunHeldForRemovable, "Run %s held for %s for abs rem disk for %s min.");
-        putInfo(FacStatusCode.RunHeldForRollback, "Run %s held for rollback of unloaded file for %s min.");
-	    putInfo(FacStatusCode.RunHeldForTapeUnitAvailability, "Run %s held for tape unit availability for %s min.");
+        putInfo(FacStatusCode.RunHeldForCacheControl, "Run %s held for control of caching for %d min.");
+	    putInfo(FacStatusCode.RunHeldForComGroup, "Run %s held for com group availability for %d min.");
+        putInfo(FacStatusCode.RunHeldForComLine, "Run %s held for com line availability for %d min.");
+        putInfo(FacStatusCode.RunHeldForDevice, "Run %s held for unit for %s device assign for %d min.");
+        putInfo(FacStatusCode.RunHeldForDisketteMount, "Run %s held for diskette to be mounted for %d min.");
+        putInfo(FacStatusCode.RunHeldForDisketteUnitAvailability, "Run %s held for diskette unit availability for %d min.");
+        putInfo(FacStatusCode.RunHeldForDiskPackMount, "Run %s held for disk pack to be mounted for %d min.");
+        putInfo(FacStatusCode.RunHeldForDiskUnitAvailability, "Run %s held for disk unit availability for %d min.");
+        putInfo(FacStatusCode.RunHeldForExclusiveFileUseRelease, "Run %s held for exclusive file use release for %d min.");
+        putInfo(FacStatusCode.RunHeldForFileCycleConflict, "Run %s held for file cycle conflict for %d min.");
+        putInfo(FacStatusCode.RunHeldForMassStorageSpace, "Run %s held for mass storage space for %d min.");
+        putInfo(FacStatusCode.RunHeldForNeedOfExclusiveUse, "Run %s held for need of exclusive use for %d min.");
+        putInfo(FacStatusCode.RunHeldForPack, "Run %s held for pack availability for %d min.");
+        putInfo(FacStatusCode.RunHeldForReel, "Run %s held for reel availability for %d min.");
+        putInfo(FacStatusCode.RunHeldForRemovable, "Run %s held for %s for abs rem disk for %d min.");
+        putInfo(FacStatusCode.RunHeldForRollback, "Run %s held for rollback of unloaded file for %d min.");
+	    putInfo(FacStatusCode.RunHeldForTapeUnitAvailability, "Run %s held for tape unit availability for %d min.");
 
         putWarning(FacStatusCode.FileAlreadyAssigned, "File is already assigned.");
         putWarning(FacStatusCode.FilenameNotKnown, "Filename not known to this run.");
@@ -114,6 +114,7 @@ public class FacStatusMessage {
         putError(FacStatusCode.IOptionOnlyAllowed, "I option is the only legal option on USE.");
         putError(FacStatusCode.MaximumIsLessThanInitialReserve, "Maximum is less than the initial reserve.");
         putError(FacStatusCode.MnemonicIsNotConfigured, "%s is not a configured assign mnemonic.");
+        putError(FacStatusCode.OperatorDoesNotAllowAbsoluteAssign, "The operator does not allow absolute assignment of pack pack-id.");
         putError(FacStatusCode.PackIdIsRequired, "Packid is required.");
         putError(FacStatusCode.PlacementFieldNotAllowed, "Placement field is not allowed with CAT.");
         putError(FacStatusCode.ReadWriteKeysNeeded, "Read and/or write keys are needed.");

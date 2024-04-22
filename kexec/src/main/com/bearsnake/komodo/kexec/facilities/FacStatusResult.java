@@ -11,36 +11,9 @@ import static com.bearsnake.komodo.kexec.facilities.FacStatusMessage.FacStatusMe
 
 public class FacStatusResult {
 
-    public static class MessageInstance {
-
-        public FacStatusCode _code;
-        public String[] _parameters;
-
-        public MessageInstance(
-            final FacStatusCode code
-        ) {
-            _code = code;
-            _parameters = new String[]{};
-        }
-
-        public MessageInstance(
-            final FacStatusCode code,
-            final String[] parameters
-        ) {
-            _code = code;
-            _parameters = parameters;
-        }
-
-        @Override
-        public String toString() {
-            var fsMsg = FacStatusMessages.get(_code);
-            return fsMsg.getTemplate();//TODO do this better
-        }
-    }
-
-    private final List<MessageInstance> _errors = new LinkedList<>();
-    private final List<MessageInstance> _infos = new LinkedList<>();
-    private final List<MessageInstance> _warnings = new LinkedList<>();
+    private final List<FacStatusMessageInstance> _errors = new LinkedList<>();
+    private final List<FacStatusMessageInstance> _infos = new LinkedList<>();
+    private final List<FacStatusMessageInstance> _warnings = new LinkedList<>();
     private long _statusWord = 0;
 
     public long getStatusWord() { return _statusWord; }
@@ -57,7 +30,7 @@ public class FacStatusResult {
         final FacStatusCode code
     ) {
         var template = FacStatusMessages.get(code);
-        var inst = new MessageInstance(code);
+        var inst = new FacStatusMessageInstance(code);
         switch (template.getCategory()) {
             case Error -> _errors.add(inst);
             case Info -> _infos.add(inst);
@@ -70,7 +43,7 @@ public class FacStatusResult {
         final String[] parameters
     ) {
         var template = FacStatusMessages.get(code);
-        var inst = new MessageInstance(code, parameters);
+        var inst = new FacStatusMessageInstance(code, parameters);
         switch (template.getCategory()) {
         case Error -> _errors.add(inst);
         case Info -> _infos.add(inst);
@@ -79,8 +52,8 @@ public class FacStatusResult {
     }
 
     public void dump() {
-        _infos.stream().map(MessageInstance::toString).forEach(System.out::println);
-        _warnings.stream().map(MessageInstance::toString).forEach(System.out::println);
-        _errors.stream().map(MessageInstance::toString).forEach(System.out::println);
+        _infos.stream().map(FacStatusMessageInstance::toString).forEach(System.out::println);
+        _warnings.stream().map(FacStatusMessageInstance::toString).forEach(System.out::println);
+        _errors.stream().map(FacStatusMessageInstance::toString).forEach(System.out::println);
     }
 }

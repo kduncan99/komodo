@@ -11,10 +11,17 @@ import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.hardwarelib.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 import com.bearsnake.komodo.kexec.facilities.NodeStatus;
+
+// TODO NOTE:
+//  To create a file on a fixed pack, use the @ASG or @CAT statement without including any pack-id field.
+//  To create a file on one or more removable packs, include one or more device identifiers on the pack-id field.
+//  This applies to ASG and CAT.
+
 
 class AsgHandler extends Handler {
 
@@ -31,7 +38,7 @@ class AsgHandler extends Handler {
     public String getCommand() { return "ASG"; }
 
     @Override
-    public void handle(final HandlerPacket hp) {
+    public void handle(final HandlerPacket hp) throws ExecStoppedException {
         if (cleanOptions(hp)) {
             postSyntaxError(hp);
             return;
@@ -84,7 +91,7 @@ class AsgHandler extends Handler {
 
     private void handleAbsolute(final HandlerPacket hp,
                                 final FileSpecification fs,
-                                final String unitName) {
+                                final String unitName) throws ExecStoppedException {
         // Find the device or channel corresponding to unitName
         var nodeInfo = Exec.getInstance().getFacilitiesManager().getNodeInfo(unitName);
         if (nodeInfo == null) {
@@ -138,7 +145,7 @@ class AsgHandler extends Handler {
 
     private void handleAbsoluteDevice(final HandlerPacket hp,
                                       final FileSpecification fs,
-                                      final NodeInfo nodeInfo) {
+                                      final NodeInfo nodeInfo) throws ExecStoppedException {
         var device = (Device)nodeInfo.getNode();
         if (device.getDeviceType() == DeviceType.DiskDevice) {
             handleAbsoluteDiskDevice(hp, fs, nodeInfo, (DiskDevice) device);
@@ -172,13 +179,7 @@ class AsgHandler extends Handler {
     private void handleAbsoluteDiskDevice(final HandlerPacket hp,
                                           final FileSpecification fs,
                                           final NodeInfo nodeInfo,
-                                          final DiskDevice device) {
-        if (nodeInfo.getNodeStatus() != NodeStatus.Reserved) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.UnitIsNotReserved, new String[]{ device.getNodeName() });
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
-            return;
-        }
-
+                                          final DiskDevice device) throws ExecStoppedException {
         long allowed = Word36.H_OPTION | Word36.I_OPTION | Word36.T_OPTION | Word36.Z_OPTION;
         if (!checkIllegalOptions(hp, allowed)) {
             return;
@@ -209,6 +210,7 @@ class AsgHandler extends Handler {
         var iOpt = (hp._optionWord & Word36.I_OPTION) != 0;
         var zOpt = (hp._optionWord & Word36.Z_OPTION) != 0;
         Exec.getInstance().getFacilitiesManager().assignDiskUnitToRun(hp._runControlEntry,
+                                                                      fs,
                                                                       device.getNodeIdentifier(),
                                                                       packName,
                                                                       iOpt,

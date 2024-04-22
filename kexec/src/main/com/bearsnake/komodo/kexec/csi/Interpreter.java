@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Parser;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.RunControlEntry;
 import com.bearsnake.komodo.kexec.exec.TIPRunControlEntry;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
@@ -56,7 +57,7 @@ public class Interpreter {
         final RunControlEntry runControlEntry,
         final StatementSource source,
         final ParsedStatement statement
-    ) {
+    ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "HandleControlStatement [%s]", runControlEntry.getRunId());
         var hp = new HandlerPacket(runControlEntry, source, statement);
         var handler = HANDLERS.get(statement._mnemonic);

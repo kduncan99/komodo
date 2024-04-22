@@ -34,6 +34,7 @@ public enum FacStatusCode {
     // Errors
     MnemonicIsNotConfigured(0201033),
     UnitNameIsNotConfigured(0201133),
+    OperatorDoesNotAllowAbsoluteAssign(0201333),
     IllegalOptionCombination(0201433),
     IllegalOption(0201533),
     UnitIsNotReserved(02031330),
