@@ -236,6 +236,7 @@ public class FacilitiesManager implements Manager {
             }
         }
 
+        // TODO the bit from here to TODO - END ... can it be extracted into a core function?
         var msg = String.format("Load %s %s %s",
                                 packName,
                                 disk.getNodeName(),
@@ -251,6 +252,8 @@ public class FacilitiesManager implements Manager {
             } catch (InterruptedException ex) {
                 // do nothing
             }
+
+            // Service message every {n} minutes
         }
 
         // compare pack names - if there is a mismatch, consult the operator.
@@ -269,6 +272,7 @@ public class FacilitiesManager implements Manager {
                 return false;
             }
         }
+        // TODO - END
 
         return true;
     }
