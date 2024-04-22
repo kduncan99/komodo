@@ -115,49 +115,6 @@ public abstract class RunControlEntry {
         }
     }
 
-    /**
-     * Searches for facilities item which is an exact match on the given file specification.
-     * There must be an exact match on qualifier and filename.
-     * If there is no file cycle spec in the file specification, the facilities item must have:
-     *      no absolute or relative file cycle (is this possible?)
-     *      or an absolute file cycle of zero
-     *      or a relative file cycle of zero
-     * If there is an absolute file cycle spec in the file specification, the facilities item must have
-     * a matching absolute file cycle.
-     * If there is a relative file cycle spec in the file specification, the facilities item must have
-     * a matching relative file cycle.
-     * This is used for (but maybe not exclusively for) checking whether a particular potential
-     * temporary file assignment refers to a pre-existing entry in the facitem list.
-     */
-    public FacilitiesItem getExactFacilitiesItem(
-        final FileSpecification fileSpecification
-    ) {
-        // TODO
-//        var filename = fileSpecification.getFilename();
-//        var qualifier = fileSpecification.getQualifier();
-//        var cycleSpec = fileSpecification.getFileCycleSpecification();
-//        for (var fi : _facilitiesItems) {
-//            if (fi.getQualifier().equals(qualifier) && (fi.getFilename().equals(filename))) {
-//                if (cycleSpec == null) {
-//                    if (!fi.hasAbsoluteCycle() && !fi.hasRelativeCycle()) {
-//                        return fi;
-//                    }
-//                    if (fi.hasAbsoluteCycle() && fi.getAbsoluteCycle() == 0) {
-//                        return fi;
-//                    } else if (fi.hasRelativeCycle() && fi.getRelativeCycle() == 0) {
-//                        return fi;
-//                    }
-//                } else if (fi.hasAbsoluteCycle() && cycleSpec.isAbsolute() && fi.getAbsoluteCycle() == cycleSpec.getCycle()) {
-//                    return fi;
-//                } else if (fi.hasRelativeCycle() && cycleSpec.isRelative() && fi.getRelativeCycle() == cycleSpec.getCycle()) {
-//                    return fi;
-//                }
-//            }
-//        }
-
-        return null;
-    }
-
     public void postContingency(final int contingencyType,
                                 final int errorType,
                                 final int errorCode) {

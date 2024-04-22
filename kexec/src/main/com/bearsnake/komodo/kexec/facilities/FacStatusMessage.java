@@ -80,6 +80,8 @@ public class FacStatusMessage {
         putError(FacStatusCode.AssignMnemonicMustBeWordAddressable, "Assign mnemonic must be word addressable.");
         putError(FacStatusCode.AssignMnemonicTooLong, "Assign mnemonic cannot be longer than 6 characters.");
         putError(FacStatusCode.AttemptToChangeGenericType, "Attempt to change generic type of the file.");
+        putError(FacStatusCode.DeviceAlreadyInUse, "Device %s already in use by this run.");
+        putError(FacStatusCode.DeviceIsFixed, "Device %s is fixed.");
         putError(FacStatusCode.DirectoryAndQualifierMayNotAppear, "Directory id and qualifier may not appear on image when R option is used.");
         putError(FacStatusCode.DirectoryOrQualifierMustAppear, "Directory id or qualifier must appear on image.");
         putError(FacStatusCode.FileAlreadyCataloged, "File is already catalogued.");
@@ -99,6 +101,7 @@ public class FacStatusMessage {
         putError(FacStatusCode.HoldForDevCURejected, "Hold for *DEV/CU rejected because of Z option.");
         putError(FacStatusCode.HoldForFCycleConflictRejected, "Hold for F-cycle conflict rejected because of Z option.");
         putError(FacStatusCode.HoldForMassStorageSpaceRejected, "Hold for mass storage space rejected because of Z option.");
+        putError(FacStatusCode.IllegalAttemptToChangeAssignmentType, "Illegal attempt to change assignment type.");
         putError(FacStatusCode.IllegalControlStatement, "Illegal control statement type submitted to ER CSI$.");
         putError(FacStatusCode.IllegalDroppingPrivateFile, "Creation of file would require illegal dropping of private file.");
         putError(FacStatusCode.IllegalInitialReserve, "Illegal value specified for initial reserve.");

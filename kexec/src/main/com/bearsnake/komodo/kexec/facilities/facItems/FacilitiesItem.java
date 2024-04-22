@@ -16,6 +16,7 @@ public abstract class FacilitiesItem {
     private boolean _isTemporary;
     private String _qualifier;
     private Integer _relativeCycle;
+    private boolean _releaseOnTaskEnd;
 
     public void dump(
         final PrintStream out,
@@ -41,6 +42,7 @@ public abstract class FacilitiesItem {
     public final Collection<String> getInternalNames() { return new HashSet<>(_internalNames); }
     public final int getRelativeCycle() { return _relativeCycle; }
     public final String getQualifier() { return _qualifier; }
+    public final boolean getReleaseOnTaskEnd() { return _releaseOnTaskEnd; }
     public final boolean isTemporary() { return _isTemporary; }
 
     public final FacilitiesItem setAbsoluteCycle(final int cycle) { _absoluteCycle = cycle; return this; }
@@ -48,6 +50,7 @@ public abstract class FacilitiesItem {
     public final FacilitiesItem setIsTemporary(final boolean value) { _isTemporary = value; return this; }
     public final FacilitiesItem setQualifier(final String qualifier) { _qualifier = qualifier; return this; }
     public final FacilitiesItem setRelativeCycle(final int cycle) { _relativeCycle = cycle; return this; }
+    public final FacilitiesItem setReleaseOnTaskEnd(final boolean value) { _releaseOnTaskEnd = value; return this; }
 
     public final boolean hasAbsoluteCycle() { return _absoluteCycle != null; }
     public final boolean hasInternalNames() { return !_internalNames.isEmpty(); }

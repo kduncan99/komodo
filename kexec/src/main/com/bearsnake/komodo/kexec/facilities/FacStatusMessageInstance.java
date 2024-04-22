@@ -30,6 +30,6 @@ public class FacStatusMessageInstance {
     public String toString() {
         var fsMsg = FacStatusMessages.get(_code);
         var text = String.format(fsMsg.getTemplate(), _parameters);
-        return String.format("%s%06o%s", fsMsg.getCategory().toString(), fsMsg.getCode()._value, text);
+        return String.format("%s:%06o %s", fsMsg.getCategory().toString(), fsMsg.getCode()._value, text);
     }
 }

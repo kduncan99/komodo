@@ -6,19 +6,29 @@ package com.bearsnake.komodo.kexec.facilities;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 
+import javax.print.DocFlavor;
+
 public class PackInfo implements MediaInfo {
 
-    long       _directoryTrackId;
-    boolean    _isFixed;
-    boolean    _isPrepped;
-    boolean    _isRemovable;
-    ArraySlice _label;
-    String     _packName;
-    int        _prepFactor;
-    long       _trackCount;
+    private long       _directoryTrackId;
+    private boolean    _isFixed;
+    private boolean    _isPrepped;
+    private boolean    _isRemovable;
+    private ArraySlice _label;
+    private String     _packName;
+    private int        _prepFactor;
+    private long       _trackCount;
 
     public PackInfo() {}
 
+    public long getDirectoryTrackId() { return _directoryTrackId; }
+    public ArraySlice getLabel() { return _label; }
+    public String getPackName() { return _packName; }
+    public int getPrepFactor() { return _prepFactor; }
+    public long getTrackCount() { return _trackCount; }
+    public boolean isFixed() { return _isFixed; }
+    public boolean isPrepped() { return _isPrepped; }
+    public boolean isRemovable() { return _isRemovable; }
     public PackInfo setDirectoryTrackId(long value) { _directoryTrackId = value; return this; }
     public PackInfo setIsFixed(boolean value) { _isFixed = value; return this; }
     public PackInfo setIsPrepped(boolean value) { _isPrepped = value; return this; }

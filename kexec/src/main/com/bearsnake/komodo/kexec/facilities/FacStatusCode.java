@@ -32,6 +32,8 @@ public enum FacStatusCode {
     FilenameNotUnique(0120533),
 
     // Errors
+    DeviceAlreadyInUse(0200333),
+    DeviceIsFixed(0200433),
     MnemonicIsNotConfigured(0201033),
     UnitNameIsNotConfigured(0201133),
     OperatorDoesNotAllowAbsoluteAssign(0201333),
@@ -42,6 +44,7 @@ public enum FacStatusCode {
     AssignMnemonicTooLong(0240733),
     AssignMnemonicMustBeSpecifiedWithPackId(0241033),
     AssignMnemonicMustBeWordAddressable(0241133),
+    IllegalAttemptToChangeAssignmentType(0241533),
     AttemptToChangeGenericType(0241633),
     IllegalValueForFCycle(0242433),
     FileCycleOutOfRange(0242533),
