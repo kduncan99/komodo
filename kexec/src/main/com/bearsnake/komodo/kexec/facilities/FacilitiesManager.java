@@ -30,6 +30,7 @@ import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.mfd.FileAllocationSet;
 import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
+import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
@@ -81,8 +82,6 @@ public class FacilitiesManager implements Manager {
                                   final String indent,
                                   final boolean verbose) {
         out.printf("%sFacilitiesManager ********************************\n", indent);
-
-        // TODO
 
         out.printf("%s  Node Graph:\n", indent);
         var subIndent = indent + "    ";
@@ -172,7 +171,7 @@ public class FacilitiesManager implements Manager {
         }
 
         var node = nodeInfo.getNode();
-        if ((node.getNodeCategory() != NodeCategory.Device) || ((Device)node).getDeviceType() != DeviceType.DiskDevice) {
+        if ((node.getNodeCategory() != NodeCategory.Device) || ((Device) node).getDeviceType() != DeviceType.DiskDevice) {
             LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Node %012o is not a disk device", nodeIdentifier);
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
             LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
@@ -182,10 +181,10 @@ public class FacilitiesManager implements Manager {
             throw new ExecStoppedException();
         }
 
-        var disk = (DiskDevice)node;
+        var disk = (DiskDevice) node;
         if (nodeInfo.getNodeStatus() != NodeStatus.Reserved) {
-            var params = new String[]{ nodeInfo.getNode().getNodeName() };
-            fsResult.postMessage(FacStatusCode.UnitIsNotReserved, params );
+            var params = new String[]{nodeInfo.getNode().getNodeName()};
+            fsResult.postMessage(FacStatusCode.UnitIsNotReserved, params);
             fsResult.mergeStatusBits(0_600000_000000L);
             LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
                                 runControlEntry.getRunId(),
@@ -233,7 +232,7 @@ public class FacilitiesManager implements Manager {
 
                 if (fi instanceof AbsoluteDiskItem adi) {
                     if (adi._node == node) {
-                        var params = new String[]{ node.getNodeName() };
+                        var params = new String[]{node.getNodeName()};
                         fsResult.postMessage(FacStatusCode.DeviceAlreadyInUse, params);
                         fsResult.mergeStatusBits(0_400000_000000L);
                         return false;
@@ -256,48 +255,54 @@ public class FacilitiesManager implements Manager {
         // Wait for the unit if necessary...
         var startTime = Instant.now();
         var nextMessageTime = startTime.plusSeconds(120);
-        if (!doNotHoldRun) {
-            while (true) {
-                if (!Exec.getInstance().isRunning()) {
-                    throw new ExecStoppedException();
+        while (true) {
+            if (!Exec.getInstance().isRunning()) {
+                throw new ExecStoppedException();
+            }
+            runControlEntry.incrementWaitingForPeripheral();
+            synchronized (nodeInfo) {
+                if (nodeInfo.getAssignedTo() == null) {
+                    nodeInfo.setAssignedTo(runControlEntry);
+                    facItem.setIsAssigned(true);
+                    runControlEntry.decrementWaitingForPeripheral();
+                    break;
                 }
-                runControlEntry.incrementWaitingForPeripheral();
-                synchronized (nodeInfo) {
-                    if (nodeInfo.getAssignedTo() == null) {
-                        nodeInfo.setAssignedTo(runControlEntry);
-                        facItem.setIsAssigned(true);
-                        runControlEntry.decrementWaitingForPeripheral();
-                        break;
-                    }
-                }
+            }
 
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    // do nothing
-                }
+            if (!doNotHoldRun) {
+                break;
+            }
 
-                var now = Instant.now();
-                if (now.isAfter(nextMessageTime)) {
-                    nextMessageTime = nextMessageTime.plusSeconds(120);
-                    if (!runControlEntry.hasTask()
-                        && ((runControlEntry.getRunType() == RunType.Batch) || (runControlEntry.getRunType() == RunType.Demand))) {
-                        long minutes = Duration.between(now, startTime).getSeconds() / 60;
-                        var params = new Object[]{runControlEntry.getRunId(), minutes};
-                        var facMsg = new FacStatusMessageInstance(FacStatusCode.RunHeldForDiskUnitAvailability, params);
-                        runControlEntry.postToPrint(facMsg.toString(), 1);
-                    }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                // do nothing
+            }
+
+            var now = Instant.now();
+            if (now.isAfter(nextMessageTime)) {
+                nextMessageTime = nextMessageTime.plusSeconds(120);
+                if (!runControlEntry.hasTask()
+                    && ((runControlEntry.getRunType() == RunType.Batch) || (runControlEntry.getRunType() == RunType.Demand))) {
+                    long minutes = Duration.between(now, startTime).getSeconds() / 60;
+                    var params = new Object[]{runControlEntry.getRunId(), minutes};
+                    var facMsg = new FacStatusMessageInstance(FacStatusCode.RunHeldForDiskUnitAvailability, params);
+                    runControlEntry.postToPrint(facMsg.toString(), 1);
                 }
             }
         }
 
         if (!facItem.isAssigned()) {
+            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun promptLoadPack returns false");
             // z-option bail-out
+            facItems.removeFacilitiesItem(facItem);
             fsResult.postMessage(FacStatusCode.HoldForDiskUnitRejected);
             fsResult.mergeStatusBits(0_400001_000000L);
+            return false;
         }
 
         if (!promptLoadPack(runControlEntry, nodeInfo, disk, packName)) {
+            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun promptLoadPack returns false");
             facItems.removeFacilitiesItem(facItem);
             nodeInfo.setAssignedTo(null);
             var params = new String[]{packName};
@@ -310,8 +315,10 @@ public class FacilitiesManager implements Manager {
             return false;
         }
 
-        var packInfo = (PackInfo)nodeInfo.getMediaInfo();
-        if (packInfo.isFixed()) {
+        var packInfo = (PackInfo) nodeInfo.getMediaInfo();
+        // TODO do we really want to restrict from using fixed here?
+        if (packInfo.isFixed() && (runControlEntry.getRunType() != RunType.Exec)) {
+            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun pack is fixed");
             facItems.removeFacilitiesItem(facItem);
             nodeInfo.setAssignedTo(null);
             var params = new String[]{packName};
@@ -563,6 +570,9 @@ public class FacilitiesManager implements Manager {
      */
     PackInfo loadDiskPackInfo(final DeviceNodeInfo nodeInfo,
                               final ArraySlice label) {
+        LogManager.logTrace(LOG_SOURCE, "loadDiskPackInfo for %s", nodeInfo.getNode().getNodeName());
+        label.logMultiFormat(Level.Trace, LOG_SOURCE, "raw disk label");
+
         var pi = new PackInfo().setLabel(label);
 
         if (!Word36.toStringFromASCII(label._array[0]).equals("VOL1")) {
@@ -574,6 +584,10 @@ public class FacilitiesManager implements Manager {
         var packName = Word36.toStringFromASCII(label._array[1]) + Word36.toStringFromASCII(label._array[2]);
         packName = packName.substring(0, 6).trim();
         if (!Exec.isValidPackName(packName)) {
+            LogManager.logWarning(LOG_SOURCE,
+                                  "%s Invalid pack name '%s'",
+                                  nodeInfo.getNode().getNodeName(),
+                                  packName);
             var msg = String.format("Pack on %s has an invalid pack name", nodeInfo.getNode().getNodeName());
             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
             return pi;
@@ -699,7 +713,7 @@ public class FacilitiesManager implements Manager {
             var candidates = new String[]{ "Y", "N" };
             var msg = String.format("Allow %s as substitute pack on %s YN?", currentPackName, nodeInfo.getNode().getNodeName());
             var response = Exec.getInstance().sendExecRestrictedReadReplyMessage(msg, candidates, null);
-            return response.equals("Y");
+            return response.equalsIgnoreCase("Y");
         }
 
         return true;

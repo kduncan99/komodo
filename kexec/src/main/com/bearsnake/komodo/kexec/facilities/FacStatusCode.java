@@ -39,7 +39,7 @@ public enum FacStatusCode {
     OperatorDoesNotAllowAbsoluteAssign(0201333),
     IllegalOptionCombination(0201433),
     IllegalOption(0201533),
-    UnitIsNotReserved(02031330),
+    UnitIsNotReserved(0203133),
     UnitIsNotUpOrReserved(0203333),
     AssignMnemonicTooLong(0240733),
     AssignMnemonicMustBeSpecifiedWithPackId(0241033),

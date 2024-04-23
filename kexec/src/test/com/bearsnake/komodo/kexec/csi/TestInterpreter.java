@@ -35,7 +35,7 @@ public class TestInterpreter {
     public void testEmpty() {
         var text = "@ . comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertNull(ps._mnemonic);
         assertNull(ps._label);
@@ -45,14 +45,14 @@ public class TestInterpreter {
         assertFalse(ps._facStatusResult.hasErrorMessages());
         assertFalse(ps._facStatusResult.hasInfoMessages());
         assertFalse(ps._facStatusResult.hasWarningMessages());
-        assertEquals(0, ps._resultCode);
+        assertEquals(0, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testEmptyWithLabel() {
         var text = "@label: . comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertNull(ps._mnemonic);
         assertEquals("LABEL", ps._label);
@@ -62,34 +62,34 @@ public class TestInterpreter {
         assertFalse(ps._facStatusResult.hasErrorMessages());
         assertFalse(ps._facStatusResult.hasInfoMessages());
         assertFalse(ps._facStatusResult.hasWarningMessages());
-        assertEquals(0, ps._resultCode);
+        assertEquals(0, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testEmptyWithInvalidLabel1() {
         var text = "@labe$l: . comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertTrue(ps._facStatusResult.hasErrorMessages());
-        assertEquals(0_400000_000000L, ps._resultCode);
+        assertEquals(0_400000_000000L, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testEmptyWithInvalidLabel2() {
         var text = "@veryLongLabel: . comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertTrue(ps._facStatusResult.hasErrorMessages());
-        assertEquals(0_400000_000000L, ps._resultCode);
+        assertEquals(0_400000_000000L, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testEmptyWithSimpleMnemonic() {
         var text = "@test . comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertEquals("TEST", ps._mnemonic);
         assertNull(ps._label);
@@ -99,34 +99,34 @@ public class TestInterpreter {
         assertFalse(ps._facStatusResult.hasErrorMessages());
         assertFalse(ps._facStatusResult.hasInfoMessages());
         assertFalse(ps._facStatusResult.hasWarningMessages());
-        assertEquals(0, ps._resultCode);
+        assertEquals(0, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testEmptyWithInvalidMnemonic1() {
         var text = "@labe$l . comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertTrue(ps._facStatusResult.hasErrorMessages());
-        assertEquals(0_400000_000000L, ps._resultCode);
+        assertEquals(0_400000_000000L, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testEmptyWithInvalidMnemonic2() {
         var text = "@veryLongMnemonic . comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertTrue(ps._facStatusResult.hasErrorMessages());
-        assertEquals(0_400000_000000L, ps._resultCode);
+        assertEquals(0_400000_000000L, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testEmptyWithLabelAndMnemonic() {
         var text = "@label: test . comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertEquals("TEST", ps._mnemonic);
         assertEquals("LABEL", ps._label);
@@ -136,14 +136,14 @@ public class TestInterpreter {
         assertFalse(ps._facStatusResult.hasErrorMessages());
         assertFalse(ps._facStatusResult.hasInfoMessages());
         assertFalse(ps._facStatusResult.hasWarningMessages());
-        assertEquals(0, ps._resultCode);
+        assertEquals(0, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testLog() {
         var text = "@label: log   This is a funny frog . comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertEquals("LOG", ps._mnemonic);
         assertEquals("LABEL", ps._label);
@@ -155,14 +155,14 @@ public class TestInterpreter {
         assertFalse(ps._facStatusResult.hasErrorMessages());
         assertFalse(ps._facStatusResult.hasInfoMessages());
         assertFalse(ps._facStatusResult.hasWarningMessages());
-        assertEquals(0, ps._resultCode);
+        assertEquals(0, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testOptions() {
         var text = "@foo,opt1///opt2/opt3";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertEquals("FOO", ps._mnemonic);
         assertNull(ps._label);
@@ -177,14 +177,14 @@ public class TestInterpreter {
         assertFalse(ps._facStatusResult.hasErrorMessages());
         assertFalse(ps._facStatusResult.hasInfoMessages());
         assertFalse(ps._facStatusResult.hasWarningMessages());
-        assertEquals(0, ps._resultCode);
+        assertEquals(0, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testAsg() {
         var text = "@asg qual*file(3)/read/write, , a/  bbb/  cat . comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertEquals("ASG", ps._mnemonic);
         assertNull(ps._label);
@@ -201,14 +201,14 @@ public class TestInterpreter {
         assertFalse(ps._facStatusResult.hasErrorMessages());
         assertFalse(ps._facStatusResult.hasInfoMessages());
         assertFalse(ps._facStatusResult.hasWarningMessages());
-        assertEquals(0, ps._resultCode);
+        assertEquals(0, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testCat() {
         var text = "@cat,pg qual*file(3)/read/write, , a/  bbb/  cat comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertEquals("CAT", ps._mnemonic);
         assertNull(ps._label);
@@ -225,14 +225,14 @@ public class TestInterpreter {
         assertFalse(ps._facStatusResult.hasErrorMessages());
         assertFalse(ps._facStatusResult.hasInfoMessages());
         assertFalse(ps._facStatusResult.hasWarningMessages());
-        assertEquals(0, ps._resultCode);
+        assertEquals(0, ps._facStatusResult.getStatusWord());
     }
 
     @Test
     public void testNormal() {
         var text = "@normal,pg qual*file(3)/read/write, , a/  bbb/  cat comment";
         var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump();
+        ps._facStatusResult.dump(System.out, "");
 
         assertEquals("NORMAL", ps._mnemonic);
         assertNull(ps._label);
@@ -251,6 +251,6 @@ public class TestInterpreter {
         assertFalse(ps._facStatusResult.hasErrorMessages());
         assertFalse(ps._facStatusResult.hasInfoMessages());
         assertFalse(ps._facStatusResult.hasWarningMessages());
-        assertEquals(0, ps._resultCode);
+        assertEquals(0, ps._facStatusResult.getStatusWord());
     }
 }

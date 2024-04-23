@@ -74,4 +74,9 @@ public class FacStatusResult {
         _errors.forEach(s -> out.printf("%s%s\n", indent, s.toString()));
         System.out.printf("%sCode:%012o\n", indent, _statusWord);
     }
+
+    @Override
+    public String toString() {
+        return String.format("%012o", _statusWord);
+    }
 }

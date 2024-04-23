@@ -187,7 +187,7 @@ public class Exec {
         }
     }
 
-    public String dump(final boolean verbose) {
+    public String dump(boolean verbose) {
         var dateTime = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
         String dtStr = dateTime.format(formatter);
@@ -290,6 +290,16 @@ public class Exec {
         return true;
     }
 
+    public static boolean isValidPrepFactor(int value) {
+        return (value == 28)
+               || (value == 56)
+               || (value == 112)
+               || (value == 224)
+               || (value == 448)
+               || (value == 896)
+               || (value == 1792);
+    }
+
     public static boolean isValidReadWriteKey(final String key) {
         if (key.isEmpty() || key.length() > 6) {
             return false;
@@ -306,15 +316,6 @@ public class Exec {
         }
 
         return true;
-    }
-
-    public static boolean isValidPrepFactor(int value) {
-        return (value == 28)
-            || (value == 56)
-            || (value == 112)
-            || (value == 224)
-            || (value == 448)
-            || (value == 1792);
     }
 
     public static boolean isValidQualifier(final String qualifier) {

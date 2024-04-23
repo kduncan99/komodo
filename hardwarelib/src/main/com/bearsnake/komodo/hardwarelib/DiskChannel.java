@@ -108,17 +108,16 @@ public class DiskChannel extends Channel {
             var buffer = ioPkt.getBuffer();
             int remaining = cw.getTransferCount();
             while (remaining > 0) {
-                long w0 = (long)(buffer.get(bx++)) << 28
-                    | (long)(buffer.get(bx++)) << 20
-                    | (long)(buffer.get(bx++)) << 12
-                    | (long)(buffer.get(bx++)) << 4
-                    | (long)(buffer.get(bx) >> 4);
-                long w1 = ((long)(buffer.get(bx++) & 0x0F) << 32)
-                    | (long)(buffer.get(bx++)) << 24
-                    | (long)(buffer.get(bx++)) << 16
-                    | (long)(buffer.get(bx++)) << 8
-                    | (long)(buffer.get(bx++));
-
+                long w0 = ((long)(buffer.get(bx++)) & 0xff) << 28
+                    | ((long)(buffer.get(bx++)) & 0xff) << 20
+                    | ((long)(buffer.get(bx++)) & 0xff) << 12
+                    | ((long)(buffer.get(bx++)) & 0xff) << 4
+                    | (long)(buffer.get(bx) >> 4) & 0x0F;
+                long w1 = (((long)(buffer.get(bx++)) & 0x0F) << 32)
+                    | ((long)(buffer.get(bx++)) & 0xff) << 24
+                    | ((long)(buffer.get(bx++)) & 0xff) << 16
+                    | ((long)(buffer.get(bx++)) & 0xff) << 8
+                    | ((long)(buffer.get(bx++)) & 0xff);
                 cw.getBuffer()._array[wx] = w0;
                 wx += increment;
                 cw.getBuffer()._array[wx] = w1;
@@ -219,10 +218,10 @@ public class DiskChannel extends Channel {
                 buffer.put(bx++, (byte)(w0 >> 4));
                 var b = (byte)((byte)(w0 << 4) | (byte)(w1 >> 32));
                 buffer.put(bx++, b);
-                buffer.put(bx++, (byte)(w1 >> 32));
                 buffer.put(bx++, (byte)(w1 >> 24));
                 buffer.put(bx++, (byte)(w1 >> 16));
                 buffer.put(bx++, (byte)(w1 >> 8));
+                buffer.put(bx++, (byte)(w1));
 
                 if (bx % 128 == 126) {
                     bx += 2;

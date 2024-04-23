@@ -8,7 +8,6 @@ import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.FacilitiesItemTable;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.tasks.Task;
-import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
 
 import java.io.PrintStream;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -98,7 +97,7 @@ public abstract class RunControlEntry {
             // TODO privileges
 
             out.printf("%s  Facility Items:\n", indent);
-            // TODO facItems
+            _facilitiesItems.dump(out, indent + "    ", verbose);
         }
     }
 

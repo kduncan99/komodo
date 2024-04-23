@@ -6,8 +6,6 @@ package com.bearsnake.komodo.kexec.facilities;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 
-import javax.print.DocFlavor;
-
 public class PackInfo implements MediaInfo {
 
     private long       _directoryTrackId;

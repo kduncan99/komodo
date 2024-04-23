@@ -275,17 +275,12 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
 
         label[3] = firstDirectoryTrackAddress;
 
-        Word36 w36 = new Word36();
-
         var recordsPerTrack = (long)(1792 / prepFactor);
-        w36.setH1(recordsPerTrack);
-        w36.setH2(prepFactor);
-        label[4] = w36.getW();
+        label[4] = Word36.setH1(label[4], recordsPerTrack);
+        label[4] = Word36.setH2(label[4], prepFactor);
 
-        w36.setW(0);
-        w36.setS1(040);
-        w36.setS2(1);
-        label[014] = w36.getW();
+        label[014] = Word36.setS1(label[014], 040);
+        label[014] = Word36.setS2(label[014], 1);
 
         label[016] = capacity;
 

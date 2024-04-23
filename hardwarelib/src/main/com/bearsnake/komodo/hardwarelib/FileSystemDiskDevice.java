@@ -127,6 +127,7 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         try {
             var path = FileSystems.getDefault().getPath(packet.getMountInfo().getFileName());
+            System.out.printf("path:%s\n", path);
             if (packet.getMountInfo().getWriteProtected()) {
                 _channel = FileChannel.open(path, CREATE, READ);
             } else {
@@ -167,6 +168,7 @@ public class FileSystemDiskDevice extends DiskDevice {
         try {
             var bytes = _channel.read(buffer, packet.getBlockId() * BLOCK_SIZE);
             if (bytes != transferSize) {
+                LogManager.logError(_nodeName, "Error - wanted %d bytes, got %d", transferSize, bytes);
                 packet.setStatus(IoStatus.SystemError);
                 return;
             }

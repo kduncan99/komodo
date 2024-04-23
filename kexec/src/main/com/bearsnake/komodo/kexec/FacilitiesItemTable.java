@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec;
 
 import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
 
+import java.io.PrintStream;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class FacilitiesItemTable {
@@ -15,6 +16,14 @@ public class FacilitiesItemTable {
     public void addFacilitiesItem(final FacilitiesItem facItem) { _content.add(facItem); }
     public ConcurrentLinkedQueue<FacilitiesItem> getFacilitiesItems() { return _content; }
     public void removeFacilitiesItem(final FacilitiesItem facItem) { _content.remove(facItem); }
+
+    public void dump(final PrintStream out,
+                     final String indent,
+                     final boolean verbose) {
+        for (var fi : _content) {
+            fi.dump(out, indent + "  ");
+        }
+    }
 
     /**
      * Searches for facilities item which is an exact match on the given file specification.

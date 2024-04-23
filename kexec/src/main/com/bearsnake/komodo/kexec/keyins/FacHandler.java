@@ -39,20 +39,22 @@ public abstract class FacHandler extends KeyinHandler {
         }
 
         var sb = new StringBuilder();
-        var components = 0;
         for (var str : componentStrings) {
-            if (((str.length() > 30) && (components > 0)) || (components == 2)) {
-                Exec.getInstance().sendExecReadOnlyMessage(sb.toString(), _source);
-                sb.setLength(0);
-                components = 0;
-            }
-
-            if (components > 0) {
-                sb.append(String.format("%-30s", str));
+            if (str.length() > 20) {
+                if (!sb.isEmpty()) {
+                    Exec.getInstance().sendExecReadOnlyMessage(sb.toString(), _source);
+                    sb.setLength(0);
+                }
+                Exec.getInstance().sendExecReadOnlyMessage(str, _source);
             } else {
-                sb.append(str);
+                if (sb.isEmpty()) {
+                    sb.append(String.format("%-20s", str));
+                } else {
+                    sb.append(str);
+                    Exec.getInstance().sendExecReadOnlyMessage(sb.toString(), _source);
+                    sb.setLength(0);
+                }
             }
-            components++;
         }
 
         if (!sb.isEmpty()) {
