@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.exec;
 
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.Configuration;
+import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
@@ -13,8 +14,10 @@ import com.bearsnake.komodo.kexec.consoles.ReadOnlyMessage;
 import com.bearsnake.komodo.kexec.consoles.ReadReplyMessage;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
+import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
+import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -124,6 +127,20 @@ public class Exec {
         }
 
         _facilitiesManager.startup();
+
+        // temporary TODO
+        var fSpec = new FileSpecification("SYS$", "UNIT$DISK0", null, null, null);
+        var ni = _facilitiesManager.getNodeInfo("DISK0");
+        var fsResult = new FacStatusResult();
+        _facilitiesManager.assignDiskUnitToRun(_runControlEntry,
+                                               fSpec,
+                                               ni.getNode().getNodeIdentifier(),
+                                               "FLOPSY",
+                                               false,
+                                               true,
+                                               fsResult);
+        fsResult.log(Level.Debug, LOG_SOURCE);
+        // end temporary TODO
 
         if (!isJumpKeySet(9) && !isJumpKeySet(13)) {
             // TODO populate rce's with entries from backlog and SMOQUE

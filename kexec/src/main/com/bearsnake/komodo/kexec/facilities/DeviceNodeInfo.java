@@ -25,6 +25,9 @@ public class DeviceNodeInfo extends NodeInfo {
 
     @Override
     public String toString() {
-        return String.format("%s %s %s", _node.toString(), _nodeStatus, _mediaInfo == null ? "" : _mediaInfo.toString());
+        return String.format("%s %s %s",
+                             getNode().toString(),
+                             getNodeStatus(),
+                             _mediaInfo == null ? "" : _mediaInfo.toString());
     }
 }

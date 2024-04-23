@@ -18,8 +18,8 @@ public class ChannelNodeInfo extends NodeInfo {
     @Override
     public String toString() {
         return String.format("%s %s %s",
-                             _node.toString(),
-                             _nodeStatus,
-                             _mediaInfo == null ? "" : _mediaInfo.toString());
+                             getNode().toString(),
+                             getNodeStatus(),
+                             getMediaInfo() == null ? "" : getMediaInfo().toString());
     }
 }

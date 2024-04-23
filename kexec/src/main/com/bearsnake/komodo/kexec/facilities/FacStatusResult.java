@@ -4,6 +4,10 @@
 
 package com.bearsnake.komodo.kexec.facilities;
 
+import com.bearsnake.komodo.logger.Level;
+import com.bearsnake.komodo.logger.LogManager;
+
+import java.io.PrintStream;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -51,9 +55,23 @@ public class FacStatusResult {
         }
     }
 
-    public void dump() {
-        _infos.stream().map(FacStatusMessageInstance::toString).forEach(System.out::println);
-        _warnings.stream().map(FacStatusMessageInstance::toString).forEach(System.out::println);
-        _errors.stream().map(FacStatusMessageInstance::toString).forEach(System.out::println);
+    public void log(
+        final Level level,
+        final String source
+    ) {
+        _infos.forEach(s -> LogManager.log(level, source, "%s", s.toString()));
+        _warnings.forEach(s -> LogManager.log(level, source, "%s", s.toString()));
+        _errors.forEach(s -> LogManager.log(level, source, "%s", s.toString()));
+        LogManager.log(level, source, "%012o", _statusWord);
+    }
+
+    public void dump(
+        final PrintStream out,
+        final String indent
+    ) {
+        _infos.forEach(s -> out.printf("%s%s\n", indent, s.toString()));
+        _warnings.forEach(s -> out.printf("%s%s\n", indent, s.toString()));
+        _errors.forEach(s -> out.printf("%s%s\n", indent, s.toString()));
+        System.out.printf("%sCode:%012o\n", indent, _statusWord);
     }
 }

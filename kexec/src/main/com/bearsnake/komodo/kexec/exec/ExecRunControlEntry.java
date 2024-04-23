@@ -12,4 +12,5 @@ public class ExecRunControlEntry extends RunControlEntry {
 
     @Override public final boolean isFinished() { return false; }
     @Override public final boolean isStarted() { return true; }
+    @Override public final boolean isSuspended() { return false; }
 }

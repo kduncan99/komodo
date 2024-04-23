@@ -65,12 +65,12 @@ public class FacilitiesManager implements Manager {
 
         // update verbosity of nodes
         for (var ni : _nodeGraph.values()) {
-            ni._node.setLogIos(Exec.getInstance().getConfiguration().getLogIos());
+            ni.getNode().setLogIos(Exec.getInstance().getConfiguration().getLogIos());
         }
 
         // clear cached disk labels
         for (var ni : _nodeGraph.values()) {
-            ni._mediaInfo = null;
+            ni.setMediaInfo(null);
         }
 
         LogManager.logTrace(LOG_SOURCE, "boot complete");
@@ -112,7 +112,7 @@ public class FacilitiesManager implements Manager {
         // set up routes
         for (var ni : _nodeGraph.values()) {
             if (ni instanceof ChannelNodeInfo) {
-                var chNode = (Channel) ni._node;
+                var chNode = (Channel) ni.getNode();
                 for (var devNode : chNode.getDevices()) {
                     var dni = (DeviceNodeInfo) _nodeGraph.get(devNode.getNodeIdentifier());
                     dni._routes.add(chNode);
@@ -152,10 +152,22 @@ public class FacilitiesManager implements Manager {
         final boolean doNotHoldRun,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s node:%d pack:%s I:%s Z:%s",
+                            runControlEntry.getRunId(),
+                            fileSpecification.toString(),
+                            nodeIdentifier,
+                            packName,
+                            releaseOnTaskEnd,
+                            doNotHoldRun);
+
         var nodeInfo = _nodeGraph.get(nodeIdentifier);
         if (nodeInfo == null) {
             LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Cannot find node %012o", nodeIdentifier);
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s node:%d result:%s",
+                                runControlEntry.getRunId(),
+                                nodeIdentifier,
+                                fsResult.toString());
             throw new ExecStoppedException();
         }
 
@@ -163,6 +175,10 @@ public class FacilitiesManager implements Manager {
         if ((node.getNodeCategory() != NodeCategory.Device) || ((Device)node).getDeviceType() != DeviceType.DiskDevice) {
             LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Node %012o is not a disk device", nodeIdentifier);
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
+                                runControlEntry.getRunId(),
+                                node.getNodeName(),
+                                fsResult.toString());
             throw new ExecStoppedException();
         }
 
@@ -171,6 +187,10 @@ public class FacilitiesManager implements Manager {
             var params = new String[]{ nodeInfo.getNode().getNodeName() };
             fsResult.postMessage(FacStatusCode.UnitIsNotReserved, params );
             fsResult.mergeStatusBits(0_600000_000000L);
+            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
+                                runControlEntry.getRunId(),
+                                node.getNodeName(),
+                                fsResult.toString());
             return false;
         }
 
@@ -243,8 +263,8 @@ public class FacilitiesManager implements Manager {
                 }
                 runControlEntry.incrementWaitingForPeripheral();
                 synchronized (nodeInfo) {
-                    if (nodeInfo._assignedTo == null) {
-                        nodeInfo._assignedTo = runControlEntry;
+                    if (nodeInfo.getAssignedTo() == null) {
+                        nodeInfo.setAssignedTo(runControlEntry);
                         facItem.setIsAssigned(true);
                         runControlEntry.decrementWaitingForPeripheral();
                         break;
@@ -279,23 +299,35 @@ public class FacilitiesManager implements Manager {
 
         if (!promptLoadPack(runControlEntry, nodeInfo, disk, packName)) {
             facItems.removeFacilitiesItem(facItem);
-            nodeInfo._assignedTo = null;
+            nodeInfo.setAssignedTo(null);
             var params = new String[]{packName};
             fsResult.postMessage(FacStatusCode.OperatorDoesNotAllowAbsoluteAssign, params);
             fsResult.mergeStatusBits(0_400000_000000L);
+            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
+                                runControlEntry.getRunId(),
+                                node.getNodeName(),
+                                fsResult.toString());
             return false;
         }
 
-        var packInfo = (PackInfo)nodeInfo._mediaInfo;
+        var packInfo = (PackInfo)nodeInfo.getMediaInfo();
         if (packInfo.isFixed()) {
             facItems.removeFacilitiesItem(facItem);
-            nodeInfo._assignedTo = null;
+            nodeInfo.setAssignedTo(null);
             var params = new String[]{packName};
             fsResult.postMessage(FacStatusCode.DeviceIsFixed, params);
             fsResult.mergeStatusBits(0_400000_000000L);
+            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
+                                runControlEntry.getRunId(),
+                                node.getNodeName(),
+                                fsResult.toString());
             return false;
         }
 
+        LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
+                            runControlEntry.getRunId(),
+                            node.getNodeName(),
+                            fsResult.toString());
         return true;
     }
 
@@ -307,7 +339,7 @@ public class FacilitiesManager implements Manager {
     public NodeInfo getNodeInfo(final String nodeName) {
         return _nodeGraph.values()
                          .stream()
-                         .filter(ni -> ni._node.getNodeName().equalsIgnoreCase(nodeName))
+                         .filter(ni -> ni.getNode().getNodeName().equalsIgnoreCase(nodeName))
                          .findFirst()
                          .orElse(null);
 
@@ -321,7 +353,7 @@ public class FacilitiesManager implements Manager {
     public Collection<NodeInfo> getNodeInfos(final NodeCategory category) {
         return _nodeGraph.values()
                          .stream()
-                         .filter(ni -> ni._node.getNodeCategory() == category)
+                         .filter(ni -> ni.getNode().getNodeCategory() == category)
                          .collect(Collectors.toCollection(LinkedList::new));
     }
 
@@ -368,14 +400,14 @@ public class FacilitiesManager implements Manager {
         }
 
         var sb = new StringBuilder();
-        sb.append(ni._node.getNodeName()).append("     ").setLength(6);
-        sb.append(" ").append(ni._nodeStatus.getDisplayString());
+        sb.append(ni.getNode().getNodeName()).append("     ").setLength(6);
+        sb.append(" ").append(ni.getNodeStatus().getDisplayString());
         sb.append(isDeviceAccessible(nodeIdentifier) ? "   " : " NA");
 
-        if (ni._node instanceof DiskDevice) {
+        if (ni.getNode() instanceof DiskDevice) {
             // [[*] [R|F] PACKID pack-id]
-            sb.append(ni._assignedTo == null ? "  " : " *");
-            if (ni._mediaInfo instanceof PackInfo pi) {
+            sb.append(ni.getAssignedTo() == null ? "  " : " *");
+            if (ni.getMediaInfo() instanceof PackInfo pi) {
                 if (pi.isFixed()) {
                     sb.append(" F");
                 } else if (pi.isRemovable()) {
@@ -386,7 +418,7 @@ public class FacilitiesManager implements Manager {
 
                 sb.append(" PACKID ").append(pi.getMediaName());
             }
-        } else if (ni._node instanceof TapeDevice) {
+        } else if (ni.getNode() instanceof TapeDevice) {
             // [* RUNID run-id REEL reel [RING|NORING] [POS [*]ffff[+|-][*]bbbbbb | POS LOST]]
             // TODO
         }
@@ -405,7 +437,7 @@ public class FacilitiesManager implements Manager {
         if (ni instanceof DeviceNodeInfo dni) {
             for (var chan : dni._routes) {
                 var cni = _nodeGraph.get(chan.getNodeIdentifier());
-                if (cni != null && cni._nodeStatus == NodeStatus.Up) {
+                if (cni != null && cni.getNodeStatus() == NodeStatus.Up) {
                     return true;
                 }
             }
@@ -457,10 +489,8 @@ public class FacilitiesManager implements Manager {
                                      .setBlockId(0)
                                      .addControlWord(cw);
         for (var ni : _nodeGraph.values()) {
-            if ((ni._nodeStatus == NodeStatus.Up)
-                || (ni._nodeStatus == NodeStatus.Suspended)
-                || ni._nodeStatus == NodeStatus.Reserved) {
-                if ((ni instanceof DeviceNodeInfo dni) && (ni._node instanceof DiskDevice dd)) {
+            if ((ni.getNodeStatus() == NodeStatus.Up) || (ni.getNodeStatus() == NodeStatus.Suspended)) {
+                if ((ni instanceof DeviceNodeInfo dni) && (ni.getNode() instanceof DiskDevice dd)) {
                     try {
                         var chan = selectRoute(dd);
                         cp.setNodeIdentifier(dd.getNodeIdentifier());
@@ -473,7 +503,7 @@ public class FacilitiesManager implements Manager {
                                                dd.getNodeName(),
                                                cp.getIoStatus());
 
-                            dni._nodeStatus = NodeStatus.Down;
+                            dni.setNodeStatus(NodeStatus.Down);
                             msg = getNodeStatusString(dd.getNodeIdentifier());
                             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
                             continue;
@@ -481,7 +511,7 @@ public class FacilitiesManager implements Manager {
 
                         var pi = loadDiskPackInfo(dni, diskLabel);
                         if (!pi.isPrepped()) {
-                            dni._nodeStatus = NodeStatus.Down;
+                            dni.setNodeStatus(NodeStatus.Down);
                             var msg = getNodeStatusString(dd.getNodeIdentifier());
                             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
                         }
@@ -528,12 +558,15 @@ public class FacilitiesManager implements Manager {
         return hwTid;
     }
 
+    /**
+     * Creates and populates PackInfo based on the ArraySlice containing the label for a disk pack
+     */
     PackInfo loadDiskPackInfo(final DeviceNodeInfo nodeInfo,
                               final ArraySlice label) {
         var pi = new PackInfo().setLabel(label);
 
         if (!Word36.toStringFromASCII(label._array[0]).equals("VOL1")) {
-            var msg = String.format("Pack on %s has no label", nodeInfo._node.getNodeName());
+            var msg = String.format("Pack on %s has no label", nodeInfo.getNode().getNodeName());
             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
             return pi;
         }
@@ -541,7 +574,7 @@ public class FacilitiesManager implements Manager {
         var packName = Word36.toStringFromASCII(label._array[1]) + Word36.toStringFromASCII(label._array[2]);
         packName = packName.substring(0, 6).trim();
         if (!Exec.isValidPackName(packName)) {
-            var msg = String.format("Pack on %s has an invalid pack name", nodeInfo._node.getNodeName());
+            var msg = String.format("Pack on %s has an invalid pack name", nodeInfo.getNode().getNodeName());
             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
             return pi;
         }
@@ -551,7 +584,7 @@ public class FacilitiesManager implements Manager {
         var prepFactor = (int)Word36.getH2(label._array[4]);
         if (!Exec.isValidPrepFactor(prepFactor)) {
             var msg = String.format("Pack on %s has an invalid prep factor: %d",
-                                    nodeInfo._node.getNodeName(),
+                                    nodeInfo.getNode().getNodeName(),
                                     prepFactor);
             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
             return pi;
@@ -648,6 +681,17 @@ public class FacilitiesManager implements Manager {
             }
         }
 
+        // Read pack label
+        try {
+            var label = readPackLabel(disk);
+            if (label == null) {
+                return false;
+            }
+            nodeInfo.setMediaInfo(loadDiskPackInfo((DeviceNodeInfo)nodeInfo, label));
+        } catch (NoRouteForIOException ex) {
+            return false;
+        }
+
         // compare pack names - if there is a mismatch, consult the operator.
         // If the operator is upset about it, un-assign the unit from the run and post appropriate status.
         var currentPackName = nodeInfo.getMediaInfo().getMediaName();
@@ -659,6 +703,28 @@ public class FacilitiesManager implements Manager {
         }
 
         return true;
+    }
+
+    private ArraySlice readPackLabel(
+        final DiskDevice disk
+    ) throws NoRouteForIOException, ExecStoppedException {
+        var channel = selectRoute(disk);
+        var cw = new ChannelProgram.ControlWord().setDirection(ChannelProgram.Direction.Increment)
+                                                 .setBuffer(new ArraySlice(new long[28]))
+                                                 .setTransferCount(28);
+        var cp = new ChannelProgram().addControlWord(cw)
+                                     .setFunction(ChannelProgram.Function.Read)
+                                     .setBlockId(0)
+                                     .setNodeIdentifier(disk.getNodeIdentifier());
+        channel.routeIo(cp);
+        if (cp.getIoStatus() != IoStatus.Complete) {
+            LogManager.logError(LOG_SOURCE, "readPackLabel ioStatus=%s", cp.getIoStatus());
+            var msg = String.format("%s Cannot read pack label %s", disk.getNodeName(), cp.getIoStatus());
+            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            return null;
+        }
+
+        return cw.getBuffer();
     }
 
     private FileSpecification resolveQualifier(
@@ -691,13 +757,13 @@ public class FacilitiesManager implements Manager {
                     throw new ExecStoppedException();
                 }
 
-                if (chi._nodeStatus == NodeStatus.Up) {
-                    return (Channel) chi._node;
+                if (chi.getNodeStatus() == NodeStatus.Up) {
+                    return (Channel) chi.getNode();
                 }
             }
 
             // if we get here, there aren't any routes
-            throw new NoRouteForIOException(ni._node.getNodeIdentifier());
+            throw new NoRouteForIOException(ni.getNode().getNodeIdentifier());
         } else {
             LogManager.logFatal(LOG_SOURCE, "ni is not DeviceNodeInfo for %s", device.getNodeName());
             Exec.getInstance().stop(StopCode.FacilitiesComplex);

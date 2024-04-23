@@ -29,7 +29,6 @@ public abstract class RunControlEntry {
     protected long _cardLimit;
     protected long _pageCount;
     protected long _pageLimit;
-    protected boolean _isSuspended = false;
 
     // The following indicate how many waits are in play for mass storage (waiting on file assign or similar)
     // and for peripherals (waiting on unit assign).

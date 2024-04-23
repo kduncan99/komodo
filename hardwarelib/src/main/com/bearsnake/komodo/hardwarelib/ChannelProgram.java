@@ -31,10 +31,15 @@ public class ChannelProgram {
     }
 
     public static class ControlWord {
-        public Direction _direction = Direction.Increment;
-        public ArraySlice _buffer;
-        public int _bufferOffset;   // index into _buffer
-        public int _transferCount;  // in words
+        private Direction _direction = Direction.Increment;
+        private ArraySlice _buffer;
+        private int _bufferOffset;   // index into _buffer
+        private int _transferCount;  // in words
+
+        public final Direction getDirection() { return _direction; }
+        public final ArraySlice getBuffer() { return _buffer; }
+        public final int getBufferOffset() { return _bufferOffset; }
+        public final int getTransferCount() { return _transferCount; }
 
         public ControlWord setDirection(Direction value) { _direction = value; return this; }
         public ControlWord setBuffer(ArraySlice value) { _buffer = value; return this; }

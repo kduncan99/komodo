@@ -26,22 +26,27 @@ public class DiskChannel extends Channel {
         }
 
         for (var cw : channelProgram._controlWords) {
-            if ((cw._transferCount <= 0) || ((cw._transferCount & 0x01) != 0)) {
+            if (cw.getBuffer() == null) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
             }
 
-            if ((cw._bufferOffset < 0) || (cw._bufferOffset >= cw._buffer.getSize())) {
+            if ((cw.getTransferCount() <= 0) || ((cw.getTransferCount() & 0x01) != 0)) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
             }
 
-            if ((cw._direction == ChannelProgram.Direction.Increment)
-                && (cw._bufferOffset + cw._transferCount > cw._buffer.getSize())) {
+            if ((cw.getBufferOffset() < 0) || (cw.getBufferOffset() >= cw.getBuffer().getSize())) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
-            } else if ((cw._direction == ChannelProgram.Direction.Decrement)
-                && (cw._bufferOffset + 1 - cw._transferCount < 0)) {
+            }
+
+            if ((cw.getDirection() == ChannelProgram.Direction.Increment)
+                && (cw.getBufferOffset() + cw.getTransferCount() > cw.getBuffer().getSize())) {
+                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
+                return;
+            } else if ((cw.getDirection() == ChannelProgram.Direction.Decrement)
+                && (cw.getBufferOffset() + 1 - cw.getTransferCount() < 0)) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
             }
@@ -49,27 +54,27 @@ public class DiskChannel extends Channel {
 
         int totalWordCount = 0;
         for (var cw : channelProgram._controlWords) {
-            if ((cw._transferCount <= 0) || ((cw._transferCount & 0x01) != 0)) {
+            if ((cw.getTransferCount() <= 0) || ((cw.getTransferCount() & 0x01) != 0)) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
             }
 
-            if ((cw._bufferOffset < 0) || (cw._bufferOffset >= cw._buffer.getSize())) {
+            if ((cw.getBufferOffset() < 0) || (cw.getBufferOffset() >= cw.getBuffer().getSize())) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
             }
 
-            if ((cw._direction == ChannelProgram.Direction.Increment)
-                && (cw._bufferOffset + cw._transferCount > cw._buffer.getSize())) {
+            if ((cw.getDirection() == ChannelProgram.Direction.Increment)
+                && (cw.getBufferOffset() + cw.getTransferCount() > cw.getBuffer().getSize())) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
-            } else if ((cw._direction == ChannelProgram.Direction.Decrement)
-                && (cw._bufferOffset + 1 - cw._transferCount < 0)) {
+            } else if ((cw.getDirection() == ChannelProgram.Direction.Decrement)
+                && (cw.getBufferOffset() + 1 - cw.getTransferCount() < 0)) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
             }
 
-            totalWordCount += cw._transferCount;
+            totalWordCount += cw.getTransferCount();
         }
 
         var diskInfo = ((DiskDevice)device).getInfo();
@@ -93,15 +98,15 @@ public class DiskChannel extends Channel {
         var bx = 0;
         while (iter.hasNext()) {
             var cw = iter.next();
-            var wx = cw._bufferOffset;
-            var increment = switch(cw._direction) {
+            var wx = cw.getBufferOffset();
+            var increment = switch(cw.getDirection()) {
                 case Increment -> 1;
                 case Decrement -> -1;
                 default -> 0;
             };
 
             var buffer = ioPkt.getBuffer();
-            int remaining = cw._transferCount;
+            int remaining = cw.getTransferCount();
             while (remaining > 0) {
                 long w0 = (long)(buffer.get(bx++)) << 28
                     | (long)(buffer.get(bx++)) << 20
@@ -114,9 +119,9 @@ public class DiskChannel extends Channel {
                     | (long)(buffer.get(bx++)) << 8
                     | (long)(buffer.get(bx++));
 
-                cw._buffer._array[wx] = w0;
+                cw.getBuffer()._array[wx] = w0;
                 wx += increment;
-                cw._buffer._array[wx] = w1;
+                cw.getBuffer()._array[wx] = w1;
                 wx += increment;
 
                 if (bx % 128 == 126) {
@@ -139,27 +144,32 @@ public class DiskChannel extends Channel {
 
         int totalWordCount = 0;
         for (var cw : channelProgram._controlWords) {
-            if ((cw._transferCount <= 0) || ((cw._transferCount & 0x01) != 0)) {
+            if (cw.getBuffer() == null) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
             }
 
-            if ((cw._bufferOffset < 0) || (cw._bufferOffset >= cw._buffer.getSize())) {
+            if ((cw.getTransferCount() <= 0) || ((cw.getTransferCount() & 0x01) != 0)) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
             }
 
-            if ((cw._direction == ChannelProgram.Direction.Increment)
-                && (cw._bufferOffset + cw._transferCount > cw._buffer.getSize())) {
-                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
-                return;
-            } else if ((cw._direction == ChannelProgram.Direction.Decrement)
-                && (cw._bufferOffset + 1 - cw._transferCount < 0)) {
+            if ((cw.getBufferOffset() < 0) || (cw.getBufferOffset() >= cw.getBuffer().getSize())) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
             }
 
-            totalWordCount += cw._transferCount;
+            if ((cw.getDirection() == ChannelProgram.Direction.Increment)
+                && (cw.getBufferOffset() + cw.getTransferCount() > cw.getBuffer().getSize())) {
+                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
+                return;
+            } else if ((cw.getDirection() == ChannelProgram.Direction.Decrement)
+                && (cw.getBufferOffset() + 1 - cw.getTransferCount() < 0)) {
+                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
+                return;
+            }
+
+            totalWordCount += cw.getTransferCount();
         }
 
         var diskInfo = ((DiskDevice)device).getInfo();
@@ -189,18 +199,18 @@ public class DiskChannel extends Channel {
         var bx = 0;
         while (iter.hasNext()) {
             var cw = iter.next();
-            var wx = cw._bufferOffset;
-            var increment = switch(cw._direction) {
+            var wx = cw.getBufferOffset();
+            var increment = switch(cw.getDirection()) {
                 case Increment -> 1;
                 case Decrement -> -1;
                 default -> 0;
             };
 
-            int remaining = cw._transferCount;
+            int remaining = cw.getTransferCount();
             while (remaining > 0) {
-                long w0 = cw._buffer._array[wx];
+                long w0 = cw.getBuffer()._array[wx];
                 wx += increment;
-                long w1 = cw._buffer._array[wx];
+                long w1 = cw.getBuffer()._array[wx];
                 wx += increment;
 
                 buffer.put(bx++, (byte)(w0 >> 28));
