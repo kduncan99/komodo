@@ -12,6 +12,7 @@ import com.bearsnake.komodo.hardwarelib.Device;
 import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.hardwarelib.DiskChannel;
 import com.bearsnake.komodo.hardwarelib.DiskDevice;
+import com.bearsnake.komodo.hardwarelib.DiskInfo;
 import com.bearsnake.komodo.hardwarelib.FileSystemDiskDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemTapeDevice;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
@@ -55,6 +56,21 @@ public class FacilitiesManager implements Manager {
     public FacilitiesManager() {
         Exec.getInstance().managerRegister(this);
     }
+
+    /*
+        Console messages TODO
+        NO PATH AVAILABLE FOR DEVICE device
+        NOT ALL FIXED DEVICES RECOVERED - CONTINUE? YN
+        No usable path found to device
+        File SYS$*RLIB$ not properly catalogued
+        File SYS$*LIB$ not properly catalogued
+        File SYS$*RUN$ not properly catalogued
+        FIXED MS DEVICES = yy - CONTINUE? YN
+        FIXED MS DEVICES = yy - EXPECTED = xx - CONTINUE? YN
+        dir-id pack-id TO BECOME FIXED YN?
+            (dir-id FIXED PACK MOUNTED ON device IGNORED)
+        NO FIXED DISK CONFIGURED
+     */
 
     // -------------------------------------------------------------------------
     // Manager interface
@@ -486,41 +502,17 @@ public class FacilitiesManager implements Manager {
     public void startup() {
         LogManager.logTrace(LOG_SOURCE, "startup()");
 
+        // drop tapes
+        // TODO
+
         // read disk labels
-        var diskLabel = new ArraySlice(new long[28]);
-        var cw = new ChannelProgram.ControlWord().setBuffer(diskLabel)
-                                                 .setBufferOffset(0)
-                                                 .setTransferCount(28)
-                                                 .setDirection(ChannelProgram.Direction.Increment);
-        var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
-                                     .setBlockId(0)
-                                     .addControlWord(cw);
         for (var ni : _nodeGraph.values()) {
             if ((ni.getNodeStatus() == NodeStatus.Up) || (ni.getNodeStatus() == NodeStatus.Suspended)) {
                 if ((ni instanceof DeviceNodeInfo dni) && (ni.getNode() instanceof DiskDevice dd)) {
                     try {
-                        var chan = selectRoute(dd);
-                        cp.setNodeIdentifier(dd.getNodeIdentifier());
-                        chan.routeIo(cp);
-                        if (cp.getIoStatus() != IoStatus.Complete) {
-                            var msg = String.format("IO Error reading pack label on device %s", dd.getNodeName());
-                            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
-
-                            LogManager.logInfo(LOG_SOURCE, "IO error device %s:%s",
-                                               dd.getNodeName(),
-                                               cp.getIoStatus());
-
-                            dni.setNodeStatus(NodeStatus.Down);
-                            msg = getNodeStatusString(dd.getNodeIdentifier());
-                            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
-                            continue;
-                        }
-
-                        var pi = loadDiskPackInfo(dni, diskLabel);
-                        if (!pi.isPrepped()) {
-                            dni.setNodeStatus(NodeStatus.Down);
-                            var msg = getNodeStatusString(dd.getNodeIdentifier());
-                            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+                        var info = loadDiskPackInfo(dni);
+                        if (info != null) {
+                            ni.setMediaInfo(info);
                         }
                     } catch (ExecStoppedException ex) {
                         return;
@@ -530,8 +522,6 @@ public class FacilitiesManager implements Manager {
                 }
             }
         }
-
-        // TODO
 
         LogManager.logTrace(LOG_SOURCE, "boot complete");
     }
@@ -568,46 +558,72 @@ public class FacilitiesManager implements Manager {
     /**
      * Creates and populates PackInfo based on the ArraySlice containing the label for a disk pack
      */
-    PackInfo loadDiskPackInfo(final DeviceNodeInfo nodeInfo,
-                              final ArraySlice label) {
-        LogManager.logTrace(LOG_SOURCE, "loadDiskPackInfo for %s", nodeInfo.getNode().getNodeName());
-        label.logMultiFormat(Level.Trace, LOG_SOURCE, "raw disk label");
-
-        var pi = new PackInfo().setLabel(label);
-
-        if (!Word36.toStringFromASCII(label._array[0]).equals("VOL1")) {
-            var msg = String.format("Pack on %s has no label", nodeInfo.getNode().getNodeName());
+    PackInfo loadDiskPackInfo(
+        final NodeInfo diskNodeInfo
+    ) throws NoRouteForIOException, ExecStoppedException {
+        var diskDevice = (DiskDevice) diskNodeInfo.getNode();
+        var diskLabel = readPackLabel(diskDevice);
+        if (diskLabel == null) {
+            var msg = getNodeStatusString(diskDevice.getNodeIdentifier());
             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
-            return pi;
+            diskNodeInfo.setNodeStatus(NodeStatus.Down);
+            return null;
         }
 
-        var packName = Word36.toStringFromASCII(label._array[1]) + Word36.toStringFromASCII(label._array[2]);
-        packName = packName.substring(0, 6).trim();
-        if (!Exec.isValidPackName(packName)) {
-            LogManager.logWarning(LOG_SOURCE,
-                                  "%s Invalid pack name '%s'",
-                                  nodeInfo.getNode().getNodeName(),
-                                  packName);
-            var msg = String.format("Pack on %s has an invalid pack name", nodeInfo.getNode().getNodeName());
+        var initialDirTrack = readInitialDirectoryTrack(diskDevice, diskLabel);
+        var pi = PackInfo.loadFromLabel(diskLabel, initialDirTrack);
+        if (pi == null) {
+            var msg = String.format("Pack on %s has no label", diskDevice.getNodeName());
             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
-            return pi;
+            diskNodeInfo.setNodeStatus(NodeStatus.Down);
+            return null;
         }
 
-        pi.setPackName(packName);
+        if (!Exec.isValidPackName(pi.getPackName())) {
+            var msg = String.format("Pack on %s has an invalid pack name", diskDevice.getNodeName());
+            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            diskNodeInfo.setNodeStatus(NodeStatus.Down);
+            return null;
+        }
 
-        var prepFactor = (int)Word36.getH2(label._array[4]);
-        if (!Exec.isValidPrepFactor(prepFactor)) {
+        if (!Exec.isValidPrepFactor(pi.getPrepFactor())) {
             var msg = String.format("Pack on %s has an invalid prep factor: %d",
-                                    nodeInfo.getNode().getNodeName(),
-                                    prepFactor);
+                                    diskDevice.getNodeName(),
+                                    pi.getPrepFactor());
             Exec.getInstance().sendExecReadOnlyMessage(msg, null);
-            return pi;
+            diskNodeInfo.setNodeStatus(NodeStatus.Down);
+            return null;
         }
 
-        pi.setIsPrepped(true)
-          .setPrepFactor(prepFactor)
-          .setDirectoryTrackId(label._array[3])
-          .setTrackCount(label._array[016]);
+        if (!pi.isPrepped()) {
+            var msg = String.format("Pack on %s is not prepped", diskDevice.getNodeName());
+            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            diskNodeInfo.setNodeStatus(NodeStatus.Down);
+            return null;
+        }
+
+        var sb = new StringBuilder();
+        sb.append(pi.getPackName()).append(" on ").append(diskDevice.getNodeName()).append(" is ");
+        if (pi.isFixed()) {
+            sb.append("FIXED ");
+            if (pi.getLDATIndex() == 0) {
+                sb.append("INIT");
+            } else {
+                sb.append(pi.getLDATIndex());
+            }
+        } else if (pi.isRemovable()) {
+            sb.append("REM ");
+            if (pi.getLDATIndex() == 0) {
+                sb.append("INIT");
+            } else {
+                sb.append(pi.getLDATIndex());
+            }
+        } else {
+            sb.append("not prepped");
+        }
+
+        sb.append(" PREP FACTOR ").append(pi.getPrepFactor());
+        Exec.getInstance().sendExecReadOnlyMessage(sb.toString(), null);
 
         return pi;
     }
@@ -701,7 +717,10 @@ public class FacilitiesManager implements Manager {
             if (label == null) {
                 return false;
             }
-            nodeInfo.setMediaInfo(loadDiskPackInfo((DeviceNodeInfo)nodeInfo, label));
+            var info = loadDiskPackInfo(nodeInfo);
+            if (info != null) {
+                nodeInfo.setMediaInfo(info);
+            }
         } catch (NoRouteForIOException ex) {
             return false;
         }
@@ -717,6 +736,32 @@ public class FacilitiesManager implements Manager {
         }
 
         return true;
+    }
+
+    private ArraySlice readInitialDirectoryTrack(
+        final DiskDevice disk,
+        final ArraySlice diskLabel
+    ) throws NoRouteForIOException, ExecStoppedException {
+        var dirTrackAddr = diskLabel.get(3);
+        var blocksPerTrack = Word36.getH1(diskLabel.get(4));
+        var dirBlockAddr = dirTrackAddr * blocksPerTrack;
+        var channel = selectRoute(disk);
+        var cw = new ChannelProgram.ControlWord().setDirection(ChannelProgram.Direction.Increment)
+                                                 .setBuffer(new ArraySlice(new long[1792]))
+                                                 .setTransferCount(1792);
+        var cp = new ChannelProgram().addControlWord(cw)
+                                     .setFunction(ChannelProgram.Function.Read)
+                                     .setBlockId(dirBlockAddr)
+                                     .setNodeIdentifier(disk.getNodeIdentifier());
+        channel.routeIo(cp);
+        if (cp.getIoStatus() != IoStatus.Complete) {
+            LogManager.logError(LOG_SOURCE, "readPackLabel ioStatus=%s", cp.getIoStatus());
+            var msg = String.format("%s Cannot read directory track %s", disk.getNodeName(), cp.getIoStatus());
+            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            return null;
+        }
+
+        return cw.getBuffer();
     }
 
     private ArraySlice readPackLabel(

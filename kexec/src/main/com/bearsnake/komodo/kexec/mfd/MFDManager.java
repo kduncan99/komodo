@@ -137,6 +137,11 @@ public class MFDManager implements Manager {
     // Service API
     // -------------------------------------------------------------------------
 
+    /* Console messages TODO
+        MASS STORAGE INITIALIZED xxx MS.
+        MASS STORAGE RECOVERED xxx MS.
+
+     */
     /*
 // AccelerateFileCycle loads information about a particular file cycle -- primarily DAD tables --
 // into memory. This is for facilities to invoke when a file gets assigned.

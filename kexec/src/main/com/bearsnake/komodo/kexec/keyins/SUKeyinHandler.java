@@ -6,8 +6,6 @@ package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.hardwarelib.Device;
 import com.bearsnake.komodo.hardwarelib.DeviceType;
-import com.bearsnake.komodo.hardwarelib.DiskDevice;
-import com.bearsnake.komodo.hardwarelib.NodeCategory;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
@@ -17,6 +15,13 @@ import com.bearsnake.komodo.logger.LogManager;
 
 public class SUKeyinHandler extends FacHandler implements Runnable {
 
+    /* TODO
+    SU component INITIALIZES AND ADDS device TO FIXED MS, PROCESS? YN
+SU KEYIN - ALREADY PERFORMED FOR component
+SU [dev] MAY BE FATAL (EXERR 052) - TERMINATE SU KEYIN? Y/N
+SU OF component IS NOT ALLOWED
+SU OF component NOT PERFORMED - KEYIN ABORTED
+     */
     private static final String[] HELP_TEXT = {
         "SU[,ALL] node_name",
         "Makes devices available for use, however space cannot be allocated.",

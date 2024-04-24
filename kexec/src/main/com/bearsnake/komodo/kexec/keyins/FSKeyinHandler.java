@@ -5,7 +5,6 @@
 package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.hardwarelib.DeviceType;
-import com.bearsnake.komodo.hardwarelib.NodeCategory;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
@@ -21,6 +20,11 @@ public class FSKeyinHandler extends FacHandler implements Runnable {
     };
 
     public static final String COMMAND = "FS";
+
+    /*
+    Console messages TODO
+    NO REMOVABLE DISKS PRESENT
+     */
 
     public FSKeyinHandler(final ConsoleId source,
                           final String options,

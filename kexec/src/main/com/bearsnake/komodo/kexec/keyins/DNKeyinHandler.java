@@ -13,7 +13,6 @@ import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.RunControlEntry;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
-import com.bearsnake.komodo.kexec.facilities.DeviceNodeInfo;
 import com.bearsnake.komodo.kexec.facilities.NodeStatus;
 import com.bearsnake.komodo.logger.LogManager;
 import java.util.HashSet;
@@ -29,6 +28,13 @@ public class DNKeyinHandler extends FacHandler implements Runnable {
 
     public static final String COMMAND = "DN";
 
+    /*
+    Console Messages TODO
+    DN device FATAL, CONTINUE PROCESSING KEYIN? Y OR N
+    DN Keyin already performed for component
+    DN KEYIN - component DOES NOT EXIST, INPUT IGNORED
+
+     */
     public DNKeyinHandler(final ConsoleId source,
                           final String options,
                           final String arguments) {
