@@ -233,7 +233,7 @@ public class MFDManager implements Manager {
             sector1.set(3, packInfo.getTrackCount() - 2);
             String packId = String.format("%-6s", packInfo.getPackName());
             sector1.set(4, Word36.stringToWordFieldata(packId).getW());
-            sector1.set(5, 0_400000_000000L);
+            sector1.set(5, INVALID_LINK);
 
             // +010,T1 is blocks per track
             // +010,S3 is version (1)
@@ -379,11 +379,11 @@ public class MFDManager implements Manager {
             thisDas.set(1, 0_400000_000017L);
             thisDas.set(2, 0_000000_000017L);
             for (int dx = 3; dx < 033; dx++) {
-                thisDas.set(dx, 0_400000_000000L);
+                thisDas.set(dx, INVALID_LINK);
                 thisDas.set(dx + 1, 0_000000_000017L);
                 thisDas.set(dx + 2, 0_000000_000017L);
             }
-            thisDas.set(033, 0_400000_000000L);
+            thisDas.set(033, INVALID_LINK);
             var dasAddr = new MFDRelativeAddress(dirTrackAddr);
             markDirectorySectorDirty(dasAddr);
         } else {
