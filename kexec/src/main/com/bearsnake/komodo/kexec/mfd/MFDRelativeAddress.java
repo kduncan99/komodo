@@ -22,11 +22,11 @@ public class MFDRelativeAddress implements Comparable<MFDRelativeAddress> {
         _value = 0;
     }
 
-    public MFDRelativeAddress(long value) {
+    public MFDRelativeAddress(final long value) {
         _value = value;
     }
 
-    public MFDRelativeAddress(MFDRelativeAddress source) {
+    public MFDRelativeAddress(final MFDRelativeAddress source) {
         _value = source._value;
     }
 
@@ -39,10 +39,33 @@ public class MFDRelativeAddress implements Comparable<MFDRelativeAddress> {
     public final long getLDATIndex() { return (_value >> 18) & 07777; }
     public final long getTrackId() { return (_value >> 6) & 07777; }
     public final long getSectorId() { return _value & 077; }
-    public void increment() { _value = (_value + 1) & 07777777777; }
-    public void setLDATIndex(long value) { _value = (value & 0777777) | ((value & 07777) << 18); }
-    public void setTrackId(long value) { _value = (value & 07777000077) | ((value & 07777) << 6); }
-    public void setSectorId(long value) { _value = (value & 07777777700) | (value & 077); }
+    public final long getValue() { return _value; }
+
+    public MFDRelativeAddress increment() {
+        _value = (_value + 1) & 07777777777;
+        return this;
+    }
+
+    public MFDRelativeAddress setLDATIndex(
+        final long value
+    ) {
+        _value = (value & 0777777) | ((value & 07777) << 18);
+        return this;
+    }
+
+    public MFDRelativeAddress setTrackId(
+        final long value
+    ) {
+        _value = (value & 07777000077) | ((value & 07777) << 6);
+        return this;
+    }
+
+    public MFDRelativeAddress setSectorId(
+        final long value
+    ) {
+        _value = (value & 07777777700) | (value & 077);
+        return this;
+    }
 
     @Override
     public String toString() {

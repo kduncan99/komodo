@@ -7,25 +7,50 @@ package com.bearsnake.komodo.kexec.facilities;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
+import com.bearsnake.komodo.kexec.mfd.TrackFreeSpaceSet;
+
+import java.io.PrintStream;
+import java.util.HashMap;
 
 public class PackInfo implements MediaInfo {
 
-    private long       _directoryTrackAddress;
-    private boolean    _isFixed;
-    private boolean    _isPrepped;
-    private boolean    _isRemovable;
-    private int        _ldatIndex;
-    private String     _packName;
-    private int        _prepFactor;
-    private long       _trackCount;
+    private static HashMap<Integer, Long> BLOCK_ALIGNMENT_MASK = new HashMap<>();
+    static {
+        BLOCK_ALIGNMENT_MASK.put(28, 0xFFFFFFFFFFFFFFFFL);
+        BLOCK_ALIGNMENT_MASK.put(56, 0xFFFFFFFFFFFFFFFEL);
+        BLOCK_ALIGNMENT_MASK.put(112, 0xFFFFFFFFFFFFFFFCL);
+        BLOCK_ALIGNMENT_MASK.put(224, 0xFFFFFFFFFFFFFFF8L);
+        BLOCK_ALIGNMENT_MASK.put(448, 0xFFFFFFFFFFFFFFF0L);
+        BLOCK_ALIGNMENT_MASK.put(896, 0xFFFFFFFFFFFFFFE0L);
+        BLOCK_ALIGNMENT_MASK.put(1792, 0xFFFFFFFFFFFFFFC0L);
+    }
+
+    private long              _directoryTrackAddress;
+    private boolean           _isFixed;
+    private boolean           _isPrepped;
+    private boolean           _isRemovable;
+    private int               _ldatIndex;
+    private String            _packName;
+    private int               _prepFactor;
+    private long              _trackCount;
+    private int               _mfdTrackCount;
+    private TrackFreeSpaceSet _freeSpace;
 
     public PackInfo() {}
 
+    public MFDRelativeAddress alignSectorAddressToBlock(final MFDRelativeAddress sectorAddress) {
+        var addr = sectorAddress.getValue() & BLOCK_ALIGNMENT_MASK.get(_prepFactor);
+        return new MFDRelativeAddress(addr);
+    }
+
     public long getDirectoryTrackAddress() { return _directoryTrackAddress; }
+    public TrackFreeSpaceSet getFreeSpace() { return _freeSpace; }
+    public int getLDATIndex() { return _ldatIndex; }
+    public int getMFDTrackCount() { return _mfdTrackCount; }
     public String getPackName() { return _packName; }
     public int getPrepFactor() { return _prepFactor; }
     public long getTrackCount() { return _trackCount; }
-    public int getLDATIndex() { return _ldatIndex; }
     public boolean isFixed() { return _isFixed; }
     public boolean isPrepped() { return _isPrepped; }
     public boolean isRemovable() { return _isRemovable; }
@@ -35,9 +60,15 @@ public class PackInfo implements MediaInfo {
     public PackInfo setIsPrepped(final boolean value) { _isPrepped = value; return this; }
     public PackInfo setIsRemovable(final boolean value) { _isRemovable = value; return this; }
     public PackInfo setLDATIndex(final int value) { _ldatIndex = value; return this; }
+    public PackInfo setMFDTrackCount(final int value) { _mfdTrackCount = value; return this; }
     public PackInfo setPackName(final String value) { _packName = value; return this; }
     public PackInfo setPrepFactor(final int value) { _prepFactor = value; return this; }
-    public PackInfo setTrackCount(final long value) { _trackCount = value; return this; }
+
+    public PackInfo setTrackCount(final long value) {
+        _freeSpace = new TrackFreeSpaceSet(value);
+        _trackCount = value;
+        return this;
+    }
 
     @Override
     public String getMediaName() { return _packName; }
@@ -75,5 +106,10 @@ public class PackInfo implements MediaInfo {
         }
 
         return pi;
+    }
+
+    @Override
+    public void dump(final PrintStream out, final String indent) {
+        // TODO
     }
 }

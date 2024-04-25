@@ -12,22 +12,16 @@ import java.util.LinkedList;
 
 public class FileAllocationSet {
 
-    private MFDRelativeAddress _dadItem0Address;
-    private MFDRelativeAddress _mainItem0Address;
     private final LinkedList<FileAllocation> _fileAllocations = new LinkedList<>();
     private boolean _isUpdated;
 
-    public FileAllocationSet(final MFDRelativeAddress dataItem0Address,
-                             final MFDRelativeAddress mainItem0Address) {
-        _dadItem0Address = dataItem0Address;
-        _mainItem0Address = mainItem0Address;
+    public FileAllocationSet() {
         _isUpdated = false;
     }
 
-    public MFDRelativeAddress getDadItem0Address() { return _dadItem0Address; }
     public LinkedList<FileAllocation> getFileAllocations() { return _fileAllocations; }
-    public MFDRelativeAddress getMainItem0Address() { return _mainItem0Address; }
     public boolean isUpdated() { return _isUpdated; }
+    public void setIsUpdated(final boolean value) { _isUpdated = value; }
 
     public synchronized long getHighestTrackAllocated() {
         return _fileAllocations.isEmpty() ? -1 : _fileAllocations.getLast().getFileRegion().getHighestTrack();
@@ -38,6 +32,7 @@ public class FileAllocationSet {
      * the given region from this file allocation set.
      * Caller MUST ensure that the requested region is a subset (or a match) of exactly one existing
      * file allocation.
+     * This is used in the process of releasing space from a file.
      * @param region Describes the region to be extracted
      * @return HardwareTrackId containing the LDAT index and devivce-relative track ID describing the
      * physical location of the first track in the requested region.
@@ -94,6 +89,11 @@ public class FileAllocationSet {
         return new HardwareTrackId(INVALID_LDAT, 0);
     }
 
+    /**
+     * Merges a particular file allocation into the file allocation set.
+     * Used for noting additional allocations for a file.
+     * @param newEntry new allocation
+     */
     public void mergeIntoFileAllocationSet(final FileAllocation newEntry) {
         var newRegion = newEntry.getFileRegion();
         var newHWTrk = newEntry.getHardwareTrackId();

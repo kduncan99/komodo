@@ -5,29 +5,15 @@
 package com.bearsnake.komodo.kexec.mfd;
 
 import com.bearsnake.komodo.kexec.HardwareTrackId;
-import com.bearsnake.komodo.kexec.mfd.FileAllocation;
-import com.bearsnake.komodo.kexec.mfd.FileAllocationSet;
-import com.bearsnake.komodo.kexec.mfd.LogicalTrackExtent;
-import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 public class TestFileAllocationSet {
 
-    private static final MFDRelativeAddress DAD_ITEM_0_ADDR = new MFDRelativeAddress(01001_0010_33);
-    private static final MFDRelativeAddress MAIN_ITEM_0_ADDR = new MFDRelativeAddress(01001_0010_35);
-
-    @Test
-    public void testCtor() {
-        var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
-        assertEquals(DAD_ITEM_0_ADDR, fas.getDadItem0Address());
-        assertEquals(MAIN_ITEM_0_ADDR, fas.getMainItem0Address());
-    }
-
     @Test
     public void testMergeIntoEmpty() {
-        var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
+        var fas = new FileAllocationSet();
 
         var region = new LogicalTrackExtent(20, 10);
         var hwTid = new HardwareTrackId(02, 1000);
@@ -43,7 +29,7 @@ public class TestFileAllocationSet {
 
     @Test
     public void testMergeAheadNonContiguousFileAddress() {
-        var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
+        var fas = new FileAllocationSet();
 
         var region = new LogicalTrackExtent(20, 10);
         var hwTid = new HardwareTrackId(02, 1000);
@@ -69,7 +55,7 @@ public class TestFileAllocationSet {
 
     @Test
     public void testMergeAheadContiguous() {
-        var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
+        var fas = new FileAllocationSet();
 
         var region = new LogicalTrackExtent(20, 10);
         var hwTid = new HardwareTrackId(02, 1000);
@@ -93,7 +79,7 @@ public class TestFileAllocationSet {
 
     @Test
     public void testMergeBehindNonContiguousFileAddress() {
-        var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
+        var fas = new FileAllocationSet();
 
         var region = new LogicalTrackExtent(20, 5);
         var hwTid = new HardwareTrackId(02, 1000);
@@ -119,7 +105,7 @@ public class TestFileAllocationSet {
 
     @Test
     public void testMergeBehindNonContiguousDifferentLDAT() {
-        var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
+        var fas = new FileAllocationSet();
 
         var region = new LogicalTrackExtent(20, 10);
         var hwTid = new HardwareTrackId(02, 1000);
@@ -145,7 +131,7 @@ public class TestFileAllocationSet {
 
     @Test
     public void testMergeBehindNonContiguousPhysical() {
-        var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
+        var fas = new FileAllocationSet();
 
         var region = new LogicalTrackExtent(20, 10);
         var hwTid = new HardwareTrackId(02, 1000);
@@ -171,7 +157,7 @@ public class TestFileAllocationSet {
 
     @Test
     public void testMergeBehindContiguous() {
-        var fas = new FileAllocationSet(DAD_ITEM_0_ADDR, MAIN_ITEM_0_ADDR);
+        var fas = new FileAllocationSet();
 
         var region = new LogicalTrackExtent(20, 5);
         var hwTid = new HardwareTrackId(02, 1000);

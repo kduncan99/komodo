@@ -4,7 +4,10 @@
 
 package com.bearsnake.komodo.kexec.facilities;
 
+import java.io.PrintStream;
+
 public interface MediaInfo {
 
-    public String getMediaName();
+    void dump(final PrintStream out, final String indent);
+    String getMediaName();
 }

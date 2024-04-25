@@ -19,7 +19,6 @@ import com.bearsnake.komodo.hardwarelib.NodeCategory;
 import com.bearsnake.komodo.hardwarelib.TapeChannel;
 import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.FileSpecification;
-import com.bearsnake.komodo.kexec.HardwareTrackId;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
@@ -28,8 +27,6 @@ import com.bearsnake.komodo.kexec.exec.RunControlEntry;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
-import com.bearsnake.komodo.kexec.mfd.FileAllocationSet;
-import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
@@ -43,9 +40,6 @@ import java.util.stream.Collectors;
 public class FacilitiesManager implements Manager {
 
     static final String LOG_SOURCE = "FacMgr";
-
-    // All assigned disk files are recorded here so that we can easily access and manage the file allocations.
-    final HashMap<MFDRelativeAddress, FileAllocationSet> _acceleratedFileAllocations = new HashMap<>();
 
     // Inventory of all the hardware nodes, keyed by node identifier.
     // It is loaded at initialization(), and will remain unchanged during the application existence.
@@ -99,18 +93,6 @@ public class FacilitiesManager implements Manager {
         var subIndent = indent + "    ";
         for (var ni : _nodeGraph.values()) {
             out.printf("%s%s\n", subIndent, ni.toString());
-        }
-
-        if (verbose) {
-            // Accelerated file information
-            out.printf("%s  Accelerated files:\n", indent);
-            for (var e : _acceleratedFileAllocations.entrySet()) {
-                var prefix = e.getKey().toString();
-                for (var fa : e.getValue().getFileAllocations()) {
-                    out.printf("%s    %s: %s\n", indent, prefix, fa.toString());
-                    prefix = "              ";
-                }
-            }
         }
     }
 
@@ -548,9 +530,16 @@ public class FacilitiesManager implements Manager {
     public void startup() throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "startup()");
 
+        var e = Exec.getInstance();
         dropTapes();
         readDiskLabels();
         var fixedDisks = getAccessibleFixedDisks();
+        if (fixedDisks.isEmpty()) {
+            e.sendExecReadOnlyMessage("No Fixed Disk Configured", null);
+            e.stop(StopCode.InitializationSystemConfigurationError);
+            throw new ExecStoppedException();
+        }
+
         var mm = Exec.getInstance().getMFDManager();
         if (Exec.getInstance().isJumpKeySet(13)) {
             mm.initializeMassStorage(fixedDisks);
@@ -564,31 +553,6 @@ public class FacilitiesManager implements Manager {
     // -------------------------------------------------------------------------
     // Core
     // -------------------------------------------------------------------------
-
-    /**
-     * Given the MFD-relative address of a main item sector 0 for a file cycle,
-     * we translate the given file-relative track id to an LDAT and physical device track.
-     * @param mainItem0Address main item address of file cycle
-     * @param fileTrackId file-relative track id
-     * @return HardwareTrackId object if the given track is allocated, else null
-     * @throws ExecStoppedException if the main item is not accelerated (generally meaning it is not assigned)
-     */
-    private HardwareTrackId convertFileRelativeTrackId(
-        final MFDRelativeAddress mainItem0Address,
-        final long fileTrackId
-    ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE, "convertFileRelativeTrackId(%s, %d)", mainItem0Address.toString(), fileTrackId);
-        var fa = _acceleratedFileAllocations.get(mainItem0Address);
-        if (fa == null) {
-            LogManager.logFatal(LOG_SOURCE, "mainItem0 is not accelerated");
-            Exec.getInstance().stop(StopCode.DirectoryErrors);
-            throw new ExecStoppedException();
-        }
-
-        var hwTid = fa.resolveFileRelativeTrackId(fileTrackId);
-        LogManager.logTrace(LOG_SOURCE, "returning %s", hwTid);
-        return hwTid;
-    }
 
     /**
      * Unloads all ready tape devices - used during boot.
