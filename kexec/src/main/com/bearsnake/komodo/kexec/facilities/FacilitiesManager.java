@@ -58,8 +58,7 @@ public class FacilitiesManager implements Manager {
         File SYS$*LIB$ not properly catalogued
         File SYS$*RUN$ not properly catalogued
         dir-id pack-id TO BECOME FIXED YN?
-            (dir-id FIXED PACK MOUNTED ON device IGNORED)
-        NO FIXED DISK CONFIGURED
+        (dir-id FIXED PACK MOUNTED ON device IGNORED)
      */
 
     // -------------------------------------------------------------------------
