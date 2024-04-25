@@ -10,12 +10,19 @@ import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.kexec.facilities.NodeInfo;
+import com.bearsnake.komodo.kexec.facilities.PackInfo;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MFDManager implements Manager {
 
@@ -26,12 +33,20 @@ public class MFDManager implements Manager {
     final HashMap<String, MFDRelativeAddress> _fileMainItemLookupTable = new HashMap<>();
     final TreeSet<MFDRelativeAddress> _freeMFDSectors = new TreeSet<>();
 
+    // This is the Logical Device Address Table which maps LDAT index to a fac mgr NodeInfo object
+    final ConcurrentHashMap<Integer, NodeInfo> _logicalDATable = new ConcurrentHashMap<>();
+
     // This is a list of MFD-relative addresses of sectors which are the first sector in any physical block
     // which contains at least one dirty sector. For example if there are 4 sectors in a physical block,
     // and the 2nd and 3rd sectors in a particular block are dirty, this list will contain the address of
     // the 1st sector in the block. We do this for I/O efficiency, but it does mean that we need to know the
     // physical block size for each pack we manage.
     final HashSet<MFDRelativeAddress> _dirtyCacheBlocks = new HashSet<>();
+
+    /* Console messages TODO
+        MASS STORAGE INITIALIZED xxx MS.
+        MASS STORAGE RECOVERED xxx MS.
+     */
 
     public MFDManager() {
         Exec.getInstance().managerRegister(this);
@@ -53,6 +68,11 @@ public class MFDManager implements Manager {
                                   final boolean verbose) {
         out.printf("%sMFDManager ********************************\n", indent);
 
+        out.printf("%s  LDATable:\n", indent);
+        for (var entry : _logicalDATable.entrySet()) {
+            out.printf("%s    %04o: %s\n", indent, entry.getKey(), entry.getValue().getNode().getNodeName());
+        }
+
         if (verbose) {
             // File main item lookup table
             out.printf("%s  File MainItem lookup table:\n", indent);
@@ -72,7 +92,7 @@ public class MFDManager implements Manager {
                                                    sectorAddr.getLDATIndex(),
                                                    sectorAddr.getTrackId(),
                                                    sectorAddr.getSectorId());
-                        var wbase = (int)(sector * 64);
+                        var wbase = (int) (sector * 64);
                         for (int wx = 0; wx < 28; wx += 7) {
                             var sb = new StringBuilder();
                             sb.append(indent).append("    ").append(prefix);
@@ -137,11 +157,6 @@ public class MFDManager implements Manager {
     // Service API
     // -------------------------------------------------------------------------
 
-    /* Console messages TODO
-        MASS STORAGE INITIALIZED xxx MS.
-        MASS STORAGE RECOVERED xxx MS.
-
-     */
     /*
 // AccelerateFileCycle loads information about a particular file cycle -- primarily DAD tables --
 // into memory. This is for facilities to invoke when a file gets assigned.
@@ -610,6 +625,66 @@ func (mgr *MFDManager) GetTrackCountsForPack(nodeIdentifier hardware.NodeIdentif
 	return
 }
 
+    /**
+     * initializes mass storage given a collection of NodeInfo objects describing the fixed disk units
+     * which are UP or SU.
+     */
+    public void initializeMassStorage(
+        final Collection<NodeInfo> fixedDiskInfo
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "initializeMassStorage");
+
+        //FIXED MS DEVICES = yy - CONTINUE? YN
+        //FIXED MS DEVICES = yy - EXPECTED = xx - CONTINUE? YN
+        var start = Instant.now();
+        var e = Exec.getInstance();
+        var msg = "Fixed MS Devices = %d - Continue? YN";
+        var allowed = new String[]{ "Y", "N" };
+        var response = e.sendExecRestrictedReadReplyMessage(msg, allowed, null);
+        if (!response.equals("Y")) {
+            e.stop(StopCode.ConsoleResponseRequiresReboot);
+            throw new ExecStoppedException();
+        }
+
+        _cachedMFDTracks.clear();
+        _dirtyCacheBlocks.clear();
+        _fileMainItemLookupTable.clear();
+        _freeMFDSectors.clear();
+        _logicalDATable.clear();
+
+        var ldatIndex = 1;
+        for (var ni : fixedDiskInfo) {
+            var packInfo = (PackInfo) ni.getMediaInfo();
+            packInfo.setLDATIndex(ldatIndex);
+
+            _logicalDATable.put(ldatIndex, ni);
+
+            // create a cached initial directory track
+            var dirTrackAddr = new MFDRelativeAddress(ldatIndex, 0, 0);
+            var dirTrackArray = new long[1792];
+            var dirTrack = new ArraySlice(dirTrackArray);
+            _cachedMFDTracks.put(dirTrackAddr, dirTrack);
+            for (var sectorId = 0; sectorId <= 077; ++sectorId) {
+                _freeMFDSectors.add(new MFDRelativeAddress(ldatIndex, 0, sectorId));
+            }
+
+            // TODO (don't forget to update _freeMFDSectors and _dirtyCacheBlocks
+
+            ldatIndex++;
+        }
+
+        // TODO create MFD$$ file artifacts in the first directory track of the first disk pack
+        //   we should be able to use the(a) generic allocateDirectorySector() method for this
+
+        // TODO write the directory tracks via fac mgr using _dirtyCacheBlocks
+
+        var elapsed = Duration.between(start, Instant.now()).get(ChronoUnit.MILLIS);
+        msg = String.format("Mass Storage Initialized %d MS.", elapsed);
+        e.sendExecReadOnlyMessage(msg, null);
+        LogManager.logTrace(LOG_SOURCE, "initializeMassStorage exiting");
+    }
+
+    /*
 // InitializeMassStorage handles MFD initialization for what is effectively a JK13 boot.
 // If we return an error, we must previously stop the exec.
 func (mgr *MFDManager) InitializeMassStorage() {
@@ -751,7 +826,7 @@ func (mgr *MFDManager) PurgeDirectory() MFDResult {
 }
 */
 
-    public void recoverMassStorage() throws ExecStoppedException {
+    public void recoverMassStorage(final Collection<NodeInfo> fixedDiskInfo) throws ExecStoppedException {
         // TODO implement
         Exec.getInstance().sendExecReadOnlyMessage("MFD Recovery is not yet implemented", null);
         Exec.getInstance().stop(StopCode.DirectoryErrors);
@@ -844,6 +919,48 @@ func (mgr *MFDManager) SetFileCycleRange(
         }
 
      */
+
+    private MFDRelativeAddress allocateDirectorySector() {
+        if (_freeMFDSectors.isEmpty()) {
+            long leastTracks = Long.MAX_VALUE;
+            int leastLDAT = -1;
+            // allocate a new directory track from the pack with the least directory tracks
+            //  TODO
+            // TODO do we need a convenienter means of counting assigned MFD tracks for an LDAT?
+        }
+
+        return _freeMFDSectors.removeFirst();
+    }
+
+    /**
+     * Allocates an unused MFD directory sector, from the pack with the preferredLDAT if possible.
+     * Will allocate a new directory track from the preferred pack if possible and then return
+     * a sector from that pack, otherwise, just returns a directory sector from anywhere possible.
+     * @param preferredLDAT LDAT index of preferred pack
+     * @return MFD-relative address of sector (0LLLLTTTTSS)
+     */
+    private MFDRelativeAddress allocateDirectorySector(
+        Integer preferredLDAT
+    ) {
+        var ni = _logicalDATable.get(preferredLDAT);
+        if ((ni != null) && ((PackInfo)ni.getMediaInfo()).isFixed()) {
+            for (var addr : _freeMFDSectors) {
+                if (addr.getLDATIndex() == preferredLDAT) {
+                    _freeMFDSectors.remove(addr);
+                    return addr;
+                }
+            }
+
+            // allocate another track on the preferred pack if we can
+            // first, find a free track on the pack (if there is one)
+            //  TODO
+            // next, find an MFD-relative space in the range of MFD relative addresses for the pack
+            //  TODO
+        }
+
+        // Cannot allocate from the preferred pack - just allocate anything.
+        return allocateDirectorySector();
+    }
 
     /*
         // allocateDirectorySector allocates an MFD directory sector for the caller.
@@ -1881,6 +1998,13 @@ func (mgr *MFDManager) SetFileCycleRange(
     }
     */
 
+    /**
+     * Retrieves an ArraySlice containing a subset of a directory track
+     * which represents the requested MFD sector
+     * @param address MFD sector address
+     * @return ArraySlice
+     * @throws ExecStoppedException if we crashed
+     */
     ArraySlice getMFDSector(final MFDRelativeAddress address) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "getMFDSector(%s)", address.toString());
 
@@ -2048,12 +2172,6 @@ func (mgr *MFDManager) SetFileCycleRange(
 
         msg = fmt.Sprintf("MS Initialized - %v Tracks Available", totalTracks)
         mgr.exec.SendExecReadOnlyMessage(msg, nil)
-        return nil
-    }
-
-    // initializeRemovable registers the isRemovable packs (if any) as part of a JK13 boot.
-    func (mgr *MFDManager) initializeRemovable(disks map[*nodeMgr.DiskDeviceInfo]*kexec.DiskAttributes) error {
-        // TODO implement initializeRemovable()
         return nil
     }
 

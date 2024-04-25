@@ -17,6 +17,7 @@ import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
+import com.bearsnake.komodo.kexec.mfd.MFDManager;
 import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.FileNotFoundException;
@@ -58,6 +59,7 @@ public class Exec {
     private ConsoleManager _consoleManager;
     private FacilitiesManager _facilitiesManager;
     private KeyinManager _keyinManager;
+    private MFDManager _mfdManager;
 
     public Exec(final boolean[] jumpKeyTable) {
         _jumpKeys = jumpKeyTable;
@@ -68,15 +70,18 @@ public class Exec {
         _consoleManager = new ConsoleManager();
         _facilitiesManager = new FacilitiesManager();
         _keyinManager = new KeyinManager();
+        _mfdManager = new MFDManager();
     }
 
     public Configuration getConfiguration() { return _configuration; }
     public ConsoleManager getConsoleManager() { return _consoleManager; }
     public ScheduledThreadPoolExecutor getExecutor() { return _executor; }
-    public static Exec getInstance() { return _instance; }
-    public KeyinManager getKeyinManager() { return _keyinManager; }
     public FacilitiesManager getFacilitiesManager() { return _facilitiesManager; }
+    public static Exec getInstance() { return _instance; }
+    public MFDManager getMFDManager() { return _mfdManager; }
+    public KeyinManager getKeyinManager() { return _keyinManager; }
     public Phase getPhase() { return _phase; }
+    public RunControlEntry getRunControlEntry() { return _runControlEntry; }
     public StopCode getStopCode() { return _stopCode; }
     public boolean isJumpKeySet(final int jumpKey) { return _jumpKeys[jumpKey - 1]; }
     public boolean isRecoveryBootAllowed() { return _allowRecoveryBoot; }

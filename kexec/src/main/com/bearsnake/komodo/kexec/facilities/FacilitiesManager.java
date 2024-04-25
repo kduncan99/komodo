@@ -12,7 +12,6 @@ import com.bearsnake.komodo.hardwarelib.Device;
 import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.hardwarelib.DiskChannel;
 import com.bearsnake.komodo.hardwarelib.DiskDevice;
-import com.bearsnake.komodo.hardwarelib.DiskInfo;
 import com.bearsnake.komodo.hardwarelib.FileSystemDiskDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemTapeDevice;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
@@ -31,7 +30,6 @@ import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.mfd.FileAllocationSet;
 import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
-import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
@@ -65,8 +63,6 @@ public class FacilitiesManager implements Manager {
         File SYS$*RLIB$ not properly catalogued
         File SYS$*LIB$ not properly catalogued
         File SYS$*RUN$ not properly catalogued
-        FIXED MS DEVICES = yy - CONTINUE? YN
-        FIXED MS DEVICES = yy - EXPECTED = xx - CONTINUE? YN
         dir-id pack-id TO BECOME FIXED YN?
             (dir-id FIXED PACK MOUNTED ON device IGNORED)
         NO FIXED DISK CONFIGURED
@@ -146,6 +142,68 @@ public class FacilitiesManager implements Manager {
     // -------------------------------------------------------------------------
 
     /**
+     * For assigning any disk to the exec. Possibly only used by facilities manager...?
+     * The device must not be assigned to any run (other than the EXEC) and it must be ready.
+     * @param nodeIdentifier node identifier of the device
+     * @param fsResult fac status result
+     * @return true if we are successful
+     * @throws ExecStoppedException if the exec is stopped
+     */
+    public boolean assignDiskUnitToExec(
+        final int nodeIdentifier,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToExec node:%d", nodeIdentifier);
+
+        var nodeInfo = _nodeGraph.get(nodeIdentifier);
+        if (nodeInfo == null) {
+            LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToExec() Cannot find node %012o", nodeIdentifier);
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
+
+        var node = nodeInfo.getNode();
+        if ((node.getNodeCategory() != NodeCategory.Device) || ((Device) node).getDeviceType() != DeviceType.DiskDevice) {
+            LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToExec() Node %012o is not a disk device", nodeIdentifier);
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
+
+        var dev = (Device) node;
+        var execRCE = Exec.getInstance().getRunControlEntry();
+        synchronized (nodeInfo) {
+            if (!dev.isReady()) {
+                LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToExec() Node %012o is not a disk device", nodeIdentifier);
+                Exec.getInstance().stop(StopCode.FacilitiesComplex);
+                throw new ExecStoppedException();
+            }
+            var currentRCE = nodeInfo.getAssignedTo();
+            if ((currentRCE != null) && (currentRCE != execRCE)) {
+                LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToExec() Node %012o is already assigned", nodeIdentifier);
+                Exec.getInstance().stop(StopCode.FacilitiesComplex);
+                throw new ExecStoppedException();
+            }
+            nodeInfo.setAssignedTo(execRCE);
+        }
+
+        var packInfo = nodeInfo.getMediaInfo();
+        var facItem = new AbsoluteDiskItem(node, packInfo.getMediaName());
+        facItem.setIsAssigned(true)
+               .setAbsoluteCycle(0)
+               .setQualifier(execRCE.getDefaultQualifier())
+               .setFilename("UNIT$" + node.getNodeName())
+               .setIsTemporary(true);
+
+        var fit = execRCE.getFacilityItemTable();
+        synchronized (fit) {
+            fit.addFacilitiesItem(facItem);
+        }
+
+        LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToExec %s result:%s", node.getNodeName(), fsResult.toString());
+        return true;
+    }
+
+    /**
      * For assigning a (reserved) disk to a run.
      * This assignment can only be temporary, and the device must be reserved.
      * @param runControlEntry describes the run
@@ -179,10 +237,6 @@ public class FacilitiesManager implements Manager {
         if (nodeInfo == null) {
             LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Cannot find node %012o", nodeIdentifier);
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
-            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s node:%d result:%s",
-                                runControlEntry.getRunId(),
-                                nodeIdentifier,
-                                fsResult.toString());
             throw new ExecStoppedException();
         }
 
@@ -190,10 +244,6 @@ public class FacilitiesManager implements Manager {
         if ((node.getNodeCategory() != NodeCategory.Device) || ((Device) node).getDeviceType() != DeviceType.DiskDevice) {
             LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Node %012o is not a disk device", nodeIdentifier);
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
-            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
-                                runControlEntry.getRunId(),
-                                node.getNodeName(),
-                                fsResult.toString());
             throw new ExecStoppedException();
         }
 
@@ -202,10 +252,6 @@ public class FacilitiesManager implements Manager {
             var params = new String[]{nodeInfo.getNode().getNodeName()};
             fsResult.postMessage(FacStatusCode.UnitIsNotReserved, params);
             fsResult.mergeStatusBits(0_600000_000000L);
-            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
-                                runControlEntry.getRunId(),
-                                node.getNodeName(),
-                                fsResult.toString());
             return false;
         }
 
@@ -499,28 +545,17 @@ public class FacilitiesManager implements Manager {
     /**
      * Invoked by Exec after boot() has been called for all managers.
      */
-    public void startup() {
+    public void startup() throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "startup()");
 
-        // drop tapes
-        // TODO
-
-        // read disk labels
-        for (var ni : _nodeGraph.values()) {
-            if ((ni.getNodeStatus() == NodeStatus.Up) || (ni.getNodeStatus() == NodeStatus.Suspended)) {
-                if ((ni instanceof DeviceNodeInfo dni) && (ni.getNode() instanceof DiskDevice dd)) {
-                    try {
-                        var info = loadDiskPackInfo(dni);
-                        if (info != null) {
-                            ni.setMediaInfo(info);
-                        }
-                    } catch (ExecStoppedException ex) {
-                        return;
-                    } catch (NoRouteForIOException ex) {
-                        LogManager.logInfo(LOG_SOURCE, "No route to device %s", dd.getNodeName());
-                    }
-                }
-            }
+        dropTapes();
+        readDiskLabels();
+        var fixedDisks = getAccessibleFixedDisks();
+        var mm = Exec.getInstance().getMFDManager();
+        if (Exec.getInstance().isJumpKeySet(13)) {
+            mm.initializeMassStorage(fixedDisks);
+        } else {
+            mm.recoverMassStorage(fixedDisks);
         }
 
         LogManager.logTrace(LOG_SOURCE, "boot complete");
@@ -556,9 +591,41 @@ public class FacilitiesManager implements Manager {
     }
 
     /**
+     * Unloads all ready tape devices - used during boot.
+     * @throws ExecStoppedException if something goes wrong while we're doing this.
+     */
+    private void dropTapes() throws ExecStoppedException {
+        for (var ni : _nodeGraph.values()) {
+            if ((ni instanceof DeviceNodeInfo dni)
+                && (ni.getNode() instanceof TapeDevice td)
+                && td.isReady()) {
+                // TODO set up and route channel program to unmount the tape device
+            }
+        }
+    }
+
+    /**
+     * Retrieves a collection of NodeInfo objects representing UP and SU disk units.
+     * Also assigns the units to the Exec.
+     */
+    private Collection<NodeInfo> getAccessibleFixedDisks() throws ExecStoppedException {
+        var list = new LinkedList<NodeInfo>();
+        for (var ni : _nodeGraph.values()) {
+            var node = ni.getNode();
+            if ((node instanceof DiskDevice)
+                && ((ni.getNodeStatus() == NodeStatus.Up) || (ni.getNodeStatus() == NodeStatus.Suspended))) {
+                list.add(ni);
+                var fsResult = new FacStatusResult();
+                assignDiskUnitToExec(node.getNodeIdentifier(), fsResult);
+            }
+        }
+        return list;
+    }
+
+    /**
      * Creates and populates PackInfo based on the ArraySlice containing the label for a disk pack
      */
-    PackInfo loadDiskPackInfo(
+    private PackInfo loadDiskPackInfo(
         final NodeInfo diskNodeInfo
     ) throws NoRouteForIOException, ExecStoppedException {
         var diskDevice = (DiskDevice) diskNodeInfo.getNode();
@@ -736,6 +803,28 @@ public class FacilitiesManager implements Manager {
         }
 
         return true;
+    }
+
+    /**
+     * Reads the labels and directory tracks for all UP and SU disks.
+     * Used early in booting.
+     * @throws ExecStoppedException if something goes wrong while we're doing this
+     */
+    private void readDiskLabels() throws ExecStoppedException {
+        for (var ni : _nodeGraph.values()) {
+            if ((ni.getNodeStatus() == NodeStatus.Up) || (ni.getNodeStatus() == NodeStatus.Suspended)) {
+                if ((ni instanceof DeviceNodeInfo dni) && (ni.getNode() instanceof DiskDevice dd)) {
+                    try {
+                        var info = loadDiskPackInfo(dni);
+                        if (info != null) {
+                            ni.setMediaInfo(info);
+                        }
+                    } catch (NoRouteForIOException ex) {
+                        LogManager.logInfo(LOG_SOURCE, "No route to device %s", dd.getNodeName());
+                    }
+                }
+            }
+        }
     }
 
     private ArraySlice readInitialDirectoryTrack(
