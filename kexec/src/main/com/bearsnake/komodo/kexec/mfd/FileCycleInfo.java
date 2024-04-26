@@ -4,13 +4,16 @@
 
 package com.bearsnake.komodo.kexec.mfd;
 
+/**
+ * Describes a particular cycle of a fileset
+ */
 public abstract class FileCycleInfo {
 
     private MFDRelativeAddress _mainItem0Address;
-    private String _accountId;
     private String _qualifier;
     private String _filename;
     private String _projectId;
+    private String _accountId;
     private InhibitFlags _inhibitFlags;
     private int _absoluteCycle;
     private String _assignMnemonic;
