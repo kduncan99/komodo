@@ -6,6 +6,8 @@ package com.bearsnake.komodo.kexec.exceptions;
 
 public abstract class KExecException extends Exception {
 
+    public KExecException() {}
+
     public KExecException(final String message) {
         super(message);
     }
