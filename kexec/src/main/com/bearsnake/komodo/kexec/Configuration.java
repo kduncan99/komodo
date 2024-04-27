@@ -24,7 +24,7 @@ public class Configuration {
     private boolean _logConsoleMessages          = true;
     private boolean _logIOs                      = true;
     private String _masterAccountId              = "SYSTEM";         // could be empty, in which case operator is prompted when ACCOUNT$R1 is created
-    public String MassStorageDefaultMnemonic     = "F";              // Usually 'F'
+    private String _massStorageDefaultMnemonic   = "F";              // Usually 'F'
     private long _maxCards                       = 256;
     public long MaxGranules                      = 256;              // max granules if not specified on @ASG or @CAT
     private long _maxPages                       = 256;
@@ -61,6 +61,7 @@ public class Configuration {
     public int getExecThreadPoolSize() { return _execThreadPoolSize; }
     public boolean getLogConsoleMessages() { return _logConsoleMessages; }
     public boolean getLogIos() { return _logIOs; }
+    public String getMassStorageDefaultMnemonic() { return _massStorageDefaultMnemonic; }
     public String getMasterAccountId() { return _masterAccountId; }
     public long getMaxCards() { return _maxCards; }
     public long getMaxPages() { return _maxPages; }

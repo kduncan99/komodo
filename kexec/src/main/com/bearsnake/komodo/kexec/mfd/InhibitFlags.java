@@ -37,4 +37,18 @@ public class InhibitFlags {
         inf.extract(value);
         return inf;
     }
+
+    public boolean isGuarded() { return _isGuarded; }
+    public boolean isUnloadInhibited() { return _isUnloadInhibited; }
+    public boolean isPrivate() { return _isPrivate; }
+    public boolean isAssignedExclusively() { return _isAssignedExclusively; }
+    public boolean isWriteOnly() { return _isWriteOnly; }
+    public boolean isReadOnly() { return _isReadOnly; }
+
+    public InhibitFlags setIsGuarded(final boolean value) { _isGuarded = value; return this; }
+    public InhibitFlags setIsUnloadInhibited(final boolean value) { _isUnloadInhibited = value; return this; }
+    public InhibitFlags setIsPrivate(final boolean value) { _isPrivate = value; return this; }
+    public InhibitFlags setIsAssignedExclusively(final boolean value) { _isAssignedExclusively = value; return this; }
+    public InhibitFlags setIsWriteOnly(final boolean value) { _isWriteOnly = value; return this; }
+    public InhibitFlags setIsReadOnly(final boolean value) { _isReadOnly = value; return this; }
 }
