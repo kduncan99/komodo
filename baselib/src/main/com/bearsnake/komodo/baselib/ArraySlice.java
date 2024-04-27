@@ -166,6 +166,23 @@ public class ArraySlice {
         return _array[index + _offset];
     }
 
+    // partial word getters
+    public long getH1(final int index) { return Word36.getH1(get(index)); }
+    public long getH2(final int index) { return Word36.getH2(get(index)); }
+    public long getQ1(final int index) { return Word36.getQ1(get(index)); }
+    public long getQ2(final int index) { return Word36.getQ2(get(index)); }
+    public long getQ3(final int index) { return Word36.getQ3(get(index)); }
+    public long getQ4(final int index) { return Word36.getQ4(get(index)); }
+    public long getS1(final int index) { return Word36.getS1(get(index)); }
+    public long getS2(final int index) { return Word36.getS2(get(index)); }
+    public long getS3(final int index) { return Word36.getS3(get(index)); }
+    public long getS4(final int index) { return Word36.getS4(get(index)); }
+    public long getS5(final int index) { return Word36.getS5(get(index)); }
+    public long getS6(final int index) { return Word36.getS6(get(index)); }
+    public long getT1(final int index) { return Word36.getT1(get(index)); }
+    public long getT2(final int index) { return Word36.getT2(get(index)); }
+    public long getT3(final int index) { return Word36.getT3(get(index)); }
+
     /**
      * Create a new array representing (but not backed by) the values of this subset
      * @return new array
@@ -607,7 +624,7 @@ public class ArraySlice {
      * @param index index into the subset at which the value should be stored
      * @param value value to be stored
      */
-    public void set(
+    public ArraySlice set(
         final int index,
         final long value
     ) {
@@ -616,6 +633,29 @@ public class ArraySlice {
         }
 
         _array[index + _offset] = value;
+        return this;
+    }
+
+    // partial word setters
+    public ArraySlice setH1(final int index, final long partial) { set(index, Word36.setH1(get(index), partial)); return this; }
+    public ArraySlice setH2(final int index, final long partial) { set(index, Word36.setH2(get(index), partial)); return this; }
+    public ArraySlice setQ1(final int index, final long partial) { set(index, Word36.setQ1(get(index), partial)); return this; }
+    public ArraySlice setQ2(final int index, final long partial) { set(index, Word36.setQ2(get(index), partial)); return this; }
+    public ArraySlice setQ3(final int index, final long partial) { set(index, Word36.setQ3(get(index), partial)); return this; }
+    public ArraySlice setQ4(final int index, final long partial) { set(index, Word36.setQ4(get(index), partial)); return this; }
+    public ArraySlice setS1(final int index, final long partial) { set(index, Word36.setS1(get(index), partial)); return this; }
+    public ArraySlice setS2(final int index, final long partial) { set(index, Word36.setS2(get(index), partial)); return this; }
+    public ArraySlice setS3(final int index, final long partial) { set(index, Word36.setS3(get(index), partial)); return this; }
+    public ArraySlice setS4(final int index, final long partial) { set(index, Word36.setS4(get(index), partial)); return this; }
+    public ArraySlice setS5(final int index, final long partial) { set(index, Word36.setS5(get(index), partial)); return this; }
+    public ArraySlice setS6(final int index, final long partial) { set(index, Word36.setS6(get(index), partial)); return this; }
+    public ArraySlice setT1(final int index, final long partial) { set(index, Word36.setT1(get(index), partial)); return this; }
+    public ArraySlice setT2(final int index, final long partial) { set(index, Word36.setT2(get(index), partial)); return this; }
+    public ArraySlice setT3(final int index, final long partial) { set(index, Word36.setT3(get(index), partial)); return this; }
+
+    public void stringToWord36ASCI(
+        final String source
+    ) {
     }
 
     /**
@@ -635,7 +675,7 @@ public class ArraySlice {
         long[] temp = new long[words];
         int tx = 0;
         for (int sx = 0; sx < source.length(); sx += 4) {
-            temp[tx++] = Word36.stringToWordASCII(source.substring(sx)).getW();
+            temp[tx++] = Word36.stringToWordASCII(source.substring(sx));
         }
 
         return new ArraySlice(temp);
@@ -658,7 +698,7 @@ public class ArraySlice {
         long[] temp = new long[words];
         int tx = 0;
         for (int sx = 0; sx < source.length(); sx += 6) {
-            temp[tx++] = Word36.stringToWordFieldata(source.substring(sx)).getW();
+            temp[tx++] = Word36.stringToWordFieldata(source.substring(sx));
         }
 
         return new ArraySlice(temp);

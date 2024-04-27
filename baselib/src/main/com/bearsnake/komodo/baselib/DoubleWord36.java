@@ -588,9 +588,9 @@ public class DoubleWord36 {
         String padded = source + "       ";
         String s1 = padded.substring(0, 4);
         String s2 = padded.substring(4, 8);
-        Word36 w1 = Word36.stringToWordASCII(s1);
-        Word36 w2 = Word36.stringToWordASCII(s2);
-        return new DoubleWord36(w1._value, w2._value);
+        var w1 = Word36.stringToWordASCII(s1);
+        var w2 = Word36.stringToWordASCII(s2);
+        return new DoubleWord36(w1, w2);
     }
 
     /**
@@ -606,9 +606,9 @@ public class DoubleWord36 {
         String padded = source + "           ";
         String s1 = padded.substring(0, 6);
         String s2 = padded.substring(6, 12);
-        Word36 w1 = Word36.stringToWordFieldata(s1);
-        Word36 w2 = Word36.stringToWordFieldata(s2);
-        return new DoubleWord36(w1._value, w2._value);
+        var w1 = Word36.stringToWordFieldata(s1);
+        var w2 = Word36.stringToWordFieldata(s2);
+        return new DoubleWord36(w1, w2);
     }
 
 

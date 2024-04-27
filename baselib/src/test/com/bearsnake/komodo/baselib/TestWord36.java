@@ -762,38 +762,38 @@ public class TestWord36 {
 
     @Test
     public void stringToWordASCII() {
-        Word36 w = Word36.stringToWordASCII("Help");
-        assertEquals(0_110_145_154_160L, w.getW());
+        var w = Word36.stringToWordASCII("Help");
+        assertEquals(0_110_145_154_160L, w);
     }
 
     @Test
     public void stringToWordASCII_over() {
-        Word36 w = Word36.stringToWordASCII("HelpSlop");
-        assertEquals(0_110_145_154_160L, w.getW());
+        var w = Word36.stringToWordASCII("HelpSlop");
+        assertEquals(0_110_145_154_160L, w);
     }
 
     @Test
     public void stringToWordASCII_partial() {
-        Word36 w = Word36.stringToWordASCII("01");
-        assertEquals(0_060_061_040_040L, w.getW());
+        var w = Word36.stringToWordASCII("01");
+        assertEquals(0_060_061_040_040L, w);
     }
 
     @Test
     public void stringToWordFieldata() {
-        Word36 w = Word36.stringToWordFieldata("Abc@23");
-        assertEquals(0_060710_006263L, w.getW());
+        var w = Word36.stringToWordFieldata("Abc@23");
+        assertEquals(0_060710_006263L, w);
     }
 
     @Test
     public void stringToWordFieldata_over() {
-        Word36 w = Word36.stringToWordFieldata("A B C@D E F");
-        assertEquals(0_060507_051000L, w.getW());
+        var w = Word36.stringToWordFieldata("A B C@D E F");
+        assertEquals(0_060507_051000L, w);
     }
 
     @Test
     public void stringToWordFieldata_partial() {
-        Word36 w = Word36.stringToWordFieldata("1234");
-        assertEquals(0_616263_640505L, w.getW());
+        var w = Word36.stringToWordFieldata("1234");
+        assertEquals(0_616263_640505L, w);
     }
 
 

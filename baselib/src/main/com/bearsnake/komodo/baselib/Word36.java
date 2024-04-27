@@ -344,7 +344,6 @@ public class Word36 implements Comparable<Word36> {
     public Word36 setT3(long partialValue)  { return new Word36(setT3(_value, partialValue)); }
     public Word36 setW(long value)          { return new Word36(value); }
 
-
     //  Negative, Positive, and Zero testing ---------------------------------------------------------------------------------------
 
     public boolean isNegative() { return (_value & NEGATIVE_BIT) != 0; }
@@ -971,7 +970,7 @@ public class Word36 implements Comparable<Word36> {
     }
 
 
-    //  Conversion from String to com.bearsnake.komodo.baselib.Word36 -------------------------------------------------------------------------------------------
+    //  Conversion from String to long -------------------------------------------------------------------------------------------
 
     /**
      * Populates this object with quarter-words derived from the ASCII characters in the source string.
@@ -980,7 +979,7 @@ public class Word36 implements Comparable<Word36> {
      * @param source string to be converted
      * @return converted data
      */
-    public static Word36 stringToWordASCII(
+    public static long stringToWordASCII(
         final String source
     ) {
         long value = 0;
@@ -993,7 +992,7 @@ public class Word36 implements Comparable<Word36> {
             }
         }
 
-        return new Word36(value);
+        return value;
     }
 
     /**
@@ -1003,7 +1002,7 @@ public class Word36 implements Comparable<Word36> {
      * @param source string to be converted
      * @return converted data
      */
-    public static Word36 stringToWordFieldata(
+    public static long stringToWordFieldata(
         final String source
     ) {
         long value = 0;
@@ -1016,7 +1015,7 @@ public class Word36 implements Comparable<Word36> {
             }
         }
 
-        return new Word36(value);
+        return value;
     }
 
 
