@@ -219,17 +219,15 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
         sector1.set(2, capacity);
         sector1.set(3, capacity);
         String packId = String.format("%-6s", packName);
-        sector1.set(4, Word36.stringToWordFieldata(packId).getW());
+        sector1.set(4, Word36.stringToWordFieldata(packId));
         sector1.set(5, 0_400000_000000L);
 
         // +010,T1 is blocks per track
         // +010,S3 is version (1)
         // +010,T3 is prepfactor
-        Word36 w36 = new Word36();
-        w36.setT1(blocksPerTrack);
-        w36.setS3(1);
-        w36.setT3(prepFactor);
-        sector1.set(010, w36.getW());
+        sector1.setT1(010, blocksPerTrack);
+        sector1.setS3(010, 1);
+        sector1.setT3(010, prepFactor);
 
         var cw = new ChannelProgram.ControlWord().setBuffer(dirTrackSlice)
                                                  .setDirection(ChannelProgram.Direction.Increment)
@@ -266,11 +264,11 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
         // For this reason, we need to write an entire block.
         var blockSize = device.getInfo().getBlockSize();
         var label = new long[blockSize];
-        label[0] = Word36.stringToWordASCII("VOL1").getW();
+        label[0] = Word36.stringToWordASCII("VOL1");
 
         var paddedPack = String.format("%-8s", packName);
-        label[1] = Word36.stringToWordASCII(paddedPack.substring(0, 4)).getW();
-        label[2] = Word36.stringToWordASCII(paddedPack.substring(4, 8)).getW();
+        label[1] = Word36.stringToWordASCII(paddedPack.substring(0, 4));
+        label[2] = Word36.stringToWordASCII(paddedPack.substring(4, 8));
         label[2] = Word36.setH2(label[2], 0);
 
         label[3] = firstDirectoryTrackAddress;
