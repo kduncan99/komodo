@@ -4,9 +4,7 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 
-import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.baselib.FieldDescriptor;
-import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.kex.kasm.*;
 import com.kadware.komodo.kex.kasm.diagnostics.*;
 import com.kadware.komodo.kex.kasm.exceptions.*;

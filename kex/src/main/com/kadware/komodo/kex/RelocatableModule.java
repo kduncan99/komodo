@@ -5,7 +5,6 @@
 package com.kadware.komodo.kex;
 
 import com.kadware.komodo.baselib.FieldDescriptor;
-import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.util.LinkedList;
 import java.util.List;

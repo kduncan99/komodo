@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.kex.kasm.expressions.builtInFunctions;
 
-import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.CharacterMode;
 import com.kadware.komodo.kex.kasm.LineSpecifier;

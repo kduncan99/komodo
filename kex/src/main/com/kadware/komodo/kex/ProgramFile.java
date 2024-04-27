@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.kex;
 
-import com.kadware.komodo.baselib.Word36;
 import java.io.File;
 import java.io.IOException;
 

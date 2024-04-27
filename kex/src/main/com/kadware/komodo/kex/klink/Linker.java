@@ -9,7 +9,6 @@ import com.kadware.komodo.baselib.AccessPermissions;
 import com.kadware.komodo.baselib.BankType;
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.baselib.VirtualAddress;
-import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.io.OutputStream;

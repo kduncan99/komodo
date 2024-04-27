@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 
-import com.kadware.komodo.baselib.DoubleWord36;
 import com.kadware.komodo.baselib.FieldDescriptor;
 import com.kadware.komodo.kex.kasm.Form;
 import com.kadware.komodo.kex.kasm.LineSpecifier;

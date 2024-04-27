@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.kex.kasm;
 
-import com.kadware.komodo.baselib.Word36;
 import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.dictionary.IntegerValue;
 import java.util.LinkedList;

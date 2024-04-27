@@ -1,6 +1,5 @@
 package com.kadware.komodo.kex;
 
-import com.kadware.komodo.baselib.ArraySlice;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import org.junit.Test;
