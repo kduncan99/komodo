@@ -297,7 +297,7 @@ public class MFDManager implements Manager {
         createFixedFileCycle(fsInfo, fcInfo);
 
         // Create DAD tables for the MFD$$ file
-        //  TODO (persist mfdFas into the MFD) - requires method for doing such
+        persistDADTable(_mfdFileAddress);
 
         // Assign MFD$$ to the exec, then write all the directory tracks to disk and clear the dirty block table.
         //  TODO -
@@ -372,8 +372,6 @@ public class MFDManager implements Manager {
              AbsoluteCycleConflictException,
              AbsoluteCycleOutOfRangeException {
         // If fsInfo is empty, we don't need to verify absolute file cycle.
-        int newCycleRange = fsInfo.getCurrentCycleRange();
-        int newHighestCycle = fsInfo.getHighestAbsoluteCycle();
         if (fsInfo.getCycleCount() > 0) {
             for (var fci : fsInfo.getCycleInfo()) {
                 if (fci.getAbsoluteCycle() == fcInfo.getAbsoluteCycle()) {
@@ -387,7 +385,7 @@ public class MFDManager implements Manager {
                 // wrap-around, and new cycle is logically higher than existing highest cycle.
                 var effectiveNew = fcInfo.getAbsoluteCycle() + 999;
                 var lowestExisting = fsInfo.getCycleInfo().getLast().getAbsoluteCycle();
-                newCycleRange = effectiveNew - lowestExisting + 1;
+                int newCycleRange = effectiveNew - lowestExisting + 1;
                 if (newCycleRange > fsInfo.getMaxCycleRange()) {
                     throw new AbsoluteCycleOutOfRangeException();
                 }
@@ -403,7 +401,7 @@ public class MFDManager implements Manager {
                 if (fcInfo.getAbsoluteCycle() > fsInfo.getHighestAbsoluteCycle()) {
                     // new absolute is higher than the current highest
                     var lowestExisting = fsInfo.getCycleInfo().getLast().getAbsoluteCycle();
-                    newCycleRange = fcInfo.getAbsoluteCycle() - lowestExisting + 1;
+                    int newCycleRange = fcInfo.getAbsoluteCycle() - lowestExisting + 1;
                     if (newCycleRange > fsInfo.getMaxCycleRange()) {
                         throw new AbsoluteCycleOutOfRangeException();
                     }
@@ -575,13 +573,39 @@ public class MFDManager implements Manager {
     }
 
     /**
+     * Retrieves a list of sectors which comprise the complete DAD table for a mass storage file cycle.
+     * @param mainItem0Address address of main item sector 0 for the file cycle.
+     * @return list
+     * @throws ExecStoppedException if something goes wrong
+     */
+    private LinkedList<ArraySlice> getDADChain(
+        final MFDRelativeAddress mainItem0Address
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "getDADChain(%s)", mainItem0Address.toString());
+        var dadChain = new LinkedList<ArraySlice>();
+
+        var mainItem0 = getMFDSector(mainItem0Address);
+        var dadAddr = mainItem0.get(0) & 0_007777_777777;
+        while (dadAddr != 0) {
+            var dad = getMFDSector(new MFDRelativeAddress(dadAddr));
+            dadChain.add(dad);
+            dadAddr = dad.get(0);
+        }
+
+        LogManager.logTrace(LOG_SOURCE, "getDADChain returning");
+        return dadChain;
+    }
+
+    /**
      * Retrieves an ArraySlice containing a subset of a directory track
      * which represents the requested MFD sector
      * @param address MFD sector address
      * @return ArraySlice
      * @throws ExecStoppedException if we crashed
      */
-    ArraySlice getMFDSector(final MFDRelativeAddress address) throws ExecStoppedException {
+    private ArraySlice getMFDSector(
+        final MFDRelativeAddress address
+    ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "getMFDSector(%s)", address.toString());
 
         var trackAddr = new MFDRelativeAddress(address.getLDATIndex(), address.getTrackId(), 0);
@@ -608,6 +632,14 @@ public class MFDManager implements Manager {
         var pi = (PackInfo)(ni.getMediaInfo());
         var aligned = pi.alignSectorAddressToBlock(sectorAddress);
         _dirtyCacheBlocks.add(aligned);
+    }
+
+    private void persistDADTable(
+        final DiskFileCycleInfo fcInfo
+    ) throws ExecStoppedException {
+        var existingChain = getDADChain(fcInfo.getMainItem0Address());
+        var newChain = fcInfo.getFileAllocations().createDADChain();
+        // TODO
     }
 
     /**

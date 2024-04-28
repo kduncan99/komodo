@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.mfd;
 
 import static com.bearsnake.komodo.kexec.exec.Exec.INVALID_LDAT;
 
+import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
 
 import java.util.LinkedList;
@@ -25,6 +26,112 @@ public class FileAllocationSet {
 
     public synchronized long getHighestTrackAllocated() {
         return _fileAllocations.isEmpty() ? -1 : _fileAllocations.getLast().getFileRegion().getHighestTrack();
+    }
+
+    /**
+     * Creates a DAD chain to represent the content of this FileAllocationSet.
+     * Caller needs to dress up the DAD entries before persisting them to disk,
+     * or else copy the relevant content to pre-existing entries.
+     */
+    public LinkedList<ArraySlice> createDADChain() {
+        var dadChain = new LinkedList<ArraySlice>();
+
+        ArraySlice currentDAD = null;
+        long currentDADNextTrack = 0;
+        int wx = 4; // word address of first DAD entry
+        int fx = 0;
+        while (fx < _fileAllocations.size()) {
+            var fa = _fileAllocations.get(fx);
+            var fr = fa.getFileRegion();
+            var hwTid = fa.getHardwareTrackId();
+            if (currentDAD == null) {
+                currentDAD = new ArraySlice(new long[28]);
+                dadChain.add(currentDAD);
+                currentDAD.set(2, fr.getTrackId() * 1792);
+                currentDAD.set(3, fr.getTrackCount() * 1792);
+                currentDADNextTrack = fr.getTrackId() + fr.getTrackCount();
+
+                currentDAD.set(4, hwTid.getTrackId() * 1792);
+                currentDAD.set(5, fr.getTrackCount() * 1792);
+                currentDAD.setH2(6, hwTid.getLDATIndex());
+                wx = 7; // word index of next entry to be used
+                fx++;   // move on to next fa
+                continue;
+            }
+
+            // do we need to establish a hole?
+            if (fr.getTrackId() > currentDADNextTrack) {
+                // yes - unless there's only space for one more entry.
+                // in that case, we're done with this entry.
+                if (wx == 25) {
+                    currentDAD.set(wx - 1, (currentDAD.get(wx - 1) | 04)); // DAD flags - prev entry is last DAD
+                    currentDAD = null;
+                    continue;
+                }
+
+                currentDAD.set(wx, currentDADNextTrack * 1792);
+                long holeWords = (fr.getTrackId() - currentDADNextTrack) * 1792;
+                currentDAD.set(wx + 1, holeWords);
+                currentDAD.setH2(wx + 2, 0_400000);
+                wx += 3;
+                continue;
+            }
+
+            // create an entry
+            currentDAD.set(wx, hwTid.getTrackId() * 1792);
+            currentDAD.set(wx + 1, fr.getTrackCount() * 1792);
+            currentDAD.setH2(wx + 2, hwTid.getLDATIndex());
+            fx++;
+            wx += 3;
+
+            // is it the last one? mark it and release it.
+            if (wx == 28) {
+                currentDAD.set(wx - 1, (currentDAD.get(wx - 1) | 04)); // DAD flags - mark the last entry
+                currentDAD = null;
+            }
+        }
+
+        // If there's a current DAD, mark it
+        if (currentDAD != null) {
+            currentDAD.set(wx - 1, (currentDAD.get(wx - 1) | 04)); // DAD flags - mark the last entry
+        }
+
+        return dadChain;
+    }
+
+    /**
+     * Creates a FileAllocationSet to represent the content of a DAD chain
+     */
+    public static FileAllocationSet createFromDADChain(
+        final LinkedList<ArraySlice> dadChain
+    ) {
+        var fas = new FileAllocationSet();
+        for (var dad : dadChain) {
+            var frAddress = dad.get(2); // file-relative address of first word described in this DAD
+            var frLast = dad.get(3);    // file-relative address of last word + 1
+            for (int wx = 0; wx < 28; wx += 3) {
+                long devAddr = dad.get(wx);
+                long wordCount = dad.get(wx + 1);
+                int dadFlags = (int)dad.getH1(wx + 2);
+                boolean lastEntry = (dadFlags & 04) != 0;
+                int ldatIndex = (int)dad.getH2(wx + 3);
+
+                if (ldatIndex != 0_400000) {
+                    // this is not a hole-DAD... create an FA
+                    var region = new LogicalTrackExtent(frAddress / 1792, wordCount / 1792);
+                    var hwTid = new HardwareTrackId(ldatIndex, devAddr / 1792);
+                    var fa = new FileAllocation(region, hwTid);
+                    fas.mergeIntoFileAllocationSet(fa);
+                }
+
+                frAddress += wordCount;
+                if (lastEntry || (frAddress >= frLast)) {
+                    break;
+                }
+            }
+        }
+
+        return fas;
     }
 
     /**
