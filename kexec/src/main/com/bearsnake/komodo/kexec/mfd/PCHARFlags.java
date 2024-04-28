@@ -27,4 +27,7 @@ public class PCHARFlags {
         inf.extract(value);
         return inf;
     }
+
+    public PCHARFlags setGranularity(final Granularity value) { _granularity = value; return this; }
+    public PCHARFlags setIsWordAddressable(final boolean value) { _isWordAddressable = value; return this; }
 }

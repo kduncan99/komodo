@@ -31,4 +31,9 @@ public class FileFlags {
         inf.extract(value);
         return inf;
     }
+
+    public FileFlags setIsLargeFile(final boolean value) { _isLargeFile = value; return this; }
+    public FileFlags setAssignmentAcceleration(final boolean value) { _assignmentAcceleration = value; return this; }
+    public FileFlags setIsWrittenTo(final boolean value) { _isWrittenTo = value; return this; }
+    public FileFlags setStoreThrough(final boolean value) { _storeThrough = value; return this; }
 }

@@ -34,4 +34,10 @@ public class UnitSelectionIndicators {
         inf.extract(value);
         return inf;
     }
+
+    public UnitSelectionIndicators setCreatedViaDevicePlacement(final boolean value) { _createdViaDevicePlacement = value; return this; }
+    public UnitSelectionIndicators setCreatedViaControlUnitPlacement(final boolean value) { _createdViaControlUnitPlacement = value; return this; }
+    public UnitSelectionIndicators setCreatedViaLogicalPlacement(final boolean value) { _createdViaLogicalPlacement = value; return this; }
+    public UnitSelectionIndicators setMultipleDevices(final boolean value) { _multipleDevices = value; return this; }
+    public UnitSelectionIndicators setInitialLDATIndex(final int value) { _initialLDATIndex = value & 07777; return this; }
 }

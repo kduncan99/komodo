@@ -12,10 +12,10 @@ public class DisableFlags {
     private boolean _cacheDrainFailure;
 
     public int compose() {
-        int value = _directoryError ? 020 : 0;
-        value |= _assignedAndWrittenAtExecStop ? 010 : 0;
-        value |= _inaccessibleBackup ? 004 : 0;
-        value |= _cacheDrainFailure ? 002 : 0;
+        int value = _directoryError ? 060 : 0;
+        value |= _assignedAndWrittenAtExecStop ? 050 : 0;
+        value |= _inaccessibleBackup ? 044 : 0;
+        value |= _cacheDrainFailure ? 042 : 0;
         return value;
     }
 
@@ -31,4 +31,9 @@ public class DisableFlags {
         inf.extract(value);
         return inf;
     }
+
+    public DisableFlags setDirectoryError(final boolean value) { _directoryError = value; return this; }
+    public DisableFlags setAssignedAndWrittenAtExecStop(final boolean value) { _assignedAndWrittenAtExecStop = value; return this; }
+    public DisableFlags setInaccessibleBackup(final boolean value) { _inaccessibleBackup = value; return this; }
+    public DisableFlags setCacheDrainFailure(final boolean value) { _cacheDrainFailure = value; return this; }
 }

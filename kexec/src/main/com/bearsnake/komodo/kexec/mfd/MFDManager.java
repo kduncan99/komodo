@@ -6,8 +6,11 @@ package com.bearsnake.komodo.kexec.mfd;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleConflictException;
+import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleOutOfRangeException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
@@ -22,6 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -178,7 +182,7 @@ public class MFDManager implements Manager {
      */
     public void initializeMassStorage(
         final Collection<NodeInfo> fixedDiskInfo
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, AbsoluteCycleConflictException, AbsoluteCycleOutOfRangeException {
         LogManager.logTrace(LOG_SOURCE, "initializeMassStorage");
 
         var start = Instant.now();
@@ -241,7 +245,7 @@ public class MFDManager implements Manager {
             sector1.set(2, packInfo.getTrackCount());
             sector1.set(3, packInfo.getTrackCount() - 2);
             String packId = String.format("%-6s", packInfo.getPackName());
-            sector1.set(4, Word36.stringToWordFieldata(packId).getW());
+            sector1.set(4, Word36.stringToWordFieldata(packId));
             sector1.set(5, INVALID_LINK);
 
             // +010,T1 is blocks per track
@@ -270,9 +274,27 @@ public class MFDManager implements Manager {
         var mfdProjectId = e.getRunControlEntry().getProjectId();
         var mfdAccountId = e.getRunControlEntry().getAccountId();
         var mfdEquip = e.getConfiguration().getMassStorageDefaultMnemonic();
+        var fFlags = new FileFlags().setIsLargeFile(true);
         var inhFlags = new InhibitFlags().setIsGuarded(true).setIsPrivate(true).setIsUnloadInhibited(true);
-        _mfdFileAddress = createFileSet(FileType.Fixed, mfdQualifier, mfdFilename, mfdProjectId, "", "", true);
-        createFixedFileCycle(_mfdFileAddress, mfdAccountId, 1, mfdEquip, inhFlags);
+        var pchFlags = new PCHARFlags().setGranularity(Granularity.Track);
+        var usInd = new UnitSelectionIndicators().setMultipleDevices(true).setInitialLDATIndex(01);
+
+        var fsInfo = new FileSetInfo().setFileType(FileType.Fixed)
+                                      .setQualifier(mfdQualifier)
+                                      .setFilename(mfdFilename)
+                                      .setProjectId(mfdProjectId)
+                                      .setIsGuarded(true);
+        _mfdFileAddress = createFileSet(fsInfo);
+
+        var fcInfo = new FixedDiskFileCycleInfo(fsInfo);
+        fcInfo.setUnitSelectionIndicators(usInd)
+              .setFileFlags(fFlags)
+              .setPCHARFlags(pchFlags)
+              .setAccountId(mfdAccountId)
+              .setAbsoluteCycle(1)
+              .setAssignMnemonic(mfdEquip)
+              .setInhibitFlags(inhFlags);
+        createFixedFileCycle(fsInfo, fcInfo);
 
         // Create DAD tables for the MFD$$ file
         //  TODO (persist mfdFas into the MFD) - requires method for doing such
@@ -332,7 +354,7 @@ public class MFDManager implements Manager {
             expandDirectory();
         }
 
-        var result = _freeMFDSectors.removeFirst();
+        var result = _freeMFDSectors.pollFirst();
         LogManager.logTrace(LOG_SOURCE, "allocateDirectorySector returning %0120", result);
         return result;
     }
@@ -340,149 +362,123 @@ public class MFDManager implements Manager {
     /**
      * Creates MFD sector(s) describing a file cycle.
      * Updates the MFD sector(s) describing the file set accordingly.
-     * @param leadItem0Addr address of file set lead item 0 sector
-     * @param accountId accountId
-     * @param absoluteFileCycle absolute file cycle - must be within the prescribed cycle range
-     * @param assignMnemonic mnemonic for this file - must be compatible with the file set filetype
-     * @param inhibitFlags inhibit flags
-     * @param descriptorFlags descriptor flags
-     * @param fileFlags file flags
-     * @param pcharFlags PCHAR flags
-     * @return MFDRelativeAddress of the main item sector 0 if successful, else null (e.g., file cycle out of range)
+     * Updates the main item sector addresses in the fcInfo object
      * @throws ExecStoppedException if something fatal occurs
      */
-    private synchronized MFDRelativeAddress createFixedFileCycle(
-        final MFDRelativeAddress leadItem0Addr,
-        final String accountId,
-        final int absoluteFileCycle,
-        final String assignMnemonic,
-        final InhibitFlags inhibitFlags,
-        final DescriptorFlags descriptorFlags,
-        final FileFlags fileFlags,
-        final PCHARFlags pcharFlags
-        // TODO we don't have other information yet - pack-id table, reel-id table, etc.
-        //  should we just take a FileCycleInfo struct as the parameter?
-        //  (we cannot put this code into FileCycleInfo because we need some varying number of disk pack sectors)
-        //  (force descriptor flags to *not* be tape or removable)
-    ) throws ExecStoppedException {
-        var leadItem0 = getMFDSector(leadItem0Addr);
-        ArraySlice leadItem1 = null;
-        MFDRelativeAddress leadItem1Addr = null;
-        var link = leadItem0.get(0);
-        if ((link & 0_400000_000000L) == 0) {
-            leadItem1Addr = new MFDRelativeAddress(link & 0_007777_777777L);
-            leadItem1 = getMFDSector(leadItem1Addr);
-        }
+    private synchronized void createFixedFileCycle(
+        final FileSetInfo fsInfo,
+        final DiskFileCycleInfo fcInfo
+    ) throws ExecStoppedException,
+             AbsoluteCycleConflictException,
+             AbsoluteCycleOutOfRangeException {
+        // If fsInfo is empty, we don't need to verify absolute file cycle.
+        int newCycleRange = fsInfo.getCurrentCycleRange();
+        int newHighestCycle = fsInfo.getHighestAbsoluteCycle();
+        if (fsInfo.getCycleCount() > 0) {
+            for (var fci : fsInfo.getCycleInfo()) {
+                if (fci.getAbsoluteCycle() == fcInfo.getAbsoluteCycle()) {
+                    throw new AbsoluteCycleConflictException();
+                }
+            }
 
-        // Check file cycle constraints - can we actually do this?
-        // Bear in mind that we cycle around below 1 and above 999.
-        var maxCycles = Word36.getS3(leadItem0.get(011));
-        var highestAbs = Word36.getT3(leadItem0.get(011));
-        //  TODO
+            // Check file cycle constraints - can we actually do this?
+            // Bear in mind that we cycle around below 1 and above 999.
+            if ((fsInfo.getHighestAbsoluteCycle() >= 967) && (fcInfo.getAbsoluteCycle() <= 32)) {
+                // wrap-around, and new cycle is logically higher than existing highest cycle.
+                var effectiveNew = fcInfo.getAbsoluteCycle() + 999;
+                var lowestExisting = fsInfo.getCycleInfo().getLast().getAbsoluteCycle();
+                newCycleRange = effectiveNew - lowestExisting + 1;
+                if (newCycleRange > fsInfo.getMaxCycleRange()) {
+                    throw new AbsoluteCycleOutOfRangeException();
+                }
+            } else if ((fsInfo.getHighestAbsoluteCycle() <= 32) && (fcInfo.getAbsoluteCycle() >= 967)) {
+                // wrap-around, new cycle is logically less than the existing highest cycle.
+                var effectiveHighest = fsInfo.getHighestAbsoluteCycle() + 999;
+                var potentialCycleRange = effectiveHighest - fcInfo.getAbsoluteCycle() + 1;
+                if (potentialCycleRange > fsInfo.getMaxCycleRange()) {
+                    throw new AbsoluteCycleOutOfRangeException();
+                }
+            } else {
+                // no wrap-around
+                if (fcInfo.getAbsoluteCycle() > fsInfo.getHighestAbsoluteCycle()) {
+                    // new absolute is higher than the current highest
+                    var lowestExisting = fsInfo.getCycleInfo().getLast().getAbsoluteCycle();
+                    newCycleRange = fcInfo.getAbsoluteCycle() - lowestExisting + 1;
+                    if (newCycleRange > fsInfo.getMaxCycleRange()) {
+                        throw new AbsoluteCycleOutOfRangeException();
+                    }
+                } else {
+                    // new absolute is lower than the current highest
+                    var potentialCycleRange = fsInfo.getHighestAbsoluteCycle() - fcInfo.getAbsoluteCycle() + 1;
+                    if (potentialCycleRange > fsInfo.getMaxCycleRange()) {
+                        throw new AbsoluteCycleOutOfRangeException();
+                    }
+                }
+            }
+        }
 
         // Do we need to create a lead item sector 1?
-        //  TODO
+        // (p.s., don't remove it if we don't need one, just leave it be).
+        if ((fsInfo.getLeadItem1Address() == null) && fsInfo.isSector1Required()) {
+            var leadItem0Addr = fsInfo.getLeadItem0Address();
+            var leadItem1Addr = allocateDirectorySector();
+            fsInfo.setLeadItem1Address(leadItem1Addr);
 
-        var mainItem0Addr = allocateDirectorySector();
-        var mainItem0 = getMFDSector(mainItem0Addr);
-        IntStream.range(0, 28).forEach(wx -> mainItem0.set(wx, 0));
+            var leadItem0 = getMFDSector(leadItem0Addr);
+            var leadItem1 = getMFDSector(leadItem1Addr);
 
-        var mainItem1Addr = allocateDirectorySector();
-        var mainItem1 = getMFDSector(mainItem1Addr);
-        IntStream.range(0, 28).forEach(wx -> mainItem1.set(wx, 0));
-
-        // Populate the main items
-        mainItem0.set(0, 0_600000_000000L);
-        for (int wx = 1; wx <= 6; wx++) {
-            mainItem0.set(wx, leadItem0.get(1));
+            leadItem0.set(0, leadItem1Addr.getValue() | 0_100000_000000L);
+            leadItem1.set(0, 0_400000_000000L);
+            IntStream.range(1, 28).forEach(x -> leadItem1._array[x] = 0);
         }
 
-        String paddedAccountId = String.format("%-12s", accountId);
-        leadItem0.set(7, Word36.stringToWordFieldata(paddedAccountId.substring(0, 6)).getW());
-        leadItem0.set(010, Word36.stringToWordFieldata(paddedAccountId.substring(6)).getW());
-        leadItem0.set(013, leadItem0Addr.getValue());
+        var addresses = new LinkedList<MFDRelativeAddress>();
+        var items = new LinkedList<ArraySlice>();
+        var itemCount = fcInfo.getRequiredNumberOfMainItems();
+        for (var ix = 0; ix < itemCount; ++ix) {
+            var addr = allocateDirectorySector();
+            addresses.add(addr);
+            items.add(getMFDSector(addr));
+            markDirectorySectorDirty(addr);
+        }
 
-        var w014 = Word36.setT1(0, descriptorFlags.compose());
-        w014 = Word36.setS3(w014, fileFlags.compose());
-        leadItem0.set(014, w014);
+        // Populate the main items
+        fcInfo.setMainItemAddresses(addresses);
+        fcInfo.populateMainItems(items);
 
-        var w015 = mainItem1Addr.getValue();
-        w015 = Word36.setS1(w015, pcharFlags.compose());
-        leadItem0.set(015, w015);
-
-        String paddedMnemonic = String.format("%-6s", assignMnemonic);
-        leadItem0.set(016, Word36.stringToWordFieldata(paddedMnemonic).getW());
-
-        var w021 = Word36.setS2(0, inhibitFlags.compose());
-        w021 = Word36.setT3(0, absoluteFileCycle);
-        leadItem0.set(021, w021);
-
-        // TODO set 023 to time-of-last-catalog
-
-        //  TODO
-
-        // Link the main items into the lead item(s) and update the cycle information in the lead item.
-        //  TODO
-
-        return mainItem0Addr;
+        // Link main item sector 0 into the lead item(s) and update the cycle information in the lead item.
+        var cycInfo = new FileSetCycleInfo().setAbsoluteCycle(fcInfo.getAbsoluteCycle())
+                                            .setMainItem0Address(fcInfo.getMainItem1Address())
+                                            .setToBeCataloged(fcInfo.getDescriptorFlags().toBeCataloged());
+        fsInfo.mergeFileSetCycleInfo(cycInfo);
+        persistLeadItems(fsInfo);
     }
 
     /**
      * Creates MFD sector(s) describing an empty fileset.
      * Normally, empty file sets do not exist. The caller must follow this up by calling createFileCycle.
      * THe fileset has no security words, and is initialized to allow a max of 32 file cycles.
-     * @param fileType file type of the file set
-     * @param qualifier qualifier
-     * @param filename filename
-     * @param projectId projectId
-     * @param readKey readkey (blank if none)
-     * @param writeKey writekey (blank if none)
-     * @param isGuarded true if this is to be a G-option file set
      * @return MFD sector address of the lead item sector 0
      * @throws ExecStoppedException if something goes badly
      */
     private synchronized MFDRelativeAddress createFileSet(
-        final FileType fileType,
-        final String qualifier,
-        final String filename,
-        final String projectId,
-        final String readKey,
-        final String writeKey,
-        final boolean isGuarded
+        final FileSetInfo fsInfo
     ) throws ExecStoppedException {
         var leadItem0Addr = allocateDirectorySector();
         var leadItem0 = getMFDSector(leadItem0Addr);
-        IntStream.range(0, 28).forEach(wx -> leadItem0.set(wx, 0));
-
-        leadItem0.set(0, 0_500000_000000L);
-
-        String paddedQualifier = String.format("%-12s", qualifier);
-        leadItem0.set(1, Word36.stringToWordFieldata(paddedQualifier.substring(0, 6)).getW());
-        leadItem0.set(2, Word36.stringToWordFieldata(paddedQualifier.substring(6)).getW());
-
-        String paddedFilename = String.format("%-12s", filename);
-        leadItem0.set(3, Word36.stringToWordFieldata(paddedFilename.substring(0, 6)).getW());
-        leadItem0.set(4, Word36.stringToWordFieldata(paddedFilename.substring(6)).getW());
-
-        String paddedProjectId = String.format("%-12s", projectId);
-        leadItem0.set(5, Word36.stringToWordFieldata(paddedProjectId.substring(0, 6)).getW());
-        leadItem0.set(6, Word36.stringToWordFieldata(paddedProjectId.substring(6)).getW());
-
-        String paddedReadKey = String.format("%-6s", readKey);
-        leadItem0.set(7, Word36.stringToWordFieldata(paddedReadKey).getW());
-
-        String paddedWriteKey = String.format("%-6s", writeKey);
-        leadItem0.set(010, Word36.stringToWordFieldata(paddedWriteKey).getW());
-
-        long w = Word36.setS1(0, fileType.getValue());
-        w = Word36.setS3(w, 32); // set initial cycle limit to 32
-        leadItem0.set(011, w);
-        if (isGuarded) {
-            w = Word36.setS1(0, 040);
-            leadItem0.set(012, w);
+        MFDRelativeAddress leadItem1Addr = null;
+        ArraySlice leadItem1 = null;
+        if (fsInfo.isSector1Required()) {
+            leadItem1Addr = allocateDirectorySector();
+            leadItem1 = getMFDSector(leadItem1Addr);
+            fsInfo.setLeadItem1Address(leadItem1Addr);
         }
 
+        fsInfo.populateLeadItemSectors(leadItem0, leadItem1);
         markDirectorySectorDirty(leadItem0Addr);
+        if (leadItem1Addr != null) {
+            markDirectorySectorDirty(leadItem1Addr);
+        }
         return leadItem0Addr;
     }
 
@@ -612,5 +608,27 @@ public class MFDManager implements Manager {
         var pi = (PackInfo)(ni.getMediaInfo());
         var aligned = pi.alignSectorAddressToBlock(sectorAddress);
         _dirtyCacheBlocks.add(aligned);
+    }
+
+    /**
+     * Rewrites the lead item(s) for a given FileSetInfo object.
+     * If the object needs a lead item sector 1 and does not currently have one, we create one.
+     */
+    private void persistLeadItems(
+        final FileSetInfo fsInfo
+    ) throws ExecStoppedException {
+        var leadItem0 = getMFDSector(fsInfo.getLeadItem0Address());
+        ArraySlice leadItem1 = null;
+        if (fsInfo.isSector1Required() && fsInfo.getLeadItem1Address() == null) {
+            fsInfo.setLeadItem1Address(allocateDirectorySector());
+            leadItem1 = getMFDSector(fsInfo.getLeadItem1Address());
+        }
+
+        fsInfo.populateLeadItemSectors(leadItem0, leadItem1);
+
+        markDirectorySectorDirty(fsInfo.getLeadItem0Address());
+        if (fsInfo.getLeadItem1Address() != null) {
+            markDirectorySectorDirty(fsInfo.getLeadItem1Address());
+        }
     }
 }

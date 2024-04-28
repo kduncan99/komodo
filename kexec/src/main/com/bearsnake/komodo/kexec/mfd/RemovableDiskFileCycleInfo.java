@@ -4,14 +4,33 @@
 
 package com.bearsnake.komodo.kexec.mfd;
 
+import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import java.util.LinkedList;
+
 public class RemovableDiskFileCycleInfo extends DiskFileCycleInfo {
 
-    private String _readKey;
-    private String _writeKey;
+    public RemovableDiskFileCycleInfo(FileSetInfo fileSetInfo) {
+        super(fileSetInfo);
+    }
 
-    public final String getReadKey() { return _readKey; }
-    public final String getWriteKey() { return _writeKey; }
+    /**
+     * Populates cataloged file main item sectors 0 and 1
+     * Invokes super class to do the most common things, then fills in anything related to mass storage
+     */
+    @Override
+    public void populateMainItems(
+        final LinkedList<ArraySlice> mainItemSectors
+    ) throws ExecStoppedException {
+        super.populateMainItems(mainItemSectors);
+        var sector0 = mainItemSectors.get(0);
 
-    public final RemovableDiskFileCycleInfo setReadKey(final String value) {_readKey = value; return this; }
-    public final RemovableDiskFileCycleInfo setWriteKey(final String value) {_writeKey = value; return this; }
+        var wReadKey = Word36.stringToWordFieldata(_fileSetInfo.getReadKey());
+        var wWriteKey = Word36.stringToWordFieldata(_fileSetInfo.getWriteKey());
+        sector0.setH1(24, wReadKey >> 18);
+        sector0.setH1(25, wReadKey & 0_777777);
+        sector0.setH1(26, wWriteKey >> 18);
+        sector0.setH1(27, wWriteKey & 0_777777);
+    }
 }
