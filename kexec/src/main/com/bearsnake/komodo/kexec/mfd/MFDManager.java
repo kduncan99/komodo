@@ -578,18 +578,19 @@ public class MFDManager implements Manager {
      * @return list
      * @throws ExecStoppedException if something goes wrong
      */
-    private LinkedList<ArraySlice> getDADChain(
+    private LinkedList<MFDSector> getDADChain(
         final MFDRelativeAddress mainItem0Address
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "getDADChain(%s)", mainItem0Address.toString());
-        var dadChain = new LinkedList<ArraySlice>();
+        var dadChain = new LinkedList<MFDSector>();
 
         var mainItem0 = getMFDSector(mainItem0Address);
-        var dadAddr = mainItem0.get(0) & 0_007777_777777;
-        while (dadAddr != 0) {
-            var dad = getMFDSector(new MFDRelativeAddress(dadAddr));
-            dadChain.add(dad);
-            dadAddr = dad.get(0);
+        var dadLink = mainItem0.get(0) & 0_007777_777777;
+        while (dadLink != 0) {
+            var dadAddr = new MFDRelativeAddress(dadLink);
+            var dad = getMFDSector(dadAddr);
+            dadChain.add(new MFDSector(dadAddr, dad));
+            dadLink = dad.get(0);
         }
 
         LogManager.logTrace(LOG_SOURCE, "getDADChain returning");
@@ -634,12 +635,102 @@ public class MFDManager implements Manager {
         _dirtyCacheBlocks.add(aligned);
     }
 
-    private void persistDADTable(
-        final DiskFileCycleInfo fcInfo
+    /**
+     * Persists DAD tables to the MFD representing the content of the given FileAllocationSet,
+     * for the file cycle indicated by the given main item sector 0 address.
+     */
+    public void persistDADTables(
+        final MFDRelativeAddress mainItem0Address,
+        final FileAllocationSet faSet
     ) throws ExecStoppedException {
-        var existingChain = getDADChain(fcInfo.getMainItem0Address());
-        var newChain = fcInfo.getFileAllocations().createDADChain();
-        // TODO
+        LogManager.logTrace(LOG_SOURCE, "persistDADTables for %s", mainItem0Address.toString());
+
+        // Go get the current chain of DAD entries.
+        // It might be smaller or larger than we need (or non-existent), but we'll deal with that presently.
+        var dadChain = getDADChain(mainItem0Address);
+
+        // Get the allocations for the faSet, and set ax to the index of the next allocation to be persisted.
+        // Also, set dx to the index of the dad sector being populated (for now, -1), and ex to the index
+        // of the next entry in that sector to be populated (for now, 8) -- these settings will ensure that
+        // we select the next (in this case, first) entry to populate.
+        // Finally, set currentDAD null - this is a reference to the DAD sector which corresponds to dx.
+        var allocations = faSet.getFileAllocations();
+        int ax = 0;
+        int dx = -1;
+        int ex = 8;
+        MFDRelativeAddress currentDADAddr = null;
+        ArraySlice currentDAD = null;
+
+        long expectedNextTrackId = 0; // this does not need an initial value
+
+        while (ax < allocations.size()) {
+            if (ex == 8) {
+                // current DAD entry is full, move on to the next one.
+                // If there isn't a next one, we need to allocate a new one and put in on the chain.
+                dx++;
+                if (dx == dadChain.size()) {
+                    var newDADAddr = allocateDirectorySector();
+                    var newDAD = getMFDSector(newDADAddr);
+                    IntStream.range(0, 28).forEach(x -> newDAD._array[x] = 0);
+                    dadChain.add(new MFDSector(newDADAddr, newDAD));
+
+                    // link this address to the previous DAD entry (but only if this is not the first).
+                    if (currentDAD != null) {
+                        currentDAD.set(0, newDADAddr.getValue());
+                        newDAD.set(1, currentDADAddr.getValue());
+                    } else {
+                        // If it *is* the first, then the previous link needs to point to the main item
+                        newDAD.set(1, mainItem0Address.getValue());
+                    }
+                }
+                currentDADAddr = dadChain.get(dx).getAddress();
+                currentDAD = dadChain.get(dx).getSector();
+                ex = 0;
+            }
+
+            var alloc = allocations.get(ax);
+            var fileRegion = alloc.getFileRegion();
+            var hwTid = alloc.getHardwareTrackId();
+
+            // If this is the first entry in this DAD, create DAD header values and reset expectedNextTrackId.
+            if (ex == 0) {
+                currentDAD.set(2, fileRegion.getTrackId() * 1792);
+                currentDAD.set(3, fileRegion.getTrackId() * 1792);
+                expectedNextTrackId = fileRegion.getTrackId();
+            }
+
+            // Does this entry immediately follow the previous entry in the file-relative address space?
+            // If not, we need to create a hole DAD.
+
+            if ((ax > 0) && (fileRegion.getTrackId() != expectedNextTrackId)) {
+                // If this hole entry would go into the last entry of the DAD, there's no reason to create it.
+                if (ex == 7) {
+                    // TODO
+                } else {
+                    // TODO
+                }
+                continue;
+            }
+
+            // Now create a DAD entry (and update the last word + 1 in the header)
+            int wx = (3 * ex) + 4;
+            currentDAD.set(wx, hwTid.getTrackId() * 1792);
+            currentDAD.set(wx + 1, fileRegion.getTrackCount() * 1792);
+            currentDAD.setH2(wx + 2, hwTid.getLDATIndex());
+
+            expectedNextTrackId += fileRegion.getTrackCount();
+            currentDAD.set(3, expectedNextTrackId * 1792);
+            ex++;
+            ax++
+        }
+
+        // Ensure the last DAD entry is marked as the last entry in its table
+
+        // Release any unused DAD entries
+        //  TODO
+
+        // Mark all the DAD sectors dirty
+        dadChain.stream().map(MFDSector::getAddress).forEach(this::markDirectorySectorDirty);
     }
 
     /**

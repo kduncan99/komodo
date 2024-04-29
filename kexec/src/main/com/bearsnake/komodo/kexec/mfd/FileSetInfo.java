@@ -11,14 +11,13 @@ import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.stream.IntStream;
 
 /**
  * Describes a file set
  */
 public class FileSetInfo {
 
-    private MFDRelativeAddress _leadItem0Address;
-    private MFDRelativeAddress _leadItem1Address;
     private String _qualifier = "";
     private String _filename = "";
     private String _projectId = "";
@@ -28,15 +27,13 @@ public class FileSetInfo {
     private boolean _isGuarded;
     private boolean _plusOneExists;
     private int _cycleCount; // number of f-cycles that exist, not counting to-be-cataloged / to-be-dropped
-    private int _maxCycleRange; //
+    private int _maxCycleRange;
     private int _currentCycleRange; // highest cycle - lowest cycle + 1
     private int _highestAbsoluteCycle;
     private LinkedList<FileSetCycleInfo> _cycleInfo = new LinkedList<>();
     private int _numberOfSecurityWords;
     private int _accessType;
 
-    public MFDRelativeAddress getLeadItem0Address() { return _leadItem0Address; }
-    public MFDRelativeAddress getLeadItem1Address() { return _leadItem1Address; }
     public String getQualifier() { return _qualifier; }
     public String getFilename() { return _filename; }
     public String getProjectId() { return _projectId; }
@@ -54,8 +51,6 @@ public class FileSetInfo {
     public int getAccessType() { return _accessType; }
 
     public FileSetInfo addCycleInfo(final FileSetCycleInfo value) { _cycleInfo.add(value); return this; }
-    public FileSetInfo setLeadItem0Address(final MFDRelativeAddress value) { _leadItem0Address = value; return this; }
-    public FileSetInfo setLeadItem1Address(final MFDRelativeAddress value) { _leadItem1Address = value; return this; }
     public FileSetInfo setQualifier(final String value) { _qualifier = value; return this; }
     public FileSetInfo setFilename(final String value) { _filename = value; return this; }
     public FileSetInfo setProjectId(final String value) { _projectId = value; return this; }
@@ -72,6 +67,9 @@ public class FileSetInfo {
     public FileSetInfo setNumberOfSecurityWords(final int value) { _numberOfSecurityWords = value; return this; }
     public FileSetInfo setAccessType(final int value) { _accessType = value; return this; }
 
+    /**
+     * Indicates whether sector 1 is required based on the content of this object.
+     */
     public boolean isSector1Required() {
         var cycleCapacity = 28 - 11 - _numberOfSecurityWords;
         return _cycleCount > cycleCapacity;
@@ -99,24 +97,19 @@ public class FileSetInfo {
 
     /**
      * Populates the given lead item sector(s).
-     * @param sector0 sector 0 content
-     * @param sector1 sector 1 content - can be null if and only if a sector 1 is not required.
+     * @param mfdSectors either 1 or 2 MFDSectors representing lead item 0 and optionally, lead item 1.
      */
     public void populateLeadItemSectors(
-        final ArraySlice sector0,
-        final ArraySlice sector1
+        LinkedList<MFDSector> mfdSectors
     ) throws ExecStoppedException {
-        if (isSector1Required() && (sector1 == null)) {
+        if (isSector1Required() && (mfdSectors.size() < 2)) {
             Exec.getInstance().stop(StopCode.ExecActivityTakenToEMode);
             throw new ExecStoppedException();
         }
 
-        for (int x = 0; x < 28; x++) {
-            sector0._array[x] = 0;
-            if (sector1 != null) {
-                sector1._array[x] = 0;
-            }
-        }
+        mfdSectors.forEach(ms -> IntStream.range(0, 28).forEach(x -> ms.getSector()._array[x] = 0));
+        var sector0 = mfdSectors.getFirst().getSector();
+        var sector1 = mfdSectors.size() > 1 ? mfdSectors.get(1).getSector() : null;
 
         sector0.set(0, 0_500000_000000L);
 

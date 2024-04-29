@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.kexec.mfd;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.DateConverter;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
@@ -13,8 +12,10 @@ import java.util.LinkedList;
 
 public abstract class DiskFileCycleInfo extends FileCycleInfo {
 
-    protected DiskFileCycleInfo(FileSetInfo fileSetInfo) {
-        super(fileSetInfo);
+    protected DiskFileCycleInfo(
+        final MFDSector leadItem0
+    ) {
+        super(leadItem0);
     }
 
     protected Instant _timeOfFirstWriteOrUnload = null;
@@ -71,14 +72,15 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
     /**
      * Populates cataloged file main item sectors 0 and 1 - completely overwriting anything previous.
      * Invokes super class to do the most common things, then fills in anything related to mass storage
+     * @param mfdSectors enough MFDSectors to store all the information required for this file cycle.
      */
     @Override
     public void populateMainItems(
-        final LinkedList<ArraySlice> mainItemSectors
+        LinkedList<MFDSector> mfdSectors
     ) throws ExecStoppedException {
-        super.populateMainItems(mainItemSectors);
-        var sector0 = mainItemSectors.get(0);
-        var sector1 = mainItemSectors.get(1);
+        super.populateMainItems(mfdSectors);
+        var sector0 = mfdSectors.get(0).getSector();
+        var sector1 = mfdSectors.get(1).getSector();
 
         sector0.set(10, DateConverter.getModifiedSingleWordTime(_timeOfFirstWriteOrUnload));
         sector0.setS3(12, _fileFlags.compose());
@@ -103,7 +105,7 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
             wx++;
             if (wx == 28) {
                 sx++;
-                dpeSector = mainItemSectors.get(sx);
+                dpeSector = mfdSectors.get(sx).getSector();
                 dpeSector.setS1(7, 0); // entry type
                 wx = 8;
             }
@@ -124,7 +126,7 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
             if (reelNums.size() > 1) {
                 sector1.set(10, Word36.stringToWordFieldata(reelNums.get(1)));
                 sx++;
-                var rnSector = mainItemSectors.get(sx);
+                var rnSector = mfdSectors.get(sx).getSector();
                 rnSector.setS1(7, 1); // entry type
                 wx = 8;
                 for (int rnx = 2; rnx < reelNums.size(); rnx++) {
@@ -132,7 +134,7 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
                     wx++;
                     if (wx == 28) {
                         sx++;
-                        rnSector = mainItemSectors.get(sx);
+                        rnSector = mfdSectors.get(sx).getSector();
                         rnSector.setS1(7, 1); // entry type
                         wx = 8;
                     }
