@@ -221,10 +221,15 @@ public class MFDManager implements Manager {
             var dirTrack = new ArraySlice(dirTrackArray);
             _cachedMFDTracks.put(dirTrackAddr, dirTrack);
             for (var sectorId = 0; sectorId <= 077; ++sectorId) {
-                _freeMFDSectors.add(new MFDRelativeAddress(ldatIndex, 0, sectorId));
+                var sectorAddr = new MFDRelativeAddress(ldatIndex, 0, sectorId);
+                _freeMFDSectors.add(sectorAddr);
+                markDirectorySectorDirty(sectorAddr);
             }
 
             packInfo.setMFDTrackCount(1);
+            var faRegion = new LogicalTrackExtent(dirTrackAddr.getValue(), 1);
+            var hwTid = new HardwareTrackId(ldatIndex, packInfo.getDirectoryTrackAddress());
+            mfdFas.mergeIntoFileAllocationSet(new FileAllocation(faRegion, hwTid));
 
             // populate directory track sector 0
             // First two sectors are allocated, so note that in [1].
@@ -268,42 +273,10 @@ public class MFDManager implements Manager {
             _fixedPackCount++;
         }
 
-        // Create MFD$$ file artifacts in the first directory track of the first disk pack
-        var mfdQualifier = e.getRunControlEntry().getDefaultQualifier();
-        var mfdFilename = "MFD$$";
-        var mfdProjectId = e.getRunControlEntry().getProjectId();
-        var mfdAccountId = e.getRunControlEntry().getAccountId();
-        var mfdEquip = e.getConfiguration().getMassStorageDefaultMnemonic();
-        var fFlags = new FileFlags().setIsLargeFile(true);
-        var inhFlags = new InhibitFlags().setIsGuarded(true).setIsPrivate(true).setIsUnloadInhibited(true);
-        var pchFlags = new PCHARFlags().setGranularity(Granularity.Track);
-        var usInd = new UnitSelectionIndicators().setMultipleDevices(true).setInitialLDATIndex(01);
-
-        var fsInfo = new FileSetInfo().setFileType(FileType.Fixed)
-                                      .setQualifier(mfdQualifier)
-                                      .setFilename(mfdFilename)
-                                      .setProjectId(mfdProjectId)
-                                      .setIsGuarded(true);
-        _mfdFileAddress = createFileSet(fsInfo);
-
-        var fcInfo = new FixedDiskFileCycleInfo(fsInfo);
-        fcInfo.setUnitSelectionIndicators(usInd)
-              .setFileFlags(fFlags)
-              .setPCHARFlags(pchFlags)
-              .setAccountId(mfdAccountId)
-              .setAbsoluteCycle(1)
-              .setAssignMnemonic(mfdEquip)
-              .setInhibitFlags(inhFlags);
-        createFixedFileCycle(fsInfo, fcInfo);
-
-        // Create DAD tables for the MFD$$ file
-        persistDADTable(_mfdFileAddress);
-
-        // Assign MFD$$ to the exec, then write all the directory tracks to disk and clear the dirty block table.
-        //  TODO -
-        //   requires facmgr method for assigning fixed disk file,
-        //   requires facmgr method for doing IO
-        _dirtyCacheBlocks.clear();
+        // Create MFD$$ file artifacts in the first directory track of the first disk pack,
+        // then write the dirty sectors (i.e., the entire MFD) to disk.
+        createMFDFile(mfdFas);
+        writeDirtyCacheBlocks();
 
         // I think we're all done here.
         var elapsed = Duration.between(start, Instant.now()).get(ChronoUnit.MILLIS);
@@ -344,18 +317,27 @@ public class MFDManager implements Manager {
     /**
      * Allocates a directory sector from the fixed MFD.
      * Expands the MFD if necessary.
-     * @return MFD relative address of the allocated directory sector
+     * @return MFDSector object containing relative address of the allocated directory sector and
+     *          a reference to the sector
      * @throws ExecStoppedException if something goes wrong
      */
-    private synchronized MFDRelativeAddress allocateDirectorySector() throws ExecStoppedException {
+    private synchronized MFDSector allocateDirectorySector() throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "allocateDirectorySector()");
 
         if (_freeMFDSectors.isEmpty()) {
             expandDirectory();
         }
 
-        var result = _freeMFDSectors.pollFirst();
-        LogManager.logTrace(LOG_SOURCE, "allocateDirectorySector returning %0120", result);
+        var addr = _freeMFDSectors.pollFirst();
+        if (addr == null) {
+            // should never be here, but just in case...
+            LogManager.logFatal(LOG_SOURCE, "No free MFD sector even after expand");
+            Exec.getInstance().stop(StopCode.DirectoryErrors);
+            throw new ExecStoppedException();
+        }
+
+        var result = new MFDSector(addr, getMFDSector(addr));
+        LogManager.logTrace(LOG_SOURCE, "allocateDirectorySector returning addr %0120", addr);
         return result;
     }
 
@@ -363,11 +345,14 @@ public class MFDManager implements Manager {
      * Creates MFD sector(s) describing a file cycle.
      * Updates the MFD sector(s) describing the file set accordingly.
      * Updates the main item sector addresses in the fcInfo object
+     * @param fsInfo FileSetInfo describing the file set (which might be empty)
+     *               MUST have the mainItem0Address value set (by us).
+     * @param fcInfo FileCycleInfo describing the file cycle to be created
      * @throws ExecStoppedException if something fatal occurs
      */
-    private synchronized void createFixedFileCycle(
+    private synchronized void createFileCycle(
         final FileSetInfo fsInfo,
-        final DiskFileCycleInfo fcInfo
+        final FileCycleInfo fcInfo
     ) throws ExecStoppedException,
              AbsoluteCycleConflictException,
              AbsoluteCycleOutOfRangeException {
@@ -415,38 +400,17 @@ public class MFDManager implements Manager {
             }
         }
 
-        // Do we need to create a lead item sector 1?
-        // (p.s., don't remove it if we don't need one, just leave it be).
-        if ((fsInfo.getLeadItem1Address() == null) && fsInfo.isSector1Required()) {
-            var leadItem0Addr = fsInfo.getLeadItem0Address();
-            var leadItem1Addr = allocateDirectorySector();
-            fsInfo.setLeadItem1Address(leadItem1Addr);
-
-            var leadItem0 = getMFDSector(leadItem0Addr);
-            var leadItem1 = getMFDSector(leadItem1Addr);
-
-            leadItem0.set(0, leadItem1Addr.getValue() | 0_100000_000000L);
-            leadItem1.set(0, 0_400000_000000L);
-            IntStream.range(1, 28).forEach(x -> leadItem1._array[x] = 0);
-        }
-
-        var addresses = new LinkedList<MFDRelativeAddress>();
-        var items = new LinkedList<ArraySlice>();
-        var itemCount = fcInfo.getRequiredNumberOfMainItems();
-        for (var ix = 0; ix < itemCount; ++ix) {
-            var addr = allocateDirectorySector();
-            addresses.add(addr);
-            items.add(getMFDSector(addr));
-            markDirectorySectorDirty(addr);
-        }
-
         // Populate the main items
-        fcInfo.setMainItemAddresses(addresses);
-        fcInfo.populateMainItems(items);
+        var mainItems = new LinkedList<MFDSector>();
+        for (var mix = 0; mix < fcInfo.getRequiredNumberOfMainItems(); mix++) {
+            mainItems.add(allocateDirectorySector());
+        }
+
+        fcInfo.populateMainItems(mainItems);
 
         // Link main item sector 0 into the lead item(s) and update the cycle information in the lead item.
         var cycInfo = new FileSetCycleInfo().setAbsoluteCycle(fcInfo.getAbsoluteCycle())
-                                            .setMainItem0Address(fcInfo.getMainItem1Address())
+                                            .setMainItem0Address(mainItems.getFirst().getAddress())
                                             .setToBeCataloged(fcInfo.getDescriptorFlags().toBeCataloged());
         fsInfo.mergeFileSetCycleInfo(cycInfo);
         persistLeadItems(fsInfo);
@@ -462,22 +426,65 @@ public class MFDManager implements Manager {
     private synchronized MFDRelativeAddress createFileSet(
         final FileSetInfo fsInfo
     ) throws ExecStoppedException {
-        var leadItem0Addr = allocateDirectorySector();
-        var leadItem0 = getMFDSector(leadItem0Addr);
-        MFDRelativeAddress leadItem1Addr = null;
-        ArraySlice leadItem1 = null;
-        if (fsInfo.isSector1Required()) {
-            leadItem1Addr = allocateDirectorySector();
-            leadItem1 = getMFDSector(leadItem1Addr);
-            fsInfo.setLeadItem1Address(leadItem1Addr);
+        var mfdSectors = new LinkedList<MFDSector>();
+        var mainItemCount = fsInfo.isSector1Required() ? 2 : 1;
+        for (int sx = 0; sx < mainItemCount; sx++) {
+            mfdSectors.add(allocateDirectorySector());
         }
 
-        fsInfo.populateLeadItemSectors(leadItem0, leadItem1);
-        markDirectorySectorDirty(leadItem0Addr);
-        if (leadItem1Addr != null) {
-            markDirectorySectorDirty(leadItem1Addr);
+        fsInfo.populateLeadItemSectors(mfdSectors);
+        markDirectorySectorsDirty(mfdSectors);
+        return mfdSectors.getFirst().getAddress();
+    }
+
+    /**
+     * Part of an initial boot - this code creates the artifacts which comprise the MFDF$$ file.
+     * @param mfdAllocationSet FileAllocationSet describing the layout of the master file directory file's content.
+     */
+    private void createMFDFile(
+        final FileAllocationSet mfdAllocationSet
+    ) throws ExecStoppedException {
+        var e = Exec.getInstance();
+        var mfdQualifier = e.getRunControlEntry().getDefaultQualifier();
+        var mfdFilename = "MFDF$$";
+        var mfdProjectId = e.getRunControlEntry().getProjectId();
+        var mfdAccountId = e.getRunControlEntry().getAccountId();
+        var mfdEquip = e.getConfiguration().getMassStorageDefaultMnemonic();
+        var fFlags = new FileFlags().setIsLargeFile(true);
+        var inhFlags = new InhibitFlags().setIsGuarded(true).setIsPrivate(true).setIsUnloadInhibited(true);
+        var pchFlags = new PCHARFlags().setGranularity(Granularity.Track);
+        var usInd = new UnitSelectionIndicators().setMultipleDevices(true).setInitialLDATIndex(01);
+
+        var fsInfo = new FileSetInfo().setFileType(FileType.Fixed)
+                                      .setQualifier(mfdQualifier)
+                                      .setFilename(mfdFilename)
+                                      .setProjectId(mfdProjectId)
+                                      .setIsGuarded(true);
+        _mfdFileAddress = createFileSet(fsInfo);
+
+        var fcInfo = new FixedDiskFileCycleInfo(new MFDSector(_mfdFileAddress, getMFDSector(_mfdFileAddress)));
+        fcInfo.setUnitSelectionIndicators(usInd)
+              .setFileFlags(fFlags)
+              .setPCHARFlags(pchFlags)
+              .setAccountId(mfdAccountId)
+              .setAbsoluteCycle(1)
+              .setAssignMnemonic(mfdEquip)
+              .setInhibitFlags(inhFlags);
+
+        try {
+            createFileCycle(fsInfo, fcInfo);
+        } catch (AbsoluteCycleOutOfRangeException
+                 | AbsoluteCycleConflictException ex) {
+            LogManager.logCatching(LOG_SOURCE, ex);
+            Exec.getInstance().stop(StopCode.DirectoryErrors);
+            throw new ExecStoppedException();
         }
-        return leadItem0Addr;
+
+        // Create DAD tables for the MFD$$ file
+        persistDADTables(_mfdFileAddress, mfdAllocationSet);
+
+        // Assign MFDF$$ to the exec
+        //  TODO
     }
 
     /**
@@ -598,6 +605,28 @@ public class MFDManager implements Manager {
     }
 
     /**
+     * Retrieves the chain of lead items indicated by the lead item sector 0 address.
+     * @param leadItem0Address address of lead item sector 0
+     * @return lead item chain containing references to one or two lead items.
+     * @throws ExecStoppedException if things go badly
+     */
+    private LinkedList<MFDSector> getLeadItemChain(
+        final MFDRelativeAddress leadItem0Address
+    ) throws ExecStoppedException {
+        var result = new LinkedList<MFDSector>();
+
+        var leadItem0 = getMFDSector(leadItem0Address);
+        result.add(new MFDSector(leadItem0Address, leadItem0));
+        if ((leadItem0.get(0) & 0_400000_000000L) == 0) {
+            var leadItem1Address = new MFDRelativeAddress(leadItem0.get(0) & 0_007777_777777L);
+            var leadItem1 = getMFDSector(leadItem1Address);
+            result.add(new MFDSector(leadItem1Address, leadItem1));
+        }
+
+        return result;
+    }
+
+    /**
      * Retrieves an ArraySlice containing a subset of a directory track
      * which represents the requested MFD sector
      * @param address MFD sector address
@@ -636,6 +665,15 @@ public class MFDManager implements Manager {
     }
 
     /**
+     * Wrapper around the above function
+     */
+    private void markDirectorySectorsDirty(
+        final LinkedList<MFDSector> mfdSectors
+    ) {
+        mfdSectors.stream().map(MFDSector::getAddress).forEach(this::markDirectorySectorDirty);
+    }
+
+    /**
      * Persists DAD tables to the MFD representing the content of the given FileAllocationSet,
      * for the file cycle indicated by the given main item sector 0 address.
      */
@@ -649,12 +687,19 @@ public class MFDManager implements Manager {
         // It might be smaller or larger than we need (or non-existent), but we'll deal with that presently.
         var dadChain = getDADChain(mainItem0Address);
 
-        // Get the allocations for the faSet, and set ax to the index of the next allocation to be persisted.
+        // Special case - no space allocated. If there is a chain, release all the entries on the chain
+        // and clear the link in the main item.
+        var allocations = faSet.getFileAllocations();
+        if (allocations.isEmpty()) {
+            dadChain.stream().map(MFDSector::getAddress).forEach(this::releaseDirectorySector);
+            return;
+        }
+
+        // Set ax to the index of the next allocation to be persisted.
         // Also, set dx to the index of the dad sector being populated (for now, -1), and ex to the index
         // of the next entry in that sector to be populated (for now, 8) -- these settings will ensure that
         // we select the next (in this case, first) entry to populate.
         // Finally, set currentDAD null - this is a reference to the DAD sector which corresponds to dx.
-        var allocations = faSet.getFileAllocations();
         int ax = 0;
         int dx = -1;
         int ex = 8;
@@ -669,8 +714,9 @@ public class MFDManager implements Manager {
                 // If there isn't a next one, we need to allocate a new one and put in on the chain.
                 dx++;
                 if (dx == dadChain.size()) {
-                    var newDADAddr = allocateDirectorySector();
-                    var newDAD = getMFDSector(newDADAddr);
+                    var newDADSector = allocateDirectorySector();
+                    var newDADAddr = newDADSector.getAddress();
+                    var newDAD = newDADSector.getSector();
                     IntStream.range(0, 28).forEach(x -> newDAD._array[x] = 0);
                     dadChain.add(new MFDSector(newDADAddr, newDAD));
 
@@ -701,57 +747,81 @@ public class MFDManager implements Manager {
 
             // Does this entry immediately follow the previous entry in the file-relative address space?
             // If not, we need to create a hole DAD.
-
             if ((ax > 0) && (fileRegion.getTrackId() != expectedNextTrackId)) {
                 // If this hole entry would go into the last entry of the DAD, there's no reason to create it.
-                if (ex == 7) {
-                    // TODO
-                } else {
-                    // TODO
+                if (ex < 7) {
+                    int wx = (3 * ex) + 4;
+                    currentDAD.set(wx, expectedNextTrackId * 1792);
+                    currentDAD.set(wx + 1, (fileRegion.getTrackId() - expectedNextTrackId) * 1792);
+                    currentDAD.setH2(wx + 2, 0_400000);
                 }
-                continue;
+                ex++;
             }
 
             // Now create a DAD entry (and update the last word + 1 in the header)
+            // Always set this entry as the last in the DAD... we'll unset it on the next entry in the DAD
+            // if there is a next one, and leave it be if there isn't.
             int wx = (3 * ex) + 4;
             currentDAD.set(wx, hwTid.getTrackId() * 1792);
             currentDAD.set(wx + 1, fileRegion.getTrackCount() * 1792);
+            currentDAD.setH1(wx + 2, 0_000004);
             currentDAD.setH2(wx + 2, hwTid.getLDATIndex());
+
+            // (Here's where we unset the last-DAD bit in the previous entry)
+            int wy = wx - 3;
+            currentDAD.setH1(wy + 2, 0_000000);
 
             expectedNextTrackId += fileRegion.getTrackCount();
             currentDAD.set(3, expectedNextTrackId * 1792);
             ex++;
-            ax++
+            ax++;
         }
 
-        // Ensure the last DAD entry is marked as the last entry in its table
-
-        // Release any unused DAD entries
-        //  TODO
+        // Release any unused DAD entries, and ensure the last DAD does not have a forward link
+        if (ex > 0) {
+            dx++;
+        }
+        while (dx < dadChain.size()) {
+            releaseDirectorySector(dadChain.get(dx++).getAddress());
+        }
+        dadChain.getLast().getSector().set(0, 0);
 
         // Mark all the DAD sectors dirty
         dadChain.stream().map(MFDSector::getAddress).forEach(this::markDirectorySectorDirty);
     }
 
     /**
-     * Rewrites the lead item(s) for a given FileSetInfo object.
-     * If the object needs a lead item sector 1 and does not currently have one, we create one.
+     * Gets the lead item chain, updates it (entirely) from the given FileSetInfo object,
+     * then marks the lead item sectors dirty for eventual writing to disk
+     * @param fsInfo FileSetInfo object
+     * @throws ExecStoppedException if something goes wrong
      */
     private void persistLeadItems(
         final FileSetInfo fsInfo
     ) throws ExecStoppedException {
-        var leadItem0 = getMFDSector(fsInfo.getLeadItem0Address());
-        ArraySlice leadItem1 = null;
-        if (fsInfo.isSector1Required() && fsInfo.getLeadItem1Address() == null) {
-            fsInfo.setLeadItem1Address(allocateDirectorySector());
-            leadItem1 = getMFDSector(fsInfo.getLeadItem1Address());
+        var chain = getLeadItemChain(fsInfo.getLeadItem0Address());
+        if (fsInfo.isSector1Required() && (chain.size() == 1)) {
+            chain.add(allocateDirectorySector());
         }
+        fsInfo.populateLeadItemSectors(chain);
+        markDirectorySectorsDirty(chain);
+    }
 
-        fsInfo.populateLeadItemSectors(leadItem0, leadItem1);
+    /**
+     * Releases an MFD directory sector
+     */
+    private void releaseDirectorySector(
+        final MFDRelativeAddress address
+    ) {
+        _freeMFDSectors.add(address);
+    }
 
-        markDirectorySectorDirty(fsInfo.getLeadItem0Address());
-        if (fsInfo.getLeadItem1Address() != null) {
-            markDirectorySectorDirty(fsInfo.getLeadItem1Address());
-        }
+    /**
+     * Writes all dirty cache blocks to underlying disk storage
+     * @throws ExecStoppedException if something goes wrong
+     */
+    private void writeDirtyCacheBlocks() throws ExecStoppedException {
+        // TODO
+        //  try to write contiguous blocks in one IO
     }
 }
