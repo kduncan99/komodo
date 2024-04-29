@@ -80,10 +80,10 @@ public abstract class FileCycleInfo {
         final LinkedList<MFDSector> mfdSectors
     ) {
         var sector0 = mfdSectors.getFirst().getSector();
-        _qualifier = Word36.toStringFromFieldata(sector0.get(1)) + Word36.toStringFromFieldata(sector0.get(2)).trim();
-        _filename = Word36.toStringFromFieldata(sector0.get(3)) + Word36.toStringFromFieldata(sector0.get(4)).trim();
-        _projectId = Word36.toStringFromFieldata(sector0.get(5)) + Word36.toStringFromFieldata(sector0.get(6)).trim();
-        _accountId = Word36.toStringFromFieldata(sector0.get(7)) + Word36.toStringFromFieldata(sector0.get(8)).trim();
+        _qualifier = (Word36.toStringFromFieldata(sector0.get(1)) + Word36.toStringFromFieldata(sector0.get(2))).trim();
+        _filename = (Word36.toStringFromFieldata(sector0.get(3)) + Word36.toStringFromFieldata(sector0.get(4))).trim();
+        _projectId = (Word36.toStringFromFieldata(sector0.get(5)) + Word36.toStringFromFieldata(sector0.get(6))).trim();
+        _accountId = (Word36.toStringFromFieldata(sector0.get(7)) + Word36.toStringFromFieldata(sector0.get(8))).trim();
         _disableFlags = new DisableFlags().extract(sector0.getS1(013));
         _descriptorFlags = new DescriptorFlags().extract(sector0.getT1(014));
         _assignMnemonic = Word36.toStringFromFieldata(sector0.get(016)).trim();
