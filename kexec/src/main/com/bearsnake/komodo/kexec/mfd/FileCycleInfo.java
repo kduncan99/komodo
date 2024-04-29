@@ -72,12 +72,36 @@ public abstract class FileCycleInfo {
     public int getRequiredNumberOfMainItems() { return 2; }
 
     /**
+     * Loads this object from the content in the given main item MFD sector chain.
+     * Should be overridden by sub-classes.
+     * @param mfdSectors main item chain
+     */
+    public void loadFromMainItemChain(
+        final LinkedList<MFDSector> mfdSectors
+    ) {
+        var sector0 = mfdSectors.getFirst().getSector();
+        _qualifier = Word36.toStringFromFieldata(sector0.get(1)) + Word36.toStringFromFieldata(sector0.get(2)).trim();
+        _filename = Word36.toStringFromFieldata(sector0.get(3)) + Word36.toStringFromFieldata(sector0.get(4)).trim();
+        _projectId = Word36.toStringFromFieldata(sector0.get(5)) + Word36.toStringFromFieldata(sector0.get(6)).trim();
+        _accountId = Word36.toStringFromFieldata(sector0.get(7)) + Word36.toStringFromFieldata(sector0.get(8)).trim();
+        _disableFlags = new DisableFlags().extract(sector0.getS1(013));
+        _descriptorFlags = new DescriptorFlags().extract(sector0.getT1(014));
+        _assignMnemonic = Word36.toStringFromFieldata(sector0.get(016)).trim();
+        _cumulativeAssignCount = (int)sector0.getH2(017);
+        _inhibitFlags = new InhibitFlags().extract(sector0.getS2(021));
+        _currentAssignCount = (int)sector0.getT2(021);
+        _absoluteCycle = (int)sector0.getT3(021);
+        _timeOfLastReference = DateConverter.fromModifiedSingleWordTime(sector0.get(022));
+        _timeCataloged = DateConverter.fromModifiedSingleWordTime(sector0.get(023));
+    }
+
+    /**
      * Handles the common aspects of populating cataloged file main item sectors.
      * Should be overridden by sub-classes.
      * @param mfdSectors enough MFDSectors to store all of the information required for this file cycle.
      */
     public void populateMainItems(
-        LinkedList<MFDSector> mfdSectors
+        final LinkedList<MFDSector> mfdSectors
     ) throws ExecStoppedException {
         if (mfdSectors.size() < getRequiredNumberOfMainItems()) {
             Exec.getInstance().stop(StopCode.ExecActivityTakenToEMode);

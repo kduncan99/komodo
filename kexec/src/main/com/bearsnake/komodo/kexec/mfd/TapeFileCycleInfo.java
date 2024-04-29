@@ -7,23 +7,12 @@ package com.bearsnake.komodo.kexec.mfd;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import java.util.LinkedList;
 
-public class FixedDiskFileCycleInfo extends DiskFileCycleInfo {
+public class TapeFileCycleInfo extends DiskFileCycleInfo {
 
-    private UnitSelectionIndicators _unitSelectionIndicators = new UnitSelectionIndicators();
-
-    public FixedDiskFileCycleInfo(
+    public TapeFileCycleInfo(
         final MFDSector leadItem0
     ) {
         super(leadItem0);
-    }
-
-    public final UnitSelectionIndicators getUnitSelectionIndicators() {
-        return _unitSelectionIndicators;
-    }
-
-    public final FixedDiskFileCycleInfo setUnitSelectionIndicators(final UnitSelectionIndicators value) {
-        _unitSelectionIndicators = value;
-        return this;
     }
 
     /**
@@ -34,8 +23,7 @@ public class FixedDiskFileCycleInfo extends DiskFileCycleInfo {
         final LinkedList<MFDSector> mfdSectors
     ) {
         super.loadFromMainItemChain(mfdSectors);
-        var sector0 = mfdSectors.getFirst().getSector();
-        _unitSelectionIndicators = new UnitSelectionIndicators().extract(sector0.getH1(033));
+        // TODO
     }
 
     /**
@@ -48,6 +36,6 @@ public class FixedDiskFileCycleInfo extends DiskFileCycleInfo {
         final LinkedList<MFDSector> mfdSectors
     ) throws ExecStoppedException {
         super.populateMainItems(mfdSectors);
-        mfdSectors.getFirst().getSector().setH1(27, _unitSelectionIndicators.compose());
+        // TODO
     }
 }

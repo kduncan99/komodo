@@ -29,7 +29,6 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
     protected long[] _quotaGroupGranules = new long[8];
     protected BackupInfo _backupInfo = new BackupInfo();
     protected LinkedList<DiskPackEntry> _diskPackEntries = new LinkedList<>();
-    protected FileAllocationSet _fileAllocations = new FileAllocationSet();
 
     public final DiskFileCycleInfo addDiskPackEntry(final DiskPackEntry value) { _diskPackEntries.add(value); return this; }
 
@@ -44,7 +43,6 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
     public final long[] getQuotaGroupGranules() { return _quotaGroupGranules; }
     public final BackupInfo getBackupInfo() { return _backupInfo; }
     public final LinkedList<DiskPackEntry> getDiskPackEntries() { return _diskPackEntries; }
-    public final FileAllocationSet getFileAllocations() { return _fileAllocations; }
 
     public final DiskFileCycleInfo setTimeOfFirstWriteOrUnload(final Instant value) { _timeOfFirstWriteOrUnload = value; return this; }
     public final DiskFileCycleInfo setFileFlags(final FileFlags value) { _fileFlags = value; return this; }
@@ -57,7 +55,6 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
     public final DiskFileCycleInfo setQuotaGroupGranules(final long[] array) { _quotaGroupGranules = array ; return this; }
     public final DiskFileCycleInfo setBackupInfo(final BackupInfo value) { _backupInfo = value; return this; }
     public final DiskFileCycleInfo setDiskPackEntries(final LinkedList<DiskPackEntry> list) { _diskPackEntries = list; return this; }
-    public final DiskFileCycleInfo setFileAllocations(final FileAllocationSet value) { _fileAllocations = value; return this; }
 
     @Override
     public int getRequiredNumberOfMainItems() {
@@ -70,13 +67,42 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
     }
 
     /**
+     * Loads this object from the content in the given main item MFD sector chain.
+     * Should be overridden by sub-classes.
+     * @param mfdSectors main item chain
+     */
+    public void loadFromMainItemChain(
+        final LinkedList<MFDSector> mfdSectors
+    ) {
+        super.loadFromMainItemChain(mfdSectors);
+        var sector0 = mfdSectors.getFirst().getSector();
+        _timeOfFirstWriteOrUnload = DateConverter.fromModifiedSingleWordTime(sector0.get(012));
+        _fileFlags = new FileFlags().extract(sector0.getS3(014));
+        _pcharFlags = new PCHARFlags().extract(sector0.getS1(015));
+        _initialSMOQUELink = sector0.getH1(017);
+        _initialGranulesReserved = sector0.getH1(024);
+        _maxGranules = sector0.getH1(025);
+        _highestGranuleAssigned = sector0.getH1(026);
+        _highestTrackWritten = sector0.getH1(027);
+        for (int x = 0; x < 8; x++) {
+            _quotaGroupGranules[x] = sector0.getH2(x + 024);
+        }
+
+        _backupInfo = null;
+        // TODO
+
+        _diskPackEntries.clear();
+        // TODO
+    }
+
+    /**
      * Populates cataloged file main item sectors 0 and 1 - completely overwriting anything previous.
      * Invokes super class to do the most common things, then fills in anything related to mass storage
      * @param mfdSectors enough MFDSectors to store all the information required for this file cycle.
      */
     @Override
     public void populateMainItems(
-        LinkedList<MFDSector> mfdSectors
+        final LinkedList<MFDSector> mfdSectors
     ) throws ExecStoppedException {
         super.populateMainItems(mfdSectors);
         var sector0 = mfdSectors.get(0).getSector();

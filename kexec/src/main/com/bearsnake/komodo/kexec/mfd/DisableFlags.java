@@ -19,11 +19,13 @@ public class DisableFlags {
         return value;
     }
 
-    public void extract(final int value) {
+    public DisableFlags extract(final long value) {
         _directoryError = (value & 020) != 0;
         _assignedAndWrittenAtExecStop = (value & 010) != 0;
         _inaccessibleBackup = (value & 004) != 0;
         _cacheDrainFailure = (value & 002) != 0;
+
+        return this;
     }
 
     public static DisableFlags extractFrom(final int value) {

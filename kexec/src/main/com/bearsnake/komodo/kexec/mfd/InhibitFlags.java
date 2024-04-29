@@ -23,13 +23,15 @@ public class InhibitFlags {
         return value;
     }
 
-    public void extract(final int value) {
+    public InhibitFlags extract(final long value) {
         _isGuarded = (value & 040) != 0;
         _isUnloadInhibited = (value & 020) != 0;
         _isPrivate = (value & 010) != 0;
         _isAssignedExclusively = (value & 004) != 0;
         _isWriteOnly = (value & 002) != 0;
         _isReadOnly = (value & 001) != 0;
+
+        return this;
     }
 
     public static InhibitFlags extractFrom(final int value) {

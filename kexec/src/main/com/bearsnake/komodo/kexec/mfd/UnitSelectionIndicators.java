@@ -21,12 +21,14 @@ public class UnitSelectionIndicators {
         return value;
     }
 
-    public void extract(final int value) {
+    public UnitSelectionIndicators extract(final long value) {
         _createdViaDevicePlacement = (value & 0_400000) != 0;
         _createdViaControlUnitPlacement = (value & 0_200000) != 0;
         _createdViaLogicalPlacement = (value & 0_100000) != 0;
         _multipleDevices = (value & 0_040000) != 0;
-        _initialLDATIndex = value & 07777;
+        _initialLDATIndex = (int)(value & 07777);
+
+        return this;
     }
 
     public static UnitSelectionIndicators extractFrom(final int value) {

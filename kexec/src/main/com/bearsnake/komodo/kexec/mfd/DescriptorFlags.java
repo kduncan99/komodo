@@ -29,7 +29,7 @@ public class DescriptorFlags {
         return value;
     }
 
-    public void extract(final int value) {
+    public DescriptorFlags extract(final long value) {
         _isUnloaded = (value & 0_4000) != 0;
         _isBackedUp = (value & 0_2000) != 0;
         _saveOnCheckPoint = (value & 0_1000) != 0;
@@ -39,6 +39,8 @@ public class DescriptorFlags {
         _toBeWriteOnly = (value & 0_0004) != 0;
         _toBeReadOnly = (value & 0_0002) != 0;
         _toBeDropped = (value & 0_0001) != 0;
+
+        return this;
     }
 
     public static DescriptorFlags extractFrom(final int value) {

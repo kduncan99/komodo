@@ -32,10 +32,11 @@ public class FileAllocationSet {
      * Creates a FileAllocationSet to represent the content of a DAD chain
      */
     public static FileAllocationSet createFromDADChain(
-        final LinkedList<ArraySlice> dadChain
+        final LinkedList<MFDSector> dadChain
     ) {
         var fas = new FileAllocationSet();
-        for (var dad : dadChain) {
+        for (var msDAD : dadChain) {
+            var dad = msDAD.getSector();
             var frAddress = dad.get(2); // file-relative address of first word described in this DAD
             var frLast = dad.get(3);    // file-relative address of last word + 1
             for (int wx = 0; wx < 28; wx += 3) {

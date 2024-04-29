@@ -19,11 +19,13 @@ public class FileFlags {
         return value;
     }
 
-    public void extract(final int value) {
+    public FileFlags extract(final long value) {
         _isLargeFile = (value & 040) != 0;
         _assignmentAcceleration = (value & 004) != 0;
         _isWrittenTo = (value & 002) != 0;
         _storeThrough = (value & 001) != 0;
+
+        return this;
     }
 
     public static FileFlags extractFrom(final int value) {

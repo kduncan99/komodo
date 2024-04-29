@@ -12,6 +12,9 @@ import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleConflictException;
 import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleOutOfRangeException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
+import com.bearsnake.komodo.kexec.exceptions.FileSetAlreadyExistsException;
+import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
@@ -37,17 +40,17 @@ public class MFDManager implements Manager {
     public static final long INVALID_LINK = 0_400000_000000L;
 
     // This is in-core MFD. Each track is keyed with the MFD relative address of sector 0 of the directory track.
+    private MFDRelativeAddress _mfdFileAddress;
     private final HashMap<MFDRelativeAddress, ArraySlice> _cachedMFDTracks = new HashMap<>();
 
     // Lookup table for lead items, keyed by a concatenation of qualifier, asterisk, and filename.
-    private final HashMap<String, MFDRelativeAddress> _fileLeadItemLookupTable = new HashMap<>();
+    private final HashMap<String, FileSetInfo> _leadItemLookupTable = new HashMap<>();
 
     // Lookup table for AcceleratedCycleInfo objects representing assigned file cycles.
     // The assign count for the file cycle is maintained in the FileCycleInfo object, so we know when we
     // can release the thing. There is an entry here for every file cycle currently assigned to at least
     // one run. The key is the address of the main item sector 0.
     private final Map<MFDRelativeAddress, AcceleratedCycleInfo> _acceleratedFileCycles = new HashMap<>();
-    private MFDRelativeAddress _mfdFileAddress;
 
     // This is the MFD sector free list. It's a tree set to make debugging slightly easier.
     private final TreeSet<MFDRelativeAddress> _freeMFDSectors = new TreeSet<>();
@@ -90,8 +93,10 @@ public class MFDManager implements Manager {
         if (verbose) {
             // lead item lookup table
             out.printf("%s  Lead Item lookup table:\n", indent);
-            for (var e : _fileLeadItemLookupTable.entrySet()) {
-                out.printf("%s    %s:  %s\n", indent, e.getKey(), e.getValue().toString());
+            for (var e : _leadItemLookupTable.entrySet()) {
+                var luKey = e.getKey();
+                var fsInfo = e.getValue();
+                out.printf("%s    %s:  %s\n", indent, luKey, fsInfo.getLeadItem0Address());
             }
 
             // MFD sectors which are in use
@@ -177,12 +182,107 @@ public class MFDManager implements Manager {
     // -------------------------------------------------------------------------
 
     /**
+     * Accelerates a file cycle. This involves loading meta information regarding the file cycle
+     * into storage, and leaving it there until the file is decelerated. If the file is already
+     * accelerated, the acceleration count is incremented.
+     * @param qualifier qualifier of the file
+     * @param filename filename of the file
+     * @param absoluteCycle absolute cycle of the file
+     * @return FileCycleInfo object describing (some of) the meta-information
+     * @throws ExecStoppedException if something goes monkey-wise
+     * @throws FileCycleDoesNotExistException the cycle indicated by the absolute cycle does not exist
+     * @throws FileSetDoesNotExistException no cycle with the given qualifier and filename exists
+     */
+    public synchronized FileCycleInfo accelerateFileCycle(
+        final String qualifier,
+        final String filename,
+        final int absoluteCycle
+    ) throws ExecStoppedException,
+             FileCycleDoesNotExistException,
+             FileSetDoesNotExistException {
+        LogManager.logTrace(LOG_SOURCE, "accelerateFileCycle %s*%s(%d)", qualifier, filename, absoluteCycle);
+
+        var luKey = composeLookupKey(qualifier, filename);
+        var fsInfo = _leadItemLookupTable.get(luKey);
+        if (fsInfo == null) {
+            throw new FileSetDoesNotExistException();
+        }
+
+        for (var cycInfo : fsInfo.getCycleInfo()) {
+            if (cycInfo.getAbsoluteCycle() == absoluteCycle) {
+                var mainItem0Addr = cycInfo.getMainItem0Address();
+                var acInfo = _acceleratedFileCycles.get(mainItem0Addr);
+                if (acInfo != null) {
+                    var newAsgCount = acInfo.incrementAssignCount();
+                    LogManager.logTrace(LOG_SOURCE, "file cycle assign count = %d", newAsgCount);
+                    return acInfo.getFileCycleInfo();
+                }
+
+                var miChain = getMainItemChain(cycInfo.getMainItem0Address());
+                var ms = new MFDSector(fsInfo.getLeadItem0Address(), getMFDSector(fsInfo.getLeadItem0Address()));
+                var fcInfo = switch (fsInfo.getFileType()) {
+                    case Fixed -> new FixedDiskFileCycleInfo(ms);
+                    case Removable -> new RemovableDiskFileCycleInfo(ms);
+                    case Tape -> new TapeFileCycleInfo(ms);
+                };
+                fcInfo.loadFromMainItemChain(miChain);
+
+                var dadChain = getDADChain(cycInfo.getMainItem0Address());
+                var fas = FileAllocationSet.createFromDADChain(dadChain);
+                acInfo = new AcceleratedCycleInfo(fcInfo, fas);
+                acInfo.incrementAssignCount();
+                _acceleratedFileCycles.put(mainItem0Addr, acInfo);
+                return acInfo.getFileCycleInfo();
+            }
+        }
+
+        throw new FileCycleDoesNotExistException();
+    }
+
+    /**
+     * Decelerates a file cycle. This involves decrementing the acceleration count for an accelerated
+     * file cycle, and unloading the corresponding meta information if the count goes to zero.
+     * @param qualifier qualifier of the file
+     * @param filename filename of the file
+     * @param absoluteCycle absolute cycle of the file
+     * @throws FileCycleDoesNotExistException the cycle indicated by the absolute cycle does not exist
+     * @throws FileSetDoesNotExistException no cycle with the given qualifier and filename exists
+     */
+    public void decelerateFileCycle(
+        final String qualifier,
+        final String filename,
+        final int absoluteCycle
+    ) throws FileCycleDoesNotExistException,
+             FileSetDoesNotExistException {
+        LogManager.logTrace(LOG_SOURCE, "decelerateFileCycle %s*%s(%d)", qualifier, filename, absoluteCycle);
+
+        var luKey = composeLookupKey(qualifier, filename);
+        var fsInfo = _leadItemLookupTable.get(luKey);
+        if (fsInfo == null) {
+            throw new FileSetDoesNotExistException();
+        }
+
+        for (var cycInfo : fsInfo.getCycleInfo()) {
+            if (cycInfo.getAbsoluteCycle() == absoluteCycle) {
+                var mainItem0Addr = cycInfo.getMainItem0Address();
+                var acInfo = _acceleratedFileCycles.get(mainItem0Addr);
+                if ((acInfo != null) && (acInfo.decrementAssignCount() == 0)) {
+                    _acceleratedFileCycles.remove(mainItem0Addr);
+                }
+                return;
+            }
+        }
+
+        throw new FileCycleDoesNotExistException();
+    }
+
+    /**
      * initializes mass storage given a collection of NodeInfo objects describing the fixed disk units
      * which are UP or SU.
      */
     public void initializeMassStorage(
         final Collection<NodeInfo> fixedDiskInfo
-    ) throws ExecStoppedException, AbsoluteCycleConflictException, AbsoluteCycleOutOfRangeException {
+    ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "initializeMassStorage");
 
         var start = Instant.now();
@@ -197,7 +297,7 @@ public class MFDManager implements Manager {
 
         _cachedMFDTracks.clear();
         _dirtyCacheBlocks.clear();
-        _fileLeadItemLookupTable.clear();
+        _leadItemLookupTable.clear();
         _freeMFDSectors.clear();
         _logicalDATable.clear();
         _fixedPackCount = 0;
@@ -255,7 +355,7 @@ public class MFDManager implements Manager {
 
             // +010,T1 is blocks per track
             // +010,S3 is version (1)
-            // +010,T3 is prepfactor
+            // +010,T3 is prep factor
             long value = Word36.setT1(0, 1792 / packInfo.getPrepFactor());
             value = Word36.setS3(value, 1);
             value = Word36.setT3(value, packInfo.getPrepFactor());
@@ -339,6 +439,13 @@ public class MFDManager implements Manager {
         var result = new MFDSector(addr, getMFDSector(addr));
         LogManager.logTrace(LOG_SOURCE, "allocateDirectorySector returning addr %0120", addr);
         return result;
+    }
+
+    private static String composeLookupKey(
+        final String qualifier,
+        final String filename
+    ) {
+        return qualifier + "*" + filename;
     }
 
     /**
@@ -425,7 +532,12 @@ public class MFDManager implements Manager {
      */
     private synchronized MFDRelativeAddress createFileSet(
         final FileSetInfo fsInfo
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, FileSetAlreadyExistsException {
+        var luKey = composeLookupKey(fsInfo.getQualifier(), fsInfo.getFilename());
+        if (_leadItemLookupTable.containsKey(luKey)) {
+            throw new FileSetAlreadyExistsException();
+        }
+
         var mfdSectors = new LinkedList<MFDSector>();
         var mainItemCount = fsInfo.isSector1Required() ? 2 : 1;
         for (int sx = 0; sx < mainItemCount; sx++) {
@@ -434,6 +546,7 @@ public class MFDManager implements Manager {
 
         fsInfo.populateLeadItemSectors(mfdSectors);
         markDirectorySectorsDirty(mfdSectors);
+        _leadItemLookupTable.put(luKey, fsInfo);
         return mfdSectors.getFirst().getAddress();
     }
 
@@ -444,47 +557,49 @@ public class MFDManager implements Manager {
     private void createMFDFile(
         final FileAllocationSet mfdAllocationSet
     ) throws ExecStoppedException {
-        var e = Exec.getInstance();
-        var mfdQualifier = e.getRunControlEntry().getDefaultQualifier();
-        var mfdFilename = "MFDF$$";
-        var mfdProjectId = e.getRunControlEntry().getProjectId();
-        var mfdAccountId = e.getRunControlEntry().getAccountId();
-        var mfdEquip = e.getConfiguration().getMassStorageDefaultMnemonic();
-        var fFlags = new FileFlags().setIsLargeFile(true);
-        var inhFlags = new InhibitFlags().setIsGuarded(true).setIsPrivate(true).setIsUnloadInhibited(true);
-        var pchFlags = new PCHARFlags().setGranularity(Granularity.Track);
-        var usInd = new UnitSelectionIndicators().setMultipleDevices(true).setInitialLDATIndex(01);
-
-        var fsInfo = new FileSetInfo().setFileType(FileType.Fixed)
-                                      .setQualifier(mfdQualifier)
-                                      .setFilename(mfdFilename)
-                                      .setProjectId(mfdProjectId)
-                                      .setIsGuarded(true);
-        _mfdFileAddress = createFileSet(fsInfo);
-
-        var fcInfo = new FixedDiskFileCycleInfo(new MFDSector(_mfdFileAddress, getMFDSector(_mfdFileAddress)));
-        fcInfo.setUnitSelectionIndicators(usInd)
-              .setFileFlags(fFlags)
-              .setPCHARFlags(pchFlags)
-              .setAccountId(mfdAccountId)
-              .setAbsoluteCycle(1)
-              .setAssignMnemonic(mfdEquip)
-              .setInhibitFlags(inhFlags);
-
         try {
+            var e = Exec.getInstance();
+            var mfdQualifier = e.getRunControlEntry().getDefaultQualifier();
+            var mfdFilename = "MFDF$$";
+            var mfdProjectId = e.getRunControlEntry().getProjectId();
+            var mfdAccountId = e.getRunControlEntry().getAccountId();
+            var mfdEquip = e.getConfiguration().getMassStorageDefaultMnemonic();
+            var fFlags = new FileFlags().setIsLargeFile(true);
+            var inhFlags = new InhibitFlags().setIsGuarded(true).setIsPrivate(true).setIsUnloadInhibited(true);
+            var pchFlags = new PCHARFlags().setGranularity(Granularity.Track);
+            var usInd = new UnitSelectionIndicators().setMultipleDevices(true).setInitialLDATIndex(01);
+
+            var fsInfo = new FileSetInfo().setFileType(FileType.Fixed)
+                                          .setQualifier(mfdQualifier)
+                                          .setFilename(mfdFilename)
+                                          .setProjectId(mfdProjectId)
+                                          .setIsGuarded(true);
+            _mfdFileAddress = createFileSet(fsInfo);
+
+            var fcInfo = new FixedDiskFileCycleInfo(new MFDSector(_mfdFileAddress, getMFDSector(_mfdFileAddress)));
+            fcInfo.setUnitSelectionIndicators(usInd)
+                  .setFileFlags(fFlags)
+                  .setPCHARFlags(pchFlags)
+                  .setAccountId(mfdAccountId)
+                  .setAbsoluteCycle(1)
+                  .setAssignMnemonic(mfdEquip)
+                  .setInhibitFlags(inhFlags);
+
             createFileCycle(fsInfo, fcInfo);
+
+            // Create DAD tables for the MFD$$ file
+            persistDADTables(_mfdFileAddress, mfdAllocationSet);
+
+            // Assign MFDF$$ to the exec
+            //  TODO
+
         } catch (AbsoluteCycleOutOfRangeException
-                 | AbsoluteCycleConflictException ex) {
+                 | AbsoluteCycleConflictException
+                 | FileSetAlreadyExistsException ex) {
             LogManager.logCatching(LOG_SOURCE, ex);
             Exec.getInstance().stop(StopCode.DirectoryErrors);
             throw new ExecStoppedException();
         }
-
-        // Create DAD tables for the MFD$$ file
-        persistDADTables(_mfdFileAddress, mfdAllocationSet);
-
-        // Assign MFDF$$ to the exec
-        //  TODO
     }
 
     /**
@@ -621,6 +736,30 @@ public class MFDManager implements Manager {
             var leadItem1Address = new MFDRelativeAddress(leadItem0.get(0) & 0_007777_777777L);
             var leadItem1 = getMFDSector(leadItem1Address);
             result.add(new MFDSector(leadItem1Address, leadItem1));
+        }
+
+        return result;
+    }
+
+    /**
+     * Retrieves the chain of main items indicated by the main item sector 0 address
+     * @param mainItem0Address address of main item sector 0
+     * @return main item chain containing references to one or more main items.
+     * @throws ExecStoppedException if things go wonky.
+     */
+    private LinkedList<MFDSector> getMainItemChain(
+        final MFDRelativeAddress mainItem0Address
+    ) throws ExecStoppedException {
+        var result = new LinkedList<MFDSector>();
+
+        var mainItem0 = getMFDSector(mainItem0Address);
+        result.add(new MFDSector(mainItem0Address, mainItem0));
+        var link = mainItem0.get(013) & 0_007777_777777L;
+        while (link != 0) {
+            var addr = new MFDRelativeAddress(link & 0_007777_777777L);
+            var mainItem = getMFDSector(addr);
+            result.add(new MFDSector(addr, mainItem));
+            link = mainItem.get(0) & 0_007777_777777L;
         }
 
         return result;

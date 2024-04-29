@@ -239,7 +239,7 @@ public class FacilitiesManager implements Manager {
         // TODO check requested pack name - if it is already assigned to this run, reject the request
 
         // Create an effective file specification based on the given specification and
-        // the qualifier specs in the run control entry.
+        // the qualifier specs in the run control entry, then create a corresponding facilities item.
         var effectiveFileSpec = resolveQualifier(fileSpecification, runControlEntry);
         var facItem = new AbsoluteDiskItem(node, packName);
         facItem.setQualifier(effectiveFileSpec.getQualifier())

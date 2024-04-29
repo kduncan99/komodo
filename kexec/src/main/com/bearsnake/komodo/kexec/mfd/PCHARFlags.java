@@ -17,9 +17,11 @@ public class PCHARFlags {
         return value;
     }
 
-    public void extract(final int value) {
+    public PCHARFlags extract(final long value) {
         _granularity = (value & 040) == 0 ? Granularity.Track : Granularity.Position;
         _isWordAddressable = (value & 010) != 0;
+
+        return this;
     }
 
     public static PCHARFlags extractFrom(final int value) {
