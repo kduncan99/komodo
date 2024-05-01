@@ -8,7 +8,7 @@ import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import java.util.LinkedList;
 
-public class TapeFileCycleInfo extends DiskFileCycleInfo {
+public class TapeFileCycleInfo extends FileCycleInfo {
 
     private LinkedList<String> _reelTable;
     private TapeDensity _density;
@@ -16,6 +16,7 @@ public class TapeFileCycleInfo extends DiskFileCycleInfo {
     private TapeFeatures _features;
     private TapeMTAPOP _mtaPop;
     private int _noiseConstant;
+    private int _numberOfReels; // only used for assistance in serializing/deserializing the reel table
     private String _processorTranslator;
     private String _tapeTranslator;
     private String _ctlPool;
@@ -63,6 +64,7 @@ public class TapeFileCycleInfo extends DiskFileCycleInfo {
                                       .extractExtension1(sector0.getS4(025));
         _mtaPop = new TapeMTAPOP().extract(sector0.getS3(025));
         _noiseConstant = (int)sector0.getT3(025);
+        _numberOfReels = (int)sector0.getS2(024);
 
         var ptVal = sector0.get(026);
         _processorTranslator = ptVal == 0 ? "" : Word36.toStringFromFieldata(ptVal);
@@ -76,28 +78,29 @@ public class TapeFileCycleInfo extends DiskFileCycleInfo {
             _ctlPool = (Word36.toStringFromFieldata(sector0.get(030)) + Word36.toStringFromFieldata(sector0.get(031))).trim();
         }
 
+        // First two reels for the cataloged tape files are stored in main item sector 0.
         int reelCount = (int)sector0.getH2(024);
         _reelTable = new LinkedList<>();
         if (reelCount > 0) {
             _reelTable.add(Word36.toStringFromFieldata(sector0.get(032)));
             if (reelCount > 1) {
                 _reelTable.add(Word36.toStringFromFieldata(sector0.get(033)));
-                if (reelCount > 2) {
-                    int sx = 2; // index to the current reel table sector
-                    var sector = mfdSectors.get(sx).getSector();
-                    int rx = 2; // reel table index
-                    int ry = 0; // reel entry index within the current reel table sector
-                    while (rx < _reelTable.size()) {
-                        _reelTable.add(Word36.toStringFromFieldata(sector.get(ry + 2)));
-                        rx++;
-                        ry++;
-                        if (ry == 25) { // 25 reels in each reel table, starting at word +02
-                            sx++;
-                            sector = mfdSectors.get(sx).getSector();
-                            ry = 0;
-                        }
-                    }
-                }
+            }
+        }
+    }
+
+    /**
+     * Loads the reel table from the reel item table sectors.
+     * The first two reels should already have been populated from main item sector 0.
+     * @param mfdSectors chain of reel table sectors describing reels 3+
+     */
+    public void loadFromReelItemTables(
+        final LinkedList<MFDSector> mfdSectors
+    ) {
+        for (var ms : mfdSectors) {
+            var sector = ms.getSector();
+            for (int ex = 0; (ex < 25) && (_reelTable.size() >= _numberOfReels); ex++) {
+                _reelTable.add(Word36.toStringFromFieldata(sector.get(2 + ex)));
             }
         }
     }
@@ -134,6 +137,7 @@ public class TapeFileCycleInfo extends DiskFileCycleInfo {
             sector0.set(031, Word36.stringToWordFieldata(paddedCTLPool.substring(6)));
         }
 
+        // First two reels for the cataloged tape files are stored in main item sector 0.
         var iter = _reelTable.iterator();
         if (iter.hasNext()) {
             var reel = iter.next();
@@ -143,7 +147,5 @@ public class TapeFileCycleInfo extends DiskFileCycleInfo {
                 sector0.set(033, Word36.stringToWordFieldata(reel));
             }
         }
-
-        // TODO remaining reels in reel table
     }
 }

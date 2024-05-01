@@ -69,11 +69,19 @@ public abstract class FileCycleInfo {
     public final FileCycleInfo setTimeOfLastReference(final Instant value) { _timeOfLastReference = value; return this; }
     public final FileCycleInfo setTimeCataloged(final Instant value) { _timeCataloged = value; return this; }
 
-    public int getRequiredNumberOfMainItems() { return 2; }
+    /**
+     * Should be overridden by sub-class, to account for number of additional backup and disk pack entries (if any).
+     * Tape file cycle items do not have these, so the TapeFileCycle class can dispense with this.
+     * @return required number of main items (always at least 2).
+     */
+    public int getRequiredNumberOfMainItems() {
+        return 2;
+    }
 
     /**
      * Loads this object from the content in the given main item MFD sector chain.
      * Should be overridden by sub-classes.
+     * Ths main item chain does not include DAD table entries, nor tape reel entries (for cataloged tape files).
      * @param mfdSectors main item chain
      */
     public void loadFromMainItemChain(
@@ -98,6 +106,8 @@ public abstract class FileCycleInfo {
     /**
      * Handles the common aspects of populating cataloged file main item sectors.
      * Should be overridden by sub-classes.
+     * Because we completely rewrite the entries, we *will* lose the links (if any) to DAD tables or reel tables.
+     * Thus, caller must account for this, taking steps to (re-)establish those links after return from here.
      * @param mfdSectors enough MFDSectors to store all of the information required for this file cycle.
      */
     public void populateMainItems(
@@ -109,8 +119,6 @@ public abstract class FileCycleInfo {
         }
 
         // Zero out the main items, then link them in order. There will always be at least two.
-        // Disk file cycles may have more than two sectors, to hold the DAD table and the backup reel table.
-        // Tape file cycles will generally only have two.
         // For sector 0:
         //  Word 0 is the first DAD table link for disk, or the first reel table link for tape.
         //      The link (bits 4-35) is empty if Bit 0 (U) is set.

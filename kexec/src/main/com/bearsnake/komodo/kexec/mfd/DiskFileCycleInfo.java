@@ -75,7 +75,9 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
         final LinkedList<MFDSector> mfdSectors
     ) {
         super.loadFromMainItemChain(mfdSectors);
-        var sector0 = mfdSectors.getFirst().getSector();
+        var sector0 = mfdSectors.get(0).getSector();
+        var sector1 = mfdSectors.get(1).getSector();
+
         _timeOfFirstWriteOrUnload = DateConverter.fromModifiedSingleWordTime(sector0.get(012));
         _fileFlags = new FileFlags().extract(sector0.getS3(014));
         _pcharFlags = new PCHARFlags().extract(sector0.getS1(015));
@@ -88,11 +90,56 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
             _quotaGroupGranules[x] = sector0.getH2(x + 024);
         }
 
+        // backup info
         _backupInfo = null;
-        // TODO
+        long numberOfBackupWords = sector1.getT1(07);
+        var currentNumberOfBackupLevels = sector1.getS3(011);
+        if (currentNumberOfBackupLevels > 0) {
+            _backupInfo = new BackupInfo().setTimeBackupCreated(DateConverter.fromModifiedSingleWordTime(sector1.get(010)))
+                                          .setFASBits(sector1.getS2(011))
+                                          .setStartingFilePosition(sector1.get(012))
+                                          .setNumberOfTextBlocks(sector1.getH2(011));
+            if (numberOfBackupWords > 0) {
+                _backupInfo.addBackupReelNumber(Word36.toStringFromFieldata(sector1.get(013)));
+                if (numberOfBackupWords > 1) {
+                    _backupInfo.addBackupReelNumber(Word36.toStringFromFieldata(sector1.get(014)));
+                }
+            }
+        }
 
+        // disk pack entries
         _diskPackEntries.clear();
-        // TODO
+        long numberOfDPEs = sector1.getT3(021);
+        for (int dpx = 0; (dpx < 5) && (dpx < numberOfDPEs); dpx++) {
+            var wx = 022 + (2 * dpx);
+            var packName = Word36.toStringFromFieldata(sector1.get(wx));
+            var mainItemAddr = sector1.get(wx + 1);
+            _diskPackEntries.add(new DiskPackEntry(packName, new MFDRelativeAddress(mainItemAddr)));
+        }
+
+        for (int sx = 2; sx < mfdSectors.size(); sx++) {
+            var sector = mfdSectors.get(sx).getSector();
+            var entryType = sector.getS1(07);
+            if (entryType == 0) {
+                // Up to 10 disk pack entries (of 2 words each).
+                // Total number of disk pack entries is in T3 of sector1[021]
+                for (int ex = 0; (ex < 10) && (_diskPackEntries.size() < numberOfDPEs); ex++) {
+                    var wx = 010 + (2 * ex);
+                    var packName = Word36.toStringFromFieldata(sector1.get(wx));
+                    var mainItemAddr = sector1.get(wx + 1);
+                    _diskPackEntries.add(new DiskPackEntry(packName, new MFDRelativeAddress(mainItemAddr)));
+                }
+            } else if ((_backupInfo != null)
+                && (entryType == 1)
+                && (_backupInfo.getBackupReelNumbers().size() < numberOfBackupWords)) {
+                // Up to 20 backup reel entries (of 1 word each) -
+                // Total number of backup reel entries can be derived from number-of-backup-words.
+                // If we support only one level of backups, then this will be the number of reels.
+                for (int ex = 0; (ex < 20) && (_backupInfo.getBackupReelNumbers().size() < numberOfBackupWords); ex++) {
+                    _backupInfo.addBackupReelNumber(Word36.toStringFromFieldata(sector.get(8 + ex)));
+                }
+            }
+        }
     }
 
     /**

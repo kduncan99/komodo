@@ -220,16 +220,29 @@ public class MFDManager implements Manager {
 
                 var miChain = getMainItemChain(cycInfo.getMainItem0Address());
                 var ms = new MFDSector(fsInfo.getLeadItem0Address(), getMFDSector(fsInfo.getLeadItem0Address()));
-                var fcInfo = switch (fsInfo.getFileType()) {
-                    case Fixed -> new FixedDiskFileCycleInfo(ms);
-                    case Removable -> new RemovableDiskFileCycleInfo(ms);
-                    case Tape -> new TapeFileCycleInfo(ms);
-                };
-                fcInfo.loadFromMainItemChain(miChain);
+                switch (fsInfo.getFileType()) {
+                    case Fixed -> {
+                        var fcInfo = new FixedDiskFileCycleInfo(ms);
+                        fcInfo.loadFromMainItemChain(miChain);
+                        var dadChain = getDADChain(cycInfo.getMainItem0Address());
+                        var fas = FileAllocationSet.createFromDADChain(dadChain);
+                        acInfo = new AcceleratedCycleInfo(fcInfo, fas);
+                    }
+                    case Removable -> {
+                        var fcInfo = new RemovableDiskFileCycleInfo(ms);
+                        fcInfo.loadFromMainItemChain(miChain);
+                        var dadChain = getDADChain(cycInfo.getMainItem0Address());
+                        var fas = FileAllocationSet.createFromDADChain(dadChain);
+                        acInfo = new AcceleratedCycleInfo(fcInfo, fas);
+                    }
+                    case Tape -> {
+                        var fcInfo = new TapeFileCycleInfo(ms);
+                        var reelTableChain = getReelTableChain(cycInfo.getMainItem0Address());
+                        fcInfo.loadFromReelItemTables(reelTableChain);
+                        acInfo = new AcceleratedCycleInfo(fcInfo);
+                    }
+                }
 
-                var dadChain = getDADChain(cycInfo.getMainItem0Address());
-                var fas = FileAllocationSet.createFromDADChain(dadChain);
-                acInfo = new AcceleratedCycleInfo(fcInfo, fas);
                 acInfo.incrementAssignCount();
                 _acceleratedFileCycles.put(mainItem0Addr, acInfo);
                 return acInfo.getFileCycleInfo();
@@ -789,6 +802,32 @@ public class MFDManager implements Manager {
     }
 
     /**
+     * Retrieves a list of sectors which comprise the complete set of
+     * reel tables for a cataloged tape file cycle.
+     * @param mainItem0Address address of main item sector 0 for the file cycle.
+     * @return list
+     * @throws ExecStoppedException if something goes wrong
+     */
+    private LinkedList<MFDSector> getReelTableChain(
+        final MFDRelativeAddress mainItem0Address
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "getReelTableChain(%s)", mainItem0Address.toString());
+        var reelTableChain = new LinkedList<MFDSector>();
+
+        var mainItem0 = getMFDSector(mainItem0Address);
+        var dadLink = mainItem0.get(0) & 0_007777_777777;
+        while (dadLink != 0) {
+            var dadAddr = new MFDRelativeAddress(dadLink);
+            var dad = getMFDSector(dadAddr);
+            reelTableChain.add(new MFDSector(dadAddr, dad));
+            dadLink = dad.get(0);
+        }
+
+        LogManager.logTrace(LOG_SOURCE, "getReelTableChain returning");
+        return reelTableChain;
+    }
+
+    /**
      * Marks a directory sector as being dirty.
      * Since we do IO on block boundaries, we don't need to actually mark *all* the sectors dirty...
      * so we only mark the first sector in a physical block, for any sector within that block.
@@ -831,6 +870,7 @@ public class MFDManager implements Manager {
         var allocations = faSet.getFileAllocations();
         if (allocations.isEmpty()) {
             dadChain.stream().map(MFDSector::getAddress).forEach(this::releaseDirectorySector);
+            LogManager.logTrace(LOG_SOURCE, "persistDADTables return empty");
             return;
         }
 
@@ -925,8 +965,8 @@ public class MFDManager implements Manager {
         }
         dadChain.getLast().getSector().set(0, 0);
 
-        // Mark all the DAD sectors dirty
-        dadChain.stream().map(MFDSector::getAddress).forEach(this::markDirectorySectorDirty);
+        markDirectorySectorsDirty(dadChain);
+        LogManager.logTrace(LOG_SOURCE, "persistDADTables return");
     }
 
     /**
@@ -944,6 +984,82 @@ public class MFDManager implements Manager {
         }
         fsInfo.populateLeadItemSectors(chain);
         markDirectorySectorsDirty(chain);
+    }
+
+    /**
+     * Persists the reel table as a set of reel table entries attached to the given main item 0.
+     * Note that we do not persist entries 0 and 1, as they are persisted in main item 1.
+     * @param mainItem0Address main item 0 address
+     * @param reelTable list of reel number which comprise the cataloged tape file
+     * @throws ExecStoppedException if something goes wrong
+     */
+    private void persistReelTables(
+        final MFDRelativeAddress mainItem0Address,
+        final LinkedList<String> reelTable
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "persistReelTables for %s", mainItem0Address.toString());
+
+        // Go get the current chain of reel table entries.
+        // It might be smaller or larger than we need (or non-existent), but we'll deal with that presently.
+        var reelTableChain = getReelTableChain(mainItem0Address);
+
+        // Special case - fewer than two reels in the file.
+        // If there is a chain, release all the entries on the chain and clear the link in the main item.
+        if (reelTable.size() < 2) {
+            reelTableChain.stream().map(MFDSector::getAddress).forEach(this::releaseDirectorySector);
+            LogManager.logTrace(LOG_SOURCE, "persistReelTables return empty");
+            return;
+        }
+
+        int rx = 2;
+        int rtx = -1;
+        int ex = 8;
+        MFDRelativeAddress currentReelTableAddr = null;
+        ArraySlice currentReelTable = null;
+
+        long expectedNextTrackId = 0; // this does not need an initial value
+
+        while (rx < reelTable.size()) {
+            if (ex == 8) {
+                // current entry is full, move on to the next one.
+                // If there isn't a next one, we need to allocate a new one and put in on the chain.
+                rtx++;
+                if (rtx == reelTableChain.size()) {
+                    var newReelTableSector = allocateDirectorySector();
+                    var newReelTableAddr = newReelTableSector.getAddress();
+                    var newReelTable = newReelTableSector.getSector();
+                    IntStream.range(0, 28).forEach(x -> newReelTable._array[x] = 0);
+                    reelTableChain.add(new MFDSector(newReelTableAddr, newReelTable));
+
+                    // link this address to the previous entry (but only if this is not the first).
+                    if (currentReelTable != null) {
+                        currentReelTable.set(0, newReelTableAddr.getValue());
+                        newReelTable.set(1, currentReelTableAddr.getValue());
+                    } else {
+                        // If it *is* the first, then the previous link needs to point to the main item
+                        newReelTable.set(1, mainItem0Address.getValue());
+                    }
+                }
+                currentReelTableAddr = reelTableChain.get(rtx).getAddress();
+                currentReelTable = reelTableChain.get(rtx).getSector();
+                ex = 0;
+            }
+
+            currentReelTable.set(2 + ex, Word36.stringToWordFieldata(reelTable.get(rx)));
+            ex++;
+            rx++;
+        }
+
+        // Release any unused entries, and ensure the last remaining entry does not have a forward link
+        if (ex > 0) {
+            rtx++;
+        }
+        while (rtx < reelTableChain.size()) {
+            releaseDirectorySector(reelTableChain.get(rtx++).getAddress());
+        }
+        reelTableChain.getLast().getSector().set(0, 0);
+
+        LogManager.logTrace(LOG_SOURCE, "persistReelTables return");
     }
 
     /**

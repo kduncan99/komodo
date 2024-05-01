@@ -15,6 +15,15 @@ public class AcceleratedCycleInfo {
     private final FileCycleInfo _fileCycleInfo;
     private final FileAllocationSet _fileAllocationSet;
 
+    // For tape files
+    public AcceleratedCycleInfo(
+        final FileCycleInfo cycleInfo
+    ) {
+        _fileCycleInfo = cycleInfo;
+        _fileAllocationSet = null;
+    }
+
+    // For disk files
     public AcceleratedCycleInfo(
         final FileCycleInfo cycleInfo,
         final FileAllocationSet allocationSet
