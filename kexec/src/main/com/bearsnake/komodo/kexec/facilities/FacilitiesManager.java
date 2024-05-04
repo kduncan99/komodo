@@ -386,7 +386,9 @@ public class FacilitiesManager implements Manager {
      * @param nodeName name of the node - we'd prefer it to be uppercase, but whatever...
      * @return NodeInfo of the node if it is configured, else null
      */
-    public NodeInfo getNodeInfo(final String nodeName) {
+    public NodeInfo getNodeInfo(
+        final String nodeName
+    ) {
         return _nodeGraph.values()
                          .stream()
                          .filter(ni -> ni.getNode().getNodeName().equalsIgnoreCase(nodeName))
@@ -400,7 +402,9 @@ public class FacilitiesManager implements Manager {
      * @param category category of interest
      * @return collection
      */
-    public Collection<NodeInfo> getNodeInfos(final NodeCategory category) {
+    public Collection<NodeInfo> getNodeInfos(
+        final NodeCategory category
+    ) {
         return _nodeGraph.values()
                          .stream()
                          .filter(ni -> ni.getNode().getNodeCategory() == category)
@@ -412,7 +416,9 @@ public class FacilitiesManager implements Manager {
      * @param deviceType device type of interest
      * @return collection
      */
-    public Collection<NodeInfo> getNodeInfos(final DeviceType deviceType) {
+    public Collection<NodeInfo> getNodeInfos(
+        final DeviceType deviceType
+    ) {
         return _nodeGraph.values()
                          .stream()
                          .filter(ni -> (ni.getNode() instanceof Device dev) && (dev.getDeviceType() == deviceType))
@@ -425,8 +431,9 @@ public class FacilitiesManager implements Manager {
      * @param channelInfo indicates the channel of interest
      * @return list of NodeInfo objects
      */
-    public Collection<NodeInfo> getNodeInfosForChannel(final ChannelNodeInfo channelInfo) {
-        LinkedList<DeviceNodeInfo> list;
+    public Collection<NodeInfo> getNodeInfosForChannel(
+        final ChannelNodeInfo channelInfo
+    ) {
         var chan = (Channel)channelInfo.getNode();
         return _nodeGraph.values()
                          .stream()
@@ -439,9 +446,11 @@ public class FacilitiesManager implements Manager {
      * Produces a string suitable for display node status upon the console
      * @param nodeIdentifier nodeIdentifier of the node we are interested in
      * @return string
-     * @throws ExecStoppedException
+     * @throws ExecStoppedException if the exec is stopped during this function
      */
-    public String getNodeStatusString(final int nodeIdentifier) throws ExecStoppedException {
+    public String getNodeStatusString(
+        final int nodeIdentifier
+    ) throws ExecStoppedException {
         var ni = _nodeGraph.get(nodeIdentifier);
         if (ni == null) {
             LogManager.logFatal(LOG_SOURCE, "getNodeStatusString nodeIdentifier %d not found", nodeIdentifier);
@@ -482,7 +491,9 @@ public class FacilitiesManager implements Manager {
      * @param nodeIdentifier identifier of the device
      * @return true if the device is accessible
      */
-    public boolean isDeviceAccessible(final int nodeIdentifier) {
+    public boolean isDeviceAccessible(
+        final int nodeIdentifier
+    ) {
         var ni = _nodeGraph.get(nodeIdentifier);
         if (ni instanceof DeviceNodeInfo dni) {
             for (var chan : dni._routes) {
@@ -500,8 +511,12 @@ public class FacilitiesManager implements Manager {
      * Routes an IO described by a channel program.
      * For the case where some portion of the Exec needs to do device-specific IO.
      * @param channelProgram IO description
+     * @throws ExecStoppedException if the exec stops during this function
+     * @throws NoRouteForIOException if the destination device has no available path
      */
-    public void routeIo(final ChannelProgram channelProgram) throws ExecStoppedException, NoRouteForIOException {
+    public void routeIo(
+        final ChannelProgram channelProgram
+    ) throws ExecStoppedException, NoRouteForIOException {
         var nodeInfo = _nodeGraph.get(channelProgram.getNodeIdentifier());
         if (nodeInfo == null) {
             LogManager.logFatal(LOG_SOURCE,

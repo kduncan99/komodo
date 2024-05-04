@@ -59,12 +59,8 @@ public class MFDManager implements Manager {
     private final ConcurrentHashMap<Integer, NodeInfo> _logicalDATable = new ConcurrentHashMap<>();
     private int _fixedPackCount;
 
-    // This is a list of MFD-relative addresses of sectors which are the first sector in any physical block
-    // which contains at least one dirty sector. For example if there are 4 sectors in a physical block,
-    // and the 2nd and 3rd sectors in a particular block are dirty, this list will contain the address of
-    // the 1st sector in the block. We do this for I/O efficiency, but it does mean that we need to know the
-    // physical block size for each pack we manage.
-    private final HashSet<MFDRelativeAddress> _dirtyCacheBlocks = new HashSet<>();
+    // This is a set of all the MFD tracks (keyed by MFD-relative track ID) which need to be persisted to disk.
+    private final HashSet<Long> _dirtyCacheTracks = new HashSet<>();
 
     public MFDManager() {
         Exec.getInstance().managerRegister(this);
@@ -137,9 +133,9 @@ public class MFDManager implements Manager {
             }
 
             // Dirty cache blocks
-            out.printf("%s  MFD addresses of 1st sector of dirty cache blocks:\n", indent);
-            for (var addr : _dirtyCacheBlocks) {
-                out.printf("%s    %s\n", indent, addr.toString());
+            out.printf("%s  Dirty mfd-relative track-IDs:\n", indent);
+            for (var addr : _dirtyCacheTracks) {
+                out.printf("%s    %012o\n", indent, addr);
             }
 
             // Free MFD sector list
@@ -309,7 +305,7 @@ public class MFDManager implements Manager {
         }
 
         _cachedMFDTracks.clear();
-        _dirtyCacheBlocks.clear();
+        _dirtyCacheTracks.clear();
         _leadItemLookupTable.clear();
         _freeMFDSectors.clear();
         _logicalDATable.clear();
@@ -389,7 +385,7 @@ public class MFDManager implements Manager {
         // Create MFD$$ file artifacts in the first directory track of the first disk pack,
         // then write the dirty sectors (i.e., the entire MFD) to disk.
         createMFDFile(mfdFas);
-        writeDirtyCacheBlocks();
+        writeDirtyCacheTracks();
 
         // I think we're all done here.
         var elapsed = Duration.between(start, Instant.now()).get(ChronoUnit.MILLIS);
@@ -604,8 +600,7 @@ public class MFDManager implements Manager {
             persistDADTables(_mfdFileAddress, mfdAllocationSet);
 
             // Assign MFDF$$ to the exec
-            //  TODO
-
+            //  TODO - leverage fac mgr
         } catch (AbsoluteCycleOutOfRangeException
                  | AbsoluteCycleConflictException
                  | FileSetAlreadyExistsException ex) {
@@ -829,17 +824,15 @@ public class MFDManager implements Manager {
 
     /**
      * Marks a directory sector as being dirty.
-     * Since we do IO on block boundaries, we don't need to actually mark *all* the sectors dirty...
-     * so we only mark the first sector in a physical block, for any sector within that block.
-     * @param sectorAddress MFD-relative sector address of dirty sector
+     * Since we do IO on track boundaries, we don't need to actually mark the sectors dirty,
+     * just the containing tracks.
+     * @param address MFD-relative sector address of dirty sector
      */
-    private void markDirectorySectorDirty(
-        final MFDRelativeAddress sectorAddress
+    private synchronized void markDirectorySectorDirty(
+        final MFDRelativeAddress address
     ) {
-        var ni = _logicalDATable.get((int)sectorAddress.getLDATIndex());
-        var pi = (PackInfo)(ni.getMediaInfo());
-        var aligned = pi.alignSectorAddressToBlock(sectorAddress);
-        _dirtyCacheBlocks.add(aligned);
+
+        _dirtyCacheTracks.add(address.getValue() & 0_007777_777700L);
     }
 
     /**
@@ -1072,11 +1065,10 @@ public class MFDManager implements Manager {
     }
 
     /**
-     * Writes all dirty cache blocks to underlying disk storage
+     * Writes all dirty cache tracks to underlying disk storage
      * @throws ExecStoppedException if something goes wrong
      */
-    private void writeDirtyCacheBlocks() throws ExecStoppedException {
+    private void writeDirtyCacheTracks() throws ExecStoppedException {
         // TODO
-        //  try to write contiguous blocks in one IO
     }
 }
