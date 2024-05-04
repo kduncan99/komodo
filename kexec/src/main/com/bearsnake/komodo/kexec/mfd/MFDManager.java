@@ -72,7 +72,7 @@ public class MFDManager implements Manager {
 
     @Override
     public void boot(final boolean recoveryBoot) {
-        LogManager.logTrace(LOG_SOURCE, "boot(%d) - nothing to do", recoveryBoot);
+        LogManager.logTrace(LOG_SOURCE, "boot(%s) - nothing to do", recoveryBoot);
     }
 
     @Override
@@ -92,7 +92,7 @@ public class MFDManager implements Manager {
             for (var e : _leadItemLookupTable.entrySet()) {
                 var luKey = e.getKey();
                 var fsInfo = e.getValue();
-                out.printf("%s    %s:  %s\n", indent, luKey, fsInfo.getLeadItem0Address());
+                out.printf("%s    %s:  %s\n", indent, luKey, fsInfo._leadItem0Address);
             }
 
             // MFD sectors which are in use
@@ -215,30 +215,13 @@ public class MFDManager implements Manager {
                 }
 
                 var miChain = getMainItemChain(cycInfo.getMainItem0Address());
-                var ms = new MFDSector(fsInfo.getLeadItem0Address(), getMFDSector(fsInfo.getLeadItem0Address()));
-                switch (fsInfo.getFileType()) {
-                    case Fixed -> {
-                        var fcInfo = new FixedDiskFileCycleInfo(ms);
-                        fcInfo.loadFromMainItemChain(miChain);
-                        var dadChain = getDADChain(cycInfo.getMainItem0Address());
-                        var fas = FileAllocationSet.createFromDADChain(dadChain);
-                        acInfo = new AcceleratedCycleInfo(fcInfo, fas);
-                    }
-                    case Removable -> {
-                        var fcInfo = new RemovableDiskFileCycleInfo(ms);
-                        fcInfo.loadFromMainItemChain(miChain);
-                        var dadChain = getDADChain(cycInfo.getMainItem0Address());
-                        var fas = FileAllocationSet.createFromDADChain(dadChain);
-                        acInfo = new AcceleratedCycleInfo(fcInfo, fas);
-                    }
-                    case Tape -> {
-                        var fcInfo = new TapeFileCycleInfo(ms);
-                        var reelTableChain = getReelTableChain(cycInfo.getMainItem0Address());
-                        fcInfo.loadFromReelItemTables(reelTableChain);
-                        acInfo = new AcceleratedCycleInfo(fcInfo);
-                    }
-                }
-
+                var fcInfo = switch (fsInfo.getFileType()) {
+                    case Fixed -> new FixedDiskFileCycleInfo();
+                    case Removable -> new RemovableDiskFileCycleInfo();
+                    case Tape -> new TapeFileCycleInfo();
+                };
+                fcInfo.loadFromMainItemChain(miChain);
+                acInfo = new AcceleratedCycleInfo(fcInfo);
                 acInfo.incrementAssignCount();
                 _acceleratedFileCycles.put(mainItem0Addr, acInfo);
                 return acInfo.getFileCycleInfo();
@@ -251,19 +234,41 @@ public class MFDManager implements Manager {
     /**
      * Decelerates a file cycle. This involves decrementing the acceleration count for an accelerated
      * file cycle, and unloading the corresponding meta information if the count goes to zero.
+     * @param fcInfo describes the file cycle to be accelerated
+     */
+    public void decelerateFileCycle(
+        final FileCycleInfo fcInfo
+    ) {
+        LogManager.logTrace(LOG_SOURCE,
+                            "accelerateFileCycle %s*%s(%d)",
+                            fcInfo.getQualifier(),
+                            fcInfo.getFilename(),
+                            fcInfo.getAbsoluteCycle());
+
+        var acInfo = _acceleratedFileCycles.get(fcInfo._mainItem0Address);
+        if ((acInfo != null) && (acInfo.decrementAssignCount() == 0)) {
+            _acceleratedFileCycles.remove(fcInfo._mainItem0Address);
+        }
+    }
+
+    /**
+     * Creates a FileCycleInfo object for a particular file cycle.
      * @param qualifier qualifier of the file
      * @param filename filename of the file
      * @param absoluteCycle absolute cycle of the file
+     * @return FileCycleInfo object describing (some of) the meta-information
+     * @throws ExecStoppedException if something goes monkey-wise
      * @throws FileCycleDoesNotExistException the cycle indicated by the absolute cycle does not exist
      * @throws FileSetDoesNotExistException no cycle with the given qualifier and filename exists
      */
-    public void decelerateFileCycle(
+    public synchronized FileCycleInfo getFileCycleInfo(
         final String qualifier,
         final String filename,
         final int absoluteCycle
-    ) throws FileCycleDoesNotExistException,
+    ) throws ExecStoppedException,
+             FileCycleDoesNotExistException,
              FileSetDoesNotExistException {
-        LogManager.logTrace(LOG_SOURCE, "decelerateFileCycle %s*%s(%d)", qualifier, filename, absoluteCycle);
+        LogManager.logTrace(LOG_SOURCE, "getFileCycleInfo %s*%s(%d)", qualifier, filename, absoluteCycle);
 
         var luKey = composeLookupKey(qualifier, filename);
         var fsInfo = _leadItemLookupTable.get(luKey);
@@ -275,14 +280,46 @@ public class MFDManager implements Manager {
             if (cycInfo.getAbsoluteCycle() == absoluteCycle) {
                 var mainItem0Addr = cycInfo.getMainItem0Address();
                 var acInfo = _acceleratedFileCycles.get(mainItem0Addr);
-                if ((acInfo != null) && (acInfo.decrementAssignCount() == 0)) {
-                    _acceleratedFileCycles.remove(mainItem0Addr);
+                if (acInfo != null) {
+                    var newAsgCount = acInfo.incrementAssignCount();
+                    LogManager.logTrace(LOG_SOURCE, "file cycle assign count = %d", newAsgCount);
+                    return acInfo.getFileCycleInfo();
                 }
-                return;
+
+                var miChain = getMainItemChain(cycInfo.getMainItem0Address());
+                var fcInfo = switch (fsInfo.getFileType()) {
+                    case Fixed -> new FixedDiskFileCycleInfo();
+                    case Removable -> new RemovableDiskFileCycleInfo();
+                    case Tape -> new TapeFileCycleInfo();
+                };
+                fcInfo.loadFromMainItemChain(miChain);
+                return fcInfo;
             }
         }
 
         throw new FileCycleDoesNotExistException();
+    }
+
+    /**
+     * Creates a FileSetInfo object for a particular file set.
+     * @param qualifier qualifier of the file
+     * @param filename filename of the file
+     * @return FileSetInfo object describing (some of) the meta-information
+     * @throws FileSetDoesNotExistException no cycle with the given qualifier and filename exists
+     */
+    public synchronized FileSetInfo getFileSetInfo(
+        final String qualifier,
+        final String filename
+    ) throws FileSetDoesNotExistException {
+        LogManager.logTrace(LOG_SOURCE, "getFileSetInfo %s*%s", qualifier, filename);
+
+        var luKey = composeLookupKey(qualifier, filename);
+        var fsInfo = _leadItemLookupTable.get(luKey);
+        if (fsInfo == null) {
+            throw new FileSetDoesNotExistException();
+        }
+
+        return fsInfo;
     }
 
     /**
@@ -462,7 +499,7 @@ public class MFDManager implements Manager {
      * Updates the MFD sector(s) describing the file set accordingly.
      * Updates the main item sector addresses in the fcInfo object
      * @param fsInfo FileSetInfo describing the file set (which might be empty)
-     *               MUST have the mainItem0Address value set (by us).
+     *               MUST have the leadItem0Address value set (by us).
      * @param fcInfo FileCycleInfo describing the file cycle to be created
      * @throws ExecStoppedException if something fatal occurs
      */
@@ -522,6 +559,8 @@ public class MFDManager implements Manager {
             mainItems.add(allocateDirectorySector());
         }
 
+        fcInfo._leadItem0Address = fsInfo._leadItem0Address;
+        fcInfo._mainItem0Address = mainItems.getFirst().getAddress();
         fcInfo.populateMainItems(mainItems);
 
         // Link main item sector 0 into the lead item(s) and update the cycle information in the lead item.
@@ -585,7 +624,7 @@ public class MFDManager implements Manager {
                                           .setIsGuarded(true);
             _mfdFileAddress = createFileSet(fsInfo);
 
-            var fcInfo = new FixedDiskFileCycleInfo(new MFDSector(_mfdFileAddress, getMFDSector(_mfdFileAddress)));
+            var fcInfo = new FixedDiskFileCycleInfo();
             fcInfo.setUnitSelectionIndicators(usInd)
                   .setFileFlags(fFlags)
                   .setPCHARFlags(pchFlags)
@@ -971,7 +1010,7 @@ public class MFDManager implements Manager {
     private void persistLeadItems(
         final FileSetInfo fsInfo
     ) throws ExecStoppedException {
-        var chain = getLeadItemChain(fsInfo.getLeadItem0Address());
+        var chain = getLeadItemChain(fsInfo._leadItem0Address);
         if (fsInfo.isSector1Required() && (chain.size() == 1)) {
             chain.add(allocateDirectorySector());
         }

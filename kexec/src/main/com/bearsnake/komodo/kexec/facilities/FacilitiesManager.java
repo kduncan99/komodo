@@ -27,6 +27,7 @@ import com.bearsnake.komodo.kexec.exec.RunControlEntry;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
+import com.bearsnake.komodo.kexec.mfd.FileCycleInfo;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
@@ -122,6 +123,48 @@ public class FacilitiesManager implements Manager {
     // Services interface
     // -------------------------------------------------------------------------
 
+    public boolean assignCatalogedFileToRun(
+        final RunControlEntry runControlEntry,
+        final FileCycleInfo fileCycleInfo, // TODO should this be FileSpecification instead?
+        final boolean releaseOnTaskEnd,
+        final boolean doNotHoldRun,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s %s*%s(%d) I:%s Z:%s",
+                            runControlEntry.getRunId(),
+                            fileCycleInfo.getQualifier(),
+                            fileCycleInfo.getFilename(),
+                            fileCycleInfo.getAbsoluteCycle(),
+                            releaseOnTaskEnd,
+                            doNotHoldRun);
+
+        boolean result;
+        if (fileCycleInfo.getDescriptorFlags().isTapeFile()) {
+            result = assignCatalogedTapeFileToRun(runControlEntry,
+                                                  fileCycleInfo,
+                                                  releaseOnTaskEnd,
+                                                  doNotHoldRun,
+                                                  fsResult);
+        } else if (fileCycleInfo.getDescriptorFlags().isRemovableDiskFile()) {
+            result = assignCatalogedRemovableFileToRun(runControlEntry,
+                                                       fileCycleInfo,
+                                                       releaseOnTaskEnd,
+                                                       doNotHoldRun,
+                                                       fsResult);
+        } else {
+            result = assignCatalogedFixedFileToRun(runControlEntry,
+                                                   fileCycleInfo,
+                                                   releaseOnTaskEnd,
+                                                   doNotHoldRun,
+                                                   fsResult);
+        }
+
+        LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s result:%s",
+                            runControlEntry.getRunId(),
+                            fsResult.toString());
+        return result;
+    }
+
     /**
      * For assigning any disk to the exec. Possibly only used by facilities manager...?
      * The device must not be assigned to any run (other than the EXEC) and it must be ready.
@@ -188,7 +231,7 @@ public class FacilitiesManager implements Manager {
      * For assigning a (reserved) disk to a run.
      * This assignment can only be temporary, and the device must be reserved.
      * @param runControlEntry describes the run
-     * @param fileSpecification describes the file name
+     * @param fileSpecification describes the file name so that we can figure out the correct qualifier to use
      * @param nodeIdentifier node identifier of the device
      * @param packName pack name requested for the device
      * @param releaseOnTaskEnd I-option on assign
@@ -238,16 +281,14 @@ public class FacilitiesManager implements Manager {
 
         // TODO check requested pack name - if it is already assigned to this run, reject the request
 
-        // Create an effective file specification based on the given specification and
-        // the qualifier specs in the run control entry, then create a corresponding facilities item.
-        var effectiveFileSpec = resolveQualifier(fileSpecification, runControlEntry);
+        // Create an appropriate facilities item.
         var facItem = new AbsoluteDiskItem(node, packName);
-        facItem.setQualifier(effectiveFileSpec.getQualifier())
-               .setFilename(effectiveFileSpec.getFilename())
+        facItem.setQualifier(fileSpecification.getQualifier())
+               .setFilename(fileSpecification.getFilename())
                .setIsTemporary(true)
                .setReleaseOnTaskEnd(releaseOnTaskEnd);
-        if (effectiveFileSpec.hasFileCycleSpecification()) {
-            var fcSpec = effectiveFileSpec.getFileCycleSpecification();
+        if (fileSpecification.hasFileCycleSpecification()) {
+            var fcSpec = fileSpecification.getFileCycleSpecification();
             if (fcSpec.isAbsolute()) {
                 facItem.setAbsoluteCycle(fcSpec.getCycle());
             } else if (fcSpec.isRelative()) {
@@ -266,7 +307,7 @@ public class FacilitiesManager implements Manager {
             for (var fi : facItems.getFacilitiesItems()) {
                 var facTable = runControlEntry.getFacilityItemTable();
                 synchronized (facTable) {
-                    if (facTable.getExactFacilitiesItem(effectiveFileSpec) != null) {
+                    if (facTable.getExactFacilitiesItem(fileSpecification) != null) {
                         fsResult.postMessage(FacStatusCode.IllegalAttemptToChangeAssignmentType);
                         fsResult.mergeStatusBits(0_400000_000000L);
                         return false;
@@ -445,8 +486,13 @@ public class FacilitiesManager implements Manager {
     /**
      * Produces a string suitable for display node status upon the console
      * @param nodeIdentifier nodeIdentifier of the node we are interested in
+<<<<<<< Updated upstream
      * @return string
      * @throws ExecStoppedException if the exec is stopped during this function
+=======
+     * @return node status string
+     * @throws ExecStoppedException If the exec stops during this function
+>>>>>>> Stashed changes
      */
     public String getNodeStatusString(
         final int nodeIdentifier
@@ -475,11 +521,20 @@ public class FacilitiesManager implements Manager {
                     sb.append("  ");
                 }
 
-                sb.append(" PACKID ").append(pi.getMediaName());
+                sb.append(" PACKID ").append(pi.getPackName());
             }
         } else if (ni.getNode() instanceof TapeDevice) {
-            // [* RUNID run-id REEL reel [RING|NORING] [POS [*]ffff[+|-][*]bbbbbb | POS LOST]]
-            // TODO
+            // [* RUNID run-id] [REEL reel [RING|NORING] [POS [*]ffff[+|-][*]bbbbbb | POS LOST]]]
+            // First part is printed if the drive is assigned
+            // Second part is printed if a reel is mounted (could be not assigned, in the case of pre-mount)
+            if (ni.getAssignedTo() != null) {
+                var runId = ni.getAssignedTo().getRunId();
+                sb.append("* RUNID ").append(String.format("%-6s", runId)).append(" ");
+            }
+            if (ni.getMediaInfo() instanceof VolumeInfo vi) {
+                sb.append("REEL ").append(String.format("%-6s", vi.getVolumeName())).append(" ");
+                // TODO RING/NORING which we get from the facitem (if assigned), and POS which we get from the device
+            }
         }
 
         return sb.toString();
@@ -567,6 +622,39 @@ public class FacilitiesManager implements Manager {
     // -------------------------------------------------------------------------
     // Core
     // -------------------------------------------------------------------------
+
+    public boolean assignCatalogedFixedFileToRun(
+        final RunControlEntry runControlEntry,
+        final FileCycleInfo fileCycleInfo,
+        final boolean releaseOnTaskEnd,
+        final boolean doNotHoldRun,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "assignCatalogedFixedFileToRun %s", runControlEntry.getRunId());
+        return false;//TODO
+    }
+
+    public boolean assignCatalogedRemovableFileToRun(
+        final RunControlEntry runControlEntry,
+        final FileCycleInfo fileCycleInfo,
+        final boolean releaseOnTaskEnd,
+        final boolean doNotHoldRun,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "assignCatalogedRemovableFileToRun %s", runControlEntry.getRunId());
+        return false;//TODO
+    }
+
+    public boolean assignCatalogedTapeFileToRun(
+        final RunControlEntry runControlEntry,
+        final FileCycleInfo fileCycleInfo,
+        final boolean releaseOnTaskEnd,
+        final boolean doNotHoldRun,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "assignCatalogedTapeFileToRun %s", runControlEntry.getRunId());
+        return false;//TODO
+    }
 
     /**
      * Unloads all ready tape devices - used during boot.
@@ -851,17 +939,6 @@ public class FacilitiesManager implements Manager {
         }
 
         return cw.getBuffer();
-    }
-
-    private FileSpecification resolveQualifier(
-        final FileSpecification initialSpec,
-        final RunControlEntry runControlEntry
-    ) {
-        return new FileSpecification(runControlEntry.getEffectiveQualifier(initialSpec),
-                                     initialSpec.getFilename(),
-                                     initialSpec.getFileCycleSpecification(),
-                                     initialSpec.getReadKey(),
-                                     initialSpec.getWriteKey());
     }
 
     Channel selectRoute(final Device device) throws ExecStoppedException, NoRouteForIOException {

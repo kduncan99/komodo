@@ -13,11 +13,7 @@ public class RemovableDiskFileCycleInfo extends DiskFileCycleInfo {
     private String _readKey = "";
     private String _writeKey = "";
 
-    public RemovableDiskFileCycleInfo(
-        final MFDSector leadItem0
-    ) {
-        super(leadItem0);
-    }
+    RemovableDiskFileCycleInfo(){}
 
     public final String getReadKey() { return _readKey; }
     public final String getWriteKey() { return _writeKey; }

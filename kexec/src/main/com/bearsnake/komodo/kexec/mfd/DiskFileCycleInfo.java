@@ -12,12 +12,6 @@ import java.util.LinkedList;
 
 public abstract class DiskFileCycleInfo extends FileCycleInfo {
 
-    protected DiskFileCycleInfo(
-        final MFDSector leadItem0
-    ) {
-        super(leadItem0);
-    }
-
     protected Instant _timeOfFirstWriteOrUnload = null;
     protected FileFlags _fileFlags = new FileFlags();
     protected PCHARFlags _pcharFlags = new PCHARFlags();

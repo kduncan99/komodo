@@ -13,6 +13,9 @@ import com.bearsnake.komodo.kexec.mfd.TrackFreeSpaceSet;
 import java.io.PrintStream;
 import java.util.HashMap;
 
+/**
+ * Describes a disk pack
+ */
 public class PackInfo implements MediaInfo {
 
     private static HashMap<Integer, Long> BLOCK_ALIGNMENT_MASK = new HashMap<>();

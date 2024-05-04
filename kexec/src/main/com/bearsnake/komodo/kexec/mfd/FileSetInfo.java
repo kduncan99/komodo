@@ -18,7 +18,7 @@ import java.util.stream.IntStream;
  */
 public class FileSetInfo {
 
-    private MFDRelativeAddress _leadItem0Address; // populated by mfd on retrieval
+    MFDRelativeAddress _leadItem0Address; // populated by mfd on retrieval
 
     private String _qualifier = "";
     private String _filename = "";
@@ -36,7 +36,6 @@ public class FileSetInfo {
     private int _numberOfSecurityWords;
     private int _accessType;
 
-    public MFDRelativeAddress getLeadItem0Address() { return _leadItem0Address; }
     public String getQualifier() { return _qualifier; }
     public String getFilename() { return _filename; }
     public String getProjectId() { return _projectId; }
@@ -54,7 +53,6 @@ public class FileSetInfo {
     public int getAccessType() { return _accessType; }
 
     public FileSetInfo addCycleInfo(final FileSetCycleInfo value) { _cycleInfo.add(value); return this; }
-    public FileSetInfo setLeadItem0Address(final MFDRelativeAddress value) { _leadItem0Address = value; return this; }
     public FileSetInfo setQualifier(final String value) { _qualifier = value; return this; }
     public FileSetInfo setFilename(final String value) { _filename = value; return this; }
     public FileSetInfo setProjectId(final String value) { _projectId = value; return this; }

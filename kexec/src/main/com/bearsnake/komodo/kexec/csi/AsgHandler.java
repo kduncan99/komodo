@@ -12,6 +12,7 @@ import com.bearsnake.komodo.hardwarelib.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
@@ -55,9 +56,11 @@ class AsgHandler extends Handler {
         FileSpecification fileSpec;
         try {
             fileSpec = FileSpecification.parse(new Parser(fnField), ".,/ ");
-        } catch (Parser.SyntaxException ex) {
-            // TODO we need to be more specific here than we currently can...
-            //   e.g., file cycle specification error is a different message.
+        } catch (FileSpecification.InvalidFileCycleException ex) {
+            hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalValueForFCycle);
+            hp._statement._facStatusResult.mergeStatusBits(0_600000_00000L);
+            return;
+        } catch (FileSpecification.Exception ex) {
             hp._statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage);
             hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
             return;
@@ -67,6 +70,14 @@ class AsgHandler extends Handler {
             hp._statement._facStatusResult.postMessage(FacStatusCode.FilenameIsRequired);
             hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
             return;
+        }
+
+        fileSpec = hp._runControlEntry.resolveQualifier(fileSpec);
+
+        // If A option is set, we are going to try to assign an existing cataloged file.
+        // In this case, go look for the file first.
+        if ((hp._optionWord & Word36.A_OPTION) != 0) {
+            handleCatalogedFile(hp, fileSpec);
         }
 
         // get the type field.
@@ -82,7 +93,6 @@ class AsgHandler extends Handler {
                 handleAbsolute(hp, fileSpec, typeField.substring(1));
                 return;
             }
-
             // TODO
         }
 
@@ -148,7 +158,7 @@ class AsgHandler extends Handler {
                                       final NodeInfo nodeInfo) throws ExecStoppedException {
         var device = (Device)nodeInfo.getNode();
         if (device.getDeviceType() == DeviceType.DiskDevice) {
-            handleAbsoluteDiskDevice(hp, fs, nodeInfo, (DiskDevice) device);
+            handleAbsoluteDiskDevice(hp, fs, (DiskDevice) device);
         } else if (device.getDeviceType() == DeviceType.TapeDevice) {
             handleAbsoluteTapeDevice(hp, fs, nodeInfo, (TapeDevice) device);
         } else {
@@ -173,13 +183,13 @@ class AsgHandler extends Handler {
      *                  for channels, at least one device accessible via the channel must be RV
      *  field[2][0] contains the pack-id we want to access
      * @param hp handler packet
-     * @param nodeInfo nodeInfo describing the exec's knowledge of the device
      * @param device disk device
      */
-    private void handleAbsoluteDiskDevice(final HandlerPacket hp,
-                                          final FileSpecification fs,
-                                          final NodeInfo nodeInfo,
-                                          final DiskDevice device) throws ExecStoppedException {
+    private void handleAbsoluteDiskDevice(
+        final HandlerPacket hp,
+        final FileSpecification fs,
+        final DiskDevice device
+    ) throws ExecStoppedException {
         long allowed = Word36.H_OPTION | Word36.I_OPTION | Word36.T_OPTION | Word36.Z_OPTION;
         if (!checkIllegalOptions(hp, allowed)) {
             return;
@@ -219,16 +229,79 @@ class AsgHandler extends Handler {
         postComplete(hp);
     }
 
-    private void handleAbsoluteTapeDevice(final HandlerPacket hp,
-                                          final FileSpecification fs,
-                                          final NodeInfo nodeInfo,
-                                          final TapeDevice device) {
+    private void handleAbsoluteTapeDevice(
+        final HandlerPacket hp,
+        final FileSpecification fs,
+        final NodeInfo nodeInfo,
+        final TapeDevice device
+    ) {
         // TODO - lots of stuff to be done
 
         // add fac item to the run
         // TODO
 
         postComplete(hp);
+    }
+
+    /**
+     * 'A' option was specified.
+     * TODO most of the steps below belong in facilities, not here
+     * . Resolve the qualifier, then invoke facilities
+     * . If the file cycle is relative, check fac items to see if this file is already assigned.
+     * .   If so, then the file is already assigned, and we simply post status to that effect
+     * .   If not, we get FileCycleInfo from the MFD.
+     * .     If the relative cycle cannot be satisfied, the request is rejected.
+     * .     Otherwise, we get the absolute cycle from the fcInfo, and search fac items again for the absolute cycle.
+     * .       If that cycle is already assigned
+     * .         with a different relative cycle, reject with f-cycle conflict
+     * .         with no relative cycle, associate the requested relative cycle with the existing fac item and return
+     *             already-assigned status
+     * .       Otherwise, create a fac item for the rel/abs combination and accelerate the cycle via MFD
+     * . If the file cycle is absolute, check fac items to see if this file is already assigned.
+     * .   If so, return status
+     * .   Otherwise
+     * .     get fcInfo from MFD, rejecting if it does not exist
+     * .     accelerate the cycle via MFD
+     * .     create fac item
+     */
+    private void handleCatalogedFile(
+        final HandlerPacket hp,
+        final FileSpecification fileSpecification
+    ) {
+        try {
+            var mm = Exec.getInstance().getMFDManager();
+            var fsInfo = mm.getFileSetInfo(fileSpecification.getQualifier(), fileSpecification.getFilename());
+            // TODO check read/write keys
+            // TODO check public/private
+            // TODO check for equipment type conflict
+            // TODO branch out based on disk/tape (because we need to check options)
+        } catch (FileSetDoesNotExistException ex) {
+            hp._statement._facStatusResult.postMessage(FacStatusCode.FileIsNotCataloged);
+            hp._statement._facStatusResult.mergeStatusBits(0_400010_000000L);
+            return;
+        }
+/*
+When a cataloged file is assigned with a relative F-cycle, the list of currently assigned files is searched to determine
+whether that relative F-cycle is already assigned to the run. If it is, that F-cycle is used. If the specified relative
+F-cycle cannot be found, the master file directories are searched to determine whether that relative F-cycle exists.
+
+If the relative F-cycle does not exist, the assignment request is rejected.
+
+If the relative F-cycle does exist, it is converted to the corresponding absolute F-cycle number and the list of
+currently assigned files is searched again to determine whether that absolute F-cycle is already assigned to the run.
+
+If it is assigned and it already has a relative F-cycle number associated with it, the request is rejected because a
+naming conflict exists when one absolute F-cycle-has two relative F-cycle values associated with it.
+
+If it is assigned and no relative F-cycle number is associated with that absolute F-cycle, then the absolute F-cycle is
+associated with the relative F-cycle.
+
+If it is not already assigned to the run, that relative F-cycle/absolute F-cycle is assigned to the run.
+
+When you specify a relative F-cycle, the file is known to the assigning run by both its relative F-cycle and the
+appropriate absolute F-cycle number. However, if you specify an absolute F-cycle, the Exec does not attempt to convert
+it to a relative F-cycle. In this case, the file is known to the assigning run only by its absolute F-cycle.
+*/
     }
 
     /**

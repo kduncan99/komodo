@@ -18,7 +18,8 @@ import java.util.stream.IntStream;
  */
 public abstract class FileCycleInfo {
 
-    protected final MFDSector _leadItem0;
+    protected MFDRelativeAddress _leadItem0Address;
+    protected MFDRelativeAddress _mainItem0Address;
 
     protected String _qualifier = "";
     protected String _filename = "";
@@ -34,12 +35,6 @@ public abstract class FileCycleInfo {
     protected int _absoluteCycle;
     protected Instant _timeOfLastReference = null;
     protected Instant _timeCataloged = null;
-
-    public FileCycleInfo(
-        final MFDSector leadItem0
-    ) {
-        _leadItem0 = leadItem0;
-    }
 
     public final String getQualifier() { return _qualifier; }
     public final String getFilename() { return _filename; }
@@ -88,6 +83,9 @@ public abstract class FileCycleInfo {
         final LinkedList<MFDSector> mfdSectors
     ) {
         var sector0 = mfdSectors.getFirst().getSector();
+        _leadItem0Address = new MFDRelativeAddress(sector0.get(11));
+        _mainItem0Address = mfdSectors.getFirst().getAddress();
+
         _qualifier = (Word36.toStringFromFieldata(sector0.get(1)) + Word36.toStringFromFieldata(sector0.get(2))).trim();
         _filename = (Word36.toStringFromFieldata(sector0.get(3)) + Word36.toStringFromFieldata(sector0.get(4))).trim();
         _projectId = (Word36.toStringFromFieldata(sector0.get(5)) + Word36.toStringFromFieldata(sector0.get(6))).trim();
@@ -142,7 +140,7 @@ public abstract class FileCycleInfo {
         var msFirst = iter.next();
         var msSecond = iter.next();
         msFirst.getSector().set(0, 0_200000_000000L);
-        msFirst.getSector().set(013, _leadItem0.getAddress().getValue());
+        msFirst.getSector().set(013, _leadItem0Address.getValue());
         msFirst.getSector().set(015, msSecond.getAddress().getValue());
 
         msSecond.getSector().set(0, 0_400000_000000L);
@@ -188,7 +186,7 @@ public abstract class FileCycleInfo {
         sector0.set(7, Word36.stringToWordFieldata(paddedAccountId.substring(0, 6)));
         sector0.set(8, Word36.stringToWordFieldata(paddedAccountId.substring(6)));
 
-        sector0.set(11, _leadItem0.getAddress().getValue());
+        sector0.set(11, _leadItem0Address.getValue());
         sector0.setS1(11, _disableFlags.compose());
         sector0.setT1(12, _descriptorFlags.compose());
         sector0.set(14, Word36.stringToWordFieldata(_assignMnemonic));

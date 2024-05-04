@@ -127,7 +127,6 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         try {
             var path = FileSystems.getDefault().getPath(packet.getMountInfo().getFileName());
-            System.out.printf("path:%s\n", path);
             if (packet.getMountInfo().getWriteProtected()) {
                 _channel = FileChannel.open(path, CREATE, READ);
             } else {

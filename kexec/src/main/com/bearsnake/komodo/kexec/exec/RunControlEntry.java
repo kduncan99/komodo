@@ -39,11 +39,6 @@ public abstract class RunControlEntry {
 
     // TODO privileges
 
-    /*
-    Console Messages:
-        run-id MAX CARDS run-id MAX PAGES run-id MAX TIME
-
-     */
     public RunControlEntry(final RunType runType,
                            final String runId,
                            final String originalRunId,
@@ -138,5 +133,15 @@ public abstract class RunControlEntry {
 
     public void postToTailSheet(final String message) {
         // TODO
+    }
+
+    public FileSpecification resolveQualifier(
+        final FileSpecification initialSpec
+    ) {
+        return new FileSpecification(getEffectiveQualifier(initialSpec),
+                                     initialSpec.getFilename(),
+                                     initialSpec.getFileCycleSpecification(),
+                                     initialSpec.getReadKey(),
+                                     initialSpec.getWriteKey());
     }
 }

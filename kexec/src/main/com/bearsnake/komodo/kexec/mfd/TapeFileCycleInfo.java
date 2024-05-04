@@ -21,11 +21,7 @@ public class TapeFileCycleInfo extends FileCycleInfo {
     private String _tapeTranslator;
     private String _ctlPool;
 
-    public TapeFileCycleInfo(
-        final MFDSector leadItem0
-    ) {
-        super(leadItem0);
-    }
+    TapeFileCycleInfo(){}
 
     public LinkedList<String> getReelTable() { return _reelTable; }
     public TapeDensity getDensity() { return _density; }
