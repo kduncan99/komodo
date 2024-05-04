@@ -23,8 +23,8 @@ public class FileSetInfo {
     private String _qualifier = "";
     private String _filename = "";
     private String _projectId = "";
-    private String _readKey = "";
-    private String _writeKey = "";
+    private String _readKey = ""; // empty string means no read key
+    private String _writeKey = ""; // empty string means no write key
     private FileType _fileType;
     private boolean _isGuarded;
     private boolean _plusOneExists;

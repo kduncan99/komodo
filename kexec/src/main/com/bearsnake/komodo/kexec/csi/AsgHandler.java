@@ -268,10 +268,26 @@ class AsgHandler extends Handler {
         final HandlerPacket hp,
         final FileSpecification fileSpecification
     ) {
+        // maybe just check the equipment type, validate the options and fields/subfields
+        // based on either disk or tape (and the fact that A is specified), then invoke either
+        // assignExistingDiskFileToRun() or assignExistingTapeFileToRun() on fac mgr.
         try {
             var mm = Exec.getInstance().getMFDManager();
             var fsInfo = mm.getFileSetInfo(fileSpecification.getQualifier(), fileSpecification.getFilename());
-            // TODO check read/write keys
+
+            // check read/write keys
+            var existingReadKey = fsInfo.getReadKey();
+            var existingWriteKey = fsInfo.getWriteKey();
+            var hasReadKey = !existingReadKey.isEmpty();
+            var hasWriteKey = !existingWriteKey.isEmpty();
+
+            var givenReadKey = fileSpecification.getReadKey();
+            var givenWriteKey = fileSpecification.getWriteKey();
+            var gaveReadKey = givenReadKey != null;
+            var gaveWriteKey = givenWriteKey != null;
+
+
+
             // TODO check public/private
             // TODO check for equipment type conflict
             // TODO branch out based on disk/tape (because we need to check options)

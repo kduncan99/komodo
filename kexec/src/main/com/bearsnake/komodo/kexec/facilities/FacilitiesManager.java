@@ -486,13 +486,8 @@ public class FacilitiesManager implements Manager {
     /**
      * Produces a string suitable for display node status upon the console
      * @param nodeIdentifier nodeIdentifier of the node we are interested in
-<<<<<<< Updated upstream
-     * @return string
-     * @throws ExecStoppedException if the exec is stopped during this function
-=======
      * @return node status string
      * @throws ExecStoppedException If the exec stops during this function
->>>>>>> Stashed changes
      */
     public String getNodeStatusString(
         final int nodeIdentifier

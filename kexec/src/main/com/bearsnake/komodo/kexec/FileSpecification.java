@@ -24,8 +24,8 @@ public class FileSpecification {
     private final String _filename;
 
     private final FileCycleSpecification _fileCycleSpecification;
-    private final String _readKey;
-    private final String _writeKey;
+    private final String _readKey; // if null, there was no read key specified
+    private final String _writeKey; // if null, there was no write key specified
 
     public FileSpecification(
         final String qualifier,
