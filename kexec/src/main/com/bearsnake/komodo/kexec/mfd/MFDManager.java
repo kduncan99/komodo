@@ -6,6 +6,8 @@ package com.bearsnake.komodo.kexec.mfd;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.hardwarelib.ChannelProgram;
+import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
@@ -16,6 +18,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetAlreadyExistsException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
+import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
@@ -877,8 +880,7 @@ public class MFDManager implements Manager {
     private synchronized void markDirectorySectorDirty(
         final MFDRelativeAddress address
     ) {
-
-        _dirtyCacheTracks.add(address.getValue() & 0_007777_777700L);
+        _dirtyCacheTracks.add((address.getValue() & 0_007777_777700L) >> 6);
     }
 
     /**
@@ -1115,6 +1117,42 @@ public class MFDManager implements Manager {
      * @throws ExecStoppedException if something goes wrong
      */
     private void writeDirtyCacheTracks() throws ExecStoppedException {
-        // TODO
+        // use direct IO - don't need to use fac mgr, other than it needs to be assigned
+        // *by* fac mgr so that the fcinfo is accelerated.
+        var acInfo = _acceleratedFileCycles.get(_mfdFileAddress);
+        var faSet = acInfo.getFileAllocationSet();
+        var e = Exec.getInstance();
+        var fm = e.getFacilitiesManager();
+        var iter = _dirtyCacheTracks.iterator();
+        while (iter.hasNext()) {
+            var mfdRelativeTrackId = iter.next();
+            iter.remove();
+            var hwTid = faSet.resolveFileRelativeTrackId(mfdRelativeTrackId);
+            var ldat = hwTid.getLDATIndex();
+            var trackId = hwTid.getTrackId();
+            var nodeInfo = _logicalDATable.get(ldat);
+            var packInfo = (PackInfo) nodeInfo.getMediaInfo();
+            var blocksPerTrack = 1792 / packInfo.getPrepFactor();
+            var blockId = trackId * blocksPerTrack;
+
+            // set up IO
+            var mfdRelAddr = new MFDRelativeAddress(mfdRelativeTrackId << 6);
+            var cw = new ChannelProgram.ControlWord().setBuffer(_cachedMFDTracks.get(mfdRelAddr))
+                                                     .setDirection(ChannelProgram.Direction.Increment)
+                                                     .setTransferCount(1792);
+            var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
+                                         .setBlockId(blockId)
+                                         .setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier())
+                                         .addControlWord(cw);
+            try {
+                fm.routeIo(cp);
+                while (cp.getIoStatus() == IoStatus.InProgress) {
+                    Exec.sleep(10);
+                }
+            } catch (NoRouteForIOException ex) {
+                e.stop(StopCode.InternalExecIOFailed);
+                throw new ExecStoppedException();
+            }
+        }
     }
 }

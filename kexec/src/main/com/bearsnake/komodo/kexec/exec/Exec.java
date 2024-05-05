@@ -33,7 +33,7 @@ import java.util.stream.IntStream;
 
 public class Exec {
 
-    public static final long INVALID_LDAT = 0_400000;
+    public static final int INVALID_LDAT = 0_400000;
     public static final int EXEC_VERSION = 1;
     public static final int EXEC_RELEASE = 1;
     public static final String EXEC_PATCH = "";
@@ -403,6 +403,17 @@ public class Exec {
         }
 
         return rrmsg.getResponse().toUpperCase();
+    }
+
+    /**
+     * this is stupid, but handy
+     */
+    public static void sleep(final int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ex) {
+            // do nothing
+        }
     }
 
     public void stop(final StopCode stopCode) {

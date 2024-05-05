@@ -799,7 +799,7 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
     }
 
     /**
-     * Unloads all ready tape devices - used during boot.
+     * Unloads all the ready tape devices - used during boot.
      * @throws ExecStoppedException if something goes wrong while we're doing this.
      */
     private void dropTapes() throws ExecStoppedException {

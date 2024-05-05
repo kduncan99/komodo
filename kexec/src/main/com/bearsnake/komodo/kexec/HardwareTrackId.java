@@ -6,20 +6,20 @@ package com.bearsnake.komodo.kexec;
 
 public class HardwareTrackId {
 
-    private long _ldatIndex;
+    private int _ldatIndex;
     private long _trackId;
 
-    public HardwareTrackId(final long ldatIndex,
+    public HardwareTrackId(final int ldatIndex,
                            final long trackId) {
         _ldatIndex = ldatIndex;
         _trackId = trackId;
     }
 
-    public void addToTrackId(long count) { _trackId += count; }
-    public long getLDATIndex() { return _ldatIndex; }
+    public void addToTrackId(final long count) { _trackId += count; }
+    public int  getLDATIndex() { return _ldatIndex; }
     public long getTrackId() { return _trackId; }
-    public void setLDATIndex(long value) { _ldatIndex = value; }
-    public void setTrackId(long value) { _trackId = value; }
+    public void setLDATIndex(final int value) { _ldatIndex = value; }
+    public void setTrackId(final long value) { _trackId = value; }
 
     /**
      * Returns true if this track ID follows the previous track ID, by the given track count
