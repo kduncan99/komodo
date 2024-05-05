@@ -19,8 +19,11 @@ import com.bearsnake.komodo.hardwarelib.NodeCategory;
 import com.bearsnake.komodo.hardwarelib.TapeChannel;
 import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
+import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.RunControlEntry;
@@ -28,6 +31,8 @@ import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.mfd.FileCycleInfo;
+import com.bearsnake.komodo.kexec.mfd.FileSetInfo;
+import com.bearsnake.komodo.kexec.mfd.FileType;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
@@ -39,6 +44,18 @@ import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 public class FacilitiesManager implements Manager {
+
+    public enum DeleteBehavior {
+        None,
+        DeleteOnNormalRunTermination,
+        DeleteOnAnyRunTermination,
+    }
+
+    public enum DirectoryOnlyBehavior {
+        None,
+        DirectoryOnlyMountPacks,
+        DirectoryOnlyDoNotMountPacks,
+    }
 
     static final String LOG_SOURCE = "FacMgr";
 
@@ -123,46 +140,133 @@ public class FacilitiesManager implements Manager {
     // Services interface
     // -------------------------------------------------------------------------
 
-    public boolean assignCatalogedFileToRun(
-        final RunControlEntry runControlEntry,
-        final FileCycleInfo fileCycleInfo, // TODO should this be FileSpecification instead?
-        final boolean releaseOnTaskEnd,
-        final boolean doNotHoldRun,
+    public boolean assignCatalogedDiskFileToExec(
+        final FileSpecification fileSpecification,
+        final boolean exclusiveUse,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s %s*%s(%d) I:%s Z:%s",
-                            runControlEntry.getRunId(),
-                            fileCycleInfo.getQualifier(),
-                            fileCycleInfo.getFilename(),
-                            fileCycleInfo.getAbsoluteCycle(),
-                            releaseOnTaskEnd,
-                            doNotHoldRun);
+        LogManager.logTrace(LOG_SOURCE, "assignCatalogedDiskFileToExec %s", fileSpecification.toString());
 
-        boolean result;
-        if (fileCycleInfo.getDescriptorFlags().isTapeFile()) {
-            result = assignCatalogedTapeFileToRun(runControlEntry,
-                                                  fileCycleInfo,
-                                                  releaseOnTaskEnd,
-                                                  doNotHoldRun,
+        var result = assignCatalogedDiskFileToRun(Exec.getInstance().getRunControlEntry(),
+                                                  fileSpecification,
+                                                  null,
+                                                  null,
+                                                  null,
+                                                  DeleteBehavior.None,
+                                                  DirectoryOnlyBehavior.None,
+                                                  false,
+                                                  true,
+                                                  false,
+                                                  exclusiveUse,
+                                                  false,
+                                                  false,
                                                   fsResult);
-        } else if (fileCycleInfo.getDescriptorFlags().isRemovableDiskFile()) {
-            result = assignCatalogedRemovableFileToRun(runControlEntry,
-                                                       fileCycleInfo,
-                                                       releaseOnTaskEnd,
-                                                       doNotHoldRun,
-                                                       fsResult);
-        } else {
-            result = assignCatalogedFixedFileToRun(runControlEntry,
-                                                   fileCycleInfo,
-                                                   releaseOnTaskEnd,
-                                                   doNotHoldRun,
-                                                   fsResult);
+
+        LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToExec result:%s", fsResult.toString());
+        return result;
+    }
+
+    public synchronized boolean assignCatalogedDiskFileToRun(
+        final RunControlEntry runControlEntry,
+        final FileSpecification fileSpecification,
+        final Integer initialReserve,  // null if not specified, attempt to change existing value
+        final Granularity granularity, // null if not specified, must match existing file otherwise
+        final Integer maxGranules,     // null if not specified, attempt to change existing value
+        final DeleteBehavior deleteBehavior,               // D/K options
+        final DirectoryOnlyBehavior directoryOnlyBehavior, // E/Y options
+        final boolean saveOnCheckpoint,                    // M option
+        final boolean assignIfDisabled,                    // Q option
+        final boolean readOnly,                            // R option
+        final boolean exclusiveUse,                        // X option
+        final boolean releaseOnTaskEnd,                    // I option
+        final boolean doNotHoldRun,                        // Z option
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "assignCatalogedDiskFileToRun %s %s",
+                            runControlEntry.getRunId(),
+                            fileSpecification.toString());
+
+        var mm = Exec.getInstance().getMFDManager();
+        FileSetInfo fsInfo;
+        try {
+            fsInfo = mm.getFileSetInfo(fileSpecification.getQualifier(), fileSpecification.getFilename());
+        } catch (FileSetDoesNotExistException ex) {
+            fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
+            fsResult.mergeStatusBits(0_400010_000000L);
+            return false;
         }
+
+        if ((fsInfo.getFileType() != FileType.Fixed) && (fsInfo.getFileType() != FileType.Removable)) {
+            fsResult.postMessage(FacStatusCode.AttemptToChangeGenericType);
+            fsResult.mergeStatusBits(0_420000_000000L);
+            return false;
+        }
+
+        if (!checkKeys(runControlEntry, fsInfo, fileSpecification, fsResult)) {
+            return false;
+        }
+
+        // Is this an absolute file cycle request?
+        if (fileSpecification.hasFileCycleSpecification() && fileSpecification.getFileCycleSpecification().isAbsolute()) {
+            // Go get the file cycle info.
+            FileCycleInfo fcInfo;
+            try {
+                fcInfo = mm.getFileCycleInfo(fileSpecification.getQualifier(),
+                                             fileSpecification.getFilename(),
+                                             fileSpecification.getFileCycleSpecification().getCycle());
+            } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
+                // we already checked for file set not existing, but we have to catch it here anyway.
+                fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
+                fsResult.mergeStatusBits(0_400010_000000L);
+                return false;
+            }
+
+            // Check the existing facility items to see if this file cycle is already assigned to this run.
+            // If it is,
+            //   change any option-driven settings if necessary
+            //   post already-assigned.
+            // Otherwise
+            //   check public/private
+            //   make sure we're not being asked to change anything in a funny way
+            //   create new fac item with option-driven settings as necessary
+        } else {
+            // It's either relative or unspecified. If unspecified, we treat it like relative +0.
+            // Check the fac items to see if the file is already assigned with this relative cycle number.
+            // If so,
+            //   change any option-driven settings if necessary
+            //   post already-assigned.
+            // Otherwise, get the absolute cycle from the fcInfo, and go through the fac items again.
+            // If it is assigned (comparing the absolute cycles)
+            //   with a different relative cycle, post f-cycle conflict and stop
+            //   else with no relative cycle, add this relative cycle to that fac item
+            //     change any option-driven settings if necessary
+            //     post already-assigned.
+            // Otherwise
+            //   check public/private (as above)
+            //   make sure we're not being asked to change anything in a funny way (as above)
+            //   create new fac item with option-driven settings as necessary
+        }
+
+        // Now we have a fac item (either pre- or newly-existing).
+        // Does there need to be a hold put in place? If so, do it.
+        // Is there already a hold in place? If so, wait on it.
+
+        // Done waiting for the thing - accelerate it via MFD (it should not have been yet).
+
+                /*
+E:241433 Attempt to change assign mnemonic.
+E:241533 Illegal attempt to change assignment type.
+E:241633 Attempt to change generic type of the file.
+E:241733 Attempt to change granularity.
+E:242033 Attempt to change initial reserve of write inhibited file.
+E:242133 Attempt to change maximum granules of a file cataloged under a different account.
+E:242233 Attempt to change maximum granules on a write inhibited file.
+         */
 
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s result:%s",
                             runControlEntry.getRunId(),
                             fsResult.toString());
-        return result;
+        return true;
     }
 
     /**
@@ -618,37 +722,80 @@ public class FacilitiesManager implements Manager {
     // Core
     // -------------------------------------------------------------------------
 
-    public boolean assignCatalogedFixedFileToRun(
-        final RunControlEntry runControlEntry,
-        final FileCycleInfo fileCycleInfo,
-        final boolean releaseOnTaskEnd,
-        final boolean doNotHoldRun,
+    /**
+     * Checks the read/write keys provided (or not) in a FileSpecification object
+     * against the keys which do (or do not) exist in the FileSetInfo object.
+     * Posts any fac results necessary, aborts the run if necessary, etc.
+     * @return true if no problems exist, else false
+     */
+    private boolean checkKeys(
+        final RunControlEntry rce,
+        final FileSetInfo fsInfo,
+        final FileSpecification fileSpec,
         final FacStatusResult fsResult
-    ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE, "assignCatalogedFixedFileToRun %s", runControlEntry.getRunId());
-        return false;//TODO
-    }
+    ) {
+        var err = false;
+        var postedReadWrite = false;
+        var existingReadKey = fsInfo.getReadKey();
+        var hasReadKey = !existingReadKey.isEmpty();
+        var givenReadKey = fileSpec.getReadKey();
+        var gaveReadKey = givenReadKey != null;
+        if (hasReadKey) {
+            if (!gaveReadKey && (!rce.isPrivileged() || fsInfo.isGuarded())) {
+                fsResult.postMessage(FacStatusCode.ReadWriteKeysNeeded);
+                fsResult.mergeStatusBits(0_600000_000000L);
+                postedReadWrite = true;
+                err = true;
+            } else if (!existingReadKey.equalsIgnoreCase(givenReadKey)) {
+                fsResult.postMessage(FacStatusCode.IncorrectReadKey);
+                fsResult.mergeStatusBits(0_401000_000000L);
+                if (rce.hasTask()) {
+                    rce.postContingency(017, 0, 0, 015);
+                }
+                err = true;
+            }
+        } else {
+            if (gaveReadKey) {
+                fsResult.postMessage(FacStatusCode.FileNotCatalogedWithReadKey);
+                fsResult.mergeStatusBits(0_400040_000000L);
+                if (rce.hasTask()) {
+                    rce.postContingency(017, 0, 0, 015);
+                }
+                err = true;
+            }
+        }
 
-    public boolean assignCatalogedRemovableFileToRun(
-        final RunControlEntry runControlEntry,
-        final FileCycleInfo fileCycleInfo,
-        final boolean releaseOnTaskEnd,
-        final boolean doNotHoldRun,
-        final FacStatusResult fsResult
-    ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE, "assignCatalogedRemovableFileToRun %s", runControlEntry.getRunId());
-        return false;//TODO
-    }
+        var existingWriteKey = fsInfo.getWriteKey();
+        var hasWriteKey = !existingWriteKey.isEmpty();
+        var givenWriteKey = fileSpec.getWriteKey();
+        var gaveWriteKey = givenWriteKey != null;
+        if (hasWriteKey) {
+            if (!gaveWriteKey && (!rce.isPrivileged() || fsInfo.isGuarded())) {
+                if (!postedReadWrite) {
+                    fsResult.postMessage(FacStatusCode.ReadWriteKeysNeeded);
+                    fsResult.mergeStatusBits(0_600000_000000L);
+                }
+                err = true;
+            } else if (!existingWriteKey.equalsIgnoreCase(givenWriteKey)) {
+                fsResult.postMessage(FacStatusCode.IncorrectWriteKey);
+                fsResult.mergeStatusBits(0_400400_000000L);
+                if (rce.hasTask()) {
+                    rce.postContingency(017, 0, 0, 015);
+                }
+                err = true;
+            }
+        } else {
+            if (gaveWriteKey) {
+                fsResult.postMessage(FacStatusCode.FileNotCatalogedWithWriteKey);
+                fsResult.mergeStatusBits(0_400020_000000L);
+                if (rce.hasTask()) {
+                    rce.postContingency(017, 0, 0, 015);
+                }
+                err = true;
+            }
+        }
 
-    public boolean assignCatalogedTapeFileToRun(
-        final RunControlEntry runControlEntry,
-        final FileCycleInfo fileCycleInfo,
-        final boolean releaseOnTaskEnd,
-        final boolean doNotHoldRun,
-        final FacStatusResult fsResult
-    ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE, "assignCatalogedTapeFileToRun %s", runControlEntry.getRunId());
-        return false;//TODO
+        return !err;
     }
 
     /**

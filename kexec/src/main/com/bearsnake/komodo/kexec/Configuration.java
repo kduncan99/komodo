@@ -4,13 +4,27 @@
 
 package com.bearsnake.komodo.kexec;
 
-import com.bearsnake.komodo.hardwarelib.Node;
+import com.bearsnake.komodo.hardwarelib.DiskChannel;
+import com.bearsnake.komodo.hardwarelib.FileSystemDiskDevice;
+import com.bearsnake.komodo.hardwarelib.FileSystemTapeDevice;
+import com.bearsnake.komodo.hardwarelib.TapeChannel;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class Configuration {
 
+    // discrete configuration values
+    // The following cannot be changed - if we make them changeable, this has implications for the mnemonic table
+    private final String _massStorageDefaultMnemonic    = "F";
+    private final String _tapeDefaultMnemonic           = "T";
+    private final String WordAddressableDefaultMnemonic = "D";
+
+    // The following can be changed when the config file is loaded (once per execution)
     public long AccountInitialReserve            = 10;               // initial reserve for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
     public String AccountAssignMnemonic          = "F";              // assign mnemonic for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
     public String DLOCAssignMnemonic             = "F";              // assign mnemonic for SYS$*DLOC$ file
@@ -24,7 +38,6 @@ public class Configuration {
     private boolean _logConsoleMessages          = true;
     private boolean _logIOs                      = true;
     private String _masterAccountId              = "SYSTEM";         // could be empty, in which case operator is prompted when ACCOUNT$R1 is created
-    private String _massStorageDefaultMnemonic   = "F";              // Usually 'F'
     private long _maxCards                       = 256;
     public long MaxGranules                      = 256;              // max granules if not specified on @ASG or @CAT
     private long _maxPages                       = 256;
@@ -45,7 +58,6 @@ public class Configuration {
     public long SymbiontBufferSize               = 224;              // Buffer size used for standard and alternate read/write buffers
     public String SystemTapeEquipment            = "T";              // assign mnemonic for exec tape requests
     public boolean TapeAccessRestrictedByAccount = false;
-    public String TapeDefaultMnemonic            = "T";
     public boolean TerminateMaxCards             = false;
     public boolean TerminateMaxPages             = false;
     public boolean TerminateMaxTime              = false;
@@ -56,8 +68,10 @@ public class Configuration {
     public long TPFMaxSize                       = 128;
     public long UserInitialReserve               = 10;               // initial reserve for SYS$*SEC@USERID$ file
     public String UserAssignMnemonic             = "F";              // assign mnemonic for SYS$*SEC@USERID$ file
-    public String WordAddressableDefaultMnemonic = "D";
 
+    // Currently there are no configuration items which can be changed dynamically
+
+    // -----------------------------------------------------------------------------------------------------------------
     public int getExecThreadPoolSize() { return _execThreadPoolSize; }
     public boolean getLogConsoleMessages() { return _logConsoleMessages; }
     public boolean getLogIos() { return _logIOs; }
@@ -68,5 +82,82 @@ public class Configuration {
 
     public void updateFromFile(final String filename) throws KExecException {
         // TODO
+    }
+
+    public enum EquipmentType {
+        CHANNEL_MODULE_DISK("CM-DISK", DiskChannel.class),
+        CHANNEL_MODULE_TAPE("CM-TAPE", TapeChannel.class),
+        FILE_SYSTEM_DISK("FS-DISK", FileSystemDiskDevice.class),
+        FILE_SYSTEM_TAPE("FS-TAPE", FileSystemTapeDevice.class);
+
+        private final Class<?> _class;
+        private final String _token;
+
+        EquipmentType(
+            final String token,
+            final Class<?> clazz
+        ) {
+            _token = token;
+            _class = clazz;
+        }
+
+        public Class<?> getClazz() { return _class; }
+        public String getToken() { return _token; }
+
+        public static EquipmentType getFromToken(final String token) {
+            for (var et : EquipmentType.values()) {
+                if (et._token.equalsIgnoreCase(token)) {
+                    return et;
+                }
+            }
+            return null;
+        }
+    }
+
+    public enum MnemonicType {
+        SECTOR_ADDRESSABLE_DISK,
+        WORD_ADDRESSABLE_DISK,
+        TAPE,
+    }
+
+    public static class MnemonicInfo {
+        public final String _mnemonic;
+        public final MnemonicType _type;
+        public final List<EquipmentType> _equipmentTypes = new LinkedList<>();
+
+        public MnemonicInfo(
+            final String mnemonic,
+            final MnemonicType type,
+            final Collection<EquipmentType> equipmentTypes
+        ) {
+            _mnemonic = mnemonic;
+            _type = type;
+            _equipmentTypes.addAll(equipmentTypes);
+        }
+    }
+
+    private static void putMnemonicInfo(
+        final String mnemonic,
+        final MnemonicType type,
+        final EquipmentType[] equipmentTypes
+    ) {
+        var mi = new MnemonicInfo(mnemonic, type, List.of(equipmentTypes));
+        MNEMONIC_TABLE.put(mi._mnemonic, mi);
+    }
+
+    private static final Map<String, MnemonicInfo> MNEMONIC_TABLE = new HashMap<>();
+    static {
+        // TODO point all the conventional mnemonics to appropriate equip types (i.e., F70, F70M, F81, etc)
+        putMnemonicInfo("F", MnemonicType.SECTOR_ADDRESSABLE_DISK, new EquipmentType[]{ EquipmentType.FILE_SYSTEM_DISK });
+        putMnemonicInfo("FFS", MnemonicType.SECTOR_ADDRESSABLE_DISK, new EquipmentType[]{ EquipmentType.FILE_SYSTEM_DISK });
+        putMnemonicInfo("D", MnemonicType.WORD_ADDRESSABLE_DISK, new EquipmentType[]{ EquipmentType.FILE_SYSTEM_DISK });
+        putMnemonicInfo("DFS", MnemonicType.WORD_ADDRESSABLE_DISK, new EquipmentType[]{ EquipmentType.FILE_SYSTEM_DISK });
+        putMnemonicInfo("T", MnemonicType.TAPE, new EquipmentType[]{ EquipmentType.FILE_SYSTEM_TAPE });
+        putMnemonicInfo("TFS", MnemonicType.TAPE, new EquipmentType[]{ EquipmentType.FILE_SYSTEM_TAPE });
+    }
+
+    public MnemonicType getMnemonicType(final String mnemonic) {
+        var mi = MNEMONIC_TABLE.get(mnemonic);
+        return mi == null ? null : mi._type;
     }
 }

@@ -11,9 +11,7 @@ import com.bearsnake.komodo.kexec.exec.TIPRunControlEntry;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.logger.LogManager;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 
 // Control Statement Interpreter main routine.
@@ -217,7 +215,7 @@ public class Interpreter {
         p.skipSpaces();
         if (ps._mnemonic.equals("LOG")) {
             var str = p.parseRemaining();
-            ps._operandFields.add(Collections.singletonList(str));
+            ps._operandFields.put(new SubfieldSpecifier(0, 0), str);
             LogManager.logTrace(LOG_SOURCE, "parseControlStatement exit");
             return ps;
         }
@@ -225,28 +223,22 @@ public class Interpreter {
         // Anyone needing a file name with potential read/write keys gets special treatment...
         // in that we do not split the first operand field on forward slashes.
         var cutSet = (ps._mnemonic.equals("ASG") || ps._mnemonic.equals("CAT")) ? " ," : " /,";
-        var opx = 0;
-        var opy = 0;
+        var currentFieldIndex = 0;
+        var currentSubfieldIndex = 0;
         while (!p.atEnd()) {
             var sub = p.parseUntil(cutSet);
-            while (ps._operandFields.size() <= opx) {
-                ps._operandFields.add(new LinkedList<>());
-            }
-            while (ps._operandFields.get(opx).size() < opy) {
-                ps._operandFields.get(opx).add("");
-            }
-            ps._operandFields.get(opx).add(sub);
+            ps._operandFields.put(new SubfieldSpecifier(currentFieldIndex, currentSubfieldIndex), sub);
 
             if (p.atEnd() || p.peekNext() == ' ') {
                 break;
             } else if (p.peekNext() == ',') {
-                opx++;
-                opy = 0;
+                currentFieldIndex++;
+                currentSubfieldIndex = 0;
                 cutSet = " /,";
                 p.skipNext();
                 p.skipSpaces();
             } else {
-                opy++;
+                currentSubfieldIndex++;
                 p.skipNext();
                 p.skipSpaces();
             }

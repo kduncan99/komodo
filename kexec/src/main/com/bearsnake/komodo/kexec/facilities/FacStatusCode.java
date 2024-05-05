@@ -30,6 +30,7 @@ public enum FacStatusCode {
     FileAlreadyAssigned(0120133),
     FilenameNotKnown(0120433),
     FilenameNotUnique(0120533),
+    PlacementFieldIgnored(0121133),
 
     // Errors
     DeviceAlreadyInUse(0200333),
@@ -49,6 +50,7 @@ public enum FacStatusCode {
     IllegalValueForFCycle(0242433),
     FileCycleOutOfRange(0242533),
     IllegalDroppingPrivateFile(0243233),
+    DuplicateMediaIdsAreNotAllowed(0243433),
     SyntaxErrorInImage(0243533),
     IllegalControlStatement(0243733),
     FilenameIsRequired(0244333),

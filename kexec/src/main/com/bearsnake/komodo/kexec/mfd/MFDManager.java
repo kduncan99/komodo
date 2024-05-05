@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.mfd;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
 import com.bearsnake.komodo.kexec.Manager;
@@ -17,6 +18,7 @@ import com.bearsnake.komodo.kexec.exceptions.FileSetAlreadyExistsException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 import com.bearsnake.komodo.kexec.facilities.PackInfo;
 import com.bearsnake.komodo.logger.LogManager;
@@ -639,7 +641,12 @@ public class MFDManager implements Manager {
             persistDADTables(_mfdFileAddress, mfdAllocationSet);
 
             // Assign MFDF$$ to the exec
-            //  TODO - leverage fac mgr
+            var fs = new FileSpecification(mfdQualifier, mfdFilename, null, null, null);
+            var fr = new FacStatusResult();
+            var result = e.getFacilitiesManager().assignCatalogedDiskFileToExec(fs, true, fr);
+            if (!result) {
+                // TODO stop the exec
+            }
         } catch (AbsoluteCycleOutOfRangeException
                  | AbsoluteCycleConflictException
                  | FileSetAlreadyExistsException ex) {

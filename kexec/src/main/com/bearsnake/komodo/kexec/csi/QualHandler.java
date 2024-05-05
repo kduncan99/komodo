@@ -4,12 +4,22 @@
 
 package com.bearsnake.komodo.kexec.csi;
 
-import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.logger.LogManager;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import static com.bearsnake.komodo.baselib.Word36.D_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.R_OPTION;
+
 class QualHandler extends Handler {
+
+    private static final Set<SubfieldSpecifier> VALID_SUBFIELD_SPECS = new HashSet<>();
+    static {
+        VALID_SUBFIELD_SPECS.add(new SubfieldSpecifier(0, 0)); // filename
+    }
 
     @Override
     public boolean allowCSF() { return true; }
@@ -30,8 +40,15 @@ class QualHandler extends Handler {
             return;
         }
 
-        if (!checkIllegalOptions(hp, Word36.D_OPTION | Word36.R_OPTION)) {
+        var allowedOpts = D_OPTION | R_OPTION;
+        var mutexOpts = D_OPTION | R_OPTION;
+        if (!checkIllegalOptions(hp, allowedOpts) || !checkMutuallyExclusiveOptions(hp, mutexOpts)) {
             return;
+        }
+        if (!checkIllegalFieldsAndSubfields(hp, VALID_SUBFIELD_SPECS, null)) {
+            if (hp._sourceIsExecRequest) {
+                hp._runControlEntry.postContingency(012, 04, 040);
+            }
         }
 
         if (hp._statement._operandFields.size() > 1) {
@@ -43,26 +60,14 @@ class QualHandler extends Handler {
             return;
         }
 
-        String qualifier = null;
-        if (hp._statement._operandFields.size() == 1) {
-            if (hp._statement._operandFields.getFirst().size() != 1) {
-                LogManager.logInfo(Interpreter.LOG_SOURCE,
-                                   "[%s] Too many operand subfields:%s",
-                                   hp._runControlEntry.getRunId(),
-                                   hp._statement._originalStatement);
-                postSyntaxError(hp);
-                return;
-            }
-
-            qualifier = hp._statement._operandFields.getFirst().getFirst();
-            if (!Exec.isValidQualifier(qualifier)) {
-                LogManager.logInfo(Interpreter.LOG_SOURCE,
-                                   "[%s] Invalid qualifier:%s",
-                                   hp._runControlEntry.getRunId(),
-                                   hp._statement._originalStatement);
-                postSyntaxError(hp);
-                return;
-            }
+        String qualifier = getSubField(hp, 0, 0);
+        if ((qualifier != null) && !Exec.isValidQualifier(qualifier)) {
+            LogManager.logInfo(Interpreter.LOG_SOURCE,
+                               "[%s] Invalid qualifier:%s",
+                               hp._runControlEntry.getRunId(),
+                               hp._statement._originalStatement);
+            postSyntaxError(hp);
+            return;
         }
 
         if (hp._optionWord == 0) {
@@ -82,7 +87,7 @@ class QualHandler extends Handler {
 
             hp._runControlEntry.setImpliedQualifier(qualifier);
             hp._statement._facStatusResult.postMessage(FacStatusCode.Complete, new String[]{"QUAL"});
-        } else if (hp._optionWord == Word36.D_OPTION) {
+        } else if (hp._optionWord == D_OPTION) {
             // set default qualifier
             if (qualifier == null) {
                 LogManager.logInfo(Interpreter.LOG_SOURCE,
@@ -99,7 +104,7 @@ class QualHandler extends Handler {
 
             hp._runControlEntry.setDefaultQualifier(qualifier);
             hp._statement._facStatusResult.postMessage(FacStatusCode.Complete, new String[]{"QUAL"});
-        } else if (hp._optionWord == Word36.R_OPTION) {
+        } else if (hp._optionWord == R_OPTION) {
             // reset default and implied qualifiers
             if (qualifier != null) {
                 LogManager.logInfo(Interpreter.LOG_SOURCE,
@@ -117,18 +122,6 @@ class QualHandler extends Handler {
             hp._runControlEntry.setDefaultQualifier(hp._runControlEntry.getProjectId());
             hp._runControlEntry.setImpliedQualifier(hp._runControlEntry.getProjectId());
             hp._statement._facStatusResult.postMessage(FacStatusCode.Complete, new String[]{"QUAL"});
-        } else {
-            // conflicting options
-            LogManager.logInfo(Interpreter.LOG_SOURCE,
-                               "[%s] Conflicting options:%s",
-                               hp._runControlEntry.getRunId(),
-                               hp._statement._originalStatement);
-            if (hp._sourceIsExecRequest) {
-                hp._runControlEntry.postContingency(012, 04, 040);
-            }
-
-            hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalOptionCombination, new String[]{ "D", "R" });
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
         }
     }
 }

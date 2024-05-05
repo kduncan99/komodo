@@ -9,7 +9,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.logger.LogManager;
 
-import java.util.List;
+import java.util.Set;
 
 abstract class Handler {
 
@@ -26,8 +26,10 @@ abstract class Handler {
      * If errors exist and the source is ER CSF$/ACSF$/CSI$, we post a contingency
      * @return true if no illegal options were specified
      */
-    protected boolean checkIllegalOptions(final HandlerPacket hp,
-                                          final long allowedOptions) {
+    protected boolean checkIllegalOptions(
+        final HandlerPacket hp,
+        final long allowedOptions
+    ) {
         long bit = Word36.A_OPTION;
         char letter = 'A';
         boolean result = true;
@@ -56,13 +58,41 @@ abstract class Handler {
     }
 
     /**
+     * Determines whether all the subfields specified in a particular CSI statement are in valid
+     * fields/subfields.
+     * @param hp HandlerPacket
+     * @param validSubfields specific subfields which are valid, by field index and subfield index
+     * @param unboundFields indexes of fields which can have any number of subfields
+     * @return true if all the specified subfields are legal; false otherwise. If we return false, we put
+     * one or more appropriate fac results into the handler packet so that there's nothing else for the
+     * caller to do other than return.
+     */
+    protected boolean checkIllegalFieldsAndSubfields(
+        final HandlerPacket hp,
+        final Set<SubfieldSpecifier> validSubfields,
+        final Set<Integer> unboundFields
+    ) {
+        for (var subSpec : hp._statement._operandFields.keySet()) {
+            if (!unboundFields.contains(subSpec.getFieldIndex()) && (!validSubfields.contains(subSpec))) {
+                hp._statement._facStatusResult.postMessage(FacStatusCode.UndefinedFieldOrSubfield);
+                hp._statement._facStatusResult.mergeStatusBits(0_600000_00000L);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Scans the options field in the packet to determine if more than one of the options
      * in the exclusive options mask are set in the options set.
      * Posts a contingency if there is an violation and the source is ER CSF$/ACSF$/CSI$.
      * @return true if there are no exclusion violations, else false
      */
-    protected boolean checkMutuallyExclusiveOptions(final HandlerPacket hp,
-                                                    final long exclusiveOptions) {
+    protected boolean checkMutuallyExclusiveOptions(
+        final HandlerPacket hp,
+        final long exclusiveOptions
+    ) {
         long bit = Word36.A_OPTION;
         char letter = 'A';
         boolean result = true;
@@ -103,7 +133,9 @@ abstract class Handler {
      * The result of the scan (the option word) is populated to the handler packet.
      * @return true if successful, false if there is an error in the options field
      */
-    protected boolean cleanOptions(final HandlerPacket hp) {
+    protected boolean cleanOptions(
+        final HandlerPacket hp
+    ) {
         hp._optionWord = 0;
         if (!hp._statement._optionsFields.isEmpty()) {
             var optStr = hp._statement._optionsFields.getFirst();
@@ -126,21 +158,42 @@ abstract class Handler {
     /**
      * Returns a particular subfield of the operands if it was specified.
      * Saves calling code a little bit of annoyance
-     * @param operands list of operand fields
+     * @return content of indicated subfield if it exists, else null
+     */
+    protected String getSubField(
+        final HandlerPacket hp,
+        final SubfieldSpecifier subfieldSpec) {
+        return (hp._statement._operandFields.get(subfieldSpec));
+    }
+
+    /**
+     * Returns a particular subfield of the operands if it was specified.
+     * Saves calling code a little bit of annoyance
+     * @param hp handler packet
      * @param fieldIndex index of operand field
      * @param subFieldIndex index of operand subfield
      * @return content of indicated subfield if it exists, else null
      */
-    protected String getSubField(final List<List<String>>operands,
-                                 final int fieldIndex,
-                                 final int subFieldIndex) {
-        if (fieldIndex <= operands.size()) {
-            var fld = operands.get(fieldIndex);
-            if (subFieldIndex <= fld.size()) {
-                return fld.get(subFieldIndex);
-            }
-        }
-        return null;
+    protected String getSubField(
+        final HandlerPacket hp,
+        final int fieldIndex,
+        final int subFieldIndex
+    ) {
+        return (hp._statement._operandFields.get(new SubfieldSpecifier(fieldIndex, subFieldIndex)));
+    }
+
+    /**
+     * Returns a particular subfield of the operands if it was specified, or the default value otherwise
+     * Saves calling code a little bit of annoyance
+     */
+    protected String getSubFieldOr(
+        final HandlerPacket hp,
+        final int fieldIndex,
+        final int subFieldIndex,
+        final String defaultValue
+    ) {
+        var result = hp._statement._operandFields.get(new SubfieldSpecifier(fieldIndex, subFieldIndex));
+        return result == null ? defaultValue : result;
     }
 
     protected void postComplete(
@@ -149,7 +202,9 @@ abstract class Handler {
         hp._statement._facStatusResult.postMessage(FacStatusCode.Complete, new String[]{ getCommand() });
     }
 
-    protected static void postSyntaxError(final HandlerPacket hp) {
+    protected static void postSyntaxError(
+        final HandlerPacket hp
+    ) {
         hp._statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage);
         hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
     }

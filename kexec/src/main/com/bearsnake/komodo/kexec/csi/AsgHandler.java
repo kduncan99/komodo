@@ -11,20 +11,96 @@ import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.hardwarelib.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
+import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 import com.bearsnake.komodo.kexec.facilities.NodeStatus;
+import com.bearsnake.komodo.kexec.mfd.FileSetInfo;
+import com.bearsnake.komodo.logger.LogManager;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Set;
+
+import static com.bearsnake.komodo.baselib.Word36.A_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.C_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.D_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.E_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.I_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.K_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.M_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.Q_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.R_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.T_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.U_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.X_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.Y_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.Z_OPTION;
 
 // TODO NOTE:
 //  To create a file on a fixed pack, use the @ASG or @CAT statement without including any pack-id field.
 //  To create a file on one or more removable packs, include one or more device identifiers on the pack-id field.
 //  This applies to ASG and CAT.
 
-
 class AsgHandler extends Handler {
+
+    // filename,
+    // type/reserve/granule/maximum/placement,
+    // pack-id-1/.../pack-id-n,
+    // ,,ACR-name
+    private static final Set<SubfieldSpecifier> CATALOGED_DISK_SUBFIELD_SPECS = new HashSet<>();
+    private static final Set<Integer> CATALOGED_DISK_UNBOUND_SUBFIELDS = new HashSet<>();
+    static {
+        CATALOGED_DISK_SUBFIELD_SPECS.add(new SubfieldSpecifier(0, 0)); // filename
+        CATALOGED_DISK_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 0)); // type
+        CATALOGED_DISK_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 1)); // reserve
+        CATALOGED_DISK_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 2)); // granularity
+        CATALOGED_DISK_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 3)); // maximum
+        CATALOGED_DISK_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 4)); // placement
+        CATALOGED_DISK_SUBFIELD_SPECS.add(new SubfieldSpecifier(5, 0)); // ACR-name
+
+        CATALOGED_DISK_UNBOUND_SUBFIELDS.add(2); // pack-ids
+    }
+
+    // filename,*name,pack-id
+    private static final Set<SubfieldSpecifier> ABSOLUTE_MASS_STORAGE_SUBFIELD_SPECS = new HashSet<>();
+    static {
+        ABSOLUTE_MASS_STORAGE_SUBFIELD_SPECS.add(new SubfieldSpecifier(0, 0)); // filename
+        ABSOLUTE_MASS_STORAGE_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 0)); // name
+        ABSOLUTE_MASS_STORAGE_SUBFIELD_SPECS.add(new SubfieldSpecifier(2, 0)); // pack-id
+    }
+
+    // filename,
+    // *type/*units/noise/processor/format,
+    // data-converter/block-numbering/data-compression/buffered-write,
+    // reel-1/.../reel-n,
+    // expiration-period,
+    // ring-indicator,
+    // ACR-name,
+    // CTL-pool
+    private static final Set<SubfieldSpecifier> ABSOLUTE_TAPE_SUBFIELD_SPECS = new HashSet<>();
+    private static final Set<Integer> ABSOLUTE_TAPE_UNBOUND_SUBFIELDS = new HashSet<>();
+    static {
+        ABSOLUTE_TAPE_SUBFIELD_SPECS.add(new SubfieldSpecifier(0, 0)); // filename
+        ABSOLUTE_TAPE_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 0)); // type
+        ABSOLUTE_TAPE_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 1)); // units
+        ABSOLUTE_TAPE_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 2)); // noise
+        ABSOLUTE_TAPE_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 3)); // processor
+        ABSOLUTE_TAPE_SUBFIELD_SPECS.add(new SubfieldSpecifier(1, 4)); // format
+        ABSOLUTE_TAPE_SUBFIELD_SPECS.add(new SubfieldSpecifier(3, 0)); // expiration
+        ABSOLUTE_TAPE_SUBFIELD_SPECS.add(new SubfieldSpecifier(4, 0)); // ring-indicator
+        ABSOLUTE_TAPE_SUBFIELD_SPECS.add(new SubfieldSpecifier(5, 0)); // ACR-name
+        ABSOLUTE_TAPE_SUBFIELD_SPECS.add(new SubfieldSpecifier(6, 0)); // CTL-pool
+
+        ABSOLUTE_TAPE_UNBOUND_SUBFIELDS.add(2); // reel-ids
+    }
 
     @Override
     public boolean allowCSF() { return true; }
@@ -46,7 +122,7 @@ class AsgHandler extends Handler {
         }
 
         // get the filename field
-        var fnField = getSubField(hp._statement._operandFields, 0, 0);
+        var fnField = getSubField(hp, 0, 0);
         if (fnField == null) {
             hp._statement._facStatusResult.postMessage(FacStatusCode.FilenameIsRequired);
             hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
@@ -74,14 +150,19 @@ class AsgHandler extends Handler {
 
         fileSpec = hp._runControlEntry.resolveQualifier(fileSpec);
 
+        // Brief sanity check
+        if (!checkMutuallyExclusiveOptions(hp, A_OPTION | C_OPTION | T_OPTION | U_OPTION)) {
+            return;
+        }
+
         // If A option is set, we are going to try to assign an existing cataloged file.
         // In this case, go look for the file first.
-        if ((hp._optionWord & Word36.A_OPTION) != 0) {
+        if ((hp._optionWord & A_OPTION) != 0) {
             handleCatalogedFile(hp, fileSpec);
         }
 
         // get the type field.
-        var typeField = getSubField(hp._statement._operandFields, 1, 0);
+        var typeField = getSubField(hp, 1, 0);
         if (typeField != null) {
             if (typeField.length() > 6) {
                 hp._statement._facStatusResult.postMessage(FacStatusCode.AssignMnemonicTooLong);
@@ -190,7 +271,7 @@ class AsgHandler extends Handler {
         final FileSpecification fs,
         final DiskDevice device
     ) throws ExecStoppedException {
-        long allowed = Word36.H_OPTION | Word36.I_OPTION | Word36.T_OPTION | Word36.Z_OPTION;
+        long allowed = Word36.H_OPTION | I_OPTION | Word36.T_OPTION | Z_OPTION;
         if (!checkIllegalOptions(hp, allowed)) {
             return;
         }
@@ -199,34 +280,30 @@ class AsgHandler extends Handler {
         // the MFD given the file specification, and if so, use A semantics. We cannot use A semantics for a
         // disk unit, so we are assuming a T option exists if a disk unit is specified. Is this correct?
 
-        if (hp._statement._operandFields.get(1).size() != 1) {
-            // contains undefined subfield
-            hp._statement._facStatusResult.postMessage(FacStatusCode.UndefinedFieldOrSubfield);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+        if (!checkIllegalFieldsAndSubfields(hp, ABSOLUTE_MASS_STORAGE_SUBFIELD_SPECS, Collections.emptySet())) {
             return;
         }
 
-        var packName = getSubField(hp._statement._operandFields, 2, 0);
+        var packName = getSubField(hp, 2, 0);
         if (packName == null) {
             hp._statement._facStatusResult.postMessage(FacStatusCode.PackIdIsRequired);
             hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
             return;
-        } else if (hp._statement._operandFields.get(2).size() > 1) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.MaximumNumberOfPackIdsExceeded);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
-            return;
         }
 
-        var iOpt = (hp._optionWord & Word36.I_OPTION) != 0;
-        var zOpt = (hp._optionWord & Word36.Z_OPTION) != 0;
-        Exec.getInstance().getFacilitiesManager().assignDiskUnitToRun(hp._runControlEntry,
-                                                                      fs,
-                                                                      device.getNodeIdentifier(),
-                                                                      packName,
-                                                                      iOpt,
-                                                                      zOpt,
-                                                                      hp._statement._facStatusResult);
-        postComplete(hp);
+        var releaseOnTaskEnd = (hp._optionWord & I_OPTION) != 0;
+        var doNotHoldRun = (hp._optionWord & Z_OPTION) != 0;
+
+        var fm = Exec.getInstance().getFacilitiesManager();
+        if (fm.assignDiskUnitToRun(hp._runControlEntry,
+                                   fs,
+                                   device.getNodeIdentifier(),
+                                   packName,
+                                   releaseOnTaskEnd,
+                                   doNotHoldRun,
+                                   hp._statement._facStatusResult)) {
+            postComplete(hp);
+        }
     }
 
     private void handleAbsoluteTapeDevice(
@@ -244,80 +321,197 @@ class AsgHandler extends Handler {
     }
 
     /**
-     * 'A' option was specified.
-     * TODO most of the steps below belong in facilities, not here
-     * . Resolve the qualifier, then invoke facilities
-     * . If the file cycle is relative, check fac items to see if this file is already assigned.
-     * .   If so, then the file is already assigned, and we simply post status to that effect
-     * .   If not, we get FileCycleInfo from the MFD.
-     * .     If the relative cycle cannot be satisfied, the request is rejected.
-     * .     Otherwise, we get the absolute cycle from the fcInfo, and search fac items again for the absolute cycle.
-     * .       If that cycle is already assigned
-     * .         with a different relative cycle, reject with f-cycle conflict
-     * .         with no relative cycle, associate the requested relative cycle with the existing fac item and return
-     *             already-assigned status
-     * .       Otherwise, create a fac item for the rel/abs combination and accelerate the cycle via MFD
-     * . If the file cycle is absolute, check fac items to see if this file is already assigned.
-     * .   If so, return status
-     * .   Otherwise
-     * .     get fcInfo from MFD, rejecting if it does not exist
-     * .     accelerate the cycle via MFD
-     * .     create fac item
+     * 'A' option was specified. Check equipment field to decide whether to use disk or tape.
+     * If neither is specified, we have to do an early run to MFD to find out what to use.
      */
     private void handleCatalogedFile(
         final HandlerPacket hp,
         final FileSpecification fileSpecification
-    ) {
-        // maybe just check the equipment type, validate the options and fields/subfields
-        // based on either disk or tape (and the fact that A is specified), then invoke either
-        // assignExistingDiskFileToRun() or assignExistingTapeFileToRun() on fac mgr.
-        try {
+    ) throws ExecStoppedException {
+        var e = Exec.getInstance();
+        var cfg = e.getConfiguration();
+
+        var equip = getSubField(hp, 1, 0);
+        if (equip == null) {
             var mm = Exec.getInstance().getMFDManager();
-            var fsInfo = mm.getFileSetInfo(fileSpecification.getQualifier(), fileSpecification.getFilename());
+            FileSetInfo fsInfo = null;
+            try {
+                fsInfo = mm.getFileSetInfo(fileSpecification.getQualifier(), fileSpecification.getFilename());
+                for (var fsci : fsInfo.getCycleInfo()) {
+                    if (!fsci.isToBeCataloged()) {
+                        var fcInfo = mm.getFileCycleInfo(fileSpecification.getQualifier(),
+                                                         fileSpecification.getFilename(),
+                                                         fsci.getAbsoluteCycle());
+                        equip = fcInfo.getAssignMnemonic();
+                    }
+                }
+            } catch (FileCycleDoesNotExistException ex) {
+                LogManager.logFatal(getCommand(),
+                                    "fsInfo for %s*%s references abs cycle which MFD cannot find",
+                                    fsInfo.getQualifier(),
+                                    fsInfo.getFilename());
+                e.stop(StopCode.FacilitiesComplex);
+                throw new ExecStoppedException();
+            } catch (FileSetDoesNotExistException ex) {
+                hp._statement._facStatusResult.postMessage(FacStatusCode.FileIsNotCataloged);
+                hp._statement._facStatusResult.mergeStatusBits(0_400010_000000L);
+                return;
+            }
+        } else {
+            if (equip.length() > 6) {
+                hp._statement._facStatusResult.postMessage(FacStatusCode.AssignMnemonicTooLong);
+                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+                return;
+            }
+        }
 
-            // check read/write keys
-            var existingReadKey = fsInfo.getReadKey();
-            var existingWriteKey = fsInfo.getWriteKey();
-            var hasReadKey = !existingReadKey.isEmpty();
-            var hasWriteKey = !existingWriteKey.isEmpty();
+        switch (cfg.getMnemonicType(equip)) {
+            case SECTOR_ADDRESSABLE_DISK,
+                WORD_ADDRESSABLE_DISK -> handleCatalogedDiskFile(hp, fileSpecification);
+            case TAPE -> handleCatalogedTapeFile(hp, fileSpecification);
+            default -> {
+                hp._statement._facStatusResult.postMessage(FacStatusCode.MnemonicIsNotConfigured);
+                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            }
+        }
+    }
 
-            var givenReadKey = fileSpecification.getReadKey();
-            var givenWriteKey = fileSpecification.getWriteKey();
-            var gaveReadKey = givenReadKey != null;
-            var gaveWriteKey = givenWriteKey != null;
-
-
-
-            // TODO check public/private
-            // TODO check for equipment type conflict
-            // TODO branch out based on disk/tape (because we need to check options)
-        } catch (FileSetDoesNotExistException ex) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.FileIsNotCataloged);
-            hp._statement._facStatusResult.mergeStatusBits(0_400010_000000L);
+    /**
+     * When we get here, there's an A option on the statement, and the type refers to mass storage
+     */
+    private void handleCatalogedDiskFile(
+        final HandlerPacket hp,
+        final FileSpecification fileSpecification
+    ) throws ExecStoppedException {
+        // Validate options and subfields
+        long allowedOpts = A_OPTION | I_OPTION | Z_OPTION
+            | D_OPTION | E_OPTION | K_OPTION | M_OPTION | Q_OPTION | R_OPTION | X_OPTION | Y_OPTION;
+        long mutexOpts1 = D_OPTION | K_OPTION;
+        long mutexOpts2 = E_OPTION | Y_OPTION;
+        if (!checkIllegalOptions(hp, allowedOpts)
+            || !checkMutuallyExclusiveOptions(hp, mutexOpts1)
+            || !checkMutuallyExclusiveOptions(hp, mutexOpts2)
+            || !checkIllegalFieldsAndSubfields(hp,
+                                               CATALOGED_DISK_SUBFIELD_SPECS,
+                                               CATALOGED_DISK_UNBOUND_SUBFIELDS)) {
             return;
         }
-/*
-When a cataloged file is assigned with a relative F-cycle, the list of currently assigned files is searched to determine
-whether that relative F-cycle is already assigned to the run. If it is, that F-cycle is used. If the specified relative
-F-cycle cannot be found, the master file directories are searched to determine whether that relative F-cycle exists.
 
-If the relative F-cycle does not exist, the assignment request is rejected.
+        if (hp._statement._operandFields.get(new SubfieldSpecifier(1, 4)) != null) {
+            hp._statement._facStatusResult.postMessage(FacStatusCode.PlacementFieldIgnored);
+        }
 
-If the relative F-cycle does exist, it is converted to the corresponding absolute F-cycle number and the list of
-currently assigned files is searched again to determine whether that absolute F-cycle is already assigned to the run.
+        Integer iReserve = null;
+        try {
+            var reserve = getSubField(hp, 1, 1);
+            iReserve = Integer.parseInt(reserve);
+            if (iReserve < 0) {
+                hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalInitialReserve);
+                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+                return;
+            }
+        } catch (NumberFormatException ex) {
+            hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalInitialReserve);
+            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            return;
+        }
 
-If it is assigned and it already has a relative F-cycle number associated with it, the request is rejected because a
-naming conflict exists when one absolute F-cycle-has two relative F-cycle values associated with it.
+        var granularity = getSubField(hp, 1, 2);
+        Granularity eGranularity = null;
+        if (granularity != null) {
+            if (granularity.equalsIgnoreCase("TRK")) {
+                eGranularity = Granularity.Track;
+            } else if (granularity.equalsIgnoreCase("POS")) {
+                eGranularity = Granularity.Position;
+            } else {
+                hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalValueForGranularity);
+                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+                return;
+            }
+        }
 
-If it is assigned and no relative F-cycle number is associated with that absolute F-cycle, then the absolute F-cycle is
-associated with the relative F-cycle.
+        Integer iMaximum = null;
+        try {
+            var maximum = getSubField(hp, 1, 3);
+            iMaximum = Integer.parseInt(maximum);
+            if (iMaximum < 0) {
+                hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalMaxGranules);
+                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+                return;
+            }
+        } catch (NumberFormatException ex) {
+            hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalMaxGranules);
+            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            return;
+        }
 
-If it is not already assigned to the run, that relative F-cycle/absolute F-cycle is assigned to the run.
+        var packIds = new LinkedList<>();
+        for (var entry : hp._statement._operandFields.entrySet()) {
+            if (entry.getKey().getFieldIndex() == 2) {
+                var packId = entry.getValue();
+                if (packIds.contains(packId)) {
+                    hp._statement._facStatusResult.postMessage(FacStatusCode.DuplicateMediaIdsAreNotAllowed);
+                    hp._statement._facStatusResult.mergeStatusBits(0_400004_000000L);
+                    return;
+                }
+                packIds.add(packId);
+            }
+        }
+        if (packIds.size() > 510) {
+            hp._statement._facStatusResult.postMessage(FacStatusCode.MaximumNumberOfPackIdsExceeded);
+            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            return;
+        }
 
-When you specify a relative F-cycle, the file is known to the assigning run by both its relative F-cycle and the
-appropriate absolute F-cycle number. However, if you specify an absolute F-cycle, the Exec does not attempt to convert
-it to a relative F-cycle. In this case, the file is known to the assigning run only by its absolute F-cycle.
-*/
+        FacilitiesManager.DeleteBehavior deleteBehavior;
+        if ((hp._optionWord & D_OPTION) != 0) {
+            deleteBehavior = FacilitiesManager.DeleteBehavior.DeleteOnNormalRunTermination;
+        } else if ((hp._optionWord & K_OPTION) != 0) {
+            deleteBehavior = FacilitiesManager.DeleteBehavior.DeleteOnAnyRunTermination;
+        } else {
+            deleteBehavior = FacilitiesManager.DeleteBehavior.None;
+        }
+
+        FacilitiesManager.DirectoryOnlyBehavior directoryOnlyBehavior;
+        if ((hp._optionWord & E_OPTION) != 0) {
+            directoryOnlyBehavior = FacilitiesManager.DirectoryOnlyBehavior.DirectoryOnlyMountPacks;
+        } else if ((hp._optionWord & Y_OPTION) != 0) {
+            directoryOnlyBehavior = FacilitiesManager.DirectoryOnlyBehavior.DirectoryOnlyDoNotMountPacks;
+        } else {
+            directoryOnlyBehavior = FacilitiesManager.DirectoryOnlyBehavior.None;
+        }
+
+        var saveOnCheckpoint = (hp._optionWord & M_OPTION) != 0;
+        var assignIfDisabled = (hp._optionWord & Q_OPTION) != 0;
+        var readOnly = (hp._optionWord & R_OPTION) != 0;
+        var releaseOnTaskEnd = (hp._optionWord & I_OPTION) != 0;
+        var exclusiveUse = (hp._optionWord & X_OPTION) != 0;
+        var doNotHoldRun = (hp._optionWord & Z_OPTION) != 0;
+
+        var fm = Exec.getInstance().getFacilitiesManager();
+        if (fm.assignCatalogedDiskFileToRun(hp._runControlEntry,
+                                            fileSpecification,
+                                            iReserve,
+                                            eGranularity,
+                                            iMaximum,
+                                            deleteBehavior,
+                                            directoryOnlyBehavior,
+                                            saveOnCheckpoint,
+                                            assignIfDisabled,
+                                            readOnly,
+                                            exclusiveUse,
+                                            releaseOnTaskEnd,
+                                            doNotHoldRun,
+                                            hp._statement._facStatusResult)) {
+            postComplete(hp);
+        }
+    }
+
+    private void handleCatalogedTapeFile(
+        final HandlerPacket hp,
+        final FileSpecification fileSpecification
+    ) {
+        // TODO
     }
 
     /**

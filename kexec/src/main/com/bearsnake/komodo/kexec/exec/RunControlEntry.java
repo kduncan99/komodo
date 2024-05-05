@@ -113,25 +113,37 @@ public abstract class RunControlEntry {
         }
     }
 
-    public void postContingency(final int contingencyType,
-                                final int errorType,
-                                final int errorCode) {
+    public boolean isPrivileged() {
+        return false; // TODO
+    }
+
+    public void postContingency(
+        final int contingencyType,
+        final int errorType,
+        final int errorCode
+    ) {
         // TODO
     }
 
-    public void postContingencyWithAux(final int contingencyType,
-                                       final int errorType,
-                                       final int errorCode,
-                                       final long auxiliary) {
+    public void postContingency(
+        final int contingencyType,
+        final int errorType,
+        final int errorCode,
+        final long auxiliary
+    ) {
         // TODO
     }
 
-    public void postToPrint(final String text,
-                            final int lineSkip) {
+    public void postToPrint(
+        final String text,
+        final int lineSkip
+    ) {
         // TODO
     }
 
-    public void postToTailSheet(final String message) {
+    public void postToTailSheet(
+        final String message
+    ) {
         // TODO
     }
 

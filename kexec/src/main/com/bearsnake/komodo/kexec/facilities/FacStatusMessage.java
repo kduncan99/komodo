@@ -75,6 +75,7 @@ public class FacStatusMessage {
         putWarning(FacStatusCode.FileAlreadyAssigned, "File is already assigned.");
         putWarning(FacStatusCode.FilenameNotKnown, "Filename not known to this run.");
         putWarning(FacStatusCode.FilenameNotUnique, "Filename not unique.");
+        putWarning(FacStatusCode.PlacementFieldIgnored, "Placement field ignored.");
 
         putError(FacStatusCode.AssignMnemonicMustBeSpecifiedWithPackId, "Assign mnemonic must be specified with a packid.");
         putError(FacStatusCode.AssignMnemonicMustBeWordAddressable, "Assign mnemonic must be word addressable.");
@@ -84,6 +85,7 @@ public class FacStatusMessage {
         putError(FacStatusCode.DeviceIsFixed, "Device %s is fixed.");
         putError(FacStatusCode.DirectoryAndQualifierMayNotAppear, "Directory id and qualifier may not appear on image when R option is used.");
         putError(FacStatusCode.DirectoryOrQualifierMustAppear, "Directory id or qualifier must appear on image.");
+        putError(FacStatusCode.DuplicateMediaIdsAreNotAllowed, "Duplicate media-ids are not allowed.");
         putError(FacStatusCode.FileAlreadyCataloged, "File is already catalogued.");
         putError(FacStatusCode.FileCycleOutOfRange, "File cycle out of range.");
         putError(FacStatusCode.FileIsNotCataloged, "File is not catalogued.");
