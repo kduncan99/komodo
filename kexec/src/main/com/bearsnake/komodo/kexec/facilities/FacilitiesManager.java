@@ -231,6 +231,7 @@ public class FacilitiesManager implements Manager {
 
         // Check read/write keys
         //  TODO read-inhibit, write-inhibit, but in what circumstance?
+        //     is it possible it is a warning at the command level, but still aborts the task at the task level?
         if (!checkKeys(runControlEntry, fsInfo, fileSpecification, fsResult)) {
             return false;
         }
