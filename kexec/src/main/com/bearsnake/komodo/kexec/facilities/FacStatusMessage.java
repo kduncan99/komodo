@@ -81,7 +81,7 @@ public class FacStatusMessage {
         putError(FacStatusCode.AssignMnemonicMustBeWordAddressable, "Assign mnemonic must be word addressable.");
         putError(FacStatusCode.AssignMnemonicTooLong, "Assign mnemonic cannot be longer than 6 characters.");
         putError(FacStatusCode.AttemptToChangeGenericType, "Attempt to change generic type of the file.");
-        putError(FacStatusCode.DeviceAlreadyInUse, "Device %s already in use by this run.");
+        putError(FacStatusCode.DeviceAlreadyInUseByThisRun, "Device %s already in use by this run.");
         putError(FacStatusCode.DeviceIsFixed, "Device %s is fixed.");
         putError(FacStatusCode.DirectoryAndQualifierMayNotAppear, "Directory id and qualifier may not appear on image when R option is used.");
         putError(FacStatusCode.DirectoryOrQualifierMustAppear, "Directory id or qualifier must appear on image.");

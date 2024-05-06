@@ -5,8 +5,9 @@
 package com.bearsnake.komodo.kexec.exec;
 
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.kexec.FacilitiesItemTable;
+import com.bearsnake.komodo.kexec.facilities.FacilitiesItemTable;
 import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.kexec.facilities.UseItemTable;
 import com.bearsnake.komodo.kexec.tasks.Task;
 
 import java.io.PrintStream;
@@ -23,6 +24,7 @@ public abstract class RunControlEntry {
     protected final String _runId;
     protected final RunType _runType;
     protected final String _userId;
+    protected final UseItemTable _useItemTable = new UseItemTable();
 
     protected long _cardCount;
     protected long _cardLimit;
@@ -34,7 +36,7 @@ public abstract class RunControlEntry {
     protected final AtomicInteger _waitingForMassStorageCounter = new AtomicInteger(0);
     protected final AtomicInteger _waitingForPeripheralCounter = new AtomicInteger(0);
 
-    protected final FacilitiesItemTable _facilitiesItems = new FacilitiesItemTable();
+    protected final FacilitiesItemTable _facilitiesItemTable = new FacilitiesItemTable();
     protected Task _activeTask = null;
 
     // TODO privileges
@@ -63,7 +65,7 @@ public abstract class RunControlEntry {
     public void decrementWaitingForPeripheral() { _waitingForPeripheralCounter.decrementAndGet(); }
     public final String getAccountId() { return _accountId; }
     public final String getDefaultQualifier() { return _defaultQualifier; }
-    public final FacilitiesItemTable getFacilityItemTable() { return _facilitiesItems; }
+    public final FacilitiesItemTable getFacilitiesItemTable() { return _facilitiesItemTable; }
     public final String getImpliedQualifier() { return _impliedQualifier; }
     public final String getOriginalRunId() { return _originalRunId; }
     public final String getProjectId() { return _projectId; }
@@ -71,6 +73,7 @@ public abstract class RunControlEntry {
     public final String getRunId() { return _runId; }
     public final RunType getRunType() { return _runType; }
     public final String getUserId() { return _userId; }
+    public final UseItemTable getUseItemTable() { return _useItemTable; }
     public final boolean hasTask() { return _activeTask != null; }
     public void incrementWaitingForMassStorage() { _waitingForMassStorageCounter.incrementAndGet(); }
     public void incrementWaitingForPeripheral() { _waitingForPeripheralCounter.incrementAndGet(); }
@@ -97,7 +100,7 @@ public abstract class RunControlEntry {
             // TODO privileges
 
             out.printf("%s  Facility Items:\n", indent);
-            _facilitiesItems.dump(out, indent + "    ", verbose);
+            _facilitiesItemTable.dump(out, indent + "    ", verbose);
         }
     }
 

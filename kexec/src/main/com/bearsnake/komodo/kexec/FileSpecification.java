@@ -41,13 +41,17 @@ public class FileSpecification {
         _writeKey = writeKey;
     }
 
-    public final FileCycleSpecification getFileCycleSpecification() { return _fileCycleSpecification; }
-    public final String getFilename() { return _filename; }
-    public final String getQualifier() { return _qualifier; }
-    public final String getReadKey() { return _readKey; }
-    public final String getWriteKey() { return _writeKey; }
-    public final boolean hasFileCycleSpecification() { return _fileCycleSpecification != null; }
-    public final boolean hasQualifier() { return _qualifier != null; }
+    public boolean couldBeInternalName() {
+        return _qualifier == null && _fileCycleSpecification == null && _readKey == null && _writeKey == null;
+    }
+
+    public FileCycleSpecification getFileCycleSpecification() { return _fileCycleSpecification; }
+    public String getFilename() { return _filename; }
+    public String getQualifier() { return _qualifier; }
+    public String getReadKey() { return _readKey; }
+    public String getWriteKey() { return _writeKey; }
+    public boolean hasFileCycleSpecification() { return _fileCycleSpecification != null; }
+    public boolean hasQualifier() { return _qualifier != null; }
 
     /**
      * parses a FileSpecification object from the given text.

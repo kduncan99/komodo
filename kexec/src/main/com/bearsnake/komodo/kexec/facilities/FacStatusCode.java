@@ -33,7 +33,7 @@ public enum FacStatusCode {
     PlacementFieldIgnored(0121133),
 
     // Errors
-    DeviceAlreadyInUse(0200333),
+    DeviceAlreadyInUseByThisRun(0200333),
     DeviceIsFixed(0200433),
     MnemonicIsNotConfigured(0201033),
     UnitNameIsNotConfigured(0201133),

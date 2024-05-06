@@ -148,12 +148,19 @@ class AsgHandler extends Handler {
             return;
         }
 
+        fileSpec = hp._runControlEntry.getUseItemTable().resolveFileSpecification(fileSpec);
         fileSpec = hp._runControlEntry.resolveQualifier(fileSpec);
 
         // Brief sanity check
         if (!checkMutuallyExclusiveOptions(hp, A_OPTION | C_OPTION | T_OPTION | U_OPTION)) {
             return;
         }
+
+        /* TODO
+            The options field, if left blank, defaults to the A option unless the file is already assigned,
+            in which case the options on the previous assign are used. If the file specified is not cataloged,
+            the blank options field defaults to a T option, thus creating a temporary file.
+        */
 
         // If A option is set, we are going to try to assign an existing cataloged file.
         // In this case, go look for the file first.

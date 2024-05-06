@@ -30,6 +30,7 @@ import com.bearsnake.komodo.kexec.exec.RunControlEntry;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
+import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
 import com.bearsnake.komodo.kexec.mfd.FileCycleInfo;
 import com.bearsnake.komodo.kexec.mfd.FileSetInfo;
 import com.bearsnake.komodo.kexec.mfd.FileType;
@@ -41,6 +42,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class FacilitiesManager implements Manager {
@@ -140,7 +142,7 @@ public class FacilitiesManager implements Manager {
     // Services interface
     // -------------------------------------------------------------------------
 
-    public boolean assignCatalogedDiskFileToExec(
+    public synchronized boolean assignCatalogedDiskFileToExec(
         final FileSpecification fileSpecification,
         final boolean exclusiveUse,
         final FacStatusResult fsResult
@@ -174,7 +176,7 @@ public class FacilitiesManager implements Manager {
         final Integer maxGranules,     // null if not specified, attempt to change existing value
         final DeleteBehavior deleteBehavior,               // D/K options
         final DirectoryOnlyBehavior directoryOnlyBehavior, // E/Y options
-        final boolean saveOnCheckpoint,                    // M option
+        final boolean saveOnCheckpoint,                    // M option (TODO update MFD item?)
         final boolean assignIfDisabled,                    // Q option
         final boolean readOnly,                            // R option
         final boolean exclusiveUse,                        // X option
@@ -206,9 +208,10 @@ public class FacilitiesManager implements Manager {
             return false;
         }
 
-        // Is this an absolute file cycle request?
+        FacilitiesItem facItem;
+        var fiTable = runControlEntry.getFacilitiesItemTable();
         if (fileSpecification.hasFileCycleSpecification() && fileSpecification.getFileCycleSpecification().isAbsolute()) {
-            // Go get the file cycle info.
+            // This an absolute file cycle request - go get the file cycle info.
             FileCycleInfo fcInfo;
             try {
                 fcInfo = mm.getFileCycleInfo(fileSpecification.getQualifier(),
@@ -221,6 +224,10 @@ public class FacilitiesManager implements Manager {
                 return false;
             }
 
+            // If it is fixed, do not accept any pack-ids.
+            // If it is *not* fixed and there are pack-ids, do sanity checking on them.
+            //  TODO
+
             // Check the existing facility items to see if this file cycle is already assigned to this run.
             // If it is,
             //   change any option-driven settings if necessary
@@ -229,7 +236,17 @@ public class FacilitiesManager implements Manager {
             //   check public/private
             //   make sure we're not being asked to change anything in a funny way
             //   create new fac item with option-driven settings as necessary
+            //   update use-items to point to fac item as necessary
+            var existingFacItem = fiTable.getFacilitiesItemByAbsoluteCycle(fileSpecification.getQualifier(),
+                                                                           fileSpecification.getFilename(),
+                                                                           fileSpecification.getFileCycleSpecification().getCycle());
+            if (existingFacItem != null) {
+                // TODO
+            } else {
+                // TODO
+            }
         } else {
+            // TODO
             // It's either relative or unspecified. If unspecified, we treat it like relative +0.
             // Check the fac items to see if the file is already assigned with this relative cycle number.
             // If so,
@@ -245,12 +262,25 @@ public class FacilitiesManager implements Manager {
             //   check public/private (as above)
             //   make sure we're not being asked to change anything in a funny way (as above)
             //   create new fac item with option-driven settings as necessary
+            //   update use-items to point to fac item as necessary
+            var cycle = fileSpecification.hasFileCycleSpecification()
+                ? fileSpecification.getFileCycleSpecification().getCycle() : 0;
+            var existingFacItem = fiTable.getFacilitiesItemByRelativeCycle(fileSpecification.getQualifier(),
+                                                                           fileSpecification.getFilename(),
+                                                                           cycle);
+            if (existingFacItem != null) {
+                // TODO
+            } else {
+                // TODO
+            }
         }
 
+        // TODO
         // Now we have a fac item (either pre- or newly-existing).
         // Does there need to be a hold put in place? If so, do it.
         // Is there already a hold in place? If so, wait on it.
 
+        // TODO
         // Done waiting for the thing - accelerate it via MFD (it should not have been yet).
 
                 /*
@@ -272,70 +302,43 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
     /**
      * For assigning any disk to the exec. Possibly only used by facilities manager...?
      * The device must not be assigned to any run (other than the EXEC) and it must be ready.
+     * @param fileSpecification needed for creating facilities item
      * @param nodeIdentifier node identifier of the device
+     * @param packName only for removable disk unit, null for fixed
      * @param fsResult fac status result
      * @return true if we are successful
      * @throws ExecStoppedException if the exec is stopped
      */
-    public boolean assignDiskUnitToExec(
+    public synchronized boolean assignDiskUnitToExec(
+        final FileSpecification fileSpecification,
         final int nodeIdentifier,
+        final String packName,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToExec node:%d", nodeIdentifier);
+        LogManager.logTrace(LOG_SOURCE,
+                            "assignDiskUnitToExec %s node:%d",
+                            fileSpecification.toString(),
+                            nodeIdentifier);
 
-        var nodeInfo = _nodeGraph.get(nodeIdentifier);
-        if (nodeInfo == null) {
-            LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToExec() Cannot find node %012o", nodeIdentifier);
-            Exec.getInstance().stop(StopCode.FacilitiesComplex);
-            throw new ExecStoppedException();
-        }
+        var result = assignDiskUnitToRun(Exec.getInstance().getRunControlEntry(),
+                                         fileSpecification,
+                                         nodeIdentifier,
+                                         packName,
+                                         false,
+                                         true,
+                                         fsResult);
 
-        var node = nodeInfo.getNode();
-        if ((node.getNodeCategory() != NodeCategory.Device) || ((Device) node).getDeviceType() != DeviceType.DiskDevice) {
-            LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToExec() Node %012o is not a disk device", nodeIdentifier);
-            Exec.getInstance().stop(StopCode.FacilitiesComplex);
-            throw new ExecStoppedException();
-        }
-
-        var dev = (Device) node;
-        var execRCE = Exec.getInstance().getRunControlEntry();
-        synchronized (nodeInfo) {
-            if (!dev.isReady()) {
-                LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToExec() Node %012o is not a disk device", nodeIdentifier);
-                Exec.getInstance().stop(StopCode.FacilitiesComplex);
-                throw new ExecStoppedException();
-            }
-            var currentRCE = nodeInfo.getAssignedTo();
-            if ((currentRCE != null) && (currentRCE != execRCE)) {
-                LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToExec() Node %012o is already assigned", nodeIdentifier);
-                Exec.getInstance().stop(StopCode.FacilitiesComplex);
-                throw new ExecStoppedException();
-            }
-            nodeInfo.setAssignedTo(execRCE);
-        }
-
-        var packInfo = nodeInfo.getMediaInfo();
-        var facItem = new AbsoluteDiskItem(node, packInfo.getMediaName());
-        facItem.setIsAssigned(true)
-               .setAbsoluteCycle(0)
-               .setQualifier(execRCE.getDefaultQualifier())
-               .setFilename("UNIT$" + node.getNodeName())
-               .setIsTemporary(true);
-
-        var fit = execRCE.getFacilityItemTable();
-        synchronized (fit) {
-            fit.addFacilitiesItem(facItem);
-        }
-
-        LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToExec %s result:%s", node.getNodeName(), fsResult.toString());
-        return true;
+        LogManager.logTrace(LOG_SOURCE,
+                            "assignDiskUnitToExec result:%s",
+                            fsResult.toString());
+        return result;
     }
 
     /**
-     * For assigning a (reserved) disk to a run.
-     * This assignment can only be temporary, and the device must be reserved.
+     * For assigning a reserved disk to a run (or any disk, if we are the Exec).
+     * This assignment can only be temporary.
      * @param runControlEntry describes the run
-     * @param fileSpecification describes the file name so that we can figure out the correct qualifier to use
+     * @param fileSpecification describes the qualifier, file name, and file cycle for the fac item
      * @param nodeIdentifier node identifier of the device
      * @param packName pack name requested for the device
      * @param releaseOnTaskEnd I-option on assign
@@ -344,11 +347,11 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
      * @return true if we are successful
      * @throws ExecStoppedException if the exec is stopped
      */
-    public boolean assignDiskUnitToRun(
+    public synchronized boolean assignDiskUnitToRun(
         final RunControlEntry runControlEntry,
         final FileSpecification fileSpecification,
         final int nodeIdentifier,
-        final String packName,
+        final String packName, // only for removable - null (and ignored) for fixed
         final boolean releaseOnTaskEnd,
         final boolean doNotHoldRun,
         final FacStatusResult fsResult
@@ -376,14 +379,40 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
         }
 
         var disk = (DiskDevice) node;
-        if (nodeInfo.getNodeStatus() != NodeStatus.Reserved) {
+        if (!runControlEntry.isPrivileged() && nodeInfo.getNodeStatus() != NodeStatus.Reserved) {
             var params = new String[]{nodeInfo.getNode().getNodeName()};
             fsResult.postMessage(FacStatusCode.UnitIsNotReserved, params);
             fsResult.mergeStatusBits(0_600000_000000L);
             return false;
         }
 
-        // TODO check requested pack name - if it is already assigned to this run, reject the request
+        // Check the node assignment for the device - if it is already assigned to us, then fail.
+        var dni = (DeviceNodeInfo) nodeInfo;
+        if (Objects.equals(dni.getAssignedTo(), runControlEntry)) {
+            var params = new String[]{node.getNodeName()};
+            fsResult.postMessage(FacStatusCode.DeviceAlreadyInUseByThisRun, params);
+            fsResult.mergeStatusBits(0_400000_000000L);
+            return false;
+        }
+
+        // Check requested pack name - if it is already assigned to this run, reject the request
+        //   TODO E:201733 Pack pack-id already in use by this run.
+
+        // If we are not the Exec make sure the pack is removable and that the device is not fixed
+        if (!runControlEntry.isPrivileged()) {
+            //   TODO E:202233 Pack pack-id is not a removable pack.
+            //   TODO E:200433 Device device-Name is fixed.
+        }
+
+        // If there is a facilities item in the rce which matches the file specification which does not refer
+        // to an absolute assign of this same unit, fail.
+        var fiTable = runControlEntry.getFacilitiesItemTable();
+        var existingFacItem = fiTable.getExactFacilitiesItem(fileSpecification);
+        if (existingFacItem != null) {
+            fsResult.postMessage(FacStatusCode.IllegalAttemptToChangeAssignmentType);
+            fsResult.mergeStatusBits(0_400000_000000L);
+            return false;
+        }
 
         // Create an appropriate facilities item.
         var facItem = new AbsoluteDiskItem(node, packName);
@@ -400,45 +429,13 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
             }
         }
 
-        // If there is a facilities item in the rce which matches the file specification which does not refer
-        //  to an absolute assign of this same unit, fail.
-        // If there is any facilities item in the rce which refers to this unit, fail (already in use by this run).
-        // If the filename portion of the new facilities item is not unique to the run, post a warning
-        //  (filename not unique)
-        var filenameNotUnique = false;
-        var facItems = runControlEntry.getFacilityItemTable();
-        synchronized (facItems) {
-            for (var fi : facItems.getFacilitiesItems()) {
-                var facTable = runControlEntry.getFacilityItemTable();
-                synchronized (facTable) {
-                    if (facTable.getExactFacilitiesItem(fileSpecification) != null) {
-                        fsResult.postMessage(FacStatusCode.IllegalAttemptToChangeAssignmentType);
-                        fsResult.mergeStatusBits(0_400000_000000L);
-                        return false;
-                    }
-                }
-
-                if (fi instanceof AbsoluteDiskItem adi) {
-                    if (adi._node == node) {
-                        var params = new String[]{node.getNodeName()};
-                        fsResult.postMessage(FacStatusCode.DeviceAlreadyInUse, params);
-                        fsResult.mergeStatusBits(0_400000_000000L);
-                        return false;
-                    }
-                }
-
-                if (fi.getFilename().equals(facItem.getFilename())) {
-                    filenameNotUnique = true;
-                }
-            }
-
-            facItems.addFacilitiesItem(facItem);
-        }
-
-        if (filenameNotUnique) {
+        // Is the filename portion of the new facilities item not unique to the run?
+        if (fiTable.getFacilitiesItemByFilename(fileSpecification.getFilename()) != null) {
             fsResult.postMessage(FacStatusCode.FilenameNotUnique);
             fsResult.mergeStatusBits(0_004000_000000L);
         }
+
+        fiTable.addFacilitiesItem(facItem, runControlEntry.getUseItemTable());
 
         // Wait for the unit if necessary...
         var startTime = Instant.now();
@@ -483,7 +480,7 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
         if (!facItem.isAssigned()) {
             LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun promptLoadPack returns false");
             // z-option bail-out
-            facItems.removeFacilitiesItem(facItem);
+            fiTable.removeFacilitiesItem(facItem, runControlEntry.getUseItemTable());
             fsResult.postMessage(FacStatusCode.HoldForDiskUnitRejected);
             fsResult.mergeStatusBits(0_400001_000000L);
             return false;
@@ -491,26 +488,10 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
 
         if (!promptLoadPack(runControlEntry, nodeInfo, disk, packName)) {
             LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun promptLoadPack returns false");
-            facItems.removeFacilitiesItem(facItem);
+            fiTable.removeFacilitiesItem(facItem, runControlEntry.getUseItemTable());
             nodeInfo.setAssignedTo(null);
             var params = new String[]{packName};
             fsResult.postMessage(FacStatusCode.OperatorDoesNotAllowAbsoluteAssign, params);
-            fsResult.mergeStatusBits(0_400000_000000L);
-            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
-                                runControlEntry.getRunId(),
-                                node.getNodeName(),
-                                fsResult.toString());
-            return false;
-        }
-
-        var packInfo = (PackInfo) nodeInfo.getMediaInfo();
-        // TODO do we really want to restrict from using fixed here?
-        if (packInfo.isFixed() && (runControlEntry.getRunType() != RunType.Exec)) {
-            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun pack is fixed");
-            facItems.removeFacilitiesItem(facItem);
-            nodeInfo.setAssignedTo(null);
-            var params = new String[]{packName};
-            fsResult.postMessage(FacStatusCode.DeviceIsFixed, params);
             fsResult.mergeStatusBits(0_400000_000000L);
             LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
                                 runControlEntry.getRunId(),
@@ -742,6 +723,8 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
         var gaveReadKey = givenReadKey != null;
         if (hasReadKey) {
             if (!gaveReadKey && (!rce.isPrivileged() || fsInfo.isGuarded())) {
+                // TODO what to do here? This is listed as an error, but there seem to be circumstances where
+                //  we allow it, setting the file to read-inhibited
                 fsResult.postMessage(FacStatusCode.ReadWriteKeysNeeded);
                 fsResult.mergeStatusBits(0_600000_000000L);
                 postedReadWrite = true;
@@ -771,6 +754,8 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
         var gaveWriteKey = givenWriteKey != null;
         if (hasWriteKey) {
             if (!gaveWriteKey && (!rce.isPrivileged() || fsInfo.isGuarded())) {
+                // TODO what to do here? This is listed as an error, but there seem to be circumstances where
+                //  we allow it, setting the file to write-inhibited
                 if (!postedReadWrite) {
                     fsResult.postMessage(FacStatusCode.ReadWriteKeysNeeded);
                     fsResult.mergeStatusBits(0_600000_000000L);
@@ -818,13 +803,19 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
      */
     private Collection<NodeInfo> getAccessibleFixedDisks() throws ExecStoppedException {
         var list = new LinkedList<NodeInfo>();
+        var execQualifier = Exec.getInstance().getRunControlEntry().getProjectId();
         for (var ni : _nodeGraph.values()) {
             var node = ni.getNode();
             if ((node instanceof DiskDevice)
                 && ((ni.getNodeStatus() == NodeStatus.Up) || (ni.getNodeStatus() == NodeStatus.Suspended))) {
                 list.add(ni);
                 var fsResult = new FacStatusResult();
-                assignDiskUnitToExec(node.getNodeIdentifier(), fsResult);
+                var fileSpec = new FileSpecification(execQualifier,
+                                                     "Fixed$" + node.getNodeName(),
+                                                     null,
+                                                     null,
+                                                     null);
+                assignDiskUnitToExec(fileSpec, node.getNodeIdentifier(), null, fsResult);
             }
         }
         return list;
