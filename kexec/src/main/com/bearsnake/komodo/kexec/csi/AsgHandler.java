@@ -306,6 +306,7 @@ class AsgHandler extends Handler {
                                    fs,
                                    device.getNodeIdentifier(),
                                    packName,
+                                   hp._optionWord,
                                    releaseOnTaskEnd,
                                    doNotHoldRun,
                                    hp._statement._facStatusResult)) {
@@ -452,7 +453,7 @@ class AsgHandler extends Handler {
             return;
         }
 
-        var packIds = new LinkedList<>();
+        var packIds = new LinkedList<String>();
         for (var entry : hp._statement._operandFields.entrySet()) {
             if (entry.getKey().getFieldIndex() == 2) {
                 var packId = entry.getValue();
@@ -498,9 +499,11 @@ class AsgHandler extends Handler {
         var fm = Exec.getInstance().getFacilitiesManager();
         if (fm.assignCatalogedDiskFileToRun(hp._runControlEntry,
                                             fileSpecification,
+                                            hp._optionWord,
                                             iReserve,
                                             eGranularity,
                                             iMaximum,
+                                            packIds,
                                             deleteBehavior,
                                             directoryOnlyBehavior,
                                             saveOnCheckpoint,

@@ -77,6 +77,7 @@ public class FacStatusMessage {
         putWarning(FacStatusCode.FilenameNotUnique, "Filename not unique.");
         putWarning(FacStatusCode.PlacementFieldIgnored, "Placement field ignored.");
 
+        putError(FacStatusCode.AssignMnemonicDoesNotAllowPackIds, "Assign mnemonic does not allow pack-ids.");
         putError(FacStatusCode.AssignMnemonicMustBeSpecifiedWithPackId, "Assign mnemonic must be specified with a packid.");
         putError(FacStatusCode.AssignMnemonicMustBeWordAddressable, "Assign mnemonic must be word addressable.");
         putError(FacStatusCode.AssignMnemonicTooLong, "Assign mnemonic cannot be longer than 6 characters.");

@@ -133,20 +133,6 @@ public class Exec {
 
         _facilitiesManager.startup();
 
-        // temporary TODO
-        var fSpec = new FileSpecification("SYS$", "UNIT$DISK0", null, null, null);
-        var ni = _facilitiesManager.getNodeInfo("DISK0");
-        var fsResult = new FacStatusResult();
-        _facilitiesManager.assignDiskUnitToRun(_runControlEntry,
-                                               fSpec,
-                                               ni.getNode().getNodeIdentifier(),
-                                               "FLOPSY",
-                                               false,
-                                               true,
-                                               fsResult);
-        fsResult.log(Level.Debug, LOG_SOURCE);
-        // end temporary TODO
-
         if (!isJumpKeySet(9) && !isJumpKeySet(13)) {
             // TODO populate rce's with entries from backlog and SMOQUE
             //   well, at some point. probably not here.

@@ -40,10 +40,16 @@ import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.bearsnake.komodo.baselib.Word36.A_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.T_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.X_OPTION;
 
 public class FacilitiesManager implements Manager {
 
@@ -149,11 +155,18 @@ public class FacilitiesManager implements Manager {
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedDiskFileToExec %s", fileSpecification.toString());
 
+        var optionsWord = A_OPTION;
+        if (exclusiveUse) {
+            optionsWord |= X_OPTION;
+        }
+
         var result = assignCatalogedDiskFileToRun(Exec.getInstance().getRunControlEntry(),
                                                   fileSpecification,
+                                                  optionsWord,
                                                   null,
                                                   null,
                                                   null,
+                                                  Collections.emptyList(),
                                                   DeleteBehavior.None,
                                                   DirectoryOnlyBehavior.None,
                                                   false,
@@ -171,9 +184,11 @@ public class FacilitiesManager implements Manager {
     public synchronized boolean assignCatalogedDiskFileToRun(
         final RunControlEntry runControlEntry,
         final FileSpecification fileSpecification,
+        final long optionsWord,
         final Integer initialReserve,  // null if not specified, attempt to change existing value
         final Granularity granularity, // null if not specified, must match existing file otherwise
         final Integer maxGranules,     // null if not specified, attempt to change existing value
+        final List<String> packIds,    // should be empty for fixed, optional for removable
         final DeleteBehavior deleteBehavior,               // D/K options
         final DirectoryOnlyBehavior directoryOnlyBehavior, // E/Y options
         final boolean saveOnCheckpoint,                    // M option (TODO update MFD item?)
@@ -188,6 +203,8 @@ public class FacilitiesManager implements Manager {
                             runControlEntry.getRunId(),
                             fileSpecification.toString());
 
+        // TODO somewhere in here, warning of file already assigned to another run gives 0_000000_100000L
+
         var mm = Exec.getInstance().getMFDManager();
         FileSetInfo fsInfo;
         try {
@@ -198,12 +215,22 @@ public class FacilitiesManager implements Manager {
             return false;
         }
 
+        // If it is fixed, do not accept any pack-ids.
+        if ((fsInfo.getFileType() == FileType.Fixed) && (!packIds.isEmpty())) {
+            fsResult.postMessage(FacStatusCode.AssignMnemonicDoesNotAllowPackIds);
+            fsResult.mergeStatusBits(0_600010_000000L);
+            return false;
+        }
+
+        // Ensure we're not asking to assign a disk file when the file set is tape
         if ((fsInfo.getFileType() != FileType.Fixed) && (fsInfo.getFileType() != FileType.Removable)) {
             fsResult.postMessage(FacStatusCode.AttemptToChangeGenericType);
             fsResult.mergeStatusBits(0_420000_000000L);
             return false;
         }
 
+        // Check read/write keys
+        //  TODO read-inhibit, write-inhibit, but in what circumstance?
         if (!checkKeys(runControlEntry, fsInfo, fileSpecification, fsResult)) {
             return false;
         }
@@ -212,11 +239,13 @@ public class FacilitiesManager implements Manager {
         var fiTable = runControlEntry.getFacilitiesItemTable();
         if (fileSpecification.hasFileCycleSpecification() && fileSpecification.getFileCycleSpecification().isAbsolute()) {
             // This an absolute file cycle request - go get the file cycle info.
+            // If it is *not* fixed and there are pack-ids, do sanity checking on them.
             FileCycleInfo fcInfo;
             try {
                 fcInfo = mm.getFileCycleInfo(fileSpecification.getQualifier(),
                                              fileSpecification.getFilename(),
                                              fileSpecification.getFileCycleSpecification().getCycle());
+                // TODO removable? check pack-ids
             } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
                 // we already checked for file set not existing, but we have to catch it here anyway.
                 fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
@@ -224,25 +253,20 @@ public class FacilitiesManager implements Manager {
                 return false;
             }
 
-            // If it is fixed, do not accept any pack-ids.
-            // If it is *not* fixed and there are pack-ids, do sanity checking on them.
-            //  TODO
-
             // Check the existing facility items to see if this file cycle is already assigned to this run.
-            // If it is,
-            //   change any option-driven settings if necessary
-            //   post already-assigned.
-            // Otherwise
-            //   check public/private
-            //   make sure we're not being asked to change anything in a funny way
-            //   create new fac item with option-driven settings as necessary
-            //   update use-items to point to fac item as necessary
             var existingFacItem = fiTable.getFacilitiesItemByAbsoluteCycle(fileSpecification.getQualifier(),
                                                                            fileSpecification.getFilename(),
                                                                            fileSpecification.getFileCycleSpecification().getCycle());
             if (existingFacItem != null) {
+                // It is already assigned.
+                // a) Change any option-driven settings if necessary, and only as allowed
+                // b) Post already-assigned.
                 // TODO
             } else {
+                // It is not already assigned.
+                // a) Check public/private
+                // b) Make sure we're not being asked to change anything in a funny way
+                // c) Create new fac item with option-driven settings as necessary and add it to the fac item table.
                 // TODO
             }
         } else {
@@ -263,6 +287,9 @@ public class FacilitiesManager implements Manager {
             //   make sure we're not being asked to change anything in a funny way (as above)
             //   create new fac item with option-driven settings as necessary
             //   update use-items to point to fac item as necessary
+            // Somewhere in this mess...
+            //   If it is *not* fixed and there are pack-ids specified, do sanity checking on them.
+            //   Do this at an appropriate point wherever necessary.
             var cycle = fileSpecification.hasFileCycleSpecification()
                 ? fileSpecification.getFileCycleSpecification().getCycle() : 0;
             var existingFacItem = fiTable.getFacilitiesItemByRelativeCycle(fileSpecification.getQualifier(),
@@ -320,10 +347,12 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
                             fileSpecification.toString(),
                             nodeIdentifier);
 
+        var optionsWord = T_OPTION | X_OPTION;
         var result = assignDiskUnitToRun(Exec.getInstance().getRunControlEntry(),
                                          fileSpecification,
                                          nodeIdentifier,
                                          packName,
+                                         optionsWord,
                                          false,
                                          true,
                                          fsResult);
@@ -341,6 +370,7 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
      * @param fileSpecification describes the qualifier, file name, and file cycle for the fac item
      * @param nodeIdentifier node identifier of the device
      * @param packName pack name requested for the device
+     * @param optionsWord options provided when the file was assigned
      * @param releaseOnTaskEnd I-option on assign
      * @param doNotHoldRun Z-option on assign
      * @param fsResult fac status result
@@ -352,6 +382,7 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
         final FileSpecification fileSpecification,
         final int nodeIdentifier,
         final String packName, // only for removable - null (and ignored) for fixed
+        final long optionsWord,
         final boolean releaseOnTaskEnd,
         final boolean doNotHoldRun,
         final FacStatusResult fsResult
