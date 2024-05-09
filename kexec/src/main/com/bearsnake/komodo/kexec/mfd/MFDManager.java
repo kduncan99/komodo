@@ -209,31 +209,39 @@ public class MFDManager implements Manager {
             throw new FileSetDoesNotExistException();
         }
 
+        AcceleratedCycleInfo acInfo = null;
         for (var cycInfo : fsInfo.getCycleInfo()) {
             if (cycInfo.getAbsoluteCycle() == absoluteCycle) {
                 var mainItem0Addr = cycInfo.getMainItem0Address();
-                var acInfo = _acceleratedFileCycles.get(mainItem0Addr);
-                if (acInfo != null) {
-                    var newAsgCount = acInfo.incrementAssignCount();
-                    LogManager.logTrace(LOG_SOURCE, "file cycle assign count = %d", newAsgCount);
-                    return acInfo.getFileCycleInfo();
+                acInfo = _acceleratedFileCycles.get(mainItem0Addr);
+                if (acInfo == null) {
+                    var miChain = getMainItemChain(cycInfo.getMainItem0Address());
+                    var fcInfo = switch (fsInfo.getFileType()) {
+                        case Fixed -> new FixedDiskFileCycleInfo();
+                        case Removable -> new RemovableDiskFileCycleInfo();
+                        case Tape -> new TapeFileCycleInfo();
+                    };
+                    fcInfo.loadFromMainItemChain(miChain);
+                    acInfo = new AcceleratedCycleInfo(fcInfo);
+                    _acceleratedFileCycles.put(mainItem0Addr, acInfo);
                 }
-
-                var miChain = getMainItemChain(cycInfo.getMainItem0Address());
-                var fcInfo = switch (fsInfo.getFileType()) {
-                    case Fixed -> new FixedDiskFileCycleInfo();
-                    case Removable -> new RemovableDiskFileCycleInfo();
-                    case Tape -> new TapeFileCycleInfo();
-                };
-                fcInfo.loadFromMainItemChain(miChain);
-                acInfo = new AcceleratedCycleInfo(fcInfo);
-                acInfo.incrementAssignCount();
-                _acceleratedFileCycles.put(mainItem0Addr, acInfo);
-                return acInfo.getFileCycleInfo();
+                break;
             }
         }
 
-        throw new FileCycleDoesNotExistException();
+        if (acInfo == null) {
+            throw new FileCycleDoesNotExistException();
+        }
+
+        // update assign counts - they are in main item sector 0, so that makes it easier for us.
+        var fcInfo = acInfo.getFileCycleInfo();
+        var cumulativeCount = fcInfo.getCumulativeAssignCount();
+        fcInfo.setCumulativeAssignCount(cumulativeCount + 1);
+        var curCount = acInfo.incrementAssignCount();
+        fcInfo.setCurrentAssignCount(curCount);
+        markDirectorySectorDirty(fcInfo._mainItem0Address);
+
+        return acInfo.getFileCycleInfo();
     }
 
     /**
@@ -251,8 +259,13 @@ public class MFDManager implements Manager {
                             fcInfo.getAbsoluteCycle());
 
         var acInfo = _acceleratedFileCycles.get(fcInfo._mainItem0Address);
-        if ((acInfo != null) && (acInfo.decrementAssignCount() == 0)) {
-            _acceleratedFileCycles.remove(fcInfo._mainItem0Address);
+        if (acInfo != null) {
+            var newCount = acInfo.decrementAssignCount();
+            fcInfo.setCurrentAssignCount(newCount);
+            markDirectorySectorDirty(fcInfo._mainItem0Address);
+            if (newCount == 0) {
+                _acceleratedFileCycles.remove(fcInfo._mainItem0Address);
+            }
         }
     }
 
@@ -648,7 +661,8 @@ public class MFDManager implements Manager {
             var fr = new FacStatusResult();
             var result = e.getFacilitiesManager().assignCatalogedDiskFileToExec(fs, true, fr);
             if (!result) {
-                // TODO stop the exec
+                e.stop(StopCode.FileAssignErrorOccurredDuringSystemInitialization);
+                throw new ExecStoppedException();
             }
         } catch (AbsoluteCycleOutOfRangeException
                  | AbsoluteCycleConflictException
@@ -1057,8 +1071,6 @@ public class MFDManager implements Manager {
         int ex = 8;
         MFDRelativeAddress currentReelTableAddr = null;
         ArraySlice currentReelTable = null;
-
-        long expectedNextTrackId = 0; // this does not need an initial value
 
         while (rx < reelTable.size()) {
             if (ex == 8) {
