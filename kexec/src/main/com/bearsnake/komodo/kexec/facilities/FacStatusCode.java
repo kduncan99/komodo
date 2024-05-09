@@ -31,6 +31,8 @@ public enum FacStatusCode {
     FilenameNotKnown(0120433),
     FilenameNotUnique(0120533),
     PlacementFieldIgnored(0121133),
+    ReadKeyExists(0121333),
+    WriteKeyExists(0122333),
 
     // Errors
     DeviceAlreadyInUseByThisRun(0200333),

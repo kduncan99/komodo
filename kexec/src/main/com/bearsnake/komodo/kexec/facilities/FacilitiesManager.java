@@ -230,11 +230,11 @@ public class FacilitiesManager implements Manager {
         }
 
         // Check read/write keys
-        //  TODO read-inhibit, write-inhibit, but in what circumstance?
-        //     is it possible it is a warning at the command level, but still aborts the task at the task level?
         if (!checkKeys(runControlEntry, fsInfo, fileSpecification, fsResult)) {
             return false;
         }
+        var readInhibit = (fsResult.getStatusWord() & 0_000100_000000L) != 0;
+        var writeInhibit = (fsResult.getStatusWord() & 0_000200_000000L) != 0;
 
         FacilitiesItem facItem;
         var fiTable = runControlEntry.getFacilitiesItemTable();
@@ -739,6 +739,8 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
      * Checks the read/write keys provided (or not) in a FileSpecification object
      * against the keys which do (or do not) exist in the FileSetInfo object.
      * Posts any fac results necessary, aborts the run if necessary, etc.
+     * Caller should check bits 10 and 11 of the result code to determine whether the file should be
+     * assigned write-inhibited and/or read-inhibited, respectively.
      * @return true if no problems exist, else false
      */
     private boolean checkKeys(
@@ -748,19 +750,14 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
         final FacStatusResult fsResult
     ) {
         var err = false;
-        var postedReadWrite = false;
         var existingReadKey = fsInfo.getReadKey();
         var hasReadKey = !existingReadKey.isEmpty();
         var givenReadKey = fileSpec.getReadKey();
         var gaveReadKey = givenReadKey != null;
         if (hasReadKey) {
             if (!gaveReadKey && (!rce.isPrivileged() || fsInfo.isGuarded())) {
-                // TODO what to do here? This is listed as an error, but there seem to be circumstances where
-                //  we allow it, setting the file to read-inhibited
-                fsResult.postMessage(FacStatusCode.ReadWriteKeysNeeded);
-                fsResult.mergeStatusBits(0_600000_000000L);
-                postedReadWrite = true;
-                err = true;
+                fsResult.postMessage(FacStatusCode.ReadKeyExists);
+                fsResult.mergeStatusBits(0_000100_000000L);
             } else if (!existingReadKey.equalsIgnoreCase(givenReadKey)) {
                 fsResult.postMessage(FacStatusCode.IncorrectReadKey);
                 fsResult.mergeStatusBits(0_401000_000000L);
@@ -786,13 +783,8 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
         var gaveWriteKey = givenWriteKey != null;
         if (hasWriteKey) {
             if (!gaveWriteKey && (!rce.isPrivileged() || fsInfo.isGuarded())) {
-                // TODO what to do here? This is listed as an error, but there seem to be circumstances where
-                //  we allow it, setting the file to write-inhibited
-                if (!postedReadWrite) {
-                    fsResult.postMessage(FacStatusCode.ReadWriteKeysNeeded);
-                    fsResult.mergeStatusBits(0_600000_000000L);
-                }
-                err = true;
+                fsResult.postMessage(FacStatusCode.WriteKeyExists);
+                fsResult.mergeStatusBits(0_000200_000000L);
             } else if (!existingWriteKey.equalsIgnoreCase(givenWriteKey)) {
                 fsResult.postMessage(FacStatusCode.IncorrectWriteKey);
                 fsResult.mergeStatusBits(0_400400_000000L);
