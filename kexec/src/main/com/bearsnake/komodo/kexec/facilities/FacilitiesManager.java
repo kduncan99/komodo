@@ -824,7 +824,15 @@ E:242233 Attempt to change maximum granules on a write inhibited file.
             if ((ni instanceof DeviceNodeInfo dni)
                 && (ni.getNode() instanceof TapeDevice td)
                 && td.isReady()) {
-                // TODO set up and route channel program to unmount the tape device
+
+                var cp = new ChannelProgram().setNodeIdentifier(ni.getNode().getNodeIdentifier())
+                                             .setFunction(ChannelProgram.Function.Control)
+                                             .setSubFunction(ChannelProgram.SubFunction.Unload);
+                try {
+                    routeIo(cp);
+                } catch (NoRouteForIOException ex) {
+                    LogManager.logCatching(LOG_SOURCE, ex);
+                }
             }
         }
     }

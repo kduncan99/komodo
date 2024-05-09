@@ -13,13 +13,25 @@ public class DiskChannel extends Channel {
     }
 
     @Override
-    public boolean canAttach(Device device) {
+    public boolean canAttach(
+        final Device device
+    ) {
         return device instanceof DiskDevice;
     }
 
     @Override
-    public void doRead(final ChannelProgram channelProgram,
-                       final Device device) {
+    public void doControl(
+        final ChannelProgram channelProgram,
+        final Device device
+    ) {
+        channelProgram.setIoStatus(IoStatus.InvalidFunction);
+    }
+
+    @Override
+    public void doRead(
+        final ChannelProgram channelProgram,
+        final Device device
+    ) {
         if (channelProgram._controlWords.isEmpty()) {
             channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
             return;
@@ -134,8 +146,18 @@ public class DiskChannel extends Channel {
     }
 
     @Override
-    public void doWrite(final ChannelProgram channelProgram,
-                        final Device device) {
+    public void doReadBackward(
+        final ChannelProgram channelProgram,
+        final Device device
+    ) {
+        channelProgram.setIoStatus(IoStatus.InvalidFunction);
+    }
+
+    @Override
+    public void doWrite(
+        final ChannelProgram channelProgram,
+        final Device device
+    ) {
         if (channelProgram._controlWords.isEmpty()) {
             channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
             return;

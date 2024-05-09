@@ -11,19 +11,41 @@ public class TapeChannel extends Channel {
     }
 
     @Override
-    public boolean canAttach(Device device) {
+    public boolean canAttach(
+        Device device
+    ) {
         return device instanceof TapeDevice;
     }
 
     @Override
-    public void doRead(final ChannelProgram channelProgram,
-                       final Device device) {
+    public void doControl(
+        final ChannelProgram channelProgram,
+        final Device device
+    ) {
         // TODO
     }
 
     @Override
-    public void doWrite(final ChannelProgram channelProgram,
-                        final Device device) {
+    public void doRead(
+        final ChannelProgram channelProgram,
+        final Device device
+    ) {
+        // TODO
+    }
+
+    @Override
+    public void doReadBackward(
+        final ChannelProgram channelProgram,
+        final Device device
+    ) {
+        // TODO
+    }
+
+    @Override
+    public void doWrite(
+        final ChannelProgram channelProgram,
+        final Device device
+    ) {
         // TODO
     }
 

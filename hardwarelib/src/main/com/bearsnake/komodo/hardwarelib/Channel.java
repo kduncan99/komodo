@@ -26,7 +26,9 @@ public abstract class Channel extends Node {
     }
 
     public abstract boolean canAttach(final Device device);
+    public abstract void doControl(ChannelProgram channelProgram, Device device);
     public abstract void doRead(ChannelProgram channelProgram, Device device);
+    public abstract void doReadBackward(ChannelProgram channelProgram, Device device);
     public abstract void doWrite(ChannelProgram channelProgram, Device device);
     public abstract ChannelType getChannelType();
     public HashSet<Device> getDevices() { return new HashSet<>(_devices.values()); }
@@ -42,9 +44,11 @@ public abstract class Channel extends Node {
             channelProgram.setIoStatus(IoStatus.DeviceIsNotAttached);
         } else {
             switch (channelProgram._function) {
-            case Read -> doRead(channelProgram, dev);
-            case Write -> doWrite(channelProgram, dev);
-            default -> channelProgram.setIoStatus(IoStatus.InvalidFunction);
+                case Control -> doControl(channelProgram, dev);
+                case Read -> doRead(channelProgram, dev);
+                case ReadBackward -> doReadBackward(channelProgram, dev);
+                case Write -> doWrite(channelProgram, dev);
+                default -> channelProgram.setIoStatus(IoStatus.InvalidFunction);
             }
         }
 
