@@ -210,31 +210,6 @@ class AsgHandler extends Handler {
         }
     }
 
-    // TODO might use some of these...
-    //E:200533 Device not available on control unit unit-Name.
-    //E:200733 Insufficient number of units available on control unit unit-Name.
-    //E:201033 asg-mnem is not a configured assign mnemonic.
-    //E:201133 device-Name is not a configured Name.
-    //E:201333 The operator does not allow absolute assignment of pack pack-id.
-    //E:202233 Pack pack-id is not a removable pack.
-    //E:202533 reel nnnnnn already in use by this run.
-    //E:203133 unit-Name is not in the reserved state.
-    //E:203233 device-Name is not up.
-    //E:203333 Name is not in the up or reserved state.
-    //E:240133 Absolute device specification is not allowed on cataloged file.
-    //E:240233 Absolute assignment of tape not allowed with CY or UY options.
-    //E:240333 Illegal options on absolute assignment.
-    //E:245433 Insufficient number of units available.
-    //E:246733 Logical channel not allowed with absolute device assign.
-    //E:247633 Maximum number of packids exceeded.
-    //E:247733 Maximum number of reelids exceeded.
-    //E:250233 Number of units not allowed with absolute device assign.
-    //E:251633 Packid is required.
-    //E:252633 Quota set does not allow absolute device assignment.
-    //E:254433 Security does not allow absolute device assignment.
-    //E:255733 Image contains an undefined field or subfield.
-    //E:256033 Requested unit(s) not available.
-
     private void handleAbsoluteChannel(final HandlerPacket hp,
                                        final FileSpecification fs,
                                        final NodeInfo nodeInfo) {
@@ -375,7 +350,7 @@ class AsgHandler extends Handler {
 
         switch (cfg.getMnemonicType(equip)) {
             case SECTOR_ADDRESSABLE_DISK,
-                WORD_ADDRESSABLE_DISK -> handleCatalogedDiskFile(hp, fileSpecification);
+                WORD_ADDRESSABLE_DISK -> handleCatalogedDiskFile(hp, fileSpecification, equip);
             case TAPE -> handleCatalogedTapeFile(hp, fileSpecification);
             default -> {
                 hp._statement._facStatusResult.postMessage(FacStatusCode.MnemonicIsNotConfigured);
@@ -389,7 +364,8 @@ class AsgHandler extends Handler {
      */
     private void handleCatalogedDiskFile(
         final HandlerPacket hp,
-        final FileSpecification fileSpecification
+        final FileSpecification fileSpecification,
+        final String equip
     ) throws ExecStoppedException {
         // Validate options and subfields
         long allowedOpts = A_OPTION | I_OPTION | Z_OPTION
@@ -453,6 +429,8 @@ class AsgHandler extends Handler {
             return;
         }
 
+        var placement = hp._statement._operandFields.get(new SubfieldSpecifier(1, 4));
+
         var packIds = new LinkedList<String>();
         for (var entry : hp._statement._operandFields.entrySet()) {
             if (entry.getKey().getFieldIndex() == 2) {
@@ -500,9 +478,11 @@ class AsgHandler extends Handler {
         if (fm.assignCatalogedDiskFileToRun(hp._runControlEntry,
                                             fileSpecification,
                                             hp._optionWord,
+                                            equip,
                                             iReserve,
                                             eGranularity,
                                             iMaximum,
+                                            placement,
                                             packIds,
                                             deleteBehavior,
                                             directoryOnlyBehavior,
