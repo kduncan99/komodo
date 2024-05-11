@@ -11,8 +11,6 @@ public class FixedDiskFileCycleInfo extends DiskFileCycleInfo {
 
     private UnitSelectionIndicators _unitSelectionIndicators = new UnitSelectionIndicators();
 
-    FixedDiskFileCycleInfo(){}
-
     public final UnitSelectionIndicators getUnitSelectionIndicators() {
         return _unitSelectionIndicators;
     }

@@ -5,14 +5,11 @@
 package com.bearsnake.komodo.kexec.facilities.facItems;
 
 import java.io.PrintStream;
-import java.util.Collection;
-import java.util.HashSet;
 
 public abstract class FacilitiesItem {
 
     private Integer _absoluteCycle;
     private String _filename;
-    private final HashSet<String> _internalNames = new HashSet<>();
     private boolean _isTemporary;
     private long _optionsWord;
     private String _qualifier;
@@ -31,16 +28,10 @@ public abstract class FacilitiesItem {
             sb.append(" rel=").append(_relativeCycle);
         }
         out.printf("%s%s\n", indent, sb);
-
-        if (hasInternalNames()) {
-            var nameStr = String.join(" ", getInternalNames());
-            out.printf("%s  IntNames:%s\n", indent, nameStr);
-        }
     }
 
     public final int getAbsoluteCycle() { return _absoluteCycle; }
     public final String getFilename() { return _filename; }
-    public final Collection<String> getInternalNames() { return new HashSet<>(_internalNames); }
     public final long getOptionsWord() { return _optionsWord; }
     public final int getRelativeCycle() { return _relativeCycle; }
     public final String getQualifier() { return _qualifier; }
@@ -56,6 +47,5 @@ public abstract class FacilitiesItem {
     public final FacilitiesItem setReleaseOnTaskEnd(final boolean value) { _releaseOnTaskEnd = value; return this; }
 
     public final boolean hasAbsoluteCycle() { return _absoluteCycle != null; }
-    public final boolean hasInternalNames() { return !_internalNames.isEmpty(); }
     public final boolean hasRelativeCycle() { return _relativeCycle != null; };
 }

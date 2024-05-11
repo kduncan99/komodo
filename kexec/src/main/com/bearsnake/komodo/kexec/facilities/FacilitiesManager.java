@@ -31,6 +31,8 @@ import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
+import com.bearsnake.komodo.kexec.facilities.facItems.FixedDiskItemFile;
+import com.bearsnake.komodo.kexec.facilities.facItems.RemovableDiskItemFile;
 import com.bearsnake.komodo.kexec.mfd.DiskFileCycleInfo;
 import com.bearsnake.komodo.kexec.mfd.FileCycleInfo;
 import com.bearsnake.komodo.kexec.mfd.FileSetInfo;
@@ -149,6 +151,7 @@ public class FacilitiesManager implements Manager {
     // Services interface
     // -------------------------------------------------------------------------
 
+    // short-cut for exec assign of cataloged fixed disk file for system purposes.
     public synchronized boolean assignCatalogedDiskFileToExec(
         final FileSpecification fileSpecification,
         final boolean exclusiveUse,
@@ -161,9 +164,12 @@ public class FacilitiesManager implements Manager {
             optionsWord |= X_OPTION;
         }
 
-        var result = assignCatalogedDiskFileToRun(Exec.getInstance().getRunControlEntry(),
+        var e = Exec.getInstance();
+        var cfg = e.getConfiguration();
+        var result = assignCatalogedDiskFileToRun(e.getRunControlEntry(),
                                                   fileSpecification,
                                                   optionsWord,
+                                                  cfg.getMassStorageDefaultMnemonic(),
                                                   null,
                                                   null,
                                                   null,
@@ -186,6 +192,7 @@ public class FacilitiesManager implements Manager {
         final RunControlEntry runControlEntry,
         final FileSpecification fileSpecification,
         final long optionsWord,        // only to be used to populate a new facItem
+        final String mnemonic,         // type/assign-mnemonic
         final Integer initialReserve,  // null if not specified, attempt to change existing value
         final Granularity granularity, // null if not specified, must match existing file otherwise
         final Integer maxGranules,     // null if not specified, attempt to change existing value
@@ -243,6 +250,8 @@ public class FacilitiesManager implements Manager {
             || (directoryOnlyBehavior != DirectoryOnlyBehavior.None);
         var alreadyAssigned = false;
 
+        var isRem = fsInfo.getFileType() == FileType.Removable;
+
         // --------------------------------------------------------
         // Determine whether the indicated file cycle exists,
         // then get fcInfo and facItem accordingly
@@ -267,32 +276,47 @@ public class FacilitiesManager implements Manager {
 
             // If this is a removable disk set, check the pack-ids on the file cycle against the
             // provided pack-ids (if any).
-            if ((fsInfo.getFileType() == FileType.Removable) && !packIds.isEmpty()) {
+            if (isRem && !packIds.isEmpty()) {
                 // TODO REM check pack-ids
             }
 
             // Check the existing facility items to see if this file cycle is already assigned to this run.
-            var existingFacItem = fiTable.getFacilitiesItemByAbsoluteCycle(fileSpecification.getQualifier(),
-                                                                           fileSpecification.getFilename(),
-                                                                           fileSpecification.getFileCycleSpecification().getCycle());
-            if (existingFacItem != null) {
+            facItem = (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByAbsoluteCycle(fileSpecification.getQualifier(),
+                                                                                        fileSpecification.getFilename(),
+                                                                                        fileSpecification.getFileCycleSpecification().getCycle());
+            if (facItem != null) {
                 alreadyAssigned = true;
             } else {
-                // It is not already assigned, but it does exist
-                // a) Check public/private
-                // b) was it previously read and/or write inhibited, but no longer? (by providing r/w keys)
-                // c) Make sure we're not being asked to change anything in a funny way
-                // d) Create new fac item with option-driven settings as necessary and add it to the fac item table.
+                // It is not already assigned, but it does exist -
+                // we have fcInfo for the existing file set, we just need a facItem.
+
+                // Check public/private
                 if (!checkPrivateAccess(runControlEntry, fcInfo, fsResult)) {
                     return false;
                 }
+
+                // Is the file read-only or write-only?
+                readInhibit |= fcInfo.getInhibitFlags().isWriteOnly();
+                writeInhibit |= fcInfo.getInhibitFlags().isReadOnly();
+
+                // Create new fac item with option-driven settings as necessary and add it to the fac item table.
+                facItem = isRem ? new RemovableDiskItemFile() : new FixedDiskItemFile();
+                facItem.setQualifier(fcInfo.getQualifier())
+                       .setFilename(fcInfo.getFilename())
+                       .setAbsoluteCycle(fcInfo.getAbsoluteCycle())
+                       .setIsTemporary(false)
+                       .setOptionsWord(optionsWord)
+                       .setReleaseOnTaskEnd(releaseOnTaskEnd);
+                facItem.setDeleteOnAnyRunTermination(deleteBehavior == DeleteBehavior.DeleteOnAnyRunTermination)
+                       .setDeleteOnNormalRunTermination(deleteBehavior == DeleteBehavior.DeleteOnNormalRunTermination)
+                       .setIsExclusive(exclusiveUse)
+                       .setIsReadable(!readInhibit)
+                       .setIsWriteable(!writeInhibit);
             }
         } else {
             // It's either relative or unspecified. If unspecified, we treat it like relative +0.
             // Check the fac items to see if the file is already assigned with this relative cycle number.
-            // If so,
-            //   change any option-driven settings if necessary
-            //   post already-assigned.
+            // If so, we are done here.
             // Otherwise, get the absolute cycle from the fcInfo, and go through the fac items again...
             // ...If it is assigned (comparing the absolute cycles)
             //   with a different relative cycle, post f-cycle conflict and stop
@@ -306,13 +330,81 @@ public class FacilitiesManager implements Manager {
             //   update use-items to point to fac item as necessary
             var cycle = fileSpecification.hasFileCycleSpecification()
                 ? fileSpecification.getFileCycleSpecification().getCycle() : 0;
-            var existingFacItem = fiTable.getFacilitiesItemByRelativeCycle(fileSpecification.getQualifier(),
-                                                                           fileSpecification.getFilename(),
-                                                                           cycle);
-            if (existingFacItem != null) {
-                // TODO STUFF as listed above
+            facItem =
+                (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByRelativeCycle(fileSpecification.getQualifier(),
+                                                                                  fileSpecification.getFilename(),
+                                                                                  cycle);
+            if (facItem != null) {
+                alreadyAssigned = true;
+                var fsci = fsInfo.getCycleInfo().get(facItem.getAbsoluteCycle());
+                try {
+                    fcInfo = (DiskFileCycleInfo) mm.getFileCycleInfo(fsInfo.getQualifier(),
+                                                                     fsInfo.getFilename(),
+                                                                     fsci.getAbsoluteCycle());
+                } catch (FileSetDoesNotExistException | FileCycleDoesNotExistException ex) {
+                    // TODO this should not happen - stop the exec
+                    return false;
+                }
             } else {
-                // TODO STUFF as listed above
+                if (cycle == 1) {
+                    // @ASG,A of +1 cycle is not allowed unless we already have it assigned,
+                    // which is already accounted for in the code just above, and it cannot be assigned by
+                    // absolute cycle - it would have been by +1.
+                    // TODO fail
+                    return false;
+                }
+
+                if (Math.abs(cycle) >= fsInfo.getCycleInfo().size()) {
+                    // Relative cycle does not exist
+                    // TODO fail - do we need to fail differently if the cycle is out of range?
+                    return false;
+                }
+
+                // Do we already have it assigned by the absolute cycle?
+                var fsci = fsInfo.getCycleInfo().get(Math.abs(cycle));
+                try {
+                    fcInfo = (DiskFileCycleInfo) mm.getFileCycleInfo(fsInfo.getQualifier(),
+                                                                     fsInfo.getFilename(),
+                                                                     fsci.getAbsoluteCycle());
+                } catch (FileSetDoesNotExistException | FileCycleDoesNotExistException ex) {
+                    // TODO this should not happen - stop the exec
+                    return false;
+                }
+
+                facItem =
+                    (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByRelativeCycle(fileSpecification.getQualifier(),
+                                                                                      fileSpecification.getFilename(),
+                                                                                      fsci.getAbsoluteCycle());
+                if (facItem != null) {
+                    // yes - attach this relative cycle to the already-existing fac item.
+                    // If it already has a relative cycle, it would have to be the same as this one, so no worries.
+                    alreadyAssigned = true;
+                    facItem.setRelativeCycle(cycle);
+                } else {
+                    // okay, so we need a new facItem.
+                    // Check public/private
+                    if (!checkPrivateAccess(runControlEntry, fcInfo, fsResult)) {
+                        return false;
+                    }
+
+                    // Is the file read-only or write-only?
+                    readInhibit |= fcInfo.getInhibitFlags().isWriteOnly();
+                    writeInhibit |= fcInfo.getInhibitFlags().isReadOnly();
+
+                    // Create new fac item with option-driven settings as necessary and add it to the fac item table.
+                    facItem = isRem ? new RemovableDiskItemFile() : new FixedDiskItemFile();
+                    facItem.setQualifier(fcInfo.getQualifier())
+                           .setFilename(fcInfo.getFilename())
+                           .setAbsoluteCycle(fcInfo.getAbsoluteCycle())
+                           .setIsTemporary(false)
+                           .setOptionsWord(optionsWord)
+                           .setReleaseOnTaskEnd(releaseOnTaskEnd);
+                    facItem.setDeleteOnAnyRunTermination(deleteBehavior == DeleteBehavior.DeleteOnAnyRunTermination)
+                           .setDeleteOnNormalRunTermination(deleteBehavior == DeleteBehavior.DeleteOnNormalRunTermination)
+                           .setIsExclusive(exclusiveUse)
+                           .setIsReadable(!readInhibit)
+                           .setIsWriteable(!writeInhibit);
+                }
             }
         }
 
@@ -321,7 +413,21 @@ public class FacilitiesManager implements Manager {
         // file cycle information for already existing file cycles,
         // and some general knowledge for both already-existing and
         // to-be existing file cycles.
+        // These are failures which should be detected before
+        // attempting to wait on facilities.
         // --------------------------------------------------------
+
+        // What to do if E,Y options are different b/w initial and subsequent assign of a cycle? Nothing.
+        //   If previously assigned E and/or Y, subsequent assign leaves the resulting behavior in place
+        //   If previously assigned without E or Y, subsequent assign with E and/or Y has no effect
+
+        // What to do if D,K options are different b/w initial and subsequent assign of a cycle?
+        //   New D or K should override any previous behavior indicated by D or K, or lack thereof.
+        //   Lack of D or K should have no effect on current behavior established by previous D or K.
+
+        // The above notwithstanding, we do have this to post (but under what conditions?):
+        // W:122533 Option conflict with previous assign options, all options ignored except i, q, x, y, or z.
+        //   TODO
 
         // Is file disabled?
         var df = fcInfo.getDisableFlags();
@@ -370,25 +476,30 @@ public class FacilitiesManager implements Manager {
         if ((granularity != null) && (granularity != fcInfo.getPCHARFlags().getGranularity())) {
             fsResult.postMessage(FacStatusCode.AttemptToChangeGranularity);
             fsResult.mergeStatusBits(0_600000_000000L);
-            //   TODO E:241733 Attempt to change granularity.
+            return false;
         }
-
-        // Attempt to change init reserve or max on write-inhibited file?
-
-        //   TODO E:242033 Attempt to change initial reserve of write inhibited file.
-        //   TODO E:242233 Attempt to change maximum granules on a write inhibited file.
 
         // Bad attempt to change init-reserve of max?
         //   TODO E:242133 Attempt to change maximum granules of a file cataloged under a different account.
         //     there is some other trouble with changing max to less than highest,
         //     or init to more than max, or some such combinations of nonsense
 
+        // Attempt to change init reserve or max on write-inhibited file?
+        // Make it happen unless the file is write-inhibited. Otherwise, fail.
+        //   TODO E:242033 Attempt to change initial reserve of write inhibited file.
+        //   TODO E:242233 Attempt to change maximum granules on a write inhibited file.
+
         if (alreadyAssigned) {
             // generic stuff for already-assigned file, which occurs before any putative wait
-            //   TODO attempt to change read-inhibited to not, or write-inhibited to not, etc?
-            //   TODO anything else?
+            // Attempt to set read-inhibited or write-inhibited?
+            if (readInhibit && facItem.isReadable()) {
+                facItem.setIsReadable(false);
+            }
+            if (writeInhibit && facItem.isWriteable()) {
+                facItem.setIsWriteable(false);
+            }
+
         } else {
-            // generic stuff for not-already-assigned file which occurs before any putative wait
             // Is file in to-be-cataloged state? What do do in this case?
             //   TODO
 
@@ -398,24 +509,79 @@ public class FacilitiesManager implements Manager {
                 fsResult.mergeStatusBits(0_400000_040000L); // TODO not sure this is the right value
                 return false;
             }
+        }
 
-            // Does there need to be a hold put in place? If so, do it.
-            //   TODO
+        // Is the file unloaded? If so, and it's not already assigned, we either fail or start a rollback.
+        // If it *is* already assigned, we can just drop through as the current facItem should already have
+        // all the rollback waiting states set properly.
+        if (fcInfo.getDescriptorFlags().isUnloaded()
+            && !alreadyAssigned
+            && (directoryOnlyBehavior == DirectoryOnlyBehavior.None)) {
+            if (doNotHoldRun) {
+                // TODO reject the assignment
+                return false;
+            }
+            if (!facItem.isWaitingForRollback()) {
+                facItem.setIsWaitingForRollback(true);
+                // TODO update rce for hold condition...?
+                // TODO initiate rollback
+            }
         }
 
         // --------------------------------------------------------
-        // Holds which might be required...
-        // mostly just waiting on exclusive use and/or rollback.
-        // Also waiting for packs (rarely occurs) for rem disk files.
+        // Checking hold conditions which might be required
+        // --------------------------------------------------------
+
+        // Are we asking for x-use of a file assigned elsewhere?
+        // This is applicable even if the file is already assigned, because we might be applying x-use now,
+        // where it wasn't applied previously.
+        if (exclusiveUse) {
+            if (alreadyAssigned ? fcInfo.getCurrentAssignCount() > 1 : fcInfo.getCurrentAssignCount() > 0) {
+                if (doNotHoldRun) {
+                    // TODO reject the assignment
+                    return false;
+                }
+
+                if (!facItem.isWaitingForExclusiveUse()) {
+                    // TODO update rce for hold condition
+                }
+            }
+        }
+
+        // Are we waiting, or do we need to wait, for a file which is exclusively assigned elsewhere?
+        // If alreadyAssigned is set, then we don't worry about it, because the facItem should already
+        // be set to the correct states.
+        if (!alreadyAssigned && (fcInfo.getInhibitFlags().isAssignedExclusively())) {
+            if (doNotHoldRun) {
+                // TODO reject the assignment
+                return false;
+            }
+
+            // TODO update rce for hold condition
+        }
+
+        // If we are removable, do we need to wait for any packs? Does that even apply here? How?
+        //   TODO
+
+        // --------------------------------------------------------
+        // Now deal with any holds which might be required...
+        // Mostly just waiting on exclusive use and/or rollback,
+        // But also waiting for packs (rarely occurs) for rem disk files.
         // --------------------------------------------------------
 
         // Is there a hold in place? If so, wait on it.
-        // TODO
+        while (facItem.isWaiting()) {
+            // TODO all the waiting stuff goes here
+        }
 
         // --------------------------------------------------------
         // Final stuff to be done (mostly just intelligent posting
         // of various warnings which apply).
         // --------------------------------------------------------
+
+        if (releaseOnTaskEnd) {
+            facItem.setReleaseOnTaskEnd(true);
+        }
 
         if (alreadyAssigned) {
             // post-wait generic stuff for already assigned disk file
@@ -423,28 +589,33 @@ public class FacilitiesManager implements Manager {
             fsResult.mergeStatusBits(0_100000_000000L);
 
             // Is X-option specified and already exclusive? post warning
-            if (exclusiveUse && facItem.isExclusive()) {
-                fsResult.postMessage(FacStatusCode.FileAlreadyExclusivelyAssigned);
-                fsResult.mergeStatusBits(0_002000_000000L);
+            if (exclusiveUse) {
+                if (facItem.isExclusive()) {
+                    fsResult.postMessage(FacStatusCode.FileAlreadyExclusivelyAssigned);
+                    fsResult.mergeStatusBits(0_002000_000000L);
+                } else {
+                    facItem.setIsExclusive(true);
+                }
             }
 
-            // TODO anything else?
-        } else {
-            // Is file already assigned to some other run?
+            // Is file already assigned to some other run? (it *is* assigned to us already)
             if (fcInfo.getCurrentAssignCount() > 1) {
                 fsResult.postMessage(FacStatusCode.FileAlreadyAssignedToAnotherRun);
                 fsResult.mergeStatusBits(0_000000_100000L);
             }
+        } else {
+            // Is file already assigned to some other run? (it's not assigned to us in any case)
+            if (fcInfo.getCurrentAssignCount() > 0) {
+                fsResult.postMessage(FacStatusCode.FileAlreadyAssignedToAnotherRun);
+                fsResult.mergeStatusBits(0_000000_100000L);
+            }
 
-            // post-wait generic stuff for not already assigned disk file
             // Is filename portion not unique compared to some other facItem?
-            //   TODO W:120533 Filename not unique. / merge 0_001000_000000L
+            // TODO W:120533 Filename not unique. / merge 0_001000_000000L
 
             // Accelerate it via MFD (it should not have been yet).
-            // TODO anything else?
+            // TODO
         }
-
-        // TODO post messages if read-inhibited, write-inhibited
 
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s result:%s",
                             runControlEntry.getRunId(),
@@ -575,6 +746,7 @@ public class FacilitiesManager implements Manager {
         var facItem = new AbsoluteDiskItem(node, packName);
         facItem.setQualifier(fileSpecification.getQualifier())
                .setFilename(fileSpecification.getFilename())
+               .setOptionsWord(optionsWord)
                .setIsTemporary(true)
                .setReleaseOnTaskEnd(releaseOnTaskEnd);
         if (fileSpecification.hasFileCycleSpecification()) {

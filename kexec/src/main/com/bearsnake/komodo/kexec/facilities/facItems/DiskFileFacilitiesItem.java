@@ -4,8 +4,6 @@
 
 package com.bearsnake.komodo.kexec.facilities.facItems;
 
-import com.bearsnake.komodo.hardwarelib.Node;
-
 import java.io.PrintStream;
 
 public abstract class DiskFileFacilitiesItem extends FacilitiesItem {
@@ -19,17 +17,19 @@ public abstract class DiskFileFacilitiesItem extends FacilitiesItem {
     protected boolean _waitingForExclusiveUse;     // some other run(s) has/have assigned the file.
     protected boolean _waitingForRollback;         // file is rolled out
 
-    public DiskFileFacilitiesItem(
-        final Node node,
-        final String requestedPackName
-    ) {
-    }
-
     @Override
     public void dump(final PrintStream out,
                      final String indent) {
         super.dump(out, indent);
-//        out.printf("%s  node:%s reqPack:%s asg:%s\n", indent, _node.getNodeName(), _requestedPackName, _isAssigned);
+        out.printf("%s  delAnyTerm:%s delNormTerm:%s excl:%s rd:%s wr:%s\n",
+                   indent, _deleteOnAnyRunTermination, _deleteOnNormalRunTermination,
+                   _isExclusive, _isReadable, _isWriteable);
+        if (_waitingForExclusiveRelease || _waitingForExclusiveUse || _waitingForRollback) {
+            out.printf("%s  HOLDS:%s%s%s\n", indent,
+                       _waitingForExclusiveRelease ? " X-USE-REL" : "",
+                       _waitingForExclusiveUse ? " X-USE" : "",
+                       _waitingForRollback ? " ROLBAK" : "");
+        }
     }
 
     public final boolean deleteOnAnyRunTermination() { return _deleteOnAnyRunTermination; }
@@ -40,6 +40,10 @@ public abstract class DiskFileFacilitiesItem extends FacilitiesItem {
     public final boolean isWaitingForExclusiveUse() { return _waitingForExclusiveRelease; }
     public final boolean isWaitingForRollback() { return _waitingForRollback; }
     public final boolean isWriteable() { return _isWriteable; }
+
+    public boolean isWaiting() {
+        return _waitingForExclusiveRelease | _waitingForExclusiveUse | _waitingForRollback;
+    }
 
     public final DiskFileFacilitiesItem setDeleteOnAnyRunTermination(final boolean value) { _deleteOnAnyRunTermination = value; return this; }
     public final DiskFileFacilitiesItem setDeleteOnNormalRunTermination(final boolean value) { _deleteOnNormalRunTermination = value; return this; }
