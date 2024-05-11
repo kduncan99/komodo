@@ -75,8 +75,10 @@ public class FacStatusMessage {
         putWarning(FacStatusCode.FileAlreadyAssigned, "File is already assigned.");
         putWarning(FacStatusCode.FileAlreadyAssignedToAnotherRun, "File is assigned to another run.");
         putWarning(FacStatusCode.FileAlreadyExclusivelyAssigned, "X option ignored, file already exclusively assigned by this run.");
+        putWarning(FacStatusCode.FileAssignedDuringSystemFailure, "File was assigned during system failure.");
         putWarning(FacStatusCode.FilenameNotKnown, "Filename not known to this run.");
         putWarning(FacStatusCode.FilenameNotUnique, "Filename not unique.");
+        putWarning(FacStatusCode.FileUnloaded, "File is unloaded.");
         putWarning(FacStatusCode.PlacementFieldIgnored, "Placement field ignored.");
 
         putError(FacStatusCode.AssignMnemonicDoesNotAllowPackIds, "Assign mnemonic does not allow pack-ids.");
@@ -89,6 +91,8 @@ public class FacStatusMessage {
         putError(FacStatusCode.DeviceIsFixed, "Device %s is fixed.");
         putError(FacStatusCode.DirectoryAndQualifierMayNotAppear, "Directory id and qualifier may not appear on image when R option is used.");
         putError(FacStatusCode.DirectoryOrQualifierMustAppear, "Directory id or qualifier must appear on image.");
+        putError(FacStatusCode.DisabledCorruptedDirectory, "File can not be recovered because master file directory (MFD) information has been corrupted.");
+        putError(FacStatusCode.DisabledForCacheDrainFailure, "File may contain corrupted data. file resided in cache disk memory at time of unrecoverable hardware error.");
         putError(FacStatusCode.DuplicateMediaIdsAreNotAllowed, "Duplicate media-ids are not allowed.");
         putError(FacStatusCode.FileAlreadyCataloged, "File is already catalogued.");
         putError(FacStatusCode.FileCycleOutOfRange, "File cycle out of range.");

@@ -34,6 +34,11 @@ public class DisableFlags {
         return inf;
     }
 
+    public boolean isDisabled() { return _directoryError || _assignedAndWrittenAtExecStop || _inaccessibleBackup || _cacheDrainFailure; }
+    public boolean directoryError() { return _directoryError; }
+    public boolean assignedAndWrittenAtExecStop()  { return _assignedAndWrittenAtExecStop; }
+    public boolean inaccessibleBackup() { return _inaccessibleBackup; }
+    public boolean cacheDrainFailure() { return _cacheDrainFailure; }
     public DisableFlags setDirectoryError(final boolean value) { _directoryError = value; return this; }
     public DisableFlags setAssignedAndWrittenAtExecStop(final boolean value) { _assignedAndWrittenAtExecStop = value; return this; }
     public DisableFlags setInaccessibleBackup(final boolean value) { _inaccessibleBackup = value; return this; }

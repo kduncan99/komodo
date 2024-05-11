@@ -33,6 +33,8 @@ public enum FacStatusCode {
     FilenameNotUnique(0120533),
     PlacementFieldIgnored(0121133),
     ReadKeyExists(0121333),
+    FileAssignedDuringSystemFailure(0122133),
+    FileUnloaded(0122233),
     WriteKeyExists(0122333),
     FileAlreadyExclusivelyAssigned(0123233),
 
@@ -63,6 +65,7 @@ public enum FacStatusCode {
     FilenameIsRequired(0244333),
     FileAlreadyCataloged(0244433),
     FileIsNotCataloged(0244533),
+    DisabledCorruptedDirectory(0244633),
     IllegalValueForGranularity(0245233),
     InternalNameRequired(0245533),
     IllegalInitialReserve(0246333),
@@ -77,6 +80,7 @@ public enum FacStatusCode {
     IncorrectReadKey(0253333),
     FileNotCatalogedWithReadKey(0253433),
     RelativeFCycleConflict(0253733),
+    FileBackupNotAvailable(0254333),
     UndefinedFieldOrSubfield(0255733),
     IncorrectWriteKey(0256633),
     FileNotCatalogedWithWriteKey(0256733),
@@ -91,6 +95,7 @@ public enum FacStatusCode {
     HoldForDevCURejected(0260233),
     HoldForFCycleConflictRejected(0260333),
     HoldForMassStorageSpaceRejected(0260433),
+    DisabledForCacheDrainFailure(0260633),
     DirectoryAndQualifierMayNotAppear(0262633),
     DirectoryOrQualifierMustAppear(0263033);
     

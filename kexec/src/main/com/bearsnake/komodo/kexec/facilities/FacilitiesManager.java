@@ -236,8 +236,11 @@ public class FacilitiesManager implements Manager {
         if (!checkKeys(runControlEntry, fsInfo, fileSpecification, fsResult)) {
             return false;
         }
-        var readInhibit = (fsResult.getStatusWord() & 0_000100_000000L) != 0;
-        var writeInhibit = ((fsResult.getStatusWord() & 0_000200_000000L) != 0) | readOnly;
+        var readInhibit = ((fsResult.getStatusWord() & 0_000100_000000L) != 0)
+            || (directoryOnlyBehavior != DirectoryOnlyBehavior.None);
+        var writeInhibit = ((fsResult.getStatusWord() & 0_000200_000000L) != 0)
+            || readOnly
+            || (directoryOnlyBehavior != DirectoryOnlyBehavior.None);
         var alreadyAssigned = false;
 
         // --------------------------------------------------------
@@ -321,7 +324,34 @@ public class FacilitiesManager implements Manager {
         // --------------------------------------------------------
 
         // Is file disabled?
-        //   TODO
+        var df = fcInfo.getDisableFlags();
+        if (df.isDisabled()) {
+            if (df.assignedAndWrittenAtExecStop()) {
+                fsResult.postMessage(FacStatusCode.FileAssignedDuringSystemFailure);
+                fsResult.mergeStatusBits(0_000000_000200L);
+            }
+            if (df.cacheDrainFailure()) {
+                if (directoryOnlyBehavior == DirectoryOnlyBehavior.None) {
+                    fsResult.postMessage(FacStatusCode.DisabledForCacheDrainFailure);
+                    fsResult.mergeStatusBits(0_600000_000000L);
+                }
+            }
+            if (df.directoryError()) {
+                if (directoryOnlyBehavior == DirectoryOnlyBehavior.None) {
+                    fsResult.postMessage(FacStatusCode.DisabledCorruptedDirectory);
+                    fsResult.mergeStatusBits(0_600000_000400L);
+                }
+            }
+            if (df.inaccessibleBackup()) {
+                if (directoryOnlyBehavior == DirectoryOnlyBehavior.None) {
+                    fsResult.postMessage(FacStatusCode.FileBackupNotAvailable);
+                    fsResult.mergeStatusBits(0_400000_000100L);
+                } else {
+                    fsResult.postMessage(FacStatusCode.FileUnloaded);
+                    fsResult.mergeStatusBits(0_000000_000100L);
+                }
+            }
+        }
 
         // Illegal attempt to change assign type? e.g., trying option A with already in-place option C
         //   TODO
