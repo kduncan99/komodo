@@ -73,6 +73,8 @@ public class FacStatusMessage {
 	    putInfo(FacStatusCode.RunHeldForTapeUnitAvailability, "Run %s held for tape unit availability for %d min.");
 
         putWarning(FacStatusCode.FileAlreadyAssigned, "File is already assigned.");
+        putWarning(FacStatusCode.FileAlreadyAssignedToAnotherRun, "File is assigned to another run.");
+        putWarning(FacStatusCode.FileAlreadyExclusivelyAssigned, "X option ignored, file already exclusively assigned by this run.");
         putWarning(FacStatusCode.FilenameNotKnown, "Filename not known to this run.");
         putWarning(FacStatusCode.FilenameNotUnique, "Filename not unique.");
         putWarning(FacStatusCode.PlacementFieldIgnored, "Placement field ignored.");
@@ -82,6 +84,7 @@ public class FacStatusMessage {
         putError(FacStatusCode.AssignMnemonicMustBeWordAddressable, "Assign mnemonic must be word addressable.");
         putError(FacStatusCode.AssignMnemonicTooLong, "Assign mnemonic cannot be longer than 6 characters.");
         putError(FacStatusCode.AttemptToChangeGenericType, "Attempt to change generic type of the file.");
+        putError(FacStatusCode.AttemptToChangeGranularity, "Attempt to change granularity.");
         putError(FacStatusCode.DeviceAlreadyInUseByThisRun, "Device %s already in use by this run.");
         putError(FacStatusCode.DeviceIsFixed, "Device %s is fixed.");
         putError(FacStatusCode.DirectoryAndQualifierMayNotAppear, "Directory id and qualifier may not appear on image when R option is used.");
@@ -89,6 +92,7 @@ public class FacStatusMessage {
         putError(FacStatusCode.DuplicateMediaIdsAreNotAllowed, "Duplicate media-ids are not allowed.");
         putError(FacStatusCode.FileAlreadyCataloged, "File is already catalogued.");
         putError(FacStatusCode.FileCycleOutOfRange, "File cycle out of range.");
+        putError(FacStatusCode.FileIsBeingDropped, "File is being dropped.");
         putError(FacStatusCode.FileIsNotCataloged, "File is not catalogued.");
         putError(FacStatusCode.FilenameIsRequired, "A filename is required on the image.");
         putError(FacStatusCode.FileNotCatalogedWithReadKey, "File is not cataloged with a read key.");

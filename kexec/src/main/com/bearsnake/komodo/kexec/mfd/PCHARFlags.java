@@ -30,6 +30,8 @@ public class PCHARFlags {
         return inf;
     }
 
+    public Granularity getGranularity() { return _granularity; }
+    public boolean isWordAddressable() { return _isWordAddressable; }
     public PCHARFlags setGranularity(final Granularity value) { _granularity = value; return this; }
     public PCHARFlags setIsWordAddressable(final boolean value) { _isWordAddressable = value; return this; }
 }

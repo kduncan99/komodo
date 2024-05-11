@@ -29,7 +29,7 @@ public class Configuration {
     public String AccountAssignMnemonic          = "F";              // assign mnemonic for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
     public String DLOCAssignMnemonic             = "F";              // assign mnemonic for SYS$*DLOC$ file
     private int _execThreadPoolSize              = 25;               // number of threads in Exec thread pool
-    public boolean FilesPrivateByAccount         = true;             // if false, files are private by project-id
+    private boolean _filesPrivateByAccount       = true;             // if false, files are private by project-id
     public long GenFInitialReserve               = 128;              // initial reserve for SYS$*GENF$ file
     public String GenFAssignMnemonic             = "F";              // assign mnemonic for SYS$*GENF$ file
     public long LibInitialReserve                = 128;              // initial reserve for SYS$*LIB$ file
@@ -73,6 +73,7 @@ public class Configuration {
 
     // -----------------------------------------------------------------------------------------------------------------
     public int getExecThreadPoolSize() { return _execThreadPoolSize; }
+    public boolean getFilesPrivateByAccount() { return _filesPrivateByAccount; }
     public boolean getLogConsoleMessages() { return _logConsoleMessages; }
     public boolean getLogIos() { return _logIOs; }
     public String getMassStorageDefaultMnemonic() { return _massStorageDefaultMnemonic; }

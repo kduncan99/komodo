@@ -28,11 +28,13 @@ public enum FacStatusCode {
 
     // Warnings
     FileAlreadyAssigned(0120133),
+    FileAlreadyAssignedToAnotherRun(0120333),
     FilenameNotKnown(0120433),
     FilenameNotUnique(0120533),
     PlacementFieldIgnored(0121133),
     ReadKeyExists(0121333),
     WriteKeyExists(0122333),
+    FileAlreadyExclusivelyAssigned(0123233),
 
     // Errors
     DeviceAlreadyInUseByThisRun(0200333),
@@ -48,8 +50,10 @@ public enum FacStatusCode {
     AssignMnemonicTooLong(0240733),
     AssignMnemonicMustBeSpecifiedWithPackId(0241033),
     AssignMnemonicMustBeWordAddressable(0241133),
+    FileIsBeingDropped(0241233),
     IllegalAttemptToChangeAssignmentType(0241533),
     AttemptToChangeGenericType(0241633),
+    AttemptToChangeGranularity(0241733),
     IllegalValueForFCycle(0242433),
     FileCycleOutOfRange(0242533),
     IllegalDroppingPrivateFile(0243233),
