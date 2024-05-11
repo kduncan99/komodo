@@ -76,6 +76,8 @@ public class FacStatusMessage {
         putWarning(FacStatusCode.FileAlreadyAssignedToAnotherRun, "File is assigned to another run.");
         putWarning(FacStatusCode.FileAlreadyExclusivelyAssigned, "X option ignored, file already exclusively assigned by this run.");
         putWarning(FacStatusCode.FileAssignedDuringSystemFailure, "File was assigned during system failure.");
+        putWarning(FacStatusCode.FileCatalogedAsReadOnly, "File is cataloged as a read-only file.");
+        putWarning(FacStatusCode.FileCatalogedAsWriteOnly, "File is cataloged as a write-only file.");
         putWarning(FacStatusCode.FilenameNotKnown, "Filename not known to this run.");
         putWarning(FacStatusCode.FilenameNotUnique, "Filename not unique.");
         putWarning(FacStatusCode.FileUnloaded, "File is unloaded.");
@@ -131,6 +133,7 @@ public class FacStatusMessage {
         putError(FacStatusCode.OperatorDoesNotAllowAbsoluteAssign, "The operator does not allow absolute assignment of pack pack-id.");
         putError(FacStatusCode.PackIdIsRequired, "Packid is required.");
         putError(FacStatusCode.PlacementFieldNotAllowed, "Placement field is not allowed with CAT.");
+        putError(FacStatusCode.Plus1IllegalWithAOption, "F-cycle of +1 is illegal with A option.");
         putError(FacStatusCode.ReadWriteKeysNeeded, "Read and/or write keys are needed.");
         putError(FacStatusCode.RelativeFCycleConflict, "Relative F-cycle conflict.");
         putError(FacStatusCode.SyntaxErrorInImage, "Syntax error in image submitted to ER CSI$.");

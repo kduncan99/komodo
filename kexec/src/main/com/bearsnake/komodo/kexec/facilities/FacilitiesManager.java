@@ -173,6 +173,7 @@ public class FacilitiesManager implements Manager {
                                                   null,
                                                   null,
                                                   null,
+                                                  null,
                                                   Collections.emptyList(),
                                                   DeleteBehavior.None,
                                                   DirectoryOnlyBehavior.None,
@@ -196,6 +197,7 @@ public class FacilitiesManager implements Manager {
         final Integer initialReserve,  // null if not specified, attempt to change existing value
         final Granularity granularity, // null if not specified, must match existing file otherwise
         final Integer maxGranules,     // null if not specified, attempt to change existing value
+        final String placement,        // only for fixed, can be null (must be null for removable)
         final List<String> packIds,    // should be empty for fixed, optional for removable
         final DeleteBehavior deleteBehavior,               // D/K options
         final DirectoryOnlyBehavior directoryOnlyBehavior, // E/Y options
@@ -210,6 +212,8 @@ public class FacilitiesManager implements Manager {
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedDiskFileToRun %s %s",
                             runControlEntry.getRunId(),
                             fileSpecification.toString());
+
+        var e = Exec.getInstance();
 
         // --------------------------------------------------------
         // Pre-checks which are very generic
@@ -274,10 +278,42 @@ public class FacilitiesManager implements Manager {
                 return false;
             }
 
-            // If this is a removable disk set, check the pack-ids on the file cycle against the
-            // provided pack-ids (if any).
-            if (isRem && !packIds.isEmpty()) {
-                // TODO REM check pack-ids
+            // Check placement (only for fixed)
+            // TODO
+            //E:202333 Placement device device is not fixed mass storage. (this goes elsewhere, it's for fixed)
+            //E:252133 Placement field is not allowed with CAT.
+            //E:252233 Placement requested on a non--mass storage device.
+            //E:252333 Placement is not allowed with a removable disk file.
+            //E:252433 Illegal syntax in placement subfield.
+
+            // Check the pack-ids on the file cycle against the provided pack-ids (if any).
+            // Cannot allow pack-ids for fixed disks.
+            // Rules:
+            //   All cycles for a given file set must have the same pack list
+            //   Max number of pack-ids is 510
+            //   If a file cycle is currently unassigned, we can add one or more pack-ids to the *END* of the pack list
+            //     *IF* the entire list is specified, with the new pack(s) at the end of the list
+            //   Packs must only be added with the A option (which is why we are here), but *NOT* with the Y option.
+            //   Packs cannot be added if the fileset has more than one cycle, or if the cycle is currently assigned.
+            //   Adding packs requires delete access (for fundamental security, cycle must not be write-inhibited)
+            if (!packIds.isEmpty()) {
+                if (!isRem) {
+                    // we'd like a better message, but this is all we have...
+                    fsResult.postMessage(FacStatusCode.UndefinedFieldOrSubfield);
+                    fsResult.mergeStatusBits(0_600000_000000L);
+                    return false;
+                }
+
+                //E:271333 Packs can only be added to removable files using an A option assignment.
+                //E:271433 Packs cannot be added to removable files using a Y option assignment.
+                //E:271533 Packs cannot be added to removable files that are currently assigned.
+                //E:271633 Packs can only be added to removable files with a single file cycle.
+                //E:202233 Pack pack-id is not a removable pack.
+                //E:247633 Maximum number of packids exceeded.
+                //E:251233 Number of packids on image not equal to number of packs assigned to file.
+                //E:251333 Number of packids on the image not equal to number of packids in master file directory.
+                //E:251433 Packids on image are not equal to packids assigned to file.
+                //E:251533 Packids on image are not in same order as file's packids.
             }
 
             // Check the existing facility items to see if this file cycle is already assigned to this run.
@@ -342,21 +378,27 @@ public class FacilitiesManager implements Manager {
                                                                      fsInfo.getFilename(),
                                                                      fsci.getAbsoluteCycle());
                 } catch (FileSetDoesNotExistException | FileCycleDoesNotExistException ex) {
-                    // TODO this should not happen - stop the exec
-                    return false;
+                    LogManager.logFatal(LOG_SOURCE,
+                                        "MFD cannot find a file cycle which must exist %s*%s(%d)",
+                                        fsInfo.getQualifier(),
+                                        fsInfo.getFilename(),
+                                        fsci.getAbsoluteCycle());
+                    e.stop(StopCode.FacilitiesComplex);
+                    throw new ExecStoppedException();
                 }
             } else {
                 if (cycle == 1) {
                     // @ASG,A of +1 cycle is not allowed unless we already have it assigned,
                     // which is already accounted for in the code just above, and it cannot be assigned by
                     // absolute cycle - it would have been by +1.
-                    // TODO fail
+                    fsResult.postMessage(FacStatusCode.Plus1IllegalWithAOption);
+                    fsResult.mergeStatusBits(0_400000_000040L);
                     return false;
                 }
 
                 if (Math.abs(cycle) >= fsInfo.getCycleInfo().size()) {
-                    // Relative cycle does not exist
-                    // TODO fail - do we need to fail differently if the cycle is out of range?
+                    fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
+                    fsResult.mergeStatusBits(0_400010_000000L);
                     return false;
                 }
 
@@ -367,8 +409,13 @@ public class FacilitiesManager implements Manager {
                                                                      fsInfo.getFilename(),
                                                                      fsci.getAbsoluteCycle());
                 } catch (FileSetDoesNotExistException | FileCycleDoesNotExistException ex) {
-                    // TODO this should not happen - stop the exec
-                    return false;
+                    LogManager.logFatal(LOG_SOURCE,
+                                        "MFD cannot find a file cycle which must exist %s*%s(%d)",
+                                        fsInfo.getQualifier(),
+                                        fsInfo.getFilename(),
+                                        fsci.getAbsoluteCycle());
+                    e.stop(StopCode.FacilitiesComplex);
+                    throw new ExecStoppedException();
                 }
 
                 facItem =
@@ -481,6 +528,7 @@ public class FacilitiesManager implements Manager {
 
         // Bad attempt to change init-reserve of max?
         //   TODO E:242133 Attempt to change maximum granules of a file cataloged under a different account.
+        //        E:246233 File initial reserve granule limits exceeded.
         //     there is some other trouble with changing max to less than highest,
         //     or init to more than max, or some such combinations of nonsense
 
@@ -488,6 +536,10 @@ public class FacilitiesManager implements Manager {
         // Make it happen unless the file is write-inhibited. Otherwise, fail.
         //   TODO E:242033 Attempt to change initial reserve of write inhibited file.
         //   TODO E:242233 Attempt to change maximum granules on a write inhibited file.
+        //        E:247133 Maximum granules less than highest granule allocated.
+        //        E:247233 File maximum granule limits exceeded.
+        //        E:247333 Illegal value specified for maximum.
+        //        E:247433 Maximum is less than the initial reserve.
 
         if (alreadyAssigned) {
             // generic stuff for already-assigned file, which occurs before any putative wait
@@ -500,13 +552,17 @@ public class FacilitiesManager implements Manager {
             }
 
         } else {
-            // Is file in to-be-cataloged state? What do do in this case?
-            //   TODO
+            // Is file in to-be-cataloged state? If so, (and it's not assigned, so...) it should appear not to exist.
+            if (fcInfo.getDescriptorFlags().toBeCataloged()) {
+                fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
+                fsResult.mergeStatusBits(0_400010_000000L);
+                return false;
+            }
 
             // Is file being dropped?
             if (fcInfo.getDescriptorFlags().toBeDropped()) {
                 fsResult.postMessage(FacStatusCode.FileIsBeingDropped);
-                fsResult.mergeStatusBits(0_400000_040000L); // TODO not sure this is the right value
+                fsResult.mergeStatusBits(0_400000_040000L);
                 return false;
             }
         }
@@ -518,7 +574,8 @@ public class FacilitiesManager implements Manager {
             && !alreadyAssigned
             && (directoryOnlyBehavior == DirectoryOnlyBehavior.None)) {
             if (doNotHoldRun) {
-                // TODO reject the assignment
+                fsResult.postMessage(FacStatusCode.HoldForRollbackRejected);
+                fsResult.mergeStatusBits(0_400002_000000L);
                 return false;
             }
             if (!facItem.isWaitingForRollback()) {
@@ -538,7 +595,8 @@ public class FacilitiesManager implements Manager {
         if (exclusiveUse) {
             if (alreadyAssigned ? fcInfo.getCurrentAssignCount() > 1 : fcInfo.getCurrentAssignCount() > 0) {
                 if (doNotHoldRun) {
-                    // TODO reject the assignment
+                    fsResult.postMessage(FacStatusCode.HoldForXUseRejected);
+                    fsResult.mergeStatusBits(0_400001_000000L);
                     return false;
                 }
 
@@ -553,7 +611,8 @@ public class FacilitiesManager implements Manager {
         // be set to the correct states.
         if (!alreadyAssigned && (fcInfo.getInhibitFlags().isAssignedExclusively())) {
             if (doNotHoldRun) {
-                // TODO reject the assignment
+                fsResult.postMessage(FacStatusCode.HoldForReleaseXUseRejected);
+                fsResult.mergeStatusBits(0_400001_000000L);
                 return false;
             }
 
@@ -581,6 +640,14 @@ public class FacilitiesManager implements Manager {
 
         if (releaseOnTaskEnd) {
             facItem.setReleaseOnTaskEnd(true);
+        }
+
+        if (fcInfo.getInhibitFlags().isReadOnly()) {
+            fsResult.postMessage(FacStatusCode.FileCatalogedAsReadOnly);
+        }
+
+        if (fcInfo.getInhibitFlags().isWriteOnly()) {
+            fsResult.postMessage(FacStatusCode.FileCatalogedAsWriteOnly);
         }
 
         if (alreadyAssigned) {
@@ -611,10 +678,28 @@ public class FacilitiesManager implements Manager {
             }
 
             // Is filename portion not unique compared to some other facItem?
-            // TODO W:120533 Filename not unique. / merge 0_001000_000000L
+            // We can do the following check because we have not yet created a facItem for
+            // this file assignment, so any hit on filename would constitute filename-not-unique.
+            if (fiTable.getFacilitiesItemByFilename(fcInfo.getFilename()) != null) {
+                fsResult.postMessage(FacStatusCode.FilenameNotUnique);
+                fsResult.mergeStatusBits(0_004000_000000L);
+            }
 
             // Accelerate it via MFD (it should not have been yet).
-            // TODO
+            try {
+                mm.accelerateFileCycle(facItem.getQualifier(), facItem.getFilename(), facItem.getAbsoluteCycle());
+            } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
+                LogManager.logFatal(LOG_SOURCE,
+                                    "MFD cannot find a file cycle which must exist %s*%s(%d)",
+                                    fsInfo.getQualifier(),
+                                    fsInfo.getFilename(),
+                                    facItem.getAbsoluteCycle());
+                e.stop(StopCode.FacilitiesComplex);
+                throw new ExecStoppedException();
+            }
+
+            // Now (finally) add the new facItem to the facItemTable
+            fiTable.addFacilitiesItem(facItem, runControlEntry.getUseItemTable());
         }
 
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s result:%s",

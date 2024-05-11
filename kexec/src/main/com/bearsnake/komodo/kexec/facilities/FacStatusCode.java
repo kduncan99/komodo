@@ -32,10 +32,12 @@ public enum FacStatusCode {
     FilenameNotKnown(0120433),
     FilenameNotUnique(0120533),
     PlacementFieldIgnored(0121133),
+    FileCatalogedAsReadOnly(0121433),
     ReadKeyExists(0121333),
     FileAssignedDuringSystemFailure(0122133),
     FileUnloaded(0122233),
     WriteKeyExists(0122333),
+    FileCatalogedAsWriteOnly(0122433),
     FileAlreadyExclusivelyAssigned(0123233),
 
     // Errors
@@ -75,6 +77,7 @@ public enum FacStatusCode {
     MaximumNumberOfPackIdsExceeded(0247633),
     IOptionOnlyAllowed(0250733),
     PackIdIsRequired(0251633),
+    Plus1IllegalWithAOption(0252033),
     PlacementFieldNotAllowed(0252133),
     IncorrectPrivacyKey(0252533),
     IncorrectReadKey(0253333),

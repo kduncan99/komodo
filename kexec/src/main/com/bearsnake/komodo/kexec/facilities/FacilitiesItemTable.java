@@ -85,8 +85,6 @@ public class FacilitiesItemTable {
         return null;
     }
 
-// TODO unneeded?    ConcurrentLinkedQueue<FacilitiesItem> getFacilitiesItems() { return _content; }
-
     synchronized FacilitiesItem getFacilitiesItemByAbsoluteCycle(
         final String qualifier,
         final String filename,
