@@ -51,6 +51,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.bearsnake.komodo.baselib.Word36.A_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.D_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.E_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.K_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.M_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.R_OPTION;
 import static com.bearsnake.komodo.baselib.Word36.T_OPTION;
 import static com.bearsnake.komodo.baselib.Word36.X_OPTION;
 
@@ -247,22 +252,19 @@ public class FacilitiesManager implements Manager {
         if (!checkKeys(runControlEntry, fsInfo, fileSpecification, fsResult)) {
             return false;
         }
-        var readInhibit = ((fsResult.getStatusWord() & 0_000100_000000L) != 0)
-            || (directoryOnlyBehavior != DirectoryOnlyBehavior.None);
-        var writeInhibit = ((fsResult.getStatusWord() & 0_000200_000000L) != 0)
-            || readOnly
-            || (directoryOnlyBehavior != DirectoryOnlyBehavior.None);
-        var alreadyAssigned = false;
 
-        var isRem = fsInfo.getFileType() == FileType.Removable;
+        var readInhibit = (fsResult.getStatusWord() & 0_000100_000000L) != 0;
+        var writeInhibit = (fsResult.getStatusWord() & 0_000200_000000L) != 0;
+        var alreadyAssigned = false;
+        var isRemovable = fsInfo.getFileType() == FileType.Removable;
 
         // --------------------------------------------------------
         // Determine whether the indicated file cycle exists,
         // then get fcInfo and facItem accordingly
         // --------------------------------------------------------
 
-        DiskFileFacilitiesItem facItem = null;
-        DiskFileCycleInfo fcInfo = null;
+        DiskFileFacilitiesItem facItem;
+        DiskFileCycleInfo fcInfo;
         var fiTable = runControlEntry.getFacilitiesItemTable();
         if (fileSpecification.hasFileCycleSpecification() && fileSpecification.getFileCycleSpecification().isAbsolute()) {
             // This an absolute file cycle request - go get the file cycle info.
@@ -297,7 +299,7 @@ public class FacilitiesManager implements Manager {
             //   Packs cannot be added if the fileset has more than one cycle, or if the cycle is currently assigned.
             //   Adding packs requires delete access (for fundamental security, cycle must not be write-inhibited)
             if (!packIds.isEmpty()) {
-                if (!isRem) {
+                if (!isRemovable) {
                     // we'd like a better message, but this is all we have...
                     fsResult.postMessage(FacStatusCode.UndefinedFieldOrSubfield);
                     fsResult.mergeStatusBits(0_600000_000000L);
@@ -322,32 +324,6 @@ public class FacilitiesManager implements Manager {
                                                                                         fileSpecification.getFileCycleSpecification().getCycle());
             if (facItem != null) {
                 alreadyAssigned = true;
-            } else {
-                // It is not already assigned, but it does exist -
-                // we have fcInfo for the existing file set, we just need a facItem.
-
-                // Check public/private
-                if (!checkPrivateAccess(runControlEntry, fcInfo, fsResult)) {
-                    return false;
-                }
-
-                // Is the file read-only or write-only?
-                readInhibit |= fcInfo.getInhibitFlags().isWriteOnly();
-                writeInhibit |= fcInfo.getInhibitFlags().isReadOnly();
-
-                // Create new fac item with option-driven settings as necessary and add it to the fac item table.
-                facItem = isRem ? new RemovableDiskItemFile() : new FixedDiskItemFile();
-                facItem.setQualifier(fcInfo.getQualifier())
-                       .setFilename(fcInfo.getFilename())
-                       .setAbsoluteCycle(fcInfo.getAbsoluteCycle())
-                       .setIsTemporary(false)
-                       .setOptionsWord(optionsWord)
-                       .setReleaseOnTaskEnd(releaseOnTaskEnd);
-                facItem.setDeleteOnAnyRunTermination(deleteBehavior == DeleteBehavior.DeleteOnAnyRunTermination)
-                       .setDeleteOnNormalRunTermination(deleteBehavior == DeleteBehavior.DeleteOnNormalRunTermination)
-                       .setIsExclusive(exclusiveUse)
-                       .setIsReadable(!readInhibit)
-                       .setIsWriteable(!writeInhibit);
             }
         } else {
             // It's either relative or unspecified. If unspecified, we treat it like relative +0.
@@ -427,32 +403,48 @@ public class FacilitiesManager implements Manager {
                     // If it already has a relative cycle, it would have to be the same as this one, so no worries.
                     alreadyAssigned = true;
                     facItem.setRelativeCycle(cycle);
-                } else {
-                    // okay, so we need a new facItem.
-                    // Check public/private
-                    if (!checkPrivateAccess(runControlEntry, fcInfo, fsResult)) {
-                        return false;
-                    }
-
-                    // Is the file read-only or write-only?
-                    readInhibit |= fcInfo.getInhibitFlags().isWriteOnly();
-                    writeInhibit |= fcInfo.getInhibitFlags().isReadOnly();
-
-                    // Create new fac item with option-driven settings as necessary and add it to the fac item table.
-                    facItem = isRem ? new RemovableDiskItemFile() : new FixedDiskItemFile();
-                    facItem.setQualifier(fcInfo.getQualifier())
-                           .setFilename(fcInfo.getFilename())
-                           .setAbsoluteCycle(fcInfo.getAbsoluteCycle())
-                           .setIsTemporary(false)
-                           .setOptionsWord(optionsWord)
-                           .setReleaseOnTaskEnd(releaseOnTaskEnd);
-                    facItem.setDeleteOnAnyRunTermination(deleteBehavior == DeleteBehavior.DeleteOnAnyRunTermination)
-                           .setDeleteOnNormalRunTermination(deleteBehavior == DeleteBehavior.DeleteOnNormalRunTermination)
-                           .setIsExclusive(exclusiveUse)
-                           .setIsReadable(!readInhibit)
-                           .setIsWriteable(!writeInhibit);
                 }
             }
+        }
+
+        if (alreadyAssigned) {
+            // We need to filter out the effects of D,E,K,R, and M since we are already assigned.
+            // We could not do this previously, as we developed the idea of being already assigned
+            // throughout the course of the preceding nonsense. But we are here now, so...
+            // We filter it out by simply not allowing these items to propagate to the already-existing
+            // facilities item - only applying them to a newly-created facilities item in the alternate
+            // conditional branch below.
+            // We do have to post a warning if any of the options were presented for an already assigned file...
+            if ((optionsWord & (D_OPTION | E_OPTION | K_OPTION | R_OPTION | M_OPTION)) != 0) {
+                fsResult.postMessage(FacStatusCode.OptionConflictOptionsIgnored);
+            }
+        } else {
+            // Not already assigned - we need to create a new facilities item.
+            // Is this file (which is not yet assigned) accessible?
+            // Check public/private
+            if (!checkPrivateAccess(runControlEntry, fcInfo, fsResult)) {
+                return false;
+            }
+
+            // Is the file read-only or write-only?
+            readInhibit |= fcInfo.getInhibitFlags().isWriteOnly();
+            readInhibit |= (directoryOnlyBehavior != DirectoryOnlyBehavior.None);
+            writeInhibit |= fcInfo.getInhibitFlags().isReadOnly();
+            writeInhibit |= readOnly || (directoryOnlyBehavior != DirectoryOnlyBehavior.None);
+
+            // Create new fac item with option-driven settings as necessary and add it to the fac item table.
+            facItem = isRemovable ? new RemovableDiskItemFile() : new FixedDiskItemFile();
+            facItem.setIsExclusive(exclusiveUse)
+                   .setDeleteOnNormalRunTermination(deleteBehavior == DeleteBehavior.DeleteOnNormalRunTermination)
+                   .setDeleteOnAnyRunTermination(deleteBehavior == DeleteBehavior.DeleteOnAnyRunTermination)
+                   .setIsReadable(!readInhibit)
+                   .setIsWriteable(!writeInhibit)
+                   .setQualifier(fcInfo.getQualifier())
+                   .setFilename(fcInfo.getFilename())
+                   .setAbsoluteCycle(fcInfo.getAbsoluteCycle())
+                   .setIsTemporary(false)
+                   .setOptionsWord(optionsWord)
+                   .setReleaseOnTaskEnd(releaseOnTaskEnd);
         }
 
         // --------------------------------------------------------
@@ -464,46 +456,9 @@ public class FacilitiesManager implements Manager {
         // attempting to wait on facilities.
         // --------------------------------------------------------
 
-        // What to do if E,Y options are different b/w initial and subsequent assign of a cycle? Nothing.
-        //   If previously assigned E and/or Y, subsequent assign leaves the resulting behavior in place
-        //   If previously assigned without E or Y, subsequent assign with E and/or Y has no effect
-
-        // What to do if D,K options are different b/w initial and subsequent assign of a cycle?
-        //   New D or K should override any previous behavior indicated by D or K, or lack thereof.
-        //   Lack of D or K should have no effect on current behavior established by previous D or K.
-
-        // The above notwithstanding, we do have this to post (but under what conditions?):
-        // W:122533 Option conflict with previous assign options, all options ignored except i, q, x, y, or z.
-        //   TODO
-
         // Is file disabled?
-        var df = fcInfo.getDisableFlags();
-        if (df.isDisabled()) {
-            if (df.assignedAndWrittenAtExecStop()) {
-                fsResult.postMessage(FacStatusCode.FileAssignedDuringSystemFailure);
-                fsResult.mergeStatusBits(0_000000_000200L);
-            }
-            if (df.cacheDrainFailure()) {
-                if (directoryOnlyBehavior == DirectoryOnlyBehavior.None) {
-                    fsResult.postMessage(FacStatusCode.DisabledForCacheDrainFailure);
-                    fsResult.mergeStatusBits(0_600000_000000L);
-                }
-            }
-            if (df.directoryError()) {
-                if (directoryOnlyBehavior == DirectoryOnlyBehavior.None) {
-                    fsResult.postMessage(FacStatusCode.DisabledCorruptedDirectory);
-                    fsResult.mergeStatusBits(0_600000_000400L);
-                }
-            }
-            if (df.inaccessibleBackup()) {
-                if (directoryOnlyBehavior == DirectoryOnlyBehavior.None) {
-                    fsResult.postMessage(FacStatusCode.FileBackupNotAvailable);
-                    fsResult.mergeStatusBits(0_400000_000100L);
-                } else {
-                    fsResult.postMessage(FacStatusCode.FileUnloaded);
-                    fsResult.mergeStatusBits(0_000000_000100L);
-                }
-            }
+        if (!checkDisabled(fcInfo, directoryOnlyBehavior, assignIfDisabled, fsResult)) {
+            return false;
         }
 
         // Illegal attempt to change assign type? e.g., trying option A with already in-place option C
@@ -1116,6 +1071,57 @@ public class FacilitiesManager implements Manager {
     // -------------------------------------------------------------------------
     // Core
     // -------------------------------------------------------------------------
+
+    /**
+     * Checks the file cycle info to see whether the corresponding file is disabled,
+     * and sets various fac status entries according to this, and to the two mitigating settings
+     * of directoryOnlyBehavior and assignIfDisabled.
+     */
+    private boolean checkDisabled(
+        final FileCycleInfo fcInfo,
+        final DirectoryOnlyBehavior directoryOnlyBehavior,
+        final boolean assignIfDisabled,
+        final FacStatusResult fsResult
+    ) {
+        var error = false;
+        var df = fcInfo.getDisableFlags();
+        if (df.isDisabled()) {
+            if (df.assignedAndWrittenAtExecStop()) {
+                fsResult.postMessage(FacStatusCode.FileAssignedDuringSystemFailure);
+                fsResult.mergeStatusBits(0_000000_000200L);
+                error = true;
+            }
+
+            if (df.cacheDrainFailure()
+                && !assignIfDisabled
+                && (directoryOnlyBehavior == DirectoryOnlyBehavior.None)) {
+                fsResult.postMessage(FacStatusCode.DisabledForCacheDrainFailure);
+                fsResult.mergeStatusBits(0_600000_000000L);
+                error = true;
+            }
+
+            if (df.directoryError()
+                && !assignIfDisabled
+                && (directoryOnlyBehavior == DirectoryOnlyBehavior.None)) {
+                fsResult.postMessage(FacStatusCode.DisabledCorruptedDirectory);
+                fsResult.mergeStatusBits(0_600000_000400L);
+                error = true;
+            }
+
+            if (df.inaccessibleBackup()) {
+                if (assignIfDisabled || (directoryOnlyBehavior != DirectoryOnlyBehavior.None)) {
+                    fsResult.postMessage(FacStatusCode.FileUnloaded);
+                    fsResult.mergeStatusBits(0_000000_000100L);
+                } else {
+                    fsResult.postMessage(FacStatusCode.FileBackupNotAvailable);
+                    fsResult.mergeStatusBits(0_400000_000100L);
+                    error = true;
+                }
+            }
+        }
+
+        return !error;
+    }
 
     /**
      * Checks the read/write keys provided (or not) in a FileSpecification object

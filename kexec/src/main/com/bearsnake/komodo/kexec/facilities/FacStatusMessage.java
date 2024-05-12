@@ -81,6 +81,7 @@ public class FacStatusMessage {
         putWarning(FacStatusCode.FilenameNotKnown, "Filename not known to this run.");
         putWarning(FacStatusCode.FilenameNotUnique, "Filename not unique.");
         putWarning(FacStatusCode.FileUnloaded, "File is unloaded.");
+        putWarning(FacStatusCode.OptionConflictOptionsIgnored, "Option conflict with previous assign options, all options ignored except i, q, x, y, or z.");
         putWarning(FacStatusCode.PlacementFieldIgnored, "Placement field ignored.");
 
         putError(FacStatusCode.AssignMnemonicDoesNotAllowPackIds, "Assign mnemonic does not allow pack-ids.");

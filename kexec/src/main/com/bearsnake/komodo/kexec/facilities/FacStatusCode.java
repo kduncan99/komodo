@@ -38,6 +38,7 @@ public enum FacStatusCode {
     FileUnloaded(0122233),
     WriteKeyExists(0122333),
     FileCatalogedAsWriteOnly(0122433),
+    OptionConflictOptionsIgnored(0122533),
     FileAlreadyExclusivelyAssigned(0123233),
 
     // Errors
