@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.kexec.exec;
 
-import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesItemTable;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.facilities.UseItemTable;
@@ -20,7 +19,7 @@ public abstract class RunControlEntry {
     protected String _impliedQualifier;
     protected final String _originalRunId;
     protected final String _projectId;
-    protected Word36 _runConditionWord = new Word36();
+    protected RunConditionWord _runConditionWord;
     protected final String _runId;
     protected final RunType _runType;
     protected final String _userId;
@@ -54,6 +53,7 @@ public abstract class RunControlEntry {
         _runId = runId;
         _userId = userId;
 
+        _runConditionWord = new RunConditionWord();
         _cardLimit = Exec.getInstance().getConfiguration().getMaxCards();
         _pageLimit = Exec.getInstance().getConfiguration().getMaxPages();
 
@@ -69,7 +69,7 @@ public abstract class RunControlEntry {
     public final String getImpliedQualifier() { return _impliedQualifier; }
     public final String getOriginalRunId() { return _originalRunId; }
     public final String getProjectId() { return _projectId; }
-    public final Word36 getRunConditionWord() { return _runConditionWord; }
+    public final RunConditionWord getRunConditionWord() { return _runConditionWord; }
     public final String getRunId() { return _runId; }
     public final RunType getRunType() { return _runType; }
     public final String getUserId() { return _userId; }
@@ -84,8 +84,6 @@ public abstract class RunControlEntry {
     public boolean isWaitingOnPeripheral() { return _waitingForPeripheralCounter.get() > 0; }
     public void setDefaultQualifier(final String qualifier) { _defaultQualifier = qualifier; }
     public void setImpliedQualifier(final String qualifier) { _impliedQualifier = qualifier; }
-    public void setRunConditionWord(final long value) { _runConditionWord.setW(value); }
-    public void setRunConditionWord(final Word36 value) { _runConditionWord = value; }
 
     public void dump(final PrintStream out,
                      final String indent,
