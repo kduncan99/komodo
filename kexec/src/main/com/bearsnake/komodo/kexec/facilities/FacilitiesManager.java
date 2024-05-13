@@ -1243,9 +1243,9 @@ public class FacilitiesManager implements Manager {
      *  Packs must only be added with the A option but *NOT* with the Y option.
      *  Packs cannot be added if the fileset has more than one cycle, or if the cycle is currently assigned.
      *  Adding packs requires delete access (for fundamental security, cycle must not be write-inhibited)
-     * @param packIds
-     * @param fsResult
-     * @return
+     * @param packIds pack ids from caller
+     * @param fsResult where we post fac status messages and codes
+     * @return true if the check passes, else false
      */
     private boolean checkPackIds(
         final FileSetInfo fsInfo,
