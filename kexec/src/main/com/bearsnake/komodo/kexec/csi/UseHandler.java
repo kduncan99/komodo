@@ -8,7 +8,6 @@ import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
-import com.bearsnake.komodo.logger.LogManager;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -37,6 +36,9 @@ class UseHandler extends Handler {
 
     @Override
     public void handle(final HandlerPacket hp) {
+        var rce = hp._runControlEntry;
+        var fsResult = hp._statement._facStatusResult;
+
         if (cleanOptions(hp)) {
             postSyntaxError(hp);
             return;
@@ -47,46 +49,50 @@ class UseHandler extends Handler {
         }
         if (!checkIllegalFieldsAndSubfields(hp, VALID_SUBFIELD_SPECS, null)) {
             if (hp._sourceIsExecRequest) {
-                hp._runControlEntry.postContingency(012, 04, 040);
+                rce.postContingency(012, 04, 040);
             }
             return;
         }
 
         String internal = getSubField(hp, 0, 0);
         if (internal == null) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.InternalNameRequired);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            fsResult.postMessage(FacStatusCode.InternalNameRequired);
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
         internal = internal.toUpperCase();
         if (!Exec.isValidFilename(internal)) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage);
-            hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
+            fsResult.postMessage(FacStatusCode.SyntaxErrorInImage);
+            fsResult.mergeStatusBits(0_400000_000000L);
             return;
         }
 
         String external = getSubField(hp, 1, 0);
         if (external == null) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.FilenameIsRequired);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            fsResult.postMessage(FacStatusCode.FilenameIsRequired);
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
         var parser = new Parser(external.toUpperCase());
         FileSpecification fileSpec;
         try {
             fileSpec = FileSpecification.parse(parser, " ,.");
-        } catch (FileSpecification.Exception ex) {
-            // TODO make this a little more specific
-            // TODO post status message
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
-            if (hp._sourceIsExecRequest) {
-                hp._runControlEntry.postContingency(012, 04, 040);
+            // keep stupid IDE happy
+            if (fileSpec == null) {
+                return;
             }
+        } catch (FileSpecification.InvalidFileCycleException ex) {
+            fsResult.postMessage(FacStatusCode.IllegalValueForFCycle);
+            fsResult.mergeStatusBits(0_600000_00000L);
+            return;
+        } catch (FileSpecification.Exception ex) {
+            fsResult.postMessage(FacStatusCode.SyntaxErrorInImage);
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
 
         var iOption = (hp._optionWord & I_OPTION) != 0;
-        // TODO call fac mgr to finish the work (which means we have to add this ability to fac mgr)
-        //   fm.use(hp._runControlEntry, internal, fileSpec, iOption, hp._statement._facStatusResult);
+        var fm = Exec.getInstance().getFacilitiesManager();
+        fm.establishUseItem(rce, internal, fileSpec, iOption);
     }
 }

@@ -121,11 +121,14 @@ class AsgHandler extends Handler {
             return;
         }
 
+        var rce = hp._runControlEntry;
+        var fsResult = hp._statement._facStatusResult;
+
         // get the filename field
         var fnField = getSubField(hp, 0, 0);
         if (fnField == null) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.FilenameIsRequired);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            fsResult.postMessage(FacStatusCode.FilenameIsRequired);
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
 
@@ -133,23 +136,23 @@ class AsgHandler extends Handler {
         try {
             fileSpec = FileSpecification.parse(new Parser(fnField), ".,/ ");
         } catch (FileSpecification.InvalidFileCycleException ex) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalValueForFCycle);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_00000L);
+            fsResult.postMessage(FacStatusCode.IllegalValueForFCycle);
+            fsResult.mergeStatusBits(0_600000_00000L);
             return;
         } catch (FileSpecification.Exception ex) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            fsResult.postMessage(FacStatusCode.SyntaxErrorInImage);
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
 
         if (fileSpec == null) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.FilenameIsRequired);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            fsResult.postMessage(FacStatusCode.FilenameIsRequired);
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
 
-        fileSpec = hp._runControlEntry.getUseItemTable().resolveFileSpecification(fileSpec);
-        fileSpec = hp._runControlEntry.resolveQualifier(fileSpec);
+        fileSpec = rce.getUseItemTable().resolveFileSpecification(fileSpec);
+        fileSpec = rce.resolveQualifier(fileSpec);
 
         // Brief sanity check
         if (!checkMutuallyExclusiveOptions(hp, A_OPTION | C_OPTION | T_OPTION | U_OPTION)) {
@@ -172,8 +175,8 @@ class AsgHandler extends Handler {
         var typeField = getSubField(hp, 1, 0);
         if (typeField != null) {
             if (typeField.length() > 6) {
-                hp._statement._facStatusResult.postMessage(FacStatusCode.AssignMnemonicTooLong);
-                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+                fsResult.postMessage(FacStatusCode.AssignMnemonicTooLong);
+                fsResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
 
@@ -190,17 +193,19 @@ class AsgHandler extends Handler {
     private void handleAbsolute(final HandlerPacket hp,
                                 final FileSpecification fs,
                                 final String unitName) throws ExecStoppedException {
+        var fsResult = hp._statement._facStatusResult;
+
         // Find the device or channel corresponding to unitName
         var nodeInfo = Exec.getInstance().getFacilitiesManager().getNodeInfo(unitName);
         if (nodeInfo == null) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.UnitNameIsNotConfigured, new String[]{ unitName });
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            fsResult.postMessage(FacStatusCode.UnitNameIsNotConfigured, new String[]{ unitName });
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
 
         if (nodeInfo.getNodeStatus() == NodeStatus.Down) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.UnitIsNotUpOrReserved, new String[]{ unitName });
-            hp._statement._facStatusResult.mergeStatusBits(0_400000_001000L);
+            fsResult.postMessage(FacStatusCode.UnitIsNotUpOrReserved, new String[]{ unitName });
+            fsResult.mergeStatusBits(0_400000_001000L);
             return;
         }
 
@@ -258,6 +263,8 @@ class AsgHandler extends Handler {
             return;
         }
 
+        var fsResult = hp._statement._facStatusResult;
+
         // A thought... if the T option is *not* specified, algorithms are supposed to go see if a file exists in
         // the MFD given the file specification, and if so, use A semantics. We cannot use A semantics for a
         // disk unit, so we are assuming a T option exists if a disk unit is specified. Is this correct?
@@ -268,8 +275,8 @@ class AsgHandler extends Handler {
 
         var packName = getSubField(hp, 2, 0);
         if (packName == null) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.PackIdIsRequired);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            fsResult.postMessage(FacStatusCode.PackIdIsRequired);
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
 
@@ -284,7 +291,7 @@ class AsgHandler extends Handler {
                                    hp._optionWord,
                                    releaseOnTaskEnd,
                                    doNotHoldRun,
-                                   hp._statement._facStatusResult)) {
+                                   fsResult)) {
             postComplete(hp);
         }
     }
@@ -314,6 +321,8 @@ class AsgHandler extends Handler {
         var e = Exec.getInstance();
         var cfg = e.getConfiguration();
 
+        var fsResult = hp._statement._facStatusResult;
+
         var equip = getSubField(hp, 1, 0);
         if (equip == null) {
             var mm = Exec.getInstance().getMFDManager();
@@ -336,14 +345,14 @@ class AsgHandler extends Handler {
                 e.stop(StopCode.FacilitiesComplex);
                 throw new ExecStoppedException();
             } catch (FileSetDoesNotExistException ex) {
-                hp._statement._facStatusResult.postMessage(FacStatusCode.FileIsNotCataloged);
-                hp._statement._facStatusResult.mergeStatusBits(0_400010_000000L);
+                fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
+                fsResult.mergeStatusBits(0_400010_000000L);
                 return;
             }
         } else {
             if (equip.length() > 6) {
-                hp._statement._facStatusResult.postMessage(FacStatusCode.AssignMnemonicTooLong);
-                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+                fsResult.postMessage(FacStatusCode.AssignMnemonicTooLong);
+                fsResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
         }
@@ -353,8 +362,8 @@ class AsgHandler extends Handler {
                 WORD_ADDRESSABLE_DISK -> handleCatalogedDiskFile(hp, fileSpecification, equip);
             case TAPE -> handleCatalogedTapeFile(hp, fileSpecification);
             default -> {
-                hp._statement._facStatusResult.postMessage(FacStatusCode.MnemonicIsNotConfigured);
-                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+                fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured);
+                fsResult.mergeStatusBits(0_600000_000000L);
             }
         }
     }
@@ -381,8 +390,10 @@ class AsgHandler extends Handler {
             return;
         }
 
+        var fsResult = hp._statement._facStatusResult;
+
         if (hp._statement._operandFields.get(new SubfieldSpecifier(1, 4)) != null) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.PlacementFieldIgnored);
+            fsResult.postMessage(FacStatusCode.PlacementFieldIgnored);
         }
 
         Integer iReserve = null;
@@ -390,13 +401,13 @@ class AsgHandler extends Handler {
             var reserve = getSubField(hp, 1, 1);
             iReserve = Integer.parseInt(reserve);
             if (iReserve < 0) {
-                hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalInitialReserve);
-                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+                fsResult.postMessage(FacStatusCode.IllegalInitialReserve);
+                fsResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
         } catch (NumberFormatException ex) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalInitialReserve);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            fsResult.postMessage(FacStatusCode.IllegalInitialReserve);
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
 
@@ -408,8 +419,8 @@ class AsgHandler extends Handler {
             } else if (granularity.equalsIgnoreCase("POS")) {
                 eGranularity = Granularity.Position;
             } else {
-                hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalValueForGranularity);
-                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+                fsResult.postMessage(FacStatusCode.IllegalValueForGranularity);
+                fsResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
         }
@@ -419,13 +430,13 @@ class AsgHandler extends Handler {
             var maximum = getSubField(hp, 1, 3);
             iMaximum = Integer.parseInt(maximum);
             if (iMaximum < 0) {
-                hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalMaxGranules);
-                hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+                fsResult.postMessage(FacStatusCode.IllegalMaxGranules);
+                fsResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
         } catch (NumberFormatException ex) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalMaxGranules);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            fsResult.postMessage(FacStatusCode.IllegalMaxGranules);
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
 
@@ -439,16 +450,16 @@ class AsgHandler extends Handler {
             if (entry.getKey().getFieldIndex() == 2) {
                 var packId = entry.getValue();
                 if (packIds.contains(packId)) {
-                    hp._statement._facStatusResult.postMessage(FacStatusCode.DuplicateMediaIdsAreNotAllowed);
-                    hp._statement._facStatusResult.mergeStatusBits(0_400004_000000L);
+                    fsResult.postMessage(FacStatusCode.DuplicateMediaIdsAreNotAllowed);
+                    fsResult.mergeStatusBits(0_400004_000000L);
                     return;
                 }
                 packIds.add(packId);
             }
         }
         if (packIds.size() > 510) {
-            hp._statement._facStatusResult.postMessage(FacStatusCode.MaximumNumberOfPackIdsExceeded);
-            hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
+            fsResult.postMessage(FacStatusCode.MaximumNumberOfPackIdsExceeded);
+            fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
 
@@ -495,7 +506,7 @@ class AsgHandler extends Handler {
                                             exclusiveUse,
                                             releaseOnTaskEnd,
                                             doNotHoldRun,
-                                            hp._statement._facStatusResult)) {
+                                            fsResult)) {
             postComplete(hp);
         }
     }

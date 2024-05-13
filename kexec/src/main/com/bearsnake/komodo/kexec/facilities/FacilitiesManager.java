@@ -889,6 +889,32 @@ public class FacilitiesManager implements Manager {
     }
 
     /**
+     * Establishes a use item in the given run control entry
+     * @param runControlEntry run control entry of interest
+     * @param internalName internal name to be applied
+     * @param fileSpecification file specification indicating the external or referenced name
+     * @param releaseOnTaskEnd true to release this use item at the next task termination
+     */
+    public void establishUseItem(
+        final RunControlEntry runControlEntry,
+        final String internalName,
+        final FileSpecification fileSpecification,
+        final boolean releaseOnTaskEnd
+    ) {
+        LogManager.logTrace(LOG_SOURCE, "establishUseItem %s %s->%s I:%s",
+                            runControlEntry.getRunId(),
+                            internalName,
+                            fileSpecification.toString(),
+                            releaseOnTaskEnd);
+
+        var ui = new UseItem(internalName, fileSpecification, releaseOnTaskEnd);
+        var uiTable = runControlEntry.getUseItemTable();
+        uiTable.addUseItem(ui);
+
+        LogManager.logTrace(LOG_SOURCE, "establishUseItem %s exit", runControlEntry.getRunId());
+    }
+
+    /**
      * Returns the facilities NodeInfo for the given node.
      * @param nodeName name of the node - we'd prefer it to be uppercase, but whatever...
      * @return NodeInfo of the node if it is configured, else null
@@ -901,7 +927,6 @@ public class FacilitiesManager implements Manager {
                          .filter(ni -> ni.getNode().getNodeName().equalsIgnoreCase(nodeName))
                          .findFirst()
                          .orElse(null);
-
     }
 
     /**

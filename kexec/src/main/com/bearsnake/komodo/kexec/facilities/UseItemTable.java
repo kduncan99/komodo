@@ -5,7 +5,6 @@
 package com.bearsnake.komodo.kexec.facilities;
 
 import com.bearsnake.komodo.kexec.FileSpecification;
-import com.bearsnake.komodo.kexec.exec.RunControlEntry;
 
 import java.util.HashMap;
 
@@ -13,13 +12,10 @@ public class UseItemTable {
 
     private static final HashMap<String, UseItem> _content = new HashMap<>();
 
-    public boolean addUseItem(
+    public void addUseItem(
         final UseItem useItem
     ) {
-        // TODO
-        //   fail if item already exists...?
         _content.put(useItem.getInternalName(), useItem);
-        return true;
     }
 
     public UseItem getUseItem(
