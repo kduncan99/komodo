@@ -18,7 +18,7 @@ class QualHandler extends Handler {
 
     private static final Set<SubfieldSpecifier> VALID_SUBFIELD_SPECS = new HashSet<>();
     static {
-        VALID_SUBFIELD_SPECS.add(new SubfieldSpecifier(0, 0)); // filename
+        VALID_SUBFIELD_SPECS.add(new SubfieldSpecifier(0, 0)); // qualifier
     }
 
     @Override
@@ -49,14 +49,6 @@ class QualHandler extends Handler {
             if (hp._sourceIsExecRequest) {
                 hp._runControlEntry.postContingency(012, 04, 040);
             }
-        }
-
-        if (hp._statement._operandFields.size() > 1) {
-            LogManager.logInfo(Interpreter.LOG_SOURCE,
-                               "[%s] Too many operand fields:%s",
-                               hp._runControlEntry.getRunId(),
-                               hp._statement._originalStatement);
-            postSyntaxError(hp);
             return;
         }
 

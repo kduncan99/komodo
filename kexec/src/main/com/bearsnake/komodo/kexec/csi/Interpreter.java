@@ -43,7 +43,7 @@ public class Interpreter {
         // START
         // SYM
         // SYMCN
-        // USE
+        addHandler(new UseHandler());
         // XQT
     }
 
