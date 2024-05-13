@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.logger.LogManager;
 
@@ -26,7 +27,7 @@ abstract class Handler {
      * If errors exist and the source is ER CSF$/ACSF$/CSI$, we post a contingency
      * @return true if no illegal options were specified
      */
-    protected boolean checkIllegalOptions(
+    protected static boolean checkIllegalOptions(
         final HandlerPacket hp,
         final long allowedOptions
     ) {
@@ -67,7 +68,7 @@ abstract class Handler {
      * one or more appropriate fac results into the handler packet so that there's nothing else for the
      * caller to do other than return.
      */
-    protected boolean checkIllegalFieldsAndSubfields(
+    protected static boolean checkIllegalFieldsAndSubfields(
         final HandlerPacket hp,
         final Set<SubfieldSpecifier> validSubfields,
         final Set<Integer> unboundFields
@@ -89,7 +90,7 @@ abstract class Handler {
      * Posts a contingency if there is an violation and the source is ER CSF$/ACSF$/CSI$.
      * @return true if there are no exclusion violations, else false
      */
-    protected boolean checkMutuallyExclusiveOptions(
+    protected static boolean checkMutuallyExclusiveOptions(
         final HandlerPacket hp,
         final long exclusiveOptions
     ) {
@@ -128,12 +129,58 @@ abstract class Handler {
     }
 
     /**
+     * Check placement field syntax for the statement in the HandlerPacket
+     * We accept:
+     *  '*' cu
+     * Where cu is the name of a channel node
+     *  '*' device
+     * where device is the name of a device node
+     *  i
+     * where i is a letter from A to Z indicating a logical channel - the mapping from the letter to a particular
+     * controller does not persist from one run to the next... One can only count on getting a compatible controller.
+     *  in
+     * where i is a letter from A to Z as above, and n is a number from 1 to 15 indicating a logical device
+     * on the selected logical controller.
+     * @return true if there are no syntax problems, false if there are syntax issues.
+     * If we return false, we've already updated the facStatusResult field.
+     */
+    protected static boolean checkPlacementFieldSyntax(
+        final HandlerPacket hp
+    ) {
+        var result = true;
+        var placement = hp._statement._operandFields.get(new SubfieldSpecifier(1, 4));
+        if ((placement != null) && !placement.isEmpty()) {
+            if (placement.startsWith("*")) {
+                result = Exec.isValidNodeName(placement.substring(1));
+            } else {
+                if (!Character.isUpperCase(placement.charAt(0))) {
+                    result = false;
+                } else {
+                    try {
+                        var i = Integer.parseInt(placement.substring(1));
+                        result = (i >= 1) && (i <= 15);
+                    } catch (NumberFormatException ex) {
+                        result = false;
+                    }
+                }
+            }
+        }
+
+        if (!result) {
+            hp._statement._facStatusResult.postMessage(FacStatusCode.IllegalCharactersInPlacementField);
+            hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
+        }
+
+        return result;
+    }
+
+    /**
      * Scans the options field and produces a corresponding options word.
      * Posts a contingency if there is an error and the source is ER CSF$/ACSF$/CSI$.
      * The result of the scan (the option word) is populated to the handler packet.
      * @return true if successful, false if there is an error in the options field
      */
-    protected boolean cleanOptions(
+    protected static boolean cleanOptions(
         final HandlerPacket hp
     ) {
         hp._optionWord = 0;
@@ -160,7 +207,7 @@ abstract class Handler {
      * Saves calling code a little bit of annoyance
      * @return content of indicated subfield if it exists, else null
      */
-    protected String getSubField(
+    protected static String getSubField(
         final HandlerPacket hp,
         final SubfieldSpecifier subfieldSpec) {
         return (hp._statement._operandFields.get(subfieldSpec));
@@ -174,7 +221,7 @@ abstract class Handler {
      * @param subFieldIndex index of operand subfield
      * @return content of indicated subfield if it exists, else null
      */
-    protected String getSubField(
+    protected static String getSubField(
         final HandlerPacket hp,
         final int fieldIndex,
         final int subFieldIndex
@@ -186,7 +233,7 @@ abstract class Handler {
      * Returns a particular subfield of the operands if it was specified, or the default value otherwise
      * Saves calling code a little bit of annoyance
      */
-    protected String getSubFieldOr(
+    protected static String getSubFieldOr(
         final HandlerPacket hp,
         final int fieldIndex,
         final int subFieldIndex,

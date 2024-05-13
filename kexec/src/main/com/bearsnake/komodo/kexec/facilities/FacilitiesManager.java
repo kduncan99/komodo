@@ -34,9 +34,11 @@ import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.FixedDiskItemFile;
 import com.bearsnake.komodo.kexec.facilities.facItems.RemovableDiskItemFile;
 import com.bearsnake.komodo.kexec.mfd.DiskFileCycleInfo;
+import com.bearsnake.komodo.kexec.mfd.DiskPackEntry;
 import com.bearsnake.komodo.kexec.mfd.FileCycleInfo;
 import com.bearsnake.komodo.kexec.mfd.FileSetInfo;
 import com.bearsnake.komodo.kexec.mfd.FileType;
+import com.bearsnake.komodo.kexec.mfd.RemovableDiskFileCycleInfo;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
@@ -58,6 +60,7 @@ import static com.bearsnake.komodo.baselib.Word36.M_OPTION;
 import static com.bearsnake.komodo.baselib.Word36.R_OPTION;
 import static com.bearsnake.komodo.baselib.Word36.T_OPTION;
 import static com.bearsnake.komodo.baselib.Word36.X_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.Y_OPTION;
 
 public class FacilitiesManager implements Manager {
 
@@ -71,6 +74,27 @@ public class FacilitiesManager implements Manager {
         None,
         DirectoryOnlyMountPacks,
         DirectoryOnlyDoNotMountPacks,
+    }
+
+    private enum PlacementType {
+        AbsoluteByChannel,
+        AbsoluteByDevice,
+        LogicalByChannel,
+        LogicalByDevice,
+    }
+
+    private static class PlacementInfo {
+
+        public final PlacementType _placementType;
+        public final int _nodeIdentifier;
+
+        public PlacementInfo(
+            final PlacementType placementType,
+            final int nodeIdentifier
+        ) {
+            _placementType = placementType;
+            _nodeIdentifier = nodeIdentifier;
+        }
     }
 
     static final String LOG_SOURCE = "FacMgr";
@@ -252,11 +276,8 @@ public class FacilitiesManager implements Manager {
         if (!checkKeys(runControlEntry, fsInfo, fileSpecification, fsResult)) {
             return false;
         }
-
         var readInhibit = (fsResult.getStatusWord() & 0_000100_000000L) != 0;
         var writeInhibit = (fsResult.getStatusWord() & 0_000200_000000L) != 0;
-        var alreadyAssigned = false;
-        var isRemovable = fsInfo.getFileType() == FileType.Removable;
 
         // --------------------------------------------------------
         // Determine whether the indicated file cycle exists,
@@ -265,14 +286,21 @@ public class FacilitiesManager implements Manager {
 
         DiskFileFacilitiesItem facItem;
         DiskFileCycleInfo fcInfo;
+        String qualifier = fileSpecification.getQualifier();
+        String filename = fileSpecification.getFilename();
+        int absCycle;
         var fiTable = runControlEntry.getFacilitiesItemTable();
-        if (fileSpecification.hasFileCycleSpecification() && fileSpecification.getFileCycleSpecification().isAbsolute()) {
-            // This an absolute file cycle request - go get the file cycle info.
-            // If it is *not* fixed and there are pack-ids, do sanity checking on them.
+
+        if (fileSpecification.hasFileCycleSpecification()
+            && fileSpecification.getFileCycleSpecification().isAbsolute()) {
+
+            // This an absolute file cycle request.
+            // Go get the file cycle info if the file exists (else fail).
+            // Get the existing fac item if the file is already assigned to the run (but it is not an error if it wasn't).
+            absCycle = fileSpecification.getFileCycleSpecification().getCycle();
             try {
-                fcInfo = (DiskFileCycleInfo) mm.getFileCycleInfo(fileSpecification.getQualifier(),
-                                                                 fileSpecification.getFilename(),
-                                                                 fileSpecification.getFileCycleSpecification().getCycle());
+                fcInfo = (DiskFileCycleInfo) mm.getFileCycleInfo(qualifier, filename, absCycle);
+                facItem = (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByAbsoluteCycle(qualifier, filename, absCycle);
             } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
                 // we already checked for file set not existing, but we have to catch it here anyway.
                 fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
@@ -280,51 +308,6 @@ public class FacilitiesManager implements Manager {
                 return false;
             }
 
-            // Check placement (only for fixed)
-            // TODO
-            //E:202333 Placement device device is not fixed mass storage. (this goes elsewhere, it's for fixed)
-            //E:252133 Placement field is not allowed with CAT.
-            //E:252233 Placement requested on a non--mass storage device.
-            //E:252333 Placement is not allowed with a removable disk file.
-            //E:252433 Illegal syntax in placement subfield.
-
-            // Check the pack-ids on the file cycle against the provided pack-ids (if any).
-            // Cannot allow pack-ids for fixed disks.
-            // Rules:
-            //   All cycles for a given file set must have the same pack list
-            //   Max number of pack-ids is 510
-            //   If a file cycle is currently unassigned, we can add one or more pack-ids to the *END* of the pack list
-            //     *IF* the entire list is specified, with the new pack(s) at the end of the list
-            //   Packs must only be added with the A option (which is why we are here), but *NOT* with the Y option.
-            //   Packs cannot be added if the fileset has more than one cycle, or if the cycle is currently assigned.
-            //   Adding packs requires delete access (for fundamental security, cycle must not be write-inhibited)
-            if (!packIds.isEmpty()) {
-                if (!isRemovable) {
-                    // we'd like a better message, but this is all we have...
-                    fsResult.postMessage(FacStatusCode.UndefinedFieldOrSubfield);
-                    fsResult.mergeStatusBits(0_600000_000000L);
-                    return false;
-                }
-
-                //E:271333 Packs can only be added to removable files using an A option assignment.
-                //E:271433 Packs cannot be added to removable files using a Y option assignment.
-                //E:271533 Packs cannot be added to removable files that are currently assigned.
-                //E:271633 Packs can only be added to removable files with a single file cycle.
-                //E:202233 Pack pack-id is not a removable pack.
-                //E:247633 Maximum number of packids exceeded.
-                //E:251233 Number of packids on image not equal to number of packs assigned to file.
-                //E:251333 Number of packids on the image not equal to number of packids in master file directory.
-                //E:251433 Packids on image are not equal to packids assigned to file.
-                //E:251533 Packids on image are not in same order as file's packids.
-            }
-
-            // Check the existing facility items to see if this file cycle is already assigned to this run.
-            facItem = (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByAbsoluteCycle(fileSpecification.getQualifier(),
-                                                                                        fileSpecification.getFilename(),
-                                                                                        fileSpecification.getFileCycleSpecification().getCycle());
-            if (facItem != null) {
-                alreadyAssigned = true;
-            }
         } else {
             // It's either relative or unspecified. If unspecified, we treat it like relative +0.
             // Check the fac items to see if the file is already assigned with this relative cycle number.
@@ -340,74 +323,65 @@ public class FacilitiesManager implements Manager {
             //   make sure we're not being asked to change anything in a funny way (as above)
             //   create new fac item with option-driven settings as necessary
             //   update use-items to point to fac item as necessary
-            var cycle = fileSpecification.hasFileCycleSpecification()
-                ? fileSpecification.getFileCycleSpecification().getCycle() : 0;
-            facItem =
-                (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByRelativeCycle(fileSpecification.getQualifier(),
-                                                                                  fileSpecification.getFilename(),
-                                                                                  cycle);
+            var relCycle = 0;
+            if (fileSpecification.hasFileCycleSpecification()) {
+                relCycle = fileSpecification.getFileCycleSpecification().getCycle();
+            }
+
+            facItem = (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByRelativeCycle(qualifier, filename, relCycle);
             if (facItem != null) {
-                alreadyAssigned = true;
                 var fsci = fsInfo.getCycleInfo().get(facItem.getAbsoluteCycle());
+                absCycle = fsci.getAbsoluteCycle();
                 try {
-                    fcInfo = (DiskFileCycleInfo) mm.getFileCycleInfo(fsInfo.getQualifier(),
-                                                                     fsInfo.getFilename(),
-                                                                     fsci.getAbsoluteCycle());
+                    fcInfo = (DiskFileCycleInfo) mm.getFileCycleInfo(qualifier, filename, absCycle);
                 } catch (FileSetDoesNotExistException | FileCycleDoesNotExistException ex) {
                     LogManager.logFatal(LOG_SOURCE,
                                         "MFD cannot find a file cycle which must exist %s*%s(%d)",
-                                        fsInfo.getQualifier(),
-                                        fsInfo.getFilename(),
-                                        fsci.getAbsoluteCycle());
+                                        qualifier, filename, absCycle);
                     e.stop(StopCode.FacilitiesComplex);
                     throw new ExecStoppedException();
                 }
             } else {
-                if (cycle == 1) {
+                if (relCycle == 1) {
                     // @ASG,A of +1 cycle is not allowed unless we already have it assigned,
                     // which is already accounted for in the code just above, and it cannot be assigned by
-                    // absolute cycle - it would have been by +1.
+                    // absolute cycle - if it was already assigned, it would have been by relative cycle +1.
                     fsResult.postMessage(FacStatusCode.Plus1IllegalWithAOption);
                     fsResult.mergeStatusBits(0_400000_000040L);
                     return false;
                 }
 
-                if (Math.abs(cycle) >= fsInfo.getCycleInfo().size()) {
+                if (Math.abs(relCycle) >= fsInfo.getCycleInfo().size()) {
                     fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
                     fsResult.mergeStatusBits(0_400010_000000L);
                     return false;
                 }
 
                 // Do we already have it assigned by the absolute cycle?
-                var fsci = fsInfo.getCycleInfo().get(Math.abs(cycle));
+                var fsci = fsInfo.getCycleInfo().get(Math.abs(relCycle));
+                absCycle = fsci.getAbsoluteCycle();
                 try {
-                    fcInfo = (DiskFileCycleInfo) mm.getFileCycleInfo(fsInfo.getQualifier(),
-                                                                     fsInfo.getFilename(),
-                                                                     fsci.getAbsoluteCycle());
+                    fcInfo = (DiskFileCycleInfo) mm.getFileCycleInfo(qualifier, filename, absCycle);
                 } catch (FileSetDoesNotExistException | FileCycleDoesNotExistException ex) {
                     LogManager.logFatal(LOG_SOURCE,
                                         "MFD cannot find a file cycle which must exist %s*%s(%d)",
-                                        fsInfo.getQualifier(),
-                                        fsInfo.getFilename(),
-                                        fsci.getAbsoluteCycle());
+                                        qualifier, filename, absCycle);
                     e.stop(StopCode.FacilitiesComplex);
                     throw new ExecStoppedException();
                 }
 
-                facItem =
-                    (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByRelativeCycle(fileSpecification.getQualifier(),
-                                                                                      fileSpecification.getFilename(),
-                                                                                      fsci.getAbsoluteCycle());
+                facItem = (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByRelativeCycle(qualifier, filename, absCycle);
                 if (facItem != null) {
                     // yes - attach this relative cycle to the already-existing fac item.
                     // If it already has a relative cycle, it would have to be the same as this one, so no worries.
-                    alreadyAssigned = true;
-                    facItem.setRelativeCycle(cycle);
+                    facItem.setRelativeCycle(relCycle);
                 }
             }
         }
 
-        if (alreadyAssigned) {
+        var isRemovable = fsInfo.getFileType() == FileType.Removable;
+        var wasAlreadyAssigned = (facItem != null);
+        if (wasAlreadyAssigned) {
             // We need to filter out the effects of D,E,K,R, and M since we are already assigned.
             // We could not do this previously, as we developed the idea of being already assigned
             // throughout the course of the preceding nonsense. But we are here now, so...
@@ -418,10 +392,48 @@ public class FacilitiesManager implements Manager {
             if ((optionsWord & (D_OPTION | E_OPTION | K_OPTION | R_OPTION | M_OPTION)) != 0) {
                 fsResult.postMessage(FacStatusCode.OptionConflictOptionsIgnored);
             }
+        }
+
+        // --------------------------------------------------------
+        // Check placement or pack-id list
+        // --------------------------------------------------------
+
+        PlacementInfo placementInfo;
+        if (isRemovable) {
+            // We are removable, check pack-ids (and ensure placement was not specified)
+            if (placement != null) {
+                fsResult.postMessage(FacStatusCode.PlacementFieldNotAllowedForRemovable);
+                fsResult.mergeStatusBits(0_600000_000000L);
+                return false;
+            }
+
+            var remInfo = (RemovableDiskFileCycleInfo) fcInfo;
+            if (!packIds.isEmpty() && !checkPackIds(fsInfo, remInfo, optionsWord, packIds, fsResult)) {
+                return false;
+            }
         } else {
-            // Not already assigned - we need to create a new facilities item.
-            // Is this file (which is not yet assigned) accessible?
-            // Check public/private
+            // We are fixed, check placement validity (and ensure pack-ids were not specified)
+            if (!packIds.isEmpty()) {
+                // we'd like a better message, but this is all we have...
+                fsResult.postMessage(FacStatusCode.UndefinedFieldOrSubfield);
+                fsResult.mergeStatusBits(0_600000_000000L);
+                return false;
+            }
+
+            if (placement != null) {
+                placementInfo = checkPlacement(placement, fsResult);
+                if (placementInfo == null) {
+                    return false;
+                }
+            }
+        }
+
+        // --------------------------------------------------------
+        // If the file was not already assigned, create a fac item
+        // --------------------------------------------------------
+
+        if (!wasAlreadyAssigned) {
+            // Check public/private - not necessary if the file was already assigned, but it wasn't, so...
             if (!checkPrivateAccess(runControlEntry, fcInfo, fsResult)) {
                 return false;
             }
@@ -451,12 +463,12 @@ public class FacilitiesManager implements Manager {
         // Error checking which cannot be done until we have
         // file cycle information for already existing file cycles,
         // and some general knowledge for both already-existing and
-        // to-be existing file cycles.
+        // to-be existing file cycles, and a facItem (new or not).
         // These are failures which should be detected before
         // attempting to wait on facilities.
         // --------------------------------------------------------
 
-        // Is file disabled?
+        // Is file disabled? (should not check this until after we know it is accessible)
         if (!checkDisabled(fcInfo, directoryOnlyBehavior, assignIfDisabled, fsResult)) {
             return false;
         }
@@ -496,7 +508,7 @@ public class FacilitiesManager implements Manager {
         //        E:247333 Illegal value specified for maximum.
         //        E:247433 Maximum is less than the initial reserve.
 
-        if (alreadyAssigned) {
+        if (wasAlreadyAssigned) {
             // generic stuff for already-assigned file, which occurs before any putative wait
             // Attempt to set read-inhibited or write-inhibited?
             if (readInhibit && facItem.isReadable()) {
@@ -526,7 +538,7 @@ public class FacilitiesManager implements Manager {
         // If it *is* already assigned, we can just drop through as the current facItem should already have
         // all the rollback waiting states set properly.
         if (fcInfo.getDescriptorFlags().isUnloaded()
-            && !alreadyAssigned
+            && !wasAlreadyAssigned
             && (directoryOnlyBehavior == DirectoryOnlyBehavior.None)) {
             if (doNotHoldRun) {
                 fsResult.postMessage(FacStatusCode.HoldForRollbackRejected);
@@ -548,7 +560,7 @@ public class FacilitiesManager implements Manager {
         // This is applicable even if the file is already assigned, because we might be applying x-use now,
         // where it wasn't applied previously.
         if (exclusiveUse) {
-            if (alreadyAssigned ? fcInfo.getCurrentAssignCount() > 1 : fcInfo.getCurrentAssignCount() > 0) {
+            if (wasAlreadyAssigned ? fcInfo.getCurrentAssignCount() > 1 : fcInfo.getCurrentAssignCount() > 0) {
                 if (doNotHoldRun) {
                     fsResult.postMessage(FacStatusCode.HoldForXUseRejected);
                     fsResult.mergeStatusBits(0_400001_000000L);
@@ -562,9 +574,9 @@ public class FacilitiesManager implements Manager {
         }
 
         // Are we waiting, or do we need to wait, for a file which is exclusively assigned elsewhere?
-        // If alreadyAssigned is set, then we don't worry about it, because the facItem should already
+        // If wasAlreadyAssigned is set, then we don't worry about it, because the facItem should already
         // be set to the correct states.
-        if (!alreadyAssigned && (fcInfo.getInhibitFlags().isAssignedExclusively())) {
+        if (!wasAlreadyAssigned && (fcInfo.getInhibitFlags().isAssignedExclusively())) {
             if (doNotHoldRun) {
                 fsResult.postMessage(FacStatusCode.HoldForReleaseXUseRejected);
                 fsResult.mergeStatusBits(0_400001_000000L);
@@ -605,7 +617,7 @@ public class FacilitiesManager implements Manager {
             fsResult.postMessage(FacStatusCode.FileCatalogedAsWriteOnly);
         }
 
-        if (alreadyAssigned) {
+        if (wasAlreadyAssigned) {
             // post-wait generic stuff for already assigned disk file
             fsResult.postMessage(FacStatusCode.FileAlreadyAssigned);
             fsResult.mergeStatusBits(0_100000_000000L);
@@ -1196,6 +1208,199 @@ public class FacilitiesManager implements Manager {
     }
 
     /**
+     * Checks a list of pack-ids for validity against a particular fileset and file-cycle.
+     * Do not invoke with an empty pack list.
+     * Rules:
+     *  All cycles for a given file set must have the same pack list
+     *  Max number of pack-ids is 510
+     *  If a file cycle is currently unassigned, we can add one or more pack-ids to the *END* of the pack list
+     *    *IF* the entire list is specified, with the new pack(s) at the end of the list
+     *  Packs must only be added with the A option but *NOT* with the Y option.
+     *  Packs cannot be added if the fileset has more than one cycle, or if the cycle is currently assigned.
+     *  Adding packs requires delete access (for fundamental security, cycle must not be write-inhibited)
+     * @param packIds
+     * @param fsResult
+     * @return
+     */
+    private boolean checkPackIds(
+        final FileSetInfo fsInfo,
+        final RemovableDiskFileCycleInfo fcInfo,
+        final long optionWord,
+        final List<String> packIds,
+        final FacStatusResult fsResult
+    ) {
+        if (packIds.size() > 510) {
+            fsResult.postMessage(FacStatusCode.MaximumNumberOfPackIdsExceeded);
+            fsResult.mergeStatusBits(0_400000_000000L);
+            return false;
+        }
+
+        LinkedList<String> existingPackIds = fcInfo.getDiskPackEntries()
+                                                   .stream()
+                                                   .map(DiskPackEntry::getPackName)
+                                                   .collect(Collectors.toCollection(LinkedList::new));
+
+        // If the given list is smaller than the existing set of pack-ids, this is an immediate error
+        if (packIds.size() < existingPackIds.size()) {
+            fsResult.postMessage(FacStatusCode.NumberOfPackIdsNotEqualToMFD);
+            fsResult.mergeStatusBits(0_400000_000000L);
+            return false;
+        }
+
+        // If the given list is the same size or larger than the existing set, then the first {n}
+        // given pack-ids must match the first {n} existing pack-ids
+        for (int px = 0; px < existingPackIds.size(); px++) {
+            if (!packIds.get(px).equals(existingPackIds.get(px))) {
+                fsResult.postMessage(FacStatusCode.PackIdsNotEqualToFile);
+                fsResult.mergeStatusBits(0_400000_000000L);
+                return false;
+            }
+        }
+
+        // Are there additional pack-ids?
+        if (packIds.size() > existingPackIds.size()) {
+            if ((optionWord & A_OPTION) == 0) {
+                fsResult.postMessage(FacStatusCode.PacksCanOnlyBeAddedWithAOption);
+                fsResult.mergeStatusBits(0_400000_000000L);
+                return false;
+            }
+
+            if ((optionWord & Y_OPTION) != 0) {
+                fsResult.postMessage(FacStatusCode.PacksCanNotBeAddedWithYOption);
+                fsResult.mergeStatusBits(0_400000_000000L);
+                return false;
+            }
+
+            if (fcInfo.getCurrentAssignCount() > 0) {
+                fsResult.postMessage(FacStatusCode.PacksCanNotBeAddedIfAssigned);
+                fsResult.mergeStatusBits(0_400000_000000L);
+                return false;
+            }
+
+            if (fsInfo.getCycleCount() > 1) {
+                fsResult.postMessage(FacStatusCode.PacksCanOnlyBeAddedWithSingleCycle);
+                fsResult.mergeStatusBits(0_400000_000000L);
+                return false;
+            }
+
+            // Any subsequent pack-ids in the given list must refer to removable packs
+            for (int px = existingPackIds.size(); px < packIds.size(); px++) {
+                //TODO E:202233 Pack pack-id is not a removable pack.
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks the placement string provided on the control statement for validity,
+     * and returns a corresponding PlacementInfo object.
+     * Do not invoke if placement string is null.
+     * @param placement placement string
+     * @param fsResult where we put facility status information if necessary
+     * @return PlacementInfo object if placement is valid, null if it is not.
+     */
+    private PlacementInfo checkPlacement(
+        final String placement,
+        final FacStatusResult fsResult
+    ) {
+        if (placement.startsWith("*")) {
+            // absolute placement, either by channel or by device
+            var unitName = placement.substring(1).toUpperCase();
+            var ni = getNodeInfoByName(unitName);
+            if (ni == null) {
+                fsResult.postMessage(FacStatusCode.UnitNameIsNotConfigured, new String[]{ unitName });
+                fsResult.mergeStatusBits(0_400000_000000L);
+                return null;
+            }
+
+            var node = ni.getNode();
+            if (node.getNodeCategory() == NodeCategory.Channel) {
+                var chan = (Channel) node;
+                // TODO make sure this is a disk channel (not sure what message to post, if not)
+
+                var cni = (ChannelNodeInfo) ni;
+                if (cni.getNodeStatus() != NodeStatus.Up) {
+                    fsResult.postMessage(FacStatusCode.DeviceIsNotUp, new String[]{ unitName });
+                    fsResult.mergeStatusBits(0_400000_000000L);
+                    return null;
+                }
+
+                // TODO make sure there is at least one unit available (not sure what message to post if not)
+
+                return new PlacementInfo(PlacementType.AbsoluteByChannel, node.getNodeIdentifier());
+            } else if (node.getNodeCategory() == NodeCategory.Device) {
+                var dev = (Device) node;
+                if (dev.getDeviceType() != DeviceType.DiskDevice) {
+                    fsResult.postMessage(FacStatusCode.PlacementOnNonMassStorageDevice);
+                    fsResult.mergeStatusBits(0_400000_000000L);
+                    return null;
+                }
+
+                var dni = (DeviceNodeInfo) ni;
+                if (ni.getNodeStatus() != NodeStatus.Up) {
+                    fsResult.postMessage(FacStatusCode.DeviceIsNotUp, new String[]{ unitName });
+                    fsResult.mergeStatusBits(0_400000_000000L);
+                    return null;
+                }
+
+                var pi = (PackInfo)dni._mediaInfo;
+                if (!pi.isFixed()) {
+                    fsResult.postMessage(FacStatusCode.PlacementNotFixedMassStorage, new String[]{ unitName });
+                    fsResult.mergeStatusBits(0_400000_000000L);
+                    return null;
+                }
+
+                return new PlacementInfo(PlacementType.AbsoluteByDevice, node.getNodeIdentifier());
+            } else {
+                // not sure that this is the right message, but it seems the closest to what we want
+                fsResult.postMessage(FacStatusCode.InvalidDeviceControlUnitName, new String[] { unitName });
+                fsResult.mergeStatusBits(0_400000_000000L);
+                return null;
+            }
+        } else {
+            // logical placement by channel, and maybe by device
+            // find the nth channel, so indicated by 'A' == 0, 'B' == 1, etc
+            char thisChar = 'A';
+            char reqChar = placement.charAt(0);
+            NodeInfo selectedChannelNodeInfo = null;
+            for (var entry : _nodeGraph.entrySet()) {
+                // ignore non-channels
+                var ni = entry.getValue();
+                if (ni.getNode().getNodeCategory() == NodeCategory.Channel) {
+                    if (thisChar == reqChar) {
+                        selectedChannelNodeInfo = entry.getValue();
+                        break;
+                    }
+                    thisChar++;
+                }
+            }
+
+            if (selectedChannelNodeInfo == null) {
+                // No such, no such TODO post error
+                return null;
+            }
+
+            if (placement.length() == 1) {
+                // just use the channel node
+                return new PlacementInfo(PlacementType.LogicalByChannel,
+                                         selectedChannelNodeInfo.getNode().getNodeIdentifier());
+            }
+
+            // Find all the available devices on the selected channel, then use the nth one.
+            var chan = (Channel) selectedChannelNodeInfo.getNode();
+            var devs = new LinkedList<>(chan.getDevices());
+            int reqDeviceIndex = Integer.parseInt(placement.substring(1));
+            if (reqDeviceIndex >= devs.size()) {
+                // no such - TODO post error
+                return null;
+            }
+
+            return new PlacementInfo(PlacementType.LogicalByDevice, devs.get(reqDeviceIndex).getNodeIdentifier());
+        }
+    }
+
+    /**
      * If the indicated file cycle is private, check the options and rce to see if the caller
      * is allowed to access the file. We produce fac status accordingly.
      * @return true if access is allowed, else false.
@@ -1263,6 +1468,18 @@ public class FacilitiesManager implements Manager {
             }
         }
         return list;
+    }
+
+    private NodeInfo getNodeInfoByName(
+        final String nodeName
+    ) {
+        synchronized (_nodeGraph) {
+            return _nodeGraph.values()
+                             .stream()
+                             .filter(ni -> ni.getNode().getNodeName().equals(nodeName))
+                             .findFirst()
+                             .orElse(null);
+        }
     }
 
     /**

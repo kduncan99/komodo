@@ -42,6 +42,7 @@ public enum FacStatusCode {
     FileAlreadyExclusivelyAssigned(0123233),
 
     // Errors
+    InvalidDeviceControlUnitName(0200133),
     DeviceAlreadyInUseByThisRun(0200333),
     DeviceIsFixed(0200433),
     MnemonicIsNotConfigured(0201033),
@@ -49,7 +50,9 @@ public enum FacStatusCode {
     OperatorDoesNotAllowAbsoluteAssign(0201333),
     IllegalOptionCombination(0201433),
     IllegalOption(0201533),
+    PlacementNotFixedMassStorage(0202333),
     UnitIsNotReserved(0203133),
+    DeviceIsNotUp(0203233),
     UnitIsNotUpOrReserved(0203333),
     AssignMnemonicDoesNotAllowPackIds(0240633),
     AssignMnemonicTooLong(0240733),
@@ -77,14 +80,21 @@ public enum FacStatusCode {
     MaximumIsLessThanInitialReserve(0247433),
     MaximumNumberOfPackIdsExceeded(0247633),
     IOptionOnlyAllowed(0250733),
+    NumberOfPackIdsNotEqualToFile(0251233),
+    NumberOfPackIdsNotEqualToMFD(0251333),
+    PackIdsNotEqualToFile(0251433),
+    PackIdsNotInSameOrder(0251533),
     PackIdIsRequired(0251633),
     Plus1IllegalWithAOption(0252033),
     PlacementFieldNotAllowed(0252133),
+    PlacementOnNonMassStorageDevice(0252233),
+    PlacementFieldNotAllowedForRemovable(0252333),
     IncorrectPrivacyKey(0252533),
     IncorrectReadKey(0253333),
     FileNotCatalogedWithReadKey(0253433),
     RelativeFCycleConflict(0253733),
     FileBackupNotAvailable(0254333),
+    IllegalCharactersInPlacementField(0245333),
     UndefinedFieldOrSubfield(0255733),
     IncorrectWriteKey(0256633),
     FileNotCatalogedWithWriteKey(0256733),
@@ -101,8 +111,12 @@ public enum FacStatusCode {
     HoldForMassStorageSpaceRejected(0260433),
     DisabledForCacheDrainFailure(0260633),
     DirectoryAndQualifierMayNotAppear(0262633),
-    DirectoryOrQualifierMustAppear(0263033);
-    
+    DirectoryOrQualifierMustAppear(0263033),
+    PacksCanOnlyBeAddedWithAOption(0271333),
+    PacksCanNotBeAddedWithYOption(0271433),
+    PacksCanNotBeAddedIfAssigned(0271533),
+    PacksCanOnlyBeAddedWithSingleCycle(0271633);
+
     final int _value;
     
     FacStatusCode(int value) {

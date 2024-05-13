@@ -430,6 +430,9 @@ class AsgHandler extends Handler {
         }
 
         var placement = hp._statement._operandFields.get(new SubfieldSpecifier(1, 4));
+        if (!checkPlacementFieldSyntax(hp)) {
+            return;
+        }
 
         var packIds = new LinkedList<String>();
         for (var entry : hp._statement._operandFields.entrySet()) {
