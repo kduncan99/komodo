@@ -18,33 +18,35 @@ import java.util.Map;
 // Calling code should first invoke parseControlStatement(), and if that works out, should subsequently
 // invoke handleControlStatement().
 // This code does not handle certain run-oriented statements such as
-//  @RUN, @FIN, @PASSWD, @TEST, @JUMP, @SETC, etc.
+//   @RUN, @FIN, @PASSWD, @TEST, @JUMP, @FILE, @ENDF, maybe others
+//   It also does not handle processor calls, including FURPUR calls.
 public class Interpreter {
 
     static final String LOG_SOURCE = "CSI";
 
     private static final Map<String, Handler> HANDLERS = new HashMap<>();
     static {
-        // ADD
+        addHandler(new AddHandler());
         addHandler(new AsgHandler());
-        // BRKPT
-        // CAT
-        // CKPT
-        // END
-        // ENDX
-        // FREE
-        // HDG
+        addHandler(new BrkptHandler());
+        addHandler(new CatHandler());
+        addHandler(new CatHandler());
+        // END - should this be done here?
+        // ENDX - should this be done here?
+        // EOF - should this be done here?
+        addHandler(new FreeHandler());
+        addHandler(new HdgHandler());
         addHandler(new LogHandler());
-        // MODE
-        // MSG
+        addHandler(new ModeHandler());
+        addHandler(new MsgHandler());
         addHandler(new QualHandler());
-        // RSTRT
-        // SETC
-        // START
-        // SYM
-        // SYMCN
+        addHandler(new RstrtHandler());
+        addHandler(new SetcHandler());
+        addHandler(new StartHandler());
+        addHandler(new SymHandler());
+        addHandler(new SymCNHandler());
         addHandler(new UseHandler());
-        // XQT
+        addHandler(new XqtHandler());
     }
 
     private static void addHandler(final Handler handler) {
