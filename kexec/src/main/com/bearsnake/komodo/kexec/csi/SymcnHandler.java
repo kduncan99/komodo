@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.kexec.csi;
 
-class SymCNHandler extends Handler {
+class SymcnHandler extends Handler {
 
     @Override
     public boolean allowCSF() { return true; }

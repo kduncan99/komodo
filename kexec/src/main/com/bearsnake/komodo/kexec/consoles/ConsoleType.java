@@ -5,31 +5,33 @@
 package com.bearsnake.komodo.kexec.consoles;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public enum ConsoleType {
-    Communications(001, 'C', "COMMSG"),
-    HardwareConfidence(002, 'H', "HWMSG"),
-    InputOutput(004, 'I', "IOMSG"),
-    System(010, 'S', "SYSMSG");
+    Communications('C', "COMMSG"),
+    HardwareConfidence('H', "HWMSG"),
+    InputOutput('I', "IOMSG"),
+    System('S', "SYSMSG");
 
-    private final int _bitMask;
     private final String _group;
     private final char _token;
 
-    public final static int ALL =
-        Communications._bitMask | HardwareConfidence._bitMask | InputOutput._bitMask | System._bitMask;
+    public final static LinkedList<ConsoleType> ALL = new LinkedList<>();
+    static {
+        ALL.add(Communications);
+        ALL.add(HardwareConfidence);
+        ALL.add(InputOutput);
+        ALL.add(System);
+    }
 
     ConsoleType(
-        final int bitMask,
         final char token,
         final String group
     ) {
-        _bitMask = bitMask;
         _group = group.toUpperCase();
         _token = Character.toUpperCase(token);
     }
 
-    public int getBitMask() { return _bitMask; }
     public String getGroup() { return _group; }
     public char getToken() { return _token; }
 

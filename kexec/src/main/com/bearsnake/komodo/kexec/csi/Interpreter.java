@@ -44,7 +44,7 @@ public class Interpreter {
         addHandler(new SetcHandler());
         addHandler(new StartHandler());
         addHandler(new SymHandler());
-        addHandler(new SymCNHandler());
+        addHandler(new SymcnHandler());
         addHandler(new UseHandler());
         addHandler(new XqtHandler());
     }
@@ -213,9 +213,9 @@ public class Interpreter {
             }
         }
 
-        // Now do the operand fields - @LOG gets special treatment
+        // Now do the operand fields - @LOG and @MSG get special treatment
         p.skipSpaces();
-        if (ps._mnemonic.equals("LOG")) {
+        if (ps._mnemonic.equals("LOG") || ps._mnemonic.equals("MSG")) {
             var str = p.parseRemaining();
             ps._operandFields.put(new SubfieldSpecifier(0, 0), str);
             LogManager.logTrace(LOG_SOURCE, "parseControlStatement exit");

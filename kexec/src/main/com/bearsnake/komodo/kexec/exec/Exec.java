@@ -240,18 +240,24 @@ public class Exec {
         return (_phase != Phase.Stopped) && (_phase != Phase.NotStarted);
     }
 
-    public static boolean isValidFilename(final String filename) {
+    public static boolean isValidFilename(
+        final String filename
+    ) {
         if ((filename.isEmpty()) || (filename.length() > 12)) {
             return false;
         }
         return IntStream.range(0, filename.length()).allMatch(chx -> isValidFilenameChar(filename.charAt(chx)));
     }
 
-    public static boolean isValidFilenameChar(final char ch) {
+    public static boolean isValidFilenameChar(
+        final char ch
+    ) {
         return (ch >= 'A' && ch <= 'Z') || ch == '-' || ch == '$';
     }
 
-    public static boolean isValidNodeName(final String deviceName) {
+    public static boolean isValidNodeName(
+        final String deviceName
+    ) {
         if (deviceName.isEmpty() || deviceName.length() > 6) {
             return false;
         }
@@ -265,7 +271,9 @@ public class Exec {
         return true;
     }
 
-    public static boolean isValidPackName(final String packName) {
+    public static boolean isValidPackName(
+        final String packName
+    ) {
         if (packName.isEmpty() || packName.length() > 6) {
             return false;
         }
@@ -279,7 +287,9 @@ public class Exec {
         return true;
     }
 
-    public static boolean isValidPrepFactor(int value) {
+    public static boolean isValidPrepFactor(
+        final int value
+    ) {
         return (value == 28)
                || (value == 56)
                || (value == 112)
@@ -289,7 +299,9 @@ public class Exec {
                || (value == 1792);
     }
 
-    public static boolean isValidReadWriteKey(final String key) {
+    public static boolean isValidReadWriteKey(
+        final String key
+    ) {
         if (key.isEmpty() || key.length() > 6) {
             return false;
         }
@@ -307,39 +319,41 @@ public class Exec {
         return true;
     }
 
-    public static boolean isValidQualifier(final String qualifier) {
+    public static boolean isValidQualifier(
+        final String qualifier
+    ) {
         if ((qualifier.isEmpty()) || (qualifier.length() > 12)) {
             return false;
         }
         return IntStream.range(0, qualifier.length()).allMatch(chx -> isValidQualifierChar(qualifier.charAt(chx)));
     }
 
-    public static boolean isValidQualifierChar(final char ch) {
+    public static boolean isValidQualifierChar(
+        final char ch
+    ) {
         return (ch >= 'A' && ch <= 'Z') || ch == '-' || ch == '$';
     }
 
-    public void sendExecReadOnlyMessage(final String message) {
-        sendExecReadOnlyMessage(message, null, null);
+    public void sendExecReadOnlyMessage(
+        final String message
+    ) {
+        var romsg = new ReadOnlyMessage(_runControlEntry, null, message, true);
+        _consoleManager.sendReadOnlyMessage(romsg);
     }
 
-    public void sendExecReadOnlyMessage(final String message,
-                                        final ConsoleId routing) {
-        sendExecReadOnlyMessage(message, routing, null);
+    public void sendExecReadOnlyMessage(
+        final String message,
+        final ConsoleId routing
+    ) {
+        var romsg = new ReadOnlyMessage(_runControlEntry, routing, null, message, true);
+        _consoleManager.sendReadOnlyMessage(romsg);
     }
 
     public void sendExecReadOnlyMessage(
         final String message,
         final ConsoleType consoleType
     ) {
-        sendExecReadOnlyMessage(message, null, consoleType);
-    }
-
-    public void sendExecReadOnlyMessage(
-        final String message,
-        final ConsoleId routing,
-        final ConsoleType consoleType
-    ) {
-        var romsg = new ReadOnlyMessage(_runControlEntry, routing, consoleType, null, message, true);
+        var romsg = new ReadOnlyMessage(_runControlEntry, consoleType, null, message, true);
         _consoleManager.sendReadOnlyMessage(romsg);
     }
 

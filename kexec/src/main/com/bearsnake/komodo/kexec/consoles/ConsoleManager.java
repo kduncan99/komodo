@@ -22,6 +22,9 @@ public class ConsoleManager implements Manager, Runnable {
     private static final String LOG_SOURCE = "ConsMgr";
     private static final long THREAD_DELAY = 50; // how often do we run the thread in msecs
 
+    // TODO
+    //  somewhere in this mess we need to post roMsgs and rrMsgs (and their responses) to batch runs
+    //  for the tail sheet.
     private final ConcurrentHashMap<ConsoleId, Console> _consoles = new ConcurrentHashMap<>();
     private final ConcurrentLinkedQueue<ConsoleId> _dropConsoleList = new ConcurrentLinkedQueue<>();
     private ConsoleId _primaryConsoleId;

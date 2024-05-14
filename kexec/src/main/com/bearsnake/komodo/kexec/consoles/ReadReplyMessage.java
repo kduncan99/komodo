@@ -11,7 +11,7 @@ public class ReadReplyMessage {
     private final RunControlEntry _source;
     private final ConsoleId _routing; // may be null
     private final ConsoleType _consoleType; // may be null
-    private final String _runId;   // for logging purposes - may not match RCE of instigator, and may be null
+    private final String _runId; // for logging purposes - may not match RCE of instigator, and may be null
     private final String _text;
     private final boolean _doNotEmitRunId;
     private final boolean _doNotLogResponse;
@@ -22,6 +22,35 @@ public class ReadReplyMessage {
     private boolean _isCanceled;
 
     private String _response;
+
+    public ReadReplyMessage(final RunControlEntry source,
+                            final String runId,
+                            final String text,
+                            final boolean doNotEmitRunId,
+                            final boolean doNotLogResponse,
+                            final int maxReplyLength) {
+        this(source, null, null, runId, text, doNotEmitRunId, doNotLogResponse, maxReplyLength);
+    }
+
+    public ReadReplyMessage(final RunControlEntry source,
+                            final ConsoleId routing,
+                            final String runId,
+                            final String text,
+                            final boolean doNotEmitRunId,
+                            final boolean doNotLogResponse,
+                            final int maxReplyLength) {
+        this(source, routing, null, runId, text, doNotEmitRunId, doNotLogResponse, maxReplyLength);
+    }
+
+    public ReadReplyMessage(final RunControlEntry source,
+                            final ConsoleType consoleType,
+                            final String runId,
+                            final String text,
+                            final boolean doNotEmitRunId,
+                            final boolean doNotLogResponse,
+                            final int maxReplyLength) {
+        this(source, null, consoleType, runId, text, doNotEmitRunId, doNotLogResponse, maxReplyLength);
+    }
 
     public ReadReplyMessage(final RunControlEntry source,
                             final ConsoleId routing,
