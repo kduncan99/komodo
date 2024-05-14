@@ -30,6 +30,7 @@ public class KeyinManager implements Manager, Runnable {
 
     static final HashMap<String, Class<?>> _handlerClasses = new HashMap<>();
     static {
+        // AC
         // AP
         // AT
         // B

@@ -12,6 +12,7 @@ import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleConflictException;
 import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleOutOfRangeException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
@@ -353,7 +354,7 @@ public class MFDManager implements Manager {
         var e = Exec.getInstance();
         var msg = String.format("Fixed MS Devices = %d - Continue? YN", fixedDiskInfo.size());
         var allowed = new String[]{ "Y", "N" };
-        var response = e.sendExecRestrictedReadReplyMessage(msg, allowed, null);
+        var response = e.sendExecRestrictedReadReplyMessage(msg, allowed);
         if (!response.equals("Y")) {
             e.stop(StopCode.ConsoleResponseRequiresReboot);
             throw new ExecStoppedException();
@@ -445,7 +446,7 @@ public class MFDManager implements Manager {
         // I think we're all done here.
         var elapsed = Duration.between(start, Instant.now()).get(ChronoUnit.MILLIS);
         msg = String.format("Mass Storage Initialized %d MS.", elapsed);
-        e.sendExecReadOnlyMessage(msg, null);
+        e.sendExecReadOnlyMessage(msg, ConsoleType.System);
         LogManager.logTrace(LOG_SOURCE, "initializeMassStorage exiting");
     }
 
@@ -459,7 +460,7 @@ public class MFDManager implements Manager {
         if (fixedDiskInfo.size() != _fixedPackCount) {
             var msg = String.format("Fixed MS Devices = %d - Expected = %d - Continue? YN", fixedDiskInfo.size(), _fixedPackCount);
             var allowed = new String[]{"Y", "N"};
-            var response = e.sendExecRestrictedReadReplyMessage(msg, allowed, null);
+            var response = e.sendExecRestrictedReadReplyMessage(msg, allowed);
             if (!response.equals("Y")) {
                 e.stop(StopCode.ConsoleResponseRequiresReboot);
                 throw new ExecStoppedException();
@@ -470,7 +471,7 @@ public class MFDManager implements Manager {
 
         var elapsed = Duration.between(start, Instant.now()).get(ChronoUnit.MILLIS);
         var msg = String.format("Mass Storage Recovered %d MS.", elapsed);
-        e.sendExecReadOnlyMessage(msg, null);
+        e.sendExecReadOnlyMessage(msg);
         LogManager.logTrace(LOG_SOURCE, "recoverMassStorage exiting");
     }
 

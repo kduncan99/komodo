@@ -21,6 +21,7 @@ import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
@@ -1090,7 +1091,7 @@ public class FacilitiesManager implements Manager {
         readDiskLabels();
         var fixedDisks = getAccessibleFixedDisks();
         if (fixedDisks.isEmpty()) {
-            e.sendExecReadOnlyMessage("No Fixed Disk Configured", null);
+            e.sendExecReadOnlyMessage("No Fixed Disk Configured");
             e.stop(StopCode.InitializationSystemConfigurationError);
             throw new ExecStoppedException();
         }
@@ -1517,7 +1518,7 @@ public class FacilitiesManager implements Manager {
         var diskLabel = readPackLabel(diskDevice);
         if (diskLabel == null) {
             var msg = getNodeStatusString(diskDevice.getNodeIdentifier());
-            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            Exec.getInstance().sendExecReadOnlyMessage(msg);
             diskNodeInfo.setNodeStatus(NodeStatus.Down);
             return null;
         }
@@ -1526,14 +1527,14 @@ public class FacilitiesManager implements Manager {
         var pi = PackInfo.loadFromLabel(diskLabel, initialDirTrack);
         if (pi == null) {
             var msg = String.format("Pack on %s has no label", diskDevice.getNodeName());
-            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            Exec.getInstance().sendExecReadOnlyMessage(msg);
             diskNodeInfo.setNodeStatus(NodeStatus.Down);
             return null;
         }
 
         if (!Exec.isValidPackName(pi.getPackName())) {
             var msg = String.format("Pack on %s has an invalid pack name", diskDevice.getNodeName());
-            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            Exec.getInstance().sendExecReadOnlyMessage(msg);
             diskNodeInfo.setNodeStatus(NodeStatus.Down);
             return null;
         }
@@ -1542,14 +1543,14 @@ public class FacilitiesManager implements Manager {
             var msg = String.format("Pack on %s has an invalid prep factor: %d",
                                     diskDevice.getNodeName(),
                                     pi.getPrepFactor());
-            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            Exec.getInstance().sendExecReadOnlyMessage(msg);
             diskNodeInfo.setNodeStatus(NodeStatus.Down);
             return null;
         }
 
         if (!pi.isPrepped()) {
             var msg = String.format("Pack on %s is not prepped", diskDevice.getNodeName());
-            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            Exec.getInstance().sendExecReadOnlyMessage(msg);
             diskNodeInfo.setNodeStatus(NodeStatus.Down);
             return null;
         }
@@ -1575,7 +1576,7 @@ public class FacilitiesManager implements Manager {
         }
 
         sb.append(" PREP FACTOR ").append(pi.getPrepFactor());
-        Exec.getInstance().sendExecReadOnlyMessage(sb.toString(), null);
+        Exec.getInstance().sendExecReadOnlyMessage(sb.toString());
 
         return pi;
     }
@@ -1642,7 +1643,7 @@ public class FacilitiesManager implements Manager {
                                     packName,
                                     disk.getNodeName(),
                                     runControlEntry.getRunId());
-        Exec.getInstance().sendExecReadOnlyMessage(loadMsg, null);
+        Exec.getInstance().sendExecReadOnlyMessage(loadMsg, ConsoleType.InputOutput);
         var serviceMsg = loadMsg.replace("Load", "Service");
 
         var nextMessageTime = Instant.now().plusSeconds(120);
@@ -1658,7 +1659,7 @@ public class FacilitiesManager implements Manager {
 
             // Service message every {n} minutes
             if (Instant.now().isAfter(nextMessageTime)) {
-                Exec.getInstance().sendExecReadOnlyMessage(serviceMsg, null);
+                Exec.getInstance().sendExecReadOnlyMessage(serviceMsg, ConsoleType.InputOutput);
                 nextMessageTime = Instant.now().plusSeconds(120);
             }
         }
@@ -1683,7 +1684,7 @@ public class FacilitiesManager implements Manager {
         if (currentPackName != null && !currentPackName.equals(packName)) {
             var candidates = new String[]{ "Y", "N" };
             var msg = String.format("Allow %s as substitute pack on %s YN?", currentPackName, nodeInfo.getNode().getNodeName());
-            var response = Exec.getInstance().sendExecRestrictedReadReplyMessage(msg, candidates, null);
+            var response = Exec.getInstance().sendExecRestrictedReadReplyMessage(msg, candidates, ConsoleType.InputOutput);
             return response.equalsIgnoreCase("Y");
         }
 
@@ -1731,7 +1732,7 @@ public class FacilitiesManager implements Manager {
         if (cp.getIoStatus() != IoStatus.Complete) {
             LogManager.logError(LOG_SOURCE, "readPackLabel ioStatus=%s", cp.getIoStatus());
             var msg = String.format("%s Cannot read directory track %s", disk.getNodeName(), cp.getIoStatus());
-            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            Exec.getInstance().sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
             return null;
         }
 
@@ -1753,7 +1754,7 @@ public class FacilitiesManager implements Manager {
         if (cp.getIoStatus() != IoStatus.Complete) {
             LogManager.logError(LOG_SOURCE, "readPackLabel ioStatus=%s", cp.getIoStatus());
             var msg = String.format("%s Cannot read pack label %s", disk.getNodeName(), cp.getIoStatus());
-            Exec.getInstance().sendExecReadOnlyMessage(msg, null);
+            Exec.getInstance().sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
             return null;
         }
 

@@ -20,6 +20,7 @@ public class StandardConsole implements Console, Runnable {
     private static final long THREAD_DELAY = 100; // how often do we run the thread in msecs
     private static final String LOG_SOURCE = "StdCons";
 
+    private int _consoleTypeBits = ConsoleType.ALL;
     private final ConsoleId _consoleId;
     private final ReadReplyInfo[] _activeReadReplyMessages = new ReadReplyInfo[10];
     private Integer _pendingReplyIndex = null;
@@ -52,6 +53,12 @@ public class StandardConsole implements Console, Runnable {
     }
 
     @Override
+    public void consoleTypeClear(final ConsoleType type) { _consoleTypeBits &= ~type.getBitMask(); }
+
+    @Override
+    public void consoleTypeSet(final ConsoleType type) { _consoleTypeBits |= type.getBitMask(); }
+
+    @Override
     public void dump(PrintStream out, String indent) {
         out.printf("%sConsole %s(%s) StandardConsole\n", indent, _consoleId.toStringFromFieldata(), _consoleId);
         if (_pendingUnsolicitedInput != null) {
@@ -77,11 +84,13 @@ public class StandardConsole implements Console, Runnable {
 
     @Override public ConsoleId getConsoleId() { return _consoleId; }
 
+    @Override public int getConsoleTypeBits() { return _consoleTypeBits; }
+
     @Override
     public SolicitedInput pollSolicitedInput() throws ConsoleException {
         SolicitedInput result = null;
         if (_pendingReplyIndex != null) {
-            synchronized (this) { // TODO synchronizing here might deadlock, but I don't know how...
+            synchronized (this) {
                 var rrMsg = _activeReadReplyMessages[_pendingReplyIndex];
                 result = new SolicitedInput(rrMsg._messageId, _pendingReplyIndex, rrMsg._response);
 

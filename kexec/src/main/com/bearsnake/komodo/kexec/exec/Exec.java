@@ -6,19 +6,17 @@ package com.bearsnake.komodo.kexec.exec;
 
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.Configuration;
-import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
+import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.consoles.ReadOnlyMessage;
 import com.bearsnake.komodo.kexec.consoles.ReadReplyMessage;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
-import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
 import com.bearsnake.komodo.kexec.mfd.MFDManager;
-import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -110,7 +108,7 @@ public class Exec {
         }
 
         var msg = String.format("KEXEC Version %s Session %03o started", VERSION_STRING, _session);
-        sendExecReadOnlyMessage(msg, null);
+        sendExecReadOnlyMessage(msg, ConsoleType.System);
         displayDateAndTime();
         displayJumpKeys(null);
 
@@ -118,13 +116,13 @@ public class Exec {
         if (!recoveryBoot || Exec.getInstance().isJumpKeySet(1)) {
             msg = "Modify config then enter DONE";
             var candidates = new String[]{"DONE"};
-            sendExecRestrictedReadReplyMessage(msg, candidates, null);
+            sendExecRestrictedReadReplyMessage(msg, candidates);
         }
 
         if (Exec.getInstance().isJumpKeySet(13)) {
             msg = "JK13 set during boot - Continue? Y/N";
             var candidates = new String[]{"Y", "N"};
-            var response = sendExecRestrictedReadReplyMessage(msg, candidates, null);
+            var response = sendExecRestrictedReadReplyMessage(msg, candidates);
             if (response.equals("N")) {
                 Exec.getInstance().stop(StopCode.ConsoleResponseRequiresReboot);
                 throw new ExecStoppedException();
@@ -150,7 +148,7 @@ public class Exec {
         var dateTime = LocalDateTime.now();
         String dtStr = dateTime.format(_dateTimeMsgFormat);
         var msg = String.format("The current date and time is %s", dtStr);
-        sendExecReadOnlyMessage(msg, null);
+        sendExecReadOnlyMessage(msg, ConsoleType.System);
     }
 
     public void displayJumpKeys(final ConsoleId source) {
@@ -320,10 +318,36 @@ public class Exec {
         return (ch >= 'A' && ch <= 'Z') || ch == '-' || ch == '$';
     }
 
+    public void sendExecReadOnlyMessage(final String message) {
+        sendExecReadOnlyMessage(message, null, null);
+    }
+
     public void sendExecReadOnlyMessage(final String message,
                                         final ConsoleId routing) {
-        var romsg = new ReadOnlyMessage(_runControlEntry, routing, null, message, true);
+        sendExecReadOnlyMessage(message, routing, null);
+    }
+
+    public void sendExecReadOnlyMessage(
+        final String message,
+        final ConsoleType consoleType
+    ) {
+        sendExecReadOnlyMessage(message, null, consoleType);
+    }
+
+    public void sendExecReadOnlyMessage(
+        final String message,
+        final ConsoleId routing,
+        final ConsoleType consoleType
+    ) {
+        var romsg = new ReadOnlyMessage(_runControlEntry, routing, consoleType, null, message, true);
         _consoleManager.sendReadOnlyMessage(romsg);
+    }
+
+    public String sendExecReadReplyMessage(
+        final String message,
+        final int maxReplyChars
+    ) throws ExecStoppedException {
+        return sendExecReadReplyMessage(message, maxReplyChars, null, null);
     }
 
     public String sendExecReadReplyMessage(
@@ -331,8 +355,26 @@ public class Exec {
         final int maxReplyChars,
         final ConsoleId routing
     ) throws ExecStoppedException {
+        return sendExecReadReplyMessage(message, maxReplyChars, routing, null);
+    }
+
+    public String sendExecReadReplyMessage(
+        final String message,
+        final int maxReplyChars,
+        final ConsoleType consoleType
+    ) throws ExecStoppedException {
+        return sendExecReadReplyMessage(message, maxReplyChars, null, consoleType);
+    }
+
+    public String sendExecReadReplyMessage(
+        final String message,
+        final int maxReplyChars,
+        final ConsoleId routing,
+        final ConsoleType consoleType
+    ) throws ExecStoppedException {
         var rrmsg = new ReadReplyMessage(_runControlEntry,
                                          routing,
+                                         consoleType,
                                          null,
                                          message,
                                          true,
@@ -348,9 +390,35 @@ public class Exec {
         return rrmsg.getResponse();
     }
 
-    public String sendExecRestrictedReadReplyMessage(final String message,
-                                                     final String[] candidates,
-                                                     final ConsoleId routing) throws ExecStoppedException {
+    public String sendExecRestrictedReadReplyMessage(
+        final String message,
+        final String[] candidates
+    ) throws ExecStoppedException {
+        return sendExecRestrictedReadReplyMessage(message, candidates, null, null);
+    }
+
+    public String sendExecRestrictedReadReplyMessage(
+        final String message,
+        final String[] candidates,
+        final ConsoleId routing
+    ) throws ExecStoppedException {
+        return sendExecRestrictedReadReplyMessage(message, candidates, routing, null);
+    }
+
+    public String sendExecRestrictedReadReplyMessage(
+        final String message,
+        final String[] candidates,
+        final ConsoleType consoleType
+    ) throws ExecStoppedException {
+        return sendExecRestrictedReadReplyMessage(message, candidates, null, consoleType);
+    }
+
+    private String sendExecRestrictedReadReplyMessage(
+        final String message,
+        final String[] candidates,
+        final ConsoleId routing,
+        final ConsoleType consoleType
+    ) throws ExecStoppedException {
         if (candidates.length == 0) {
             LogManager.logFatal(LOG_SOURCE, "sendExecRestrictedReadReplyMessage:Empty candidates list");
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
@@ -366,6 +434,7 @@ public class Exec {
 
         var rrmsg = new ReadReplyMessage(_runControlEntry,
                                          routing,
+                                         consoleType,
                                          null,
                                          message,
                                          true,

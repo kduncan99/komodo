@@ -13,6 +13,7 @@ public interface Console {
     void close() throws ConsoleException;
     void dump(PrintStream out, String indent);
     ConsoleId getConsoleId();
+    int getConsoleTypeBits();
     SolicitedInput pollSolicitedInput() throws ConsoleException;
     String pollUnsolicitedInput() throws ConsoleException;
     boolean IsConnected();
@@ -20,4 +21,6 @@ public interface Console {
     void sendReadOnlyMessage(String text) throws ConsoleException;
     void sendSystemMessages(String text1, String text2) throws ConsoleException;
     int sendReadReplyMessage(MessageId messageId, String text, int maxReplyLength) throws ConsoleException;
+    void consoleTypeClear(ConsoleType type);
+    void consoleTypeSet(ConsoleType type);
 }

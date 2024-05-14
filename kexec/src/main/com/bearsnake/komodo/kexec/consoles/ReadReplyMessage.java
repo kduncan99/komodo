@@ -10,6 +10,7 @@ public class ReadReplyMessage {
     private final MessageId _messageId;
     private final RunControlEntry _source;
     private final ConsoleId _routing; // may be null
+    private final ConsoleType _consoleType; // may be null
     private final String _runId;   // for logging purposes - may not match RCE of instigator, and may be null
     private final String _text;
     private final boolean _doNotEmitRunId;
@@ -24,6 +25,7 @@ public class ReadReplyMessage {
 
     public ReadReplyMessage(final RunControlEntry source,
                             final ConsoleId routing,
+                            final ConsoleType consoleType,
                             final String runId,
                             final String text,
                             final boolean doNotEmitRunId,
@@ -31,6 +33,7 @@ public class ReadReplyMessage {
                             final int maxReplyLength) {
         _messageId = new MessageId();
         _source = source;
+        _consoleType = consoleType;
         _routing = routing;
         _runId = runId;
         _text = text;
@@ -51,6 +54,7 @@ public class ReadReplyMessage {
 
     public final boolean doNotEmitRunId() { return _doNotEmitRunId; }
     public final boolean doNotLogResponse() { return _doNotLogResponse; }
+    public final ConsoleType getConsoleType() { return _consoleType; }
     public final int getMaxReplyLength() { return _maxReplyLength; }
     public final MessageId getMessageId() { return _messageId; }
     public final String getResponse() { return _response; }
