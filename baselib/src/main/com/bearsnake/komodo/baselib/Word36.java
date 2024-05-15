@@ -328,42 +328,22 @@ public class Word36 implements Comparable<Word36> {
     public long getXT3() { return getXT3(_value); }
     public long getW() { return _value; }
 
-    public Word36 SetH1(final long value) { _value = setH1(_value, value); return this; }
-    public Word36 SetH2(final long value) { _value = setH2(_value, value); return this; }
-    public Word36 SetQ1(final long value) { _value = setQ1(_value, value); return this; }
-    public Word36 SetQ2(final long value) { _value = setQ2(_value, value); return this; }
-    public Word36 SetQ3(final long value) { _value = setQ3(_value, value); return this; }
-    public Word36 SetQ4(final long value) { _value = setQ4(_value, value); return this; }
-    public Word36 SetS1(final long value) { _value = setS1(_value, value); return this; }
-    public Word36 SetS2(final long value) { _value = setS2(_value, value); return this; }
-    public Word36 SetS3(final long value) { _value = setS3(_value, value); return this; }
-    public Word36 SetS4(final long value) { _value = setS4(_value, value); return this; }
-    public Word36 SetS5(final long value) { _value = setS5(_value, value); return this; }
-    public Word36 SetS6(final long value) { _value = setS6(_value, value); return this; }
-    public Word36 SetT1(final long value) { _value = setT1(_value, value); return this; }
-    public Word36 SetT2(final long value) { _value = setT2(_value, value); return this; }
-    public Word36 SetT3(final long value) { _value = setT3(_value, value); return this; }
-    public Word36 SetW(final long value) { _value = value; return this; }
-    // TODO
-    //  For now, keep this commented-out so we can catch the cases where we previously relied
-    //  on this class to NOT change its value.
-    //  Later, delete the following, and mass-rename the above to camel-case.
-//    public Word36 setH1(long partialValue)  { return new Word36(setH1(_value, partialValue)); }
-//    public Word36 setH2(long partialValue)  { return new Word36(setH2(_value, partialValue)); }
-//    public Word36 setQ1(long partialValue)  { return new Word36(setQ1(_value, partialValue)); }
-//    public Word36 setQ2(long partialValue)  { return new Word36(setQ2(_value, partialValue)); }
-//    public Word36 setQ3(long partialValue)  { return new Word36(setQ3(_value, partialValue)); }
-//    public Word36 setQ4(long partialValue)  { return new Word36(setQ4(_value, partialValue)); }
-//    public Word36 setS1(long partialValue)  { return new Word36(setS1(_value, partialValue)); }
-//    public Word36 setS2(long partialValue)  { return new Word36(setS2(_value, partialValue)); }
-//    public Word36 setS3(long partialValue)  { return new Word36(setS3(_value, partialValue)); }
-//    public Word36 setS4(long partialValue)  { return new Word36(setS4(_value, partialValue)); }
-//    public Word36 setS5(long partialValue)  { return new Word36(setS5(_value, partialValue)); }
-//    public Word36 setS6(long partialValue)  { return new Word36(setS6(_value, partialValue)); }
-//    public Word36 setT1(long partialValue)  { return new Word36(setT1(_value, partialValue)); }
-//    public Word36 setT2(long partialValue)  { return new Word36(setT2(_value, partialValue)); }
-//    public Word36 setT3(long partialValue)  { return new Word36(setT3(_value, partialValue)); }
-//    public Word36 setW(long value)          { return new Word36(value); }
+    public Word36 setH1(final long value) { _value = setH1(_value, value); return this; }
+    public Word36 setH2(final long value) { _value = setH2(_value, value); return this; }
+    public Word36 setQ1(final long value) { _value = setQ1(_value, value); return this; }
+    public Word36 setQ2(final long value) { _value = setQ2(_value, value); return this; }
+    public Word36 setQ3(final long value) { _value = setQ3(_value, value); return this; }
+    public Word36 setQ4(final long value) { _value = setQ4(_value, value); return this; }
+    public Word36 setS1(final long value) { _value = setS1(_value, value); return this; }
+    public Word36 setS2(final long value) { _value = setS2(_value, value); return this; }
+    public Word36 setS3(final long value) { _value = setS3(_value, value); return this; }
+    public Word36 setS4(final long value) { _value = setS4(_value, value); return this; }
+    public Word36 setS5(final long value) { _value = setS5(_value, value); return this; }
+    public Word36 setS6(final long value) { _value = setS6(_value, value); return this; }
+    public Word36 setT1(final long value) { _value = setT1(_value, value); return this; }
+    public Word36 setT2(final long value) { _value = setT2(_value, value); return this; }
+    public Word36 setT3(final long value) { _value = setT3(_value, value); return this; }
+    public Word36 setW(final long value) { _value = value; return this; }
 
     //  Negative, Positive, and Zero testing ---------------------------------------------------------------------------------------
 

@@ -70,25 +70,14 @@ System page
 OS Configuration page (new page)
   KEXEC configuration items
 
-* every all
-Set logger name to foo.class.getSimpleName()
-
 * baselib
 more FloatingPointComponent tests
 
 * hardwarelib
 SP: Move dayclock architecture to SystemProcessor
 IP: SYSC subfunctions need unit tests
-CM: ChannelModules should log based on LOG_CHANNEL_IOS and LOG_CHANNEL_IO_BUFFERS (or the config equivalent)
-Need a SystemLogTapeDevice
 Redo all the node and subclasses tests, many of which are commented out (Node has been done)
-For FSTDevice, what to do when we try to read with _writeFlag or _writeMarkFlag set?
 Need some unit tests of proper DR settings across interrupts, returns, and UR instruction
-RAMDiskDevice word interface, optional dedupe with SHA-256, required backing store
-RAMTapeDevice byte interface, optional compression, optional backing store
-PrinterDevice
-CardReaderDevice
-CardPunchDevice
 IP: SYSC subfunctions for IO
 IP: need more address space management instructions unit tests
 IP: basic mode procedure call unit tests for LBJ, LIJ, LDJ for basic and extended mode banks
@@ -186,12 +175,6 @@ IP: search and masked search instructions (and unit tests)
   MASL
   MASG
 
-* exlib:
-    external file formats for hosting SDFF and PF files (and maybe tape files?)
-    support sym, rel, and abs elements
-    support various tape file formats
-    support SOS VT file format for import/export of tape files
-
 * kasm
 Need to support "$(n)" as a relocated reference to location counter n offset by 0 (for expressions)
   Can we implement this as a built-in function?
@@ -237,20 +220,3 @@ directives
   Define what a saved binary looks like
     update: It's stored in a sort of JSON format
     update: It's an array of BankDescriptors (stored in JSON format)
-
-* Exec
-Subsystems:
-  Init
-  Console (can we farm this out to SCP?)
-  CoreScheduler
-  JobScheduler
-  IO
-  MFD
-  ProgFileSystem
-  Facilities
-  RSI
-  Spooler
-  Loader (load, swap, etc)
-  MemoryMgr
-  TIP
-  CSI
