@@ -9,6 +9,9 @@ import com.bearsnake.komodo.kexec.exec.Exec;
 
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.PrintStream;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -20,7 +23,7 @@ public class StandardConsole implements Console, Runnable {
     private static final long THREAD_DELAY = 100; // how often do we run the thread in msecs
     private static final String LOG_SOURCE = "StdCons";
 
-    private int _consoleTypeBits = ConsoleType.ALL;
+    private final LinkedList<ConsoleType> _consoleTypes = new LinkedList<>();
     private final ConsoleId _consoleId;
     private final ReadReplyInfo[] _activeReadReplyMessages = new ReadReplyInfo[10];
     private Integer _pendingReplyIndex = null;
@@ -29,6 +32,7 @@ public class StandardConsole implements Console, Runnable {
 
     public StandardConsole() {
         _consoleId = new ConsoleId(1);
+        _consoleTypes.addAll(List.of(ConsoleType.values()));
     }
 
     @Override
@@ -53,10 +57,10 @@ public class StandardConsole implements Console, Runnable {
     }
 
     @Override
-    public void consoleTypeClear(final ConsoleType type) { _consoleTypeBits &= ~type.getBitMask(); }
+    public void consoleTypeClear(final ConsoleType type) { _consoleTypes.remove(type); }
 
     @Override
-    public void consoleTypeSet(final ConsoleType type) { _consoleTypeBits |= type.getBitMask(); }
+    public void consoleTypeSet(final ConsoleType type) { _consoleTypes.add(type); }
 
     @Override
     public void dump(PrintStream out, String indent) {
@@ -84,7 +88,7 @@ public class StandardConsole implements Console, Runnable {
 
     @Override public ConsoleId getConsoleId() { return _consoleId; }
 
-    @Override public int getConsoleTypeBits() { return _consoleTypeBits; }
+    @Override public Collection<ConsoleType> getConsoleTypes() { return _consoleTypes; }
 
     @Override
     public SolicitedInput pollSolicitedInput() throws ConsoleException {

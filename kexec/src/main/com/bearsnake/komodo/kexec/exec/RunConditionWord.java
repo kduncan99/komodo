@@ -52,13 +52,13 @@ public class RunConditionWord extends Word36 {
     public void setCSISetCValue(
         final long value
     ) {
-        SetT2(value);
+        setT2(value);
     }
 
     public void setERSetCValue(
         final long value
     ) {
-        SetT3(value);
+        setT3(value);
     }
 
     public void taskStarted() { _value &= 0_7770_7777_7777L; }

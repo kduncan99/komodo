@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.consoles;
 
 import com.bearsnake.komodo.kexec.exceptions.ConsoleException;
 import java.io.PrintStream;
+import java.util.Collection;
 
 public interface Console {
 
@@ -13,7 +14,7 @@ public interface Console {
     void close() throws ConsoleException;
     void dump(PrintStream out, String indent);
     ConsoleId getConsoleId();
-    int getConsoleTypeBits();
+    Collection<ConsoleType> getConsoleTypes();
     SolicitedInput pollSolicitedInput() throws ConsoleException;
     String pollUnsolicitedInput() throws ConsoleException;
     boolean IsConnected();
