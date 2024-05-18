@@ -6,8 +6,6 @@ package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.StopCode;
-import com.bearsnake.komodo.logger.LogManager;
 
 public class DJKeyinHandler extends JumpKeyHandler implements Runnable {
 
@@ -25,19 +23,13 @@ public class DJKeyinHandler extends JumpKeyHandler implements Runnable {
     }
 
     @Override
-    public String getCommand() { return COMMAND; }
+    String getCommand() { return COMMAND; }
 
     @Override
-    public String[] getHelp() { return HELP_TEXT; }
+    String[] getHelp() { return HELP_TEXT; }
 
     @Override
-    public void run() {
-        try {
-            Exec.getInstance().displayJumpKeys(_source);
-        } catch (Throwable t) {
-            LogManager.logCatching(COMMAND, t);
-            Exec.getInstance().stop(StopCode.ExecContingencyHandler);
-        }
-        setFinished();
+    void process() {
+        Exec.getInstance().displayJumpKeys(_source);
     }
 }

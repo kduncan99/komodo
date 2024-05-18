@@ -6,8 +6,6 @@ package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.StopCode;
-import com.bearsnake.komodo.logger.LogManager;
 
 public class DKeyinHandler extends KeyinHandler implements Runnable {
 
@@ -25,32 +23,23 @@ public class DKeyinHandler extends KeyinHandler implements Runnable {
     }
 
     @Override
-    public void abort(){}
-
-    @Override
-    public boolean checkSyntax() {
+    boolean checkSyntax() {
         return _options == null && _arguments == null;
     }
 
     @Override
-    public String getCommand() { return COMMAND; }
+    String getCommand() { return COMMAND; }
 
     @Override
-    public String[] getHelp() { return HELP_TEXT; }
+    String[] getHelp() { return HELP_TEXT; }
 
     @Override
-    public boolean isAllowed() {
+    boolean isAllowed() {
         return true;
     }
 
     @Override
-    public void run() {
-        try {
-            Exec.getInstance().displayDateAndTime();
-        } catch (Throwable t) {
-            LogManager.logCatching(COMMAND, t);
-            Exec.getInstance().stop(StopCode.ExecContingencyHandler);
-        }
-        setFinished();
+    void process() {
+        Exec.getInstance().displayDateAndTime();
     }
 }

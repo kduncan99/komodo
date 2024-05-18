@@ -13,6 +13,10 @@ public interface Manager {
     // Invoked for all managers when the exec boots
     void boot(boolean recoveryBoot) throws KExecException;
 
+    // Invoked for all managers when the exec is being closed out
+    void close();
+
+    // For debugging
     void dump(PrintStream out, String indent, boolean verbose);
 
     // Invoked for all managers when the exec is instantiated (presumably when the application starts)

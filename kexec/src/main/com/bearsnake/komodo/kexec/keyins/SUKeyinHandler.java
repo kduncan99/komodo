@@ -8,12 +8,10 @@ import com.bearsnake.komodo.hardwarelib.Device;
 import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.DeviceNodeInfo;
 import com.bearsnake.komodo.kexec.facilities.NodeStatus;
-import com.bearsnake.komodo.logger.LogManager;
 
-public class SUKeyinHandler extends FacHandler implements Runnable {
+class SUKeyinHandler extends FacHandler implements Runnable {
 
     /* TODO
     SU component INITIALIZES AND ADDS device TO FIXED MS, PROCESS? YN
@@ -36,37 +34,24 @@ SU OF component NOT PERFORMED - KEYIN ABORTED
     }
 
     @Override
-    public void abort(){}
-
-    @Override
-    public boolean checkSyntax() {
+    boolean checkSyntax() {
         return _options == null && _arguments != null;
     }
 
     @Override
-    public String getCommand() { return COMMAND; }
+    String getCommand() { return COMMAND; }
 
     @Override
-    public String[] getHelp() { return HELP_TEXT; }
+    String[] getHelp() { return HELP_TEXT; }
 
     @Override
-    public boolean isAllowed() {
+    boolean isAllowed() {
         // TODO depends on @@CONS privilege
         return true;
     }
 
     @Override
-    public void run() {
-        try {
-            process();
-        } catch (Throwable t) {
-            LogManager.logCatching(COMMAND, t);
-            Exec.getInstance().stop(StopCode.ExecContingencyHandler);
-        }
-        setFinished();
-    }
-
-    private void process() {
+    void process() {
         if (_options != null) {
             processAll();
         } else {

@@ -18,11 +18,10 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
 
-public class KeyinManager implements Manager, Runnable {
+public class KeyinManager implements Manager {
 
-    private static final long THREAD_DELAY = 50;
+    private static final int POLL_DELAY = 100;
     private static final String LOG_SOURCE = "KeyinMgr";
 
     private final ConcurrentLinkedQueue<KeyinHandler> _postedKeyinHandlers = new ConcurrentLinkedQueue<>();
@@ -102,6 +101,8 @@ public class KeyinManager implements Manager, Runnable {
         _handlerClasses.put(StopKeyinHandler.COMMAND.toUpperCase(), StopKeyinHandler.class);
     }
 
+    private Poller _poller = null;
+
     public KeyinManager(){
         Exec.getInstance().managerRegister(this);
     }
@@ -139,11 +140,12 @@ public class KeyinManager implements Manager, Runnable {
 
                     LogManager.logInfo(LOG_SOURCE, "Scheduling %s keyin", kh.getCommand());
                     _postedKeyinHandlers.add(kh);
-                    Exec.getInstance().getExecutor().schedule(kh, 0, TimeUnit.MILLISECONDS);
+                    new Thread(kh).start();
                 } catch (IllegalAccessException |
                          InvocationTargetException |
                          InstantiationException |
                          NoSuchMethodException ex) {
+                    ex.printStackTrace();//TODO remove
                     LogManager.logCatching(LOG_SOURCE, ex);
                     Exec.getInstance().stop(StopCode.ExecContingencyHandler);
                     return;
@@ -169,11 +171,15 @@ public class KeyinManager implements Manager, Runnable {
     public void boot(final boolean recoveryBoot) throws KExecException {
         LogManager.logTrace(LOG_SOURCE, "boot(%s)", recoveryBoot);
         _postedKeyins.clear();
-        Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
-                                                                THREAD_DELAY,
-                                                                THREAD_DELAY,
-                                                                TimeUnit.MILLISECONDS);
+        _poller = new Poller();
+        new Thread(_poller).start();
+
         LogManager.logTrace(LOG_SOURCE, "boot complete", recoveryBoot);
+    }
+
+    @Override
+    public void close() {
+        LogManager.logTrace(LOG_SOURCE, "close()");
     }
 
     @Override
@@ -200,17 +206,26 @@ public class KeyinManager implements Manager, Runnable {
     @Override
     public void stop() {
         LogManager.logTrace(LOG_SOURCE, "stop()");
-        // nothing to do... i think.
+        _poller._terminate = true;
+        _poller = null;
     }
 
-    @Override
-    public void run() {
-        try {
-            checkPostedKeyins();
-            pruneOldKeyins();
-        } catch (Throwable t) {
-            LogManager.logCatching(LOG_SOURCE, t);
-            Exec.getInstance().stop(StopCode.ExecActivityTakenToEMode);
+    private class Poller implements Runnable {
+
+        public boolean _terminate = false;
+
+        @Override
+        public void run() {
+            while (!_terminate) {
+                try {
+                    checkPostedKeyins();
+                    pruneOldKeyins();
+                } catch (Throwable t) {
+                    LogManager.logCatching(LOG_SOURCE, t);
+                    Exec.getInstance().stop(StopCode.ExecActivityTakenToEMode);
+                }
+                Exec.sleep(POLL_DELAY);
+            }
         }
     }
 }

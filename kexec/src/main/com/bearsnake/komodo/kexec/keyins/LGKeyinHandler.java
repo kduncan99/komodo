@@ -6,10 +6,9 @@ package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.logger.LogManager;
 
-public class LGKeyinHandler extends KeyinHandler implements Runnable {
+class LGKeyinHandler extends KeyinHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
         "LG {message}",
@@ -25,34 +24,25 @@ public class LGKeyinHandler extends KeyinHandler implements Runnable {
     }
 
     @Override
-    public void abort(){}
-
-    @Override
-    public boolean checkSyntax() {
+    boolean checkSyntax() {
         return _options == null && _arguments != null;
     }
 
     @Override
-    public String getCommand() { return COMMAND; }
+    String getCommand() { return COMMAND; }
 
     @Override
-    public String[] getHelp() { return HELP_TEXT; }
+    String[] getHelp() { return HELP_TEXT; }
 
     @Override
-    public boolean isAllowed() {
+    boolean isAllowed() {
         return true;
     }
 
     @Override
-    public void run() {
-        try {
-            LogManager.logInfo(COMMAND, "%s", _arguments);
-            var msg = "Log entry created";
-            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
-        } catch (Throwable t) {
-            LogManager.logCatching(COMMAND, t);
-            Exec.getInstance().stop(StopCode.ExecContingencyHandler);
-        }
-        setFinished();
+    void process() {
+        LogManager.logInfo(COMMAND, "%s", _arguments);
+        var msg = "Log entry created";
+        Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
     }
 }

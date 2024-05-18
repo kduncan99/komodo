@@ -15,12 +15,11 @@ import com.bearsnake.komodo.logger.LogManager;
 import java.io.PrintStream;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
 
-public class ConsoleManager implements Manager, Runnable {
+public class ConsoleManager implements Manager {
 
     private static final String LOG_SOURCE = "ConsMgr";
-    private static final long THREAD_DELAY = 50; // how often do we run the thread in msecs
+    private static final int POLL_DELAY = 50; // how often do we run the thread in msecs
 
     // TODO
     //  somewhere in this mess we need to post roMsgs and rrMsgs (and their responses) to batch runs
@@ -31,6 +30,8 @@ public class ConsoleManager implements Manager, Runnable {
     private ConsoleId _primaryConsoleId;
     private final ConcurrentLinkedQueue<ReadOnlyMessage> _queuedReadOnlyMessages = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<MessageId, ReadReplyMessage> _queuedReadReplyMessages = new ConcurrentHashMap<>();
+
+    private Poller _poller = null;
 
     public ConsoleManager() {
         Exec.getInstance().managerRegister(this);
@@ -68,11 +69,22 @@ public class ConsoleManager implements Manager, Runnable {
         _queuedReadOnlyMessages.clear();
         _queuedReadReplyMessages.clear();
 
-        Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
-                                                                THREAD_DELAY,
-                                                                THREAD_DELAY,
-                                                                TimeUnit.MILLISECONDS);
+        _poller = new Poller();
+        new Thread(_poller).start();
+
         LogManager.logTrace(LOG_SOURCE, "boot complete", recoveryBoot);
+    }
+
+    @Override
+    public void close() {
+        LogManager.logTrace(LOG_SOURCE, "close()");
+        for (var cons : _consoles.values()) {
+            try {
+                cons.close();
+            } catch (ConsoleException ex) {
+                // do nothing
+            }
+        }
     }
 
     @Override
@@ -111,9 +123,7 @@ public class ConsoleManager implements Manager, Runnable {
                    _consoles.get(_primaryConsoleId).getConsoleId());
 
         var subIndent = indent + "  ";
-        for (var console : _consoles.values()) {
-            console.dump(out, subIndent);
-        }
+        _consoles.values().forEach(console -> console.dump(out, subIndent));
     }
 
     @Override
@@ -166,6 +176,10 @@ public class ConsoleManager implements Manager, Runnable {
     @Override
     public void stop() {
         LogManager.logTrace(LOG_SOURCE, "stop()");
+
+        _poller._terminate = true;
+        _poller = null;
+
         synchronized (_queuedReadReplyMessages) {
             _queuedReadReplyMessages.values()
                                     .stream()
@@ -344,23 +358,31 @@ public class ConsoleManager implements Manager, Runnable {
         }
     }
 
-    @Override
-    public void run() {
-        try {
-            checkForReadOnlyMessage();
-            checkForReadReplyMessage();
-            checkForSolicitedInput();
-            checkForUnsolicitedInput();
-            dropConsoles();
-        } catch (KExecException ex) {
-            // trap door - exec is stopped.
-            // we don't need to do anything here, but we do need to avoid throwing the exception.
-        } catch (Throwable t) {
-            // Something very unexpected went wrong.
-            // We need to avoid throwing the exception (which would cause all sorts of shenanigans),
-            // but we do need to bring the exec to a screeching halt.
-            LogManager.logCatching(LOG_SOURCE, t);
-            Exec.getInstance().stop(StopCode.ExecContingencyHandler);
+    private class Poller implements Runnable {
+
+        public boolean _terminate = false;
+
+        @Override
+        public void run() {
+            while (!_terminate) {
+                try {
+                    checkForReadOnlyMessage();
+                    checkForReadReplyMessage();
+                    checkForSolicitedInput();
+                    checkForUnsolicitedInput();
+                    dropConsoles();
+                } catch (KExecException ex) {
+                    // trap door - exec is stopped.
+                    // we don't need to do anything here, but we do need to avoid throwing the exception.
+                } catch (Throwable t) {
+                    // Something very unexpected went wrong.
+                    // We need to avoid throwing the exception (which would cause all sorts of shenanigans),
+                    // but we do need to bring the exec to a screeching halt.
+                    LogManager.logCatching(LOG_SOURCE, t);
+                    Exec.getInstance().stop(StopCode.ExecContingencyHandler);
+                }
+                Exec.sleep(POLL_DELAY);
+            }
         }
     }
 }

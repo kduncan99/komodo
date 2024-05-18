@@ -14,12 +14,10 @@ import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.NodeStatus;
 import com.bearsnake.komodo.kexec.mfd.MFDManager;
-import com.bearsnake.komodo.logger.LogManager;
 
-public class PREPKeyinHandler extends KeyinHandler implements Runnable {
+class PREPKeyinHandler extends KeyinHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
         "PREP,[F|R] {device},{packname}",
@@ -40,10 +38,7 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
     }
 
     @Override
-    public void abort(){}
-
-    @Override
-    public boolean checkSyntax() {
+    boolean checkSyntax() {
         if (_options == null || _arguments == null) {
             return false;
         }
@@ -63,13 +58,13 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
     }
 
     @Override
-    public String getCommand() { return COMMAND; }
+    String getCommand() { return COMMAND; }
 
     @Override
-    public String[] getHelp() { return HELP_TEXT; }
+    String[] getHelp() { return HELP_TEXT; }
 
     @Override
-    public boolean isAllowed() {
+    boolean isAllowed() {
         return true;
     }
 
@@ -113,7 +108,8 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
         return true;
     }
 
-    private void process() {
+    @Override
+    void process() {
         var fixed = _options.equalsIgnoreCase("F");
         var rem = _options.equalsIgnoreCase("R");
         if (!fixed && !rem) {
@@ -305,16 +301,5 @@ public class PREPKeyinHandler extends KeyinHandler implements Runnable {
         }
 
         return true;
-    }
-
-    @Override
-    public void run() {
-        try {
-            process();
-        } catch (Throwable t) {
-            LogManager.logCatching(COMMAND, t);
-            Exec.getInstance().stop(StopCode.ExecContingencyHandler);
-        }
-        setFinished();
     }
 }

@@ -5,22 +5,24 @@
 package com.bearsnake.komodo.kexec.consoles;
 
 import com.bearsnake.komodo.kexec.exceptions.ConsoleException;
-import com.bearsnake.komodo.kexec.exec.Exec;
 
 import com.bearsnake.komodo.logger.LogManager;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * StandardConsole implements a basic system console using the Java version of stdin and stdout
  */
-public class StandardConsole implements Console, Runnable {
+public class StandardConsole implements Console {
 
-    private static final long THREAD_DELAY = 100; // how often do we run the thread in msecs
+    private static final long POLL_DELAY = 100; // how often do we run the thread in msecs
     private static final String LOG_SOURCE = "StdCons";
 
     private final LinkedList<ConsoleType> _consoleTypes = new LinkedList<>();
@@ -28,11 +30,16 @@ public class StandardConsole implements Console, Runnable {
     private final ReadReplyInfo[] _activeReadReplyMessages = new ReadReplyInfo[10];
     private Integer _pendingReplyIndex = null;
     private String _pendingUnsolicitedInput = null;
-    private final Scanner _scanner = new Scanner(System.in);
+
+    private Poller _poller;
+    private Timer _timer = new Timer();
+    private BufferedReader _reader = new BufferedReader(new InputStreamReader(System.in));
 
     public StandardConsole() {
         _consoleId = new ConsoleId(1);
         _consoleTypes.addAll(List.of(ConsoleType.values()));
+        _poller = new Poller();
+        _timer.schedule(_poller, POLL_DELAY, POLL_DELAY);
     }
 
     @Override
@@ -53,6 +60,10 @@ public class StandardConsole implements Console, Runnable {
 
     @Override
     public void close() {
+        LogManager.logTrace(LOG_SOURCE, "close()");
+        _poller.cancel();
+        _timer.cancel();
+        _timer = null;
         System.out.println("** CONSOLE CLOSED **");
     }
 
@@ -119,11 +130,11 @@ public class StandardConsole implements Console, Runnable {
 
     @Override
     public void reset() throws ConsoleException {
+        _poller.cancel();
+        _timer.purge();
+        _poller = new Poller();
+        _timer.schedule(_poller, POLL_DELAY, POLL_DELAY);
         System.out.println("** CONSOLE RESET **");
-        Exec.getInstance().getExecutor().scheduleWithFixedDelay(this,
-                                                                THREAD_DELAY,
-                                                                THREAD_DELAY,
-                                                                TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -159,62 +170,68 @@ public class StandardConsole implements Console, Runnable {
     /**
      * Async thread which handles interaction with stdin/stdout
      */
-    @Override
-    public void run() {
-        try {
-            if (_scanner.hasNext()) {
-                // read input if there is any to be read, but ignore it if the previous input is still pending.
-                var input = _scanner.nextLine();
-                if (_pendingReplyIndex != null || _pendingUnsolicitedInput != null) {
-                    return;
-                }
+    private class Poller extends TimerTask {
 
-                // if the input is empty (all spaces is considered empty) ignore it.
-                input = input.trim();
-                if (input.isEmpty()) {
-                    return;
-                }
-
-                // solicited input?
-                if (Character.isDigit(input.charAt(0))) {
-                    var mx = Integer.parseInt(input.substring(0, 1));
-                    if (_activeReadReplyMessages[mx] == null) {
-                        System.out.printf("** MESSAGE %d DOES NOT EXIST **\n", mx);
+        @Override
+        public void run() {
+            LogManager.logTrace(LOG_SOURCE, "run() enter");//TODO remove
+            try {
+                if (System.in.available() > 0) {
+                    // read input if there is any to be read, but ignore it if the previous input is still pending.
+                    var input = _reader.readLine();
+                    if (_pendingReplyIndex != null || _pendingUnsolicitedInput != null) {
                         return;
                     }
 
-                    if (input.length() == 1) {
-                        _activeReadReplyMessages[mx]._response = "";
+                    // if the input is empty (all spaces is considered empty) ignore it.
+                    input = input.trim();
+                    if (input.isEmpty()) {
+                        return;
+                    }
+
+                    // solicited input?
+                    if (Character.isDigit(input.charAt(0))) {
+                        var mx = Integer.parseInt(input.substring(0, 1));
+                        if (_activeReadReplyMessages[mx] == null) {
+                            System.out.printf("** MESSAGE %d DOES NOT EXIST **\n", mx);
+                            return;
+                        }
+
+                        if (input.length() == 1) {
+                            _activeReadReplyMessages[mx]._response = "";
+                            _pendingReplyIndex = mx;
+                            return;
+                        }
+
+                        if (input.charAt(1) != ' ') {
+                            System.out.println("** INVALID INPUT **");
+                            return;
+                        }
+
+                        var cx = 2;
+                        while (input.charAt(cx) == ' ') {
+                            cx++;
+                        }
+
+                        var response = input.substring(cx);
+                        if (response.length() > _activeReadReplyMessages[mx]._maxReplyLength) {
+                            System.out.println("** RESPONSE IS TOO LONG **");
+                            return;
+                        }
+
+                        _activeReadReplyMessages[mx]._response = response;
                         _pendingReplyIndex = mx;
                         return;
                     }
 
-                    if (input.charAt(1) != ' ') {
-                        System.out.println("** INVALID INPUT **");
-                        return;
-                    }
-
-                    var cx = 2;
-                    while (input.charAt(cx) == ' ') {
-                        cx++;
-                    }
-
-                    var response = input.substring(cx);
-                    if (response.length() > _activeReadReplyMessages[mx]._maxReplyLength) {
-                        System.out.println("** RESPONSE IS TOO LONG **");
-                        return;
-                    }
-
-                    _activeReadReplyMessages[mx]._response = response;
-                    _pendingReplyIndex = mx;
-                    return;
+                    // unsolicited input...
+                    _pendingUnsolicitedInput = input;
                 }
-
-                // unsolicited input...
-                _pendingUnsolicitedInput = input;
+            } catch (Throwable t) {
+                LogManager.logCatching(LOG_SOURCE, t);
+                System.out.printf("--- %s ---\n", t);
             }
-        } catch (Throwable t) {
-            System.out.printf("--- %s ---\n", t);
+            LogManager.logTrace(LOG_SOURCE, "run() final exit");//TODO remove
         }
     }
 }

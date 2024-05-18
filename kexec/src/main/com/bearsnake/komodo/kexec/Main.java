@@ -135,6 +135,8 @@ public class Main {
             System.out.println("::Recovering system...");
             session++;
         }
+
+        e.close();
     }
 
     public static void main(String[] args) {
@@ -168,7 +170,7 @@ public class Main {
         }
 
         run(context, cfg);
-
         LogManager.close();
+        System.out.println("MAIN DONE");//TODO remove
     }
 }

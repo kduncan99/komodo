@@ -5,6 +5,10 @@
 package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
+import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.logger.LogManager;
+
 import java.time.LocalDateTime;
 
 public abstract class KeyinHandler implements Runnable {
@@ -15,28 +19,24 @@ public abstract class KeyinHandler implements Runnable {
     protected LocalDateTime _timeFinished;
     protected LocalDateTime _timeToPrune;
 
-    public KeyinHandler(final ConsoleId source,
-                        final String options,
-                        final String arguments) {
+    KeyinHandler(final ConsoleId source,
+                 final String options,
+                 final String arguments) {
         _source = source;
         _options = options;
         _arguments = arguments;
     }
 
-    public abstract void abort();
-    public abstract boolean checkSyntax();
-    public String getArguments() { return _arguments; }
-    public abstract String getCommand();
-    public String getOptions() { return _options; }
-    public abstract String[] getHelp();
-    public LocalDateTime getTimeFinished() { return _timeFinished; }
-    public abstract boolean isAllowed();
-    public boolean isDone() { return _timeFinished != null; }
+    abstract boolean checkSyntax();
+    String getArguments() { return _arguments; }
+    abstract String getCommand();
+    String getOptions() { return _options; }
+    abstract String[] getHelp();
+    LocalDateTime getTimeFinished() { return _timeFinished; }
+    abstract boolean isAllowed();
+    boolean isDone() { return _timeFinished != null; }
 
-    protected void setFinished() {
-        _timeFinished = LocalDateTime.now();
-        _timeToPrune = _timeFinished.plusMinutes(5);
-    }
+    abstract void process();
 
     @Override
     public synchronized String toString() {
@@ -52,5 +52,21 @@ public abstract class KeyinHandler implements Runnable {
             sb.append(" (FINISHED)");
         }
         return sb.toString();
+    }
+
+    @Override
+    public final void run() {
+        LogManager.logTrace(getCommand(), "starting");
+        try {
+            process();
+            _timeFinished = LocalDateTime.now();
+            _timeToPrune = _timeFinished.plusMinutes(5);
+            LogManager.logTrace(getCommand(), "stopped");
+        } catch (Throwable t) {
+            LogManager.logCatching(getCommand(), t);
+            Exec.getInstance().stop(StopCode.ExecContingencyHandler);
+            _timeFinished = LocalDateTime.now();
+            LogManager.logTrace(getCommand(), "aborted");
+        }
     }
 }

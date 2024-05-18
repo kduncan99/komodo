@@ -25,8 +25,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 public class Exec {
@@ -44,7 +42,6 @@ public class Exec {
 
     private boolean _allowRecoveryBoot;
     private Configuration _configuration;
-    private ScheduledThreadPoolExecutor _executor;
     private final boolean[] _jumpKeys;
     private final LinkedList<Manager> _managers = new LinkedList<>();
     private Phase _phase;
@@ -73,7 +70,6 @@ public class Exec {
 
     public Configuration getConfiguration() { return _configuration; }
     public ConsoleManager getConsoleManager() { return _consoleManager; }
-    public ScheduledThreadPoolExecutor getExecutor() { return _executor; }
     public FacilitiesManager getFacilitiesManager() { return _facilitiesManager; }
     public static Exec getInstance() { return _instance; }
     public MFDManager getMFDManager() { return _mfdManager; }
@@ -99,9 +95,6 @@ public class Exec {
         _runControlEntries.clear();
         _runControlEntry = new ExecRunControlEntry(_configuration.getMasterAccountId());
         _runControlEntries.put(_runControlEntry._runId, _runControlEntry);
-
-        _executor = new ScheduledThreadPoolExecutor((int)_configuration.getExecThreadPoolSize());
-        _executor.setRemoveOnCancelPolicy(true);
 
         for (var m : _managers) {
             m.boot(recoveryBoot);
@@ -139,9 +132,15 @@ public class Exec {
         LogManager.logTrace(LOG_SOURCE, "boot complete");
     }
 
+    /**
+     * Invoke before discarding the Exec, and do NOT use the Exec after invoking here.
+     */
     public void close() {
-        _executor.close();
-        _executor = null;
+        _managers.forEach(Manager::close);
+        _consoleManager = null;
+        _facilitiesManager = null;
+        _keyinManager = null;
+        _mfdManager = null;
     }
 
     public void displayDateAndTime() {
@@ -205,17 +204,6 @@ public class Exec {
         }
         out.printf("  JumpKeys:       %s\n", jkStr);
         out.printf("  Allow Recovery: %s\n", _allowRecoveryBoot);
-
-        if (_executor != null) {
-            out.printf("  Activities (cpSize=%d active=%d tasks=%d comp=%d):\n",
-                       _executor.getCorePoolSize(),
-                       _executor.getActiveCount(),
-                       _executor.getTaskCount(),
-                       _executor.getCompletedTaskCount());
-            if (verbose) {
-                _executor.getQueue().forEach(q -> out.printf("    %s\n", q.toString()));
-            }
-        }
 
         out.println("  Run Control Entries:");
         for (var rce : _runControlEntries.values()) {
@@ -291,12 +279,12 @@ public class Exec {
         final int value
     ) {
         return (value == 28)
-               || (value == 56)
-               || (value == 112)
-               || (value == 224)
-               || (value == 448)
-               || (value == 896)
-               || (value == 1792);
+            || (value == 56)
+            || (value == 112)
+            || (value == 224)
+            || (value == 448)
+            || (value == 896)
+            || (value == 1792);
     }
 
     public static boolean isValidReadWriteKey(
@@ -485,22 +473,17 @@ public class Exec {
         }
     }
 
+    /**
+     * All exec code should invoke this in order to stop the exec.
+     * It does NOT immediately shut things down, but it will cause that to happen fairly soon,
+     * as the exec thread notices and responds.
+     * @param stopCode reason for stopping
+     */
     public void stop(final StopCode stopCode) {
         LogManager.logTrace(LOG_SOURCE, "stop(%s)", stopCode);
         _stopCode = stopCode;
         _stopFlag = true;
         _phase = Phase.Stopped;
-        _executor.shutdownNow();
-        try {
-            if (!_executor.awaitTermination(5, TimeUnit.SECONDS)) {
-                LogManager.logWarning(LOG_SOURCE, "Executor failed to terminate");
-            }
-        } catch (InterruptedException ex) {
-            // nothing to do here
-        }
-        _executor = null;
-        for (var m : _managers) {
-            m.stop();
-        }
+        _managers.forEach(Manager::stop);
     }
 }

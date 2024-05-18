@@ -18,10 +18,7 @@ public abstract class JumpKeyHandler extends KeyinHandler {
     }
 
     @Override
-    public final void abort(){}
-
-    @Override
-    public final boolean checkSyntax() {
+    final boolean checkSyntax() {
         if (this instanceof CJKeyinHandler || this instanceof SJKeyinHandler) {
             if (_options != null && _arguments == null) {
                 return _options.equalsIgnoreCase("ALL");
@@ -47,7 +44,7 @@ public abstract class JumpKeyHandler extends KeyinHandler {
     }
 
     @Override
-    public final boolean isAllowed() {
+    final boolean isAllowed() {
         return true;
     }
 

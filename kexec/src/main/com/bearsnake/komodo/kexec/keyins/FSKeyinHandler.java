@@ -7,10 +7,8 @@ package com.bearsnake.komodo.kexec.keyins;
 import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.StopCode;
-import com.bearsnake.komodo.logger.LogManager;
 
-public class FSKeyinHandler extends FacHandler implements Runnable {
+class FSKeyinHandler extends FacHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
         "FS,[ CM | DISK[S] | FDISK | MS | PACK[S] | RDISK | TAPE[S] ]",
@@ -33,10 +31,7 @@ public class FSKeyinHandler extends FacHandler implements Runnable {
     }
 
     @Override
-    public void abort(){}
-
-    @Override
-    public boolean checkSyntax() {
+    boolean checkSyntax() {
         // If option is ALL, we require a single argument which must be a node name
         if ((_options != null) && (_options.equalsIgnoreCase("ALL"))) {
             return _arguments != null && Exec.isValidNodeName(_arguments);
@@ -52,40 +47,30 @@ public class FSKeyinHandler extends FacHandler implements Runnable {
     }
 
     @Override
-    public String getCommand() { return COMMAND; }
+    String getCommand() { return COMMAND; }
 
     @Override
-    public String[] getHelp() { return HELP_TEXT; }
+    String[] getHelp() { return HELP_TEXT; }
 
     @Override
-    public boolean isAllowed() {
+    boolean isAllowed() {
         return true;
     }
 
     @Override
-    public void run() {
-        try {
-            process();
-        } catch (Throwable t) {
-            LogManager.logCatching(COMMAND, t);
-            Exec.getInstance().stop(StopCode.ExecContingencyHandler);
-        }
-        setFinished();
-    }
-
-    private void process() {
+    public void process() {
         switch (_options.toUpperCase()) {
-        case "ALL" -> processAll();
-        case "DISK", "DISKS" -> processDisks();
-        case "FDISK" -> processFixedDisks();
-        case "MS" -> processMassStorage();
-        case "PACK", "PACKS" -> processPacks();
-        case "RDISK" -> processRemovableDisks();
-        case "TAPE", "TAPES" -> processTapes();
-        default -> {
-            var msg = String.format("Invalid option %s", _options.toUpperCase());
-            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
-        }
+            case "ALL" -> processAll();
+            case "DISK", "DISKS" -> processDisks();
+            case "FDISK" -> processFixedDisks();
+            case "MS" -> processMassStorage();
+            case "PACK", "PACKS" -> processPacks();
+            case "RDISK" -> processRemovableDisks();
+            case "TAPE", "TAPES" -> processTapes();
+            default -> {
+                var msg = String.format("Invalid option %s", _options.toUpperCase());
+                Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+            }
         }
     }
 

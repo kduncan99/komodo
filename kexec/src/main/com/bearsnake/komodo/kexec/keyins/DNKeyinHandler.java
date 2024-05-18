@@ -14,10 +14,9 @@ import com.bearsnake.komodo.kexec.exec.RunControlEntry;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.NodeStatus;
-import com.bearsnake.komodo.logger.LogManager;
 import java.util.HashSet;
 
-public class DNKeyinHandler extends FacHandler implements Runnable {
+class DNKeyinHandler extends FacHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
         "DN node_name[,...]",
@@ -42,10 +41,7 @@ public class DNKeyinHandler extends FacHandler implements Runnable {
     }
 
     @Override
-    public void abort(){}
-
-    @Override
-    public boolean checkSyntax() {
+    boolean checkSyntax() {
         if (_options != null && !_options.equalsIgnoreCase("ALL")) {
             return false;
         }
@@ -54,29 +50,19 @@ public class DNKeyinHandler extends FacHandler implements Runnable {
     }
 
     @Override
-    public String getCommand() { return COMMAND; }
+    String getCommand() { return COMMAND; }
 
     @Override
-    public String[] getHelp() { return HELP_TEXT; }
+    String[] getHelp() { return HELP_TEXT; }
 
     @Override
-    public boolean isAllowed() {
+    boolean isAllowed() {
         // TODO depends on @@CONS privilege
         return true;
     }
 
     @Override
-    public void run() {
-        try {
-            process();
-        } catch (Throwable t) {
-            LogManager.logCatching(COMMAND, t);
-            Exec.getInstance().stop(StopCode.ExecContingencyHandler);
-        }
-        setFinished();
-    }
-
-    private void process() {
+    void process() {
         if (_options != null) {
             processAll();
         } else {

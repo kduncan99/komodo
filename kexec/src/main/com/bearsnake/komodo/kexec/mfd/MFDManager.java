@@ -82,6 +82,11 @@ public class MFDManager implements Manager {
     }
 
     @Override
+    public void close() {
+        LogManager.logTrace(LOG_SOURCE, "close()");
+    }
+
+    @Override
     public synchronized void dump(final PrintStream out,
                                   final String indent,
                                   final boolean verbose) {
@@ -175,7 +180,7 @@ public class MFDManager implements Manager {
     }
 
     @Override
-    public synchronized void stop() {
+    public void stop() {
         LogManager.logTrace(LOG_SOURCE, "stop()");
     }
 

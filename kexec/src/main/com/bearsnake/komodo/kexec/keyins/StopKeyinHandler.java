@@ -8,7 +8,7 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 
-public class StopKeyinHandler extends KeyinHandler implements Runnable {
+class StopKeyinHandler extends KeyinHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
         "$!",
@@ -24,27 +24,23 @@ public class StopKeyinHandler extends KeyinHandler implements Runnable {
     }
 
     @Override
-    public void abort(){}
-
-    @Override
-    public boolean checkSyntax() {
+    boolean checkSyntax() {
         return _options == null && _arguments == null;
     }
 
     @Override
-    public String getCommand() { return COMMAND; }
+    String getCommand() { return COMMAND; }
 
     @Override
-    public String[] getHelp() { return HELP_TEXT; }
+    String[] getHelp() { return HELP_TEXT; }
 
     @Override
-    public boolean isAllowed() {
+    boolean isAllowed() {
         return true;
     }
 
     @Override
-    public void run() {
+    void process() {
         Exec.getInstance().stop(StopCode.OperatorInitiatedRecovery);
-        setFinished();
     }
 }
