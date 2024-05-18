@@ -174,7 +174,6 @@ public class StandardConsole implements Console {
 
         @Override
         public void run() {
-            LogManager.logTrace(LOG_SOURCE, "run() enter");//TODO remove
             try {
                 if (System.in.available() > 0) {
                     // read input if there is any to be read, but ignore it if the previous input is still pending.
@@ -231,7 +230,6 @@ public class StandardConsole implements Console {
                 LogManager.logCatching(LOG_SOURCE, t);
                 System.out.printf("--- %s ---\n", t);
             }
-            LogManager.logTrace(LOG_SOURCE, "run() final exit");//TODO remove
         }
     }
 }

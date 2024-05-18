@@ -138,7 +138,8 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
 
     /**
      * Populates cataloged file main item sectors 0 and 1 - completely overwriting anything previous.
-     * Invokes super class to do the most common things, then fills in anything related to mass storage
+     * Invokes super class to do the most common things, then fills in anything related to mass storage.
+     * _leadItem0Address must already be populated.
      * @param mfdSectors enough MFDSectors to store all the information required for this file cycle.
      */
     @Override
@@ -149,7 +150,9 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
         var sector0 = mfdSectors.get(0).getSector();
         var sector1 = mfdSectors.get(1).getSector();
 
-        sector0.set(10, DateConverter.getModifiedSingleWordTime(_timeOfFirstWriteOrUnload));
+        if (_timeOfFirstWriteOrUnload != null) {
+            sector0.set(10, DateConverter.getModifiedSingleWordTime(_timeOfFirstWriteOrUnload));
+        }
         sector0.setS3(12, _fileFlags.compose());
         sector0.setS1(13, _pcharFlags.compose());
         sector0.setH1(15, _initialSMOQUELink);
@@ -189,21 +192,23 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
             sector1.setS2(8, _backupInfo.getFASBits());
             sector1.setS3(8, 1);// current backup levels
             sector1.setH2(8, _backupInfo.getNumberOfBackupWords());
-            sector1.set(9, Word36.stringToWordFieldata(reelNums.getFirst()));
-            if (reelNums.size() > 1) {
-                sector1.set(10, Word36.stringToWordFieldata(reelNums.get(1)));
-                sx++;
-                var rnSector = mfdSectors.get(sx).getSector();
-                rnSector.setS1(7, 1); // entry type
-                wx = 8;
-                for (int rnx = 2; rnx < reelNums.size(); rnx++) {
-                    rnSector.set(wx, Word36.stringToWordFieldata(reelNums.get(rnx)));
-                    wx++;
-                    if (wx == 28) {
-                        sx++;
-                        rnSector = mfdSectors.get(sx).getSector();
-                        rnSector.setS1(7, 1); // entry type
-                        wx = 8;
+            if (!reelNums.isEmpty()) {
+                sector1.set(9, Word36.stringToWordFieldata(reelNums.getFirst()));
+                if (reelNums.size() > 1) {
+                    sector1.set(10, Word36.stringToWordFieldata(reelNums.get(1)));
+                    sx++;
+                    var rnSector = mfdSectors.get(sx).getSector();
+                    rnSector.setS1(7, 1); // entry type
+                    wx = 8;
+                    for (int rnx = 2; rnx < reelNums.size(); rnx++) {
+                        rnSector.set(wx, Word36.stringToWordFieldata(reelNums.get(rnx)));
+                        wx++;
+                        if (wx == 28) {
+                            sx++;
+                            rnSector = mfdSectors.get(sx).getSector();
+                            rnSector.setS1(7, 1); // entry type
+                            wx = 8;
+                        }
                     }
                 }
             }

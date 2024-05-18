@@ -103,10 +103,10 @@ public abstract class FileCycleInfo {
 
     /**
      * Handles the common aspects of populating cataloged file main item sectors.
-     * Should be overridden by sub-classes.
+     * Should be overridden by subclasses.
      * Because we completely rewrite the entries, we *will* lose the links (if any) to DAD tables or reel tables.
      * Thus, caller must account for this, taking steps to (re-)establish those links after return from here.
-     * @param mfdSectors enough MFDSectors to store all of the information required for this file cycle.
+     * @param mfdSectors enough MFDSectors to store all the information required for this file cycle.
      */
     public void populateMainItems(
         final LinkedList<MFDSector> mfdSectors
@@ -194,8 +194,12 @@ public abstract class FileCycleInfo {
         sector0.setS2(17, _inhibitFlags.compose());
         sector0.setT2(17, _currentAssignCount);
         sector0.setT3(17, _absoluteCycle);
-        sector0.set(18, DateConverter.getModifiedSingleWordTime(_timeOfLastReference));
-        sector0.set(19, DateConverter.getModifiedSingleWordTime(_timeCataloged));
+        if (_timeOfLastReference != null) {
+            sector0.set(18, DateConverter.getModifiedSingleWordTime(_timeOfLastReference));
+        }
+        if (_timeCataloged != null) {
+            sector0.set(19, DateConverter.getModifiedSingleWordTime(_timeCataloged));
+        }
 
         // Fill in sector 1 information common to all formats of main item sector 1
         sector1.setT3(7, _absoluteCycle);

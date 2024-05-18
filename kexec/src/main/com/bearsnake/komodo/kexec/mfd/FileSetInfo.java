@@ -84,17 +84,24 @@ public class FileSetInfo {
     public void mergeFileSetCycleInfo(
         final FileSetCycleInfo fsci
     ) {
-        for (int cx = 0; cx < _cycleInfo.size(); ++cx) {
-            if (_cycleInfo.get(cx).getAbsoluteCycle() < fsci.getAbsoluteCycle()) {
-                _cycleInfo.add(cx, fsci);
-                break;
-            }
-        }
-        if (fsci.getAbsoluteCycle() > _highestAbsoluteCycle) {
+        if (_cycleInfo.isEmpty()) {
+            _cycleInfo.add(fsci);
             _highestAbsoluteCycle = fsci.getAbsoluteCycle();
+            _currentCycleRange = 1;
+            _cycleCount = 1;
+        } else {
+            for (int cx = 0; cx < _cycleInfo.size(); ++cx) {
+                if (_cycleInfo.get(cx).getAbsoluteCycle() < fsci.getAbsoluteCycle()) {
+                    _cycleInfo.add(cx, fsci);
+                    break;
+                }
+            }
+            if (fsci.getAbsoluteCycle() > _highestAbsoluteCycle) {
+                _highestAbsoluteCycle = fsci.getAbsoluteCycle();
+            }
+            _currentCycleRange = _highestAbsoluteCycle - _cycleInfo.getLast().getAbsoluteCycle() + 1;
+            _cycleCount = _cycleInfo.size();
         }
-        _currentCycleRange = _highestAbsoluteCycle - _cycleInfo.getLast().getAbsoluteCycle() + 1;
-        _cycleCount = _cycleInfo.size();
     }
 
     /**

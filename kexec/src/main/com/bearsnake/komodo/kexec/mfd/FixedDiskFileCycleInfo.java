@@ -33,9 +33,10 @@ public class FixedDiskFileCycleInfo extends DiskFileCycleInfo {
     }
 
     /**
-     * Populates cataloged file main item sectors 0 and 1
-     * Invokes super class to do the most common things, then fills in anything related to mass storage
-     * @param mfdSectors enough MFDSectors to store all of the information required for this file cycle.
+     * Populates cataloged file main item sectors 0 and 1.
+     * Invokes super class to do the most common things, then fills in anything related to mass storage.
+     * _leadItem0Address must be populated before invoking
+     * @param mfdSectors enough MFDSectors to store all the information required for this file cycle.
      */
     @Override
     public void populateMainItems(
