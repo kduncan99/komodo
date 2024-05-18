@@ -68,6 +68,16 @@ public class MFDRelativeAddress implements Comparable<MFDRelativeAddress> {
     }
 
     @Override
+    public boolean equals(final Object obj) {
+        return (obj instanceof MFDRelativeAddress mra) && (mra._value == _value);
+    }
+
+    @Override
+    public int hashCode() {
+        return (int)_value;
+    }
+
+    @Override
     public String toString() {
         return String.format("%012o", _value);
     }

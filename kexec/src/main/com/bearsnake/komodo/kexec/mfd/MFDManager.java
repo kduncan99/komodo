@@ -106,6 +106,12 @@ public class MFDManager implements Manager {
                 out.printf("%s    %s:  %s\n", indent, luKey, fsInfo._leadItem0Address);
             }
 
+            // MFD tracks
+            out.printf("%s  Cached MFD Tracks:\n", indent);
+            for (var addr : _cachedMFDTracks.keySet()) {
+                out.printf("%s    %s\n", indent, addr.toString());
+            }
+
             // MFD sectors which are in use
             out.printf("%s  In-use MFD Sectors:\n", indent);
             for (var e : _cachedMFDTracks.entrySet()) {
@@ -511,7 +517,7 @@ public class MFDManager implements Manager {
         }
 
         var result = new MFDSector(addr, getMFDSector(addr));
-        LogManager.logTrace(LOG_SOURCE, "allocateDirectorySector returning addr %0120", addr);
+        LogManager.logTrace(LOG_SOURCE, "allocateDirectorySector returning addr %s", addr);
         return result;
     }
 
