@@ -3,3 +3,4 @@ out
 test-deploy
 media
 /media
+*.log
