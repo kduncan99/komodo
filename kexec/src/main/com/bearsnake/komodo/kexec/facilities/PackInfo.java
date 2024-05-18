@@ -80,27 +80,29 @@ public class PackInfo implements MediaInfo {
         final ArraySlice label,
         final ArraySlice initialDirectoryTrack
     ) {
-        if (!Word36.toStringFromASCII(label._array[0]).equals("VOL1")) {
+        if (!Word36.toStringFromASCII(label.get(0)).equals("VOL1")) {
             return null;
         }
 
         var pi = new PackInfo();
-        var packName = Word36.toStringFromASCII(label._array[01]) + Word36.toStringFromASCII(label._array[02]);
+        var packName = Word36.toStringFromASCII(label.get(01)) + Word36.toStringFromASCII(label.get(02));
         pi._packName = packName.substring(0, 6).trim();
-        pi._prepFactor = (int)Word36.getH2(label._array[04]);
+        pi._prepFactor = (int)Word36.getH2(label.get(04));
         pi._isPrepped = Exec.isValidPrepFactor(pi._prepFactor) && Exec.isValidPackName(pi._packName);
-        pi._directoryTrackAddress = label._array[03];
+        pi._directoryTrackAddress = label.get(03);
         pi._trackCount = label._array[016];
 
+        var sector1 = new ArraySlice(initialDirectoryTrack, 28, 28);
+
         if (pi._isPrepped) {
-            if (Word36.getH1(initialDirectoryTrack._array[05]) == 0) {
+            if (Word36.getH1(sector1.get(05)) == 0) {
                 pi._isFixed = false;
                 pi._isRemovable = true;
-                pi._ldatIndex = (int) Word36.getH1(initialDirectoryTrack._array[020]);
+                pi._ldatIndex = (int) Word36.getH1(sector1.get(020));
             } else {
                 pi._isFixed = true;
                 pi._isRemovable = false;
-                pi._ldatIndex = (int) Word36.getH1(initialDirectoryTrack._array[05]) & 07777;
+                pi._ldatIndex = (int) Word36.getH1(sector1.get(05)) & 07777;
             }
         } else {
             pi._isFixed = false;

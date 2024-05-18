@@ -714,7 +714,7 @@ public class FacilitiesManager implements Manager {
     }
 
     /**
-     * For assigning a reserved disk to a run (or any disk, if we are the Exec).
+     * For assigning a reserved disk to a run.
      * This assignment can only be temporary.
      * @param runControlEntry describes the run
      * @param fileSpecification describes the qualifier, file name, and file cycle for the fac item
@@ -731,7 +731,7 @@ public class FacilitiesManager implements Manager {
         final RunControlEntry runControlEntry,
         final FileSpecification fileSpecification,
         final int nodeIdentifier,
-        final String packName, // only for removable - null (and ignored) for fixed
+        final String packName,
         final long optionsWord,
         final boolean releaseOnTaskEnd,
         final boolean doNotHoldRun,
@@ -885,6 +885,93 @@ public class FacilitiesManager implements Manager {
         LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
                             runControlEntry.getRunId(),
                             node.getNodeName(),
+                            fsResult.toString());
+        return true;
+    }
+
+    /**
+     * For assigning a reserved disk to a run.
+     * This assignment can only be temporary.
+     * @param fileSpecification needed for creating facilities item
+     * @param nodeIdentifier node identifier of the device
+     * @param packName only for removable disk unit, null for fixed
+     * @param fsResult fac status result
+     * @return true if we are successful
+     * @throws ExecStoppedException if the exec is stopped
+     */
+    public synchronized boolean assignFixedDiskUnitToExec(
+        final FileSpecification fileSpecification,
+        final int nodeIdentifier,
+        final String packName,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE,
+                            "assignFixedDiskUnitToExec %s node:%d",
+                            fileSpecification.toString(),
+                            nodeIdentifier);
+
+        var nodeInfo = _nodeGraph.get(nodeIdentifier);
+        if (nodeInfo == null) {
+            LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Cannot find node %012o", nodeIdentifier);
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
+
+        var node = nodeInfo.getNode();
+        if ((node.getNodeCategory() != NodeCategory.Device) || ((Device) node).getDeviceType() != DeviceType.DiskDevice) {
+            LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Node %012o is not a disk device", nodeIdentifier);
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
+
+        var disk = (DiskDevice) node;
+
+        // Check the node assignment for the device - if it is already assigned to us, then fail.
+        var rce = Exec.getInstance().getRunControlEntry();
+        var dni = (DeviceNodeInfo) nodeInfo;
+        if (Objects.equals(dni.getAssignedTo(), rce)) {
+            var params = new String[]{node.getNodeName()};
+            fsResult.postMessage(FacStatusCode.DeviceAlreadyInUseByThisRun, params);
+            fsResult.mergeStatusBits(0_400000_000000L);
+            return false;
+        }
+
+        // If there is a facilities item in the rce which matches the file specification which does not refer
+        // to an absolute assign of this same unit, fail.
+        var fiTable = rce.getFacilitiesItemTable();
+        var existingFacItem = fiTable.getExactFacilitiesItem(fileSpecification);
+        if (existingFacItem != null) {
+            fsResult.postMessage(FacStatusCode.IllegalAttemptToChangeAssignmentType);
+            fsResult.mergeStatusBits(0_400000_000000L);
+            return false;
+        }
+
+        // Create an appropriate facilities item.
+        var facItem = new AbsoluteDiskItem(node, packName);
+        var optionsWord = T_OPTION | X_OPTION;
+        facItem.setQualifier(fileSpecification.getQualifier())
+               .setFilename(fileSpecification.getFilename())
+               .setOptionsWord(optionsWord)
+               .setIsTemporary(true);
+        if (fileSpecification.hasFileCycleSpecification()) {
+            var fcSpec = fileSpecification.getFileCycleSpecification();
+            if (fcSpec.isAbsolute()) {
+                facItem.setAbsoluteCycle(fcSpec.getCycle());
+            } else if (fcSpec.isRelative()) {
+                facItem.setRelativeCycle(fcSpec.getCycle());
+            }
+        }
+
+        // Is the filename portion of the new facilities item not unique to the run?
+        if (fiTable.getFacilitiesItemByFilename(fileSpecification.getFilename()) != null) {
+            fsResult.postMessage(FacStatusCode.FilenameNotUnique);
+            fsResult.mergeStatusBits(0_004000_000000L);
+        }
+
+        fiTable.addFacilitiesItem(facItem, rce.getUseItemTable());
+
+        LogManager.logTrace(LOG_SOURCE,
+                            "assignFixedDiskUnitToExec result:%s",
                             fsResult.toString());
         return true;
     }
@@ -1490,7 +1577,7 @@ public class FacilitiesManager implements Manager {
                                                      null,
                                                      null,
                                                      null);
-                assignDiskUnitToExec(fileSpec, node.getNodeIdentifier(), null, fsResult);
+                assignFixedDiskUnitToExec(fileSpec, node.getNodeIdentifier(), null, fsResult);
             }
         }
         return list;

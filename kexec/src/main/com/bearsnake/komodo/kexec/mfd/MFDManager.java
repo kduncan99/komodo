@@ -374,6 +374,10 @@ public class MFDManager implements Manager {
             packInfo.setLDATIndex(ldatIndex);
 
             var fs = packInfo.getFreeSpace();
+            if (fs == null) {
+                packInfo.setTrackCount(packInfo.getTrackCount());
+                fs = packInfo.getFreeSpace();
+            }
             fs.reset();
             fs.markAllocated(0, 1);
             fs.markAllocated(packInfo.getDirectoryTrackAddress() / 1792, 1);
@@ -1130,6 +1134,7 @@ public class MFDManager implements Manager {
      * @throws ExecStoppedException if something goes wrong
      */
     private void writeDirtyCacheTracks() throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "writeDirtyCacheTracks() enter");
         // use direct IO - don't need to use fac mgr, other than it needs to be assigned
         // *by* fac mgr so that the fcinfo is accelerated.
         var acInfo = _acceleratedFileCycles.get(_mfdFileAddress);
@@ -1167,5 +1172,6 @@ public class MFDManager implements Manager {
                 throw new ExecStoppedException();
             }
         }
+        LogManager.logTrace(LOG_SOURCE, "writeDirtyCacheTracks() exit");
     }
 }

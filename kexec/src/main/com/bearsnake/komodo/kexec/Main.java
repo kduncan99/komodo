@@ -105,6 +105,7 @@ public class Main {
                 e.boot(recovery, session);
             } catch (KExecException ex) {
                 System.out.printf("::Cannot boot exec:%s\n", ex.getMessage());
+                e.dump(true);
                 break;
             }
 

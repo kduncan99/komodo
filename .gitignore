@@ -4,3 +4,4 @@ test-deploy
 media
 /media
 *.log
+*.dump
