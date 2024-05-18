@@ -25,6 +25,7 @@ public class ConsoleManager implements Manager, Runnable {
     // TODO
     //  somewhere in this mess we need to post roMsgs and rrMsgs (and their responses) to batch runs
     //  for the tail sheet.
+    // TODO Need to observe ConsoleType for choosing consoles
     private final ConcurrentHashMap<ConsoleId, Console> _consoles = new ConcurrentHashMap<>();
     private final ConcurrentLinkedQueue<ConsoleId> _dropConsoleList = new ConcurrentLinkedQueue<>();
     private ConsoleId _primaryConsoleId;
