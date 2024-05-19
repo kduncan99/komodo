@@ -24,7 +24,7 @@ public class FSNativeTapeTranslator extends FSTapeTranslator {
     private static final byte[] TAPE_MARK = { (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff };
     private static final ByteBuffer TAPE_MARK_BB = ByteBuffer.wrap(TAPE_MARK);
 
-    private ByteBuffer _controlWordBuffer = ByteBuffer.allocate(4);
+    private final ByteBuffer _controlWordBuffer;
 
     FSNativeTapeTranslator(
         final FileChannel channel
