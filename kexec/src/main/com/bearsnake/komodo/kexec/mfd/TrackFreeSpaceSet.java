@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.mfd;
 
+import java.io.PrintStream;
 import java.util.LinkedList;
 
 /**
@@ -46,6 +47,14 @@ public class TrackFreeSpaceSet {
         tr.adjustTrackCount(-1);
         _availableTrackCount--;
         return result;
+    }
+
+    public void dump(final PrintStream out,
+                     final String indent) {
+        out.printf("%sTrack Count=%d Available=%d\n", indent, _trackCount, _availableTrackCount);
+        for (var tr : _freeSpace) {
+            out.printf("%s  Addr:%08o Count:%d\n", indent, tr.getTrackId(), tr.getTrackCount());
+        }
     }
 
     /**

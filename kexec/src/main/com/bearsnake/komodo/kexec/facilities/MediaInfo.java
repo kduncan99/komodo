@@ -10,4 +10,5 @@ public interface MediaInfo {
 
     void dump(final PrintStream out, final String indent);
     String getMediaName();
+    String toString();
 }

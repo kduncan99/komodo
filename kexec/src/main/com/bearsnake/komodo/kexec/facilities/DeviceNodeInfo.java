@@ -22,12 +22,4 @@ public class DeviceNodeInfo extends NodeInfo {
     }
 
     public void addChannel(final Channel channel) { _routes.add(channel); }
-
-    @Override
-    public String toString() {
-        return String.format("%s %s %s",
-                             getNode().toString(),
-                             getNodeStatus(),
-                             _mediaInfo == null ? "" : _mediaInfo.toString());
-    }
 }

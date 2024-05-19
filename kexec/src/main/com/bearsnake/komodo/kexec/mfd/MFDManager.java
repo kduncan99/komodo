@@ -173,10 +173,13 @@ public class MFDManager implements Manager {
         }
 
         // accelerated file cycles
+        out.printf("%s  MFD$$ file address:%s\n", indent, _mfdFileAddress);
         out.printf("%s  Accelerated file cycles:\n", indent);
-        for (var aci : _acceleratedFileCycles.values()) {
+        for (var entry : _acceleratedFileCycles.entrySet()) {
+            var addr = entry.getKey();
+            var aci = entry.getValue();
             var fci = aci.getFileCycleInfo();
-            out.printf("%s    %s*%s(%d)\n", indent, fci.getQualifier(), fci.getFilename(), fci.getAbsoluteCycle());
+            out.printf("%s    %s:%s*%s(%d)\n", indent, addr, fci.getQualifier(), fci.getFilename(), fci.getAbsoluteCycle());
         }
     }
 
@@ -228,13 +231,28 @@ public class MFDManager implements Manager {
                 acInfo = _acceleratedFileCycles.get(mainItem0Addr);
                 if (acInfo == null) {
                     var miChain = getMainItemChain(cycInfo.getMainItem0Address());
-                    var fcInfo = switch (fsInfo.getFileType()) {
-                        case Fixed -> new FixedDiskFileCycleInfo();
-                        case Removable -> new RemovableDiskFileCycleInfo();
-                        case Tape -> new TapeFileCycleInfo();
-                    };
-                    fcInfo.loadFromMainItemChain(miChain);
-                    acInfo = new AcceleratedCycleInfo(fcInfo);
+                    FileCycleInfo fcInfo;
+                    switch (fsInfo.getFileType()) {
+                        case Fixed -> {
+                            fcInfo = new FixedDiskFileCycleInfo();
+                            fcInfo.loadFromMainItemChain(miChain);
+                            var dadChain = getDADChain(mainItem0Addr);
+                            var fas = FileAllocationSet.createFromDADChain(dadChain);
+                            acInfo = new AcceleratedCycleInfo(fcInfo, fas);
+                        }
+                        case Removable -> {
+                            fcInfo = new RemovableDiskFileCycleInfo();
+                            fcInfo.loadFromMainItemChain(miChain);
+                            var dadChain = getDADChain(mainItem0Addr);
+                            var fas = FileAllocationSet.createFromDADChain(dadChain);
+                            acInfo = new AcceleratedCycleInfo(fcInfo, fas);
+                        }
+                        case Tape -> {
+                            fcInfo = new TapeFileCycleInfo();
+                            fcInfo.loadFromMainItemChain(miChain);
+                            acInfo = new AcceleratedCycleInfo(fcInfo);
+                        }
+                    }
                     _acceleratedFileCycles.put(mainItem0Addr, acInfo);
                 }
                 break;
@@ -363,106 +381,115 @@ public class MFDManager implements Manager {
 
         var start = Instant.now();
         var e = Exec.getInstance();
-        var msg = String.format("Fixed MS Devices = %d - Continue? YN", fixedDiskInfo.size());
-        var allowed = new String[]{ "Y", "N" };
-        var response = e.sendExecRestrictedReadReplyMessage(msg, allowed);
-        if (!response.equals("Y")) {
-            e.stop(StopCode.ConsoleResponseRequiresReboot);
+        try {
+            var msg = String.format("Fixed MS Devices = %d - Continue? YN", fixedDiskInfo.size());
+            var allowed = new String[]{"Y", "N"};
+            var response = e.sendExecRestrictedReadReplyMessage(msg, allowed);
+            if (!response.equals("Y")) {
+                e.stop(StopCode.ConsoleResponseRequiresReboot);
+                throw new ExecStoppedException();
+            }
+
+            _cachedMFDTracks.clear();
+            _dirtyCacheTracks.clear();
+            _leadItemLookupTable.clear();
+            _freeMFDSectors.clear();
+            _logicalDATable.clear();
+            _fixedPackCount = 0;
+            var mfdFas = new FileAllocationSet();
+
+            var ldatIndex = 1;
+            for (var ni : fixedDiskInfo) {
+                var packInfo = (PackInfo) ni.getMediaInfo();
+                packInfo.setLDATIndex(ldatIndex);
+
+                var fs = packInfo.getFreeSpace();
+                if (fs == null) {
+                    packInfo.setTrackCount(packInfo.getTrackCount());
+                    fs = packInfo.getFreeSpace();
+                }
+                fs.reset();
+                fs.markAllocated(0, 1);
+                fs.markAllocated(packInfo.getDirectoryTrackAddress() / 1792, 1);
+
+                _logicalDATable.put(ldatIndex, ni);
+
+                // create a cached initial directory track
+                var dirTrackAddr = new MFDRelativeAddress(ldatIndex, 0, 0);
+                var dirTrackArray = new long[1792];
+                var dirTrack = new ArraySlice(dirTrackArray);
+                _cachedMFDTracks.put(dirTrackAddr, dirTrack);
+
+                for (var sectorId = 2; sectorId <= 077; ++sectorId) {
+                    var sectorAddr = new MFDRelativeAddress(ldatIndex, 0, sectorId);
+                    _freeMFDSectors.add(sectorAddr);
+                    markDirectorySectorDirty(sectorAddr);
+                }
+
+                packInfo.setMFDTrackCount(1);
+                var faRegion = new LogicalTrackExtent(dirTrackAddr.getValue() >> 6, 1);
+                var hwTid = new HardwareTrackId(ldatIndex, packInfo.getDirectoryTrackAddress());
+                mfdFas.mergeIntoFileAllocationSet(new FileAllocation(faRegion, hwTid));
+
+                // populate directory track sector 0
+                // First two sectors are allocated, so note that in [1].
+                // DAS links to tracks 1 through 8 are invalid, as is link to next DAS.
+                var sector0 = new ArraySlice(dirTrack, 0, 28);
+                sector0.set(0, Word36.setH1(0, ldatIndex));
+                sector0.set(01, 0_600000_000000L);
+                for (int dx = 3; dx < 27; dx += 3) {
+                    sector0.set(dx, MFDManager.INVALID_LINK);
+                }
+                sector0.set(27, MFDManager.INVALID_LINK);
+
+                // populate directory track sector 1
+                // Leave +0 and +1 alone (We aren't doing HMBT/SMBT)
+                // Set +2 and +3 to available tracks, +4 to pack-id
+                // +5,H1 Bit35 needs to be set to indicate fixed pack
+                var sector1 = new ArraySlice(dirTrack, 28, 28);
+                sector1.set(2, packInfo.getTrackCount());
+                sector1.set(3, packInfo.getTrackCount() - 2);
+                String packId = String.format("%-6s", packInfo.getPackName());
+                sector1.set(4, Word36.stringToWordFieldata(packId));
+                sector1.set(5, INVALID_LINK);
+
+                // +010,T1 is blocks per track
+                // +010,S3 is version (1)
+                // +010,T3 is prep factor
+                long value = Word36.setT1(0, 1792 / packInfo.getPrepFactor());
+                value = Word36.setS3(value, 1);
+                value = Word36.setT3(value, packInfo.getPrepFactor());
+                sector1.set(010, value);
+
+                var sector0Addr = new MFDRelativeAddress(dirTrackAddr);
+                var sector1Addr = new MFDRelativeAddress(dirTrackAddr).setSectorId(1);
+                _freeMFDSectors.remove(sector0Addr);
+                _freeMFDSectors.remove(sector1Addr);
+
+                markDirectorySectorDirty(sector0Addr);
+                markDirectorySectorDirty(sector1Addr);
+
+                ldatIndex++;
+                _fixedPackCount++;
+            }
+
+            // Create MFD$$ file artifacts in the first directory track of the first disk pack,
+            // then write the dirty sectors (i.e., the entire MFD) to disk.
+            createMFDFile(mfdFas);
+            writeDirtyCacheTracks();
+
+            // I think we're all done here.
+            var elapsed = Duration.between(start, Instant.now()).getNano() / 1000;
+            msg = String.format("Mass Storage Initialized %d MS.", elapsed);
+            e.sendExecReadOnlyMessage(msg, ConsoleType.System);
+        } catch (ExecStoppedException ex) {
+            throw ex;
+        } catch (Throwable t) {
+            LogManager.logCatching(LOG_SOURCE, t);
+            e.stop(StopCode.ExecActivityTakenToEMode);
             throw new ExecStoppedException();
         }
 
-        _cachedMFDTracks.clear();
-        _dirtyCacheTracks.clear();
-        _leadItemLookupTable.clear();
-        _freeMFDSectors.clear();
-        _logicalDATable.clear();
-        _fixedPackCount = 0;
-        var mfdFas = new FileAllocationSet();
-
-        var ldatIndex = 1;
-        for (var ni : fixedDiskInfo) {
-            var packInfo = (PackInfo) ni.getMediaInfo();
-            packInfo.setLDATIndex(ldatIndex);
-
-            var fs = packInfo.getFreeSpace();
-            if (fs == null) {
-                packInfo.setTrackCount(packInfo.getTrackCount());
-                fs = packInfo.getFreeSpace();
-            }
-            fs.reset();
-            fs.markAllocated(0, 1);
-            fs.markAllocated(packInfo.getDirectoryTrackAddress() / 1792, 1);
-
-            _logicalDATable.put(ldatIndex, ni);
-
-            // create a cached initial directory track
-            var dirTrackAddr = new MFDRelativeAddress(ldatIndex, 0, 0);
-            var dirTrackArray = new long[1792];
-            var dirTrack = new ArraySlice(dirTrackArray);
-            _cachedMFDTracks.put(dirTrackAddr, dirTrack);
-
-            for (var sectorId = 2; sectorId <= 077; ++sectorId) {
-                var sectorAddr = new MFDRelativeAddress(ldatIndex, 0, sectorId);
-                _freeMFDSectors.add(sectorAddr);
-                markDirectorySectorDirty(sectorAddr);
-            }
-
-            packInfo.setMFDTrackCount(1);
-            var faRegion = new LogicalTrackExtent(dirTrackAddr.getValue() >> 6, 1);
-            var hwTid = new HardwareTrackId(ldatIndex, packInfo.getDirectoryTrackAddress());
-            mfdFas.mergeIntoFileAllocationSet(new FileAllocation(faRegion, hwTid));
-
-            // populate directory track sector 0
-            // First two sectors are allocated, so note that in [1].
-            // DAS links to tracks 1 through 8 are invalid, as is link to next DAS.
-            var sector0 = new ArraySlice(dirTrack, 0, 28);
-            sector0.set(0, Word36.setH1(0, ldatIndex));
-            sector0.set(01, 0_600000_000000L);
-            for (int dx = 3; dx < 27; dx += 3) {
-                sector0.set(dx, MFDManager.INVALID_LINK);
-            }
-            sector0.set(27, MFDManager.INVALID_LINK);
-
-            // populate directory track sector 1
-            // Leave +0 and +1 alone (We aren't doing HMBT/SMBT)
-            // Set +2 and +3 to available tracks, +4 to pack-id
-            // +5,H1 Bit35 needs to be set to indicate fixed pack
-            var sector1 = new ArraySlice(dirTrack, 28, 28);
-            sector1.set(2, packInfo.getTrackCount());
-            sector1.set(3, packInfo.getTrackCount() - 2);
-            String packId = String.format("%-6s", packInfo.getPackName());
-            sector1.set(4, Word36.stringToWordFieldata(packId));
-            sector1.set(5, INVALID_LINK);
-
-            // +010,T1 is blocks per track
-            // +010,S3 is version (1)
-            // +010,T3 is prep factor
-            long value = Word36.setT1(0, 1792 / packInfo.getPrepFactor());
-            value = Word36.setS3(value, 1);
-            value = Word36.setT3(value, packInfo.getPrepFactor());
-            sector1.set(010, value);
-
-            var sector0Addr = new MFDRelativeAddress(dirTrackAddr);
-            var sector1Addr = new MFDRelativeAddress(dirTrackAddr).setSectorId(1);
-            _freeMFDSectors.remove(sector0Addr);
-            _freeMFDSectors.remove(sector1Addr);
-
-            markDirectorySectorDirty(sector0Addr);
-            markDirectorySectorDirty(sector1Addr);
-
-            ldatIndex++;
-            _fixedPackCount++;
-        }
-
-        // Create MFD$$ file artifacts in the first directory track of the first disk pack,
-        // then write the dirty sectors (i.e., the entire MFD) to disk.
-        createMFDFile(mfdFas);
-        writeDirtyCacheTracks();
-
-        // I think we're all done here.
-        var elapsed = Duration.between(start, Instant.now()).getNano() / 1000;
-        msg = String.format("Mass Storage Initialized %d MS.", elapsed);
-        e.sendExecReadOnlyMessage(msg, ConsoleType.System);
         LogManager.logTrace(LOG_SOURCE, "initializeMassStorage exiting");
     }
 
@@ -657,8 +684,7 @@ public class MFDManager implements Manager {
                                           .setFilename(mfdFilename)
                                           .setProjectId(mfdProjectId)
                                           .setIsGuarded(true);
-            _mfdFileAddress = createFileSet(fsInfo);
-            fsInfo._leadItem0Address = _mfdFileAddress;
+            fsInfo._leadItem0Address = createFileSet(fsInfo);
 
             var fcInfo = new FixedDiskFileCycleInfo();
             fcInfo.setUnitSelectionIndicators(usInd)
@@ -673,6 +699,7 @@ public class MFDManager implements Manager {
                   .setInhibitFlags(inhFlags);
 
             createFileCycle(fsInfo, fcInfo);
+            _mfdFileAddress = fcInfo._mainItem0Address;
 
             // Create DAD tables for the MFD$$ file
             persistDADTables(_mfdFileAddress, mfdAllocationSet);
@@ -958,9 +985,6 @@ public class MFDManager implements Manager {
             return;
         }
 
-        for (var fa : allocations) {
-            System.out.printf("FAlloc FileRegion=%s HWTid=%s\n", fa.getFileRegion(), fa.getHardwareTrackId());
-        }
         // Set ax to the index of the next allocation to be persisted.
         // Also, set dx to the index of the dad sector being populated (for now, -1), and ex to the index
         // of the next entry in that sector to be populated (for now, 8) -- these settings will ensure that

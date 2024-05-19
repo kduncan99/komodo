@@ -29,7 +29,7 @@ public class PackInfo implements MediaInfo {
         BLOCK_ALIGNMENT_MASK.put(1792, 0xFFFFFFFFFFFFFFC0L);
     }
 
-    private long              _directoryTrackAddress;
+    private long              _directoryTrackAddress; // DRWA (word address)
     private boolean           _isFixed;
     private boolean           _isPrepped;
     private boolean           _isRemovable;
@@ -114,7 +114,22 @@ public class PackInfo implements MediaInfo {
     }
 
     @Override
-    public void dump(final PrintStream out, final String indent) {
-        // TODO
+    public void dump(final PrintStream out,
+                     final String indent) {
+        var sb = new StringBuilder().append(indent).append("Pack:").append(_packName);
+        if (_isPrepped) {
+            sb.append(" PREPPED RECL:").append(_prepFactor);
+            if (_isFixed) {
+                sb.append(" FIX");
+            } else if (_isRemovable) {
+                sb.append(" REM");
+            }
+        }
+
+        sb.append(" LDAT:").append(String.format("%06o", _ldatIndex));
+        sb.append(" DirTrk:").append(String.format("%06o", _directoryTrackAddress));
+        sb.append(" Tracks:").append(_trackCount).append(" MFDTrks:").append(_mfdTrackCount);
+        out.println(sb);
+        _freeSpace.dump(out, indent + "  ");
     }
 }

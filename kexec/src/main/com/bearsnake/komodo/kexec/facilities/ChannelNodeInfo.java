@@ -14,12 +14,4 @@ public class ChannelNodeInfo extends NodeInfo {
     public ChannelNodeInfo(final Node node) {
         super(node);
     }
-
-    @Override
-    public String toString() {
-        return String.format("%s %s %s",
-                             getNode().toString(),
-                             getNodeStatus(),
-                             getMediaInfo() == null ? "" : getMediaInfo().toString());
-    }
 }

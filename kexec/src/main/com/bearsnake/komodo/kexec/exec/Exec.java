@@ -481,9 +481,13 @@ public class Exec {
      */
     public void stop(final StopCode stopCode) {
         LogManager.logTrace(LOG_SOURCE, "stop(%s)", stopCode);
-        _stopCode = stopCode;
-        _stopFlag = true;
-        _phase = Phase.Stopped;
-        _managers.forEach(Manager::stop);
+        if (_phase == Phase.Stopped) {
+            LogManager.logError(LOG_SOURCE, "Already stopped");
+        } else {
+            _stopCode = stopCode;
+            _stopFlag = true;
+            _phase = Phase.Stopped;
+            _managers.forEach(Manager::stop);
+        }
     }
 }

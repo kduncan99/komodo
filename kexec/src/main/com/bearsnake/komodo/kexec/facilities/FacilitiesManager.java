@@ -62,6 +62,7 @@ import static com.bearsnake.komodo.baselib.Word36.R_OPTION;
 import static com.bearsnake.komodo.baselib.Word36.T_OPTION;
 import static com.bearsnake.komodo.baselib.Word36.X_OPTION;
 import static com.bearsnake.komodo.baselib.Word36.Y_OPTION;
+import static com.bearsnake.komodo.logger.Level.Trace;
 
 public class FacilitiesManager implements Manager {
 
@@ -156,6 +157,10 @@ public class FacilitiesManager implements Manager {
         var subIndent = indent + "    ";
         for (var ni : _nodeGraph.values()) {
             out.printf("%s%s\n", subIndent, ni.toString());
+            var mi = ni.getMediaInfo();
+            if (mi != null) {
+                mi.dump(out, subIndent);
+            }
         }
     }
 
@@ -261,6 +266,7 @@ public class FacilitiesManager implements Manager {
         } catch (FileSetDoesNotExistException ex) {
             fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
             fsResult.mergeStatusBits(0_400010_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -268,6 +274,7 @@ public class FacilitiesManager implements Manager {
         if ((fsInfo.getFileType() == FileType.Fixed) && (!packIds.isEmpty())) {
             fsResult.postMessage(FacStatusCode.AssignMnemonicDoesNotAllowPackIds);
             fsResult.mergeStatusBits(0_600010_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -275,11 +282,13 @@ public class FacilitiesManager implements Manager {
         if ((fsInfo.getFileType() != FileType.Fixed) && (fsInfo.getFileType() != FileType.Removable)) {
             fsResult.postMessage(FacStatusCode.AttemptToChangeGenericType);
             fsResult.mergeStatusBits(0_420000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
         // Check read/write keys
         if (!checkKeys(runControlEntry, fsInfo, fileSpecification, fsResult)) {
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
         var readInhibit = (fsResult.getStatusWord() & 0_000100_000000L) != 0;
@@ -311,6 +320,7 @@ public class FacilitiesManager implements Manager {
                 // we already checked for file set not existing, but we have to catch it here anyway.
                 fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
                 fsResult.mergeStatusBits(0_400010_000000L);
+                fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
 
@@ -354,12 +364,14 @@ public class FacilitiesManager implements Manager {
                     // absolute cycle - if it was already assigned, it would have been by relative cycle +1.
                     fsResult.postMessage(FacStatusCode.Plus1IllegalWithAOption);
                     fsResult.mergeStatusBits(0_400000_000040L);
+                    fsResult.log(Trace, LOG_SOURCE);
                     return false;
                 }
 
                 if (Math.abs(relCycle) >= fsInfo.getCycleInfo().size()) {
                     fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
                     fsResult.mergeStatusBits(0_400010_000000L);
+                    fsResult.log(Trace, LOG_SOURCE);
                     return false;
                 }
 
@@ -410,11 +422,13 @@ public class FacilitiesManager implements Manager {
             if (placement != null) {
                 fsResult.postMessage(FacStatusCode.PlacementFieldNotAllowedForRemovable);
                 fsResult.mergeStatusBits(0_600000_000000L);
+                fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
 
             var remInfo = (RemovableDiskFileCycleInfo) fcInfo;
             if (!packIds.isEmpty() && !checkPackIds(fsInfo, remInfo, optionsWord, packIds, fsResult)) {
+                fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
         } else {
@@ -423,12 +437,14 @@ public class FacilitiesManager implements Manager {
                 // we'd like a better message, but this is all we have...
                 fsResult.postMessage(FacStatusCode.UndefinedFieldOrSubfield);
                 fsResult.mergeStatusBits(0_600000_000000L);
+                fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
 
             if (placement != null) {
                 placementInfo = checkPlacement(placement, fsResult);
                 if (placementInfo == null) {
+                    fsResult.log(Trace, LOG_SOURCE);
                     return false;
                 }
             }
@@ -441,6 +457,7 @@ public class FacilitiesManager implements Manager {
         if (!wasAlreadyAssigned) {
             // Check public/private - not necessary if the file was already assigned, but it wasn't, so...
             if (!checkPrivateAccess(runControlEntry, fcInfo, fsResult)) {
+                fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
 
@@ -476,6 +493,7 @@ public class FacilitiesManager implements Manager {
 
         // Is file disabled? (should not check this until after we know it is accessible)
         if (!checkDisabled(fcInfo, directoryOnlyBehavior, assignIfDisabled, fsResult)) {
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -496,6 +514,7 @@ public class FacilitiesManager implements Manager {
         if ((granularity != null) && (granularity != fcInfo.getPCHARFlags().getGranularity())) {
             fsResult.postMessage(FacStatusCode.AttemptToChangeGranularity);
             fsResult.mergeStatusBits(0_600000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -529,6 +548,7 @@ public class FacilitiesManager implements Manager {
             if (fcInfo.getDescriptorFlags().toBeCataloged()) {
                 fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
                 fsResult.mergeStatusBits(0_400010_000000L);
+                fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
 
@@ -536,6 +556,7 @@ public class FacilitiesManager implements Manager {
             if (fcInfo.getDescriptorFlags().toBeDropped()) {
                 fsResult.postMessage(FacStatusCode.FileIsBeingDropped);
                 fsResult.mergeStatusBits(0_400000_040000L);
+                fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
         }
@@ -549,6 +570,7 @@ public class FacilitiesManager implements Manager {
             if (doNotHoldRun) {
                 fsResult.postMessage(FacStatusCode.HoldForRollbackRejected);
                 fsResult.mergeStatusBits(0_400002_000000L);
+                fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
             if (!facItem.isWaitingForRollback()) {
@@ -570,6 +592,7 @@ public class FacilitiesManager implements Manager {
                 if (doNotHoldRun) {
                     fsResult.postMessage(FacStatusCode.HoldForXUseRejected);
                     fsResult.mergeStatusBits(0_400001_000000L);
+                    fsResult.log(Trace, LOG_SOURCE);
                     return false;
                 }
 
@@ -586,6 +609,7 @@ public class FacilitiesManager implements Manager {
             if (doNotHoldRun) {
                 fsResult.postMessage(FacStatusCode.HoldForReleaseXUseRejected);
                 fsResult.mergeStatusBits(0_400001_000000L);
+                fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
 
@@ -678,6 +702,7 @@ public class FacilitiesManager implements Manager {
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s result:%s",
                             runControlEntry.getRunId(),
                             fsResult.toString());
+        fsResult.log(Trace, LOG_SOURCE);
         return true;
     }
 
@@ -769,6 +794,7 @@ public class FacilitiesManager implements Manager {
             var params = new String[]{nodeInfo.getNode().getNodeName()};
             fsResult.postMessage(FacStatusCode.UnitIsNotReserved, params);
             fsResult.mergeStatusBits(0_600000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -778,6 +804,7 @@ public class FacilitiesManager implements Manager {
             var params = new String[]{node.getNodeName()};
             fsResult.postMessage(FacStatusCode.DeviceAlreadyInUseByThisRun, params);
             fsResult.mergeStatusBits(0_400000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -797,6 +824,7 @@ public class FacilitiesManager implements Manager {
         if (existingFacItem != null) {
             fsResult.postMessage(FacStatusCode.IllegalAttemptToChangeAssignmentType);
             fsResult.mergeStatusBits(0_400000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -870,6 +898,7 @@ public class FacilitiesManager implements Manager {
             fiTable.removeFacilitiesItem(facItem, runControlEntry.getUseItemTable());
             fsResult.postMessage(FacStatusCode.HoldForDiskUnitRejected);
             fsResult.mergeStatusBits(0_400001_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -880,10 +909,7 @@ public class FacilitiesManager implements Manager {
             var params = new String[]{packName};
             fsResult.postMessage(FacStatusCode.OperatorDoesNotAllowAbsoluteAssign, params);
             fsResult.mergeStatusBits(0_400000_000000L);
-            LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
-                                runControlEntry.getRunId(),
-                                node.getNodeName(),
-                                fsResult.toString());
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -938,6 +964,7 @@ public class FacilitiesManager implements Manager {
             var params = new String[]{node.getNodeName()};
             fsResult.postMessage(FacStatusCode.DeviceAlreadyInUseByThisRun, params);
             fsResult.mergeStatusBits(0_400000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -948,6 +975,7 @@ public class FacilitiesManager implements Manager {
         if (existingFacItem != null) {
             fsResult.postMessage(FacStatusCode.IllegalAttemptToChangeAssignmentType);
             fsResult.mergeStatusBits(0_400000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
@@ -1528,18 +1556,30 @@ public class FacilitiesManager implements Manager {
         final FileCycleInfo fcInfo,
         final FacStatusResult fsResult
     ) {
-        var ok = !fcInfo.getInhibitFlags().isPrivate();
-        if (!ok && (!fcInfo.getInhibitFlags().isGuarded())) {
-            var privByAcct = Exec.getInstance().getConfiguration().getFilesPrivateByAccount();
-            ok = (rce.isPrivileged())
-                || (privByAcct && rce.getAccountId().equals(fcInfo.getAccountId()))
-                || (!privByAcct && rce.getProjectId().equals(fcInfo.getProjectId()));
+        // if file is not private, we're good
+        if (!fcInfo.getInhibitFlags().isPrivate()) {
+            return true;
         }
-        if (!ok) {
-            fsResult.postMessage(FacStatusCode.IncorrectPrivacyKey);
-            fsResult.mergeStatusBits(0_400000_020000L);
+
+        // if account/project matches, we're good
+        if (Exec.getInstance().getConfiguration().getFilesPrivateByAccount()) {
+            if (rce.getAccountId().equals(fcInfo.getAccountId())) {
+                return true;
+            }
+        } else {
+            if (rce.getProjectId().equals(fcInfo.getProjectId())) {
+                return true;
+            }
         }
-        return ok;
+
+        // if it's guarded, and we get to this point, we're not going to allow it.
+        if (fcInfo.getInhibitFlags().isGuarded()) {
+            return false;
+        }
+
+        // It's not guarded but it *is* private, and we didn't match the account/project.
+        // If we are privileged, we can still access the thing.
+        return rce.isPrivileged();
     }
 
     /**

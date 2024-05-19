@@ -267,7 +267,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         label[2] = Word36.stringToWordASCII(paddedPack.substring(4, 8));
         label[2] = Word36.setH2(label[2], 0);
 
-        label[3] = firstDirectoryTrackAddress;
+        label[3] = firstDirectoryTrackAddress * 1792; // convert to DRWA
 
         var recordsPerTrack = (long)(1792 / prepFactor);
         label[4] = Word36.setH1(label[4], recordsPerTrack);

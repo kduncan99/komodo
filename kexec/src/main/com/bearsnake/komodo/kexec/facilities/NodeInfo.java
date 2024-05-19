@@ -31,5 +31,8 @@ public abstract class NodeInfo {
     public void setMediaInfo(final MediaInfo mi) { _mediaInfo = mi; }
     public void setNodeStatus(final NodeStatus status) { _nodeStatus = status; }
 
-    public abstract String toString();
+    @Override
+    public String toString() {
+        return String.format("%s %s", getNode().toString(), getNodeStatus());
+    }
 }
