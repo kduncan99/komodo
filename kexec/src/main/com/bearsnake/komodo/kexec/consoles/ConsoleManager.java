@@ -358,6 +358,7 @@ public class ConsoleManager implements Manager {
         }
     }
 
+    // TODO Can we make this more performant? Use wait() instead of sleep(), and notify() somewhere that makes sense
     private class Poller implements Runnable {
 
         public boolean _terminate = false;
