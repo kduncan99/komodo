@@ -180,6 +180,11 @@ public class MFDManager implements Manager {
             var aci = entry.getValue();
             var fci = aci.getFileCycleInfo();
             out.printf("%s    %s:%s*%s(%d)\n", indent, addr, fci.getQualifier(), fci.getFilename(), fci.getAbsoluteCycle());
+            if (verbose) {
+                for (var fa : aci.getFileAllocationSet().getFileAllocations()) {
+                    out.printf("%s      %s\n", indent, fa.toString());
+                }
+            }
         }
     }
 
@@ -379,7 +384,6 @@ public class MFDManager implements Manager {
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "initializeMassStorage");
 
-        var start = Instant.now();
         var e = Exec.getInstance();
         try {
             var msg = String.format("Fixed MS Devices = %d - Continue? YN", fixedDiskInfo.size());
@@ -389,6 +393,8 @@ public class MFDManager implements Manager {
                 e.stop(StopCode.ConsoleResponseRequiresReboot);
                 throw new ExecStoppedException();
             }
+
+            var start = Instant.now();
 
             _cachedMFDTracks.clear();
             _dirtyCacheTracks.clear();
@@ -428,7 +434,7 @@ public class MFDManager implements Manager {
 
                 packInfo.setMFDTrackCount(1);
                 var faRegion = new LogicalTrackExtent(dirTrackAddr.getValue() >> 6, 1);
-                var hwTid = new HardwareTrackId(ldatIndex, packInfo.getDirectoryTrackAddress());
+                var hwTid = new HardwareTrackId(ldatIndex, packInfo.getDirectoryTrackAddress() / 1792);
                 mfdFas.mergeIntoFileAllocationSet(new FileAllocation(faRegion, hwTid));
 
                 // populate directory track sector 0
@@ -479,7 +485,7 @@ public class MFDManager implements Manager {
             writeDirtyCacheTracks();
 
             // I think we're all done here.
-            var elapsed = Duration.between(start, Instant.now()).getNano() / 1000;
+            var elapsed = Duration.between(start, Instant.now()).getNano() / 1000000;
             msg = String.format("Mass Storage Initialized %d MS.", elapsed);
             e.sendExecReadOnlyMessage(msg, ConsoleType.System);
         } catch (ExecStoppedException ex) {
@@ -712,6 +718,9 @@ public class MFDManager implements Manager {
                 e.stop(StopCode.FileAssignErrorOccurredDuringSystemInitialization);
                 throw new ExecStoppedException();
             }
+
+            var msg = String.format("Created %s*%s", mfdQualifier, mfdFilename);
+            e.sendExecReadOnlyMessage(msg);
         } catch (AbsoluteCycleOutOfRangeException
                  | AbsoluteCycleConflictException
                  | FileSetAlreadyExistsException ex) {
@@ -1212,7 +1221,6 @@ public class MFDManager implements Manager {
             var ldat = hwTid.getLDATIndex();
             var trackId = hwTid.getTrackId();
             var nodeInfo = _logicalDATable.get(ldat);
-            System.out.println(hwTid);//TODO remove
             var packInfo = (PackInfo) nodeInfo.getMediaInfo();
             var blocksPerTrack = 1792 / packInfo.getPrepFactor();
             var blockId = trackId * blocksPerTrack;

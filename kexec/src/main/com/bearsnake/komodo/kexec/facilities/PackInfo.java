@@ -18,7 +18,7 @@ import java.util.HashMap;
  */
 public class PackInfo implements MediaInfo {
 
-    private static HashMap<Integer, Long> BLOCK_ALIGNMENT_MASK = new HashMap<>();
+    private static final HashMap<Integer, Long> BLOCK_ALIGNMENT_MASK = new HashMap<>();
     static {
         BLOCK_ALIGNMENT_MASK.put(28, 0xFFFFFFFFFFFFFFFFL);
         BLOCK_ALIGNMENT_MASK.put(56, 0xFFFFFFFFFFFFFFFEL);

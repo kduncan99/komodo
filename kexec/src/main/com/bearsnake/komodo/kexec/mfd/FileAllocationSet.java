@@ -6,7 +6,6 @@ package com.bearsnake.komodo.kexec.mfd;
 
 import static com.bearsnake.komodo.kexec.exec.Exec.INVALID_LDAT;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
 
 import java.util.LinkedList;
@@ -39,12 +38,12 @@ public class FileAllocationSet {
             var dad = msDAD.getSector();
             var frAddress = dad.get(2); // file-relative address of first word described in this DAD
             var frLast = dad.get(3);    // file-relative address of last word + 1
-            for (int wx = 0; wx < 28; wx += 3) {
+            for (int wx = 4; wx < 28; wx += 3) {
                 long devAddr = dad.get(wx);
                 long wordCount = dad.get(wx + 1);
                 int dadFlags = (int)dad.getH1(wx + 2);
                 boolean lastEntry = (dadFlags & 04) != 0;
-                int ldatIndex = (int)dad.getH2(wx + 3);
+                int ldatIndex = (int)dad.getH2(wx + 2);
 
                 if (ldatIndex != 0_400000) {
                     // this is not a hole-DAD... create an FA
@@ -159,12 +158,11 @@ public class FileAllocationSet {
     }
 
     /**
-     *  TODO change name to findContainingAllocation()
      * Finds the FileAllocation entry which contains the indicated file-relative track id.
      * @param fileTrackId file-relative track id we are interested in
      * @return containing FileAllocation entry, or nil if the track is not allocated
      */
-    public synchronized FileAllocation findPrecedingAllocation(final long fileTrackId) {
+    public synchronized FileAllocation findContainingAllocation(final long fileTrackId) {
         return _fileAllocations.stream()
                                .filter(fa -> fa.containsFileRelativeTrack(fileTrackId))
                                .findFirst()
@@ -187,10 +185,8 @@ public class FileAllocationSet {
     public synchronized HardwareTrackId resolveFileRelativeTrackId(final long fileRelativeTrackId) {
         for (var fa : _fileAllocations) {
             if (fa.containsFileRelativeTrack(fileRelativeTrackId)) {
-                System.out.println(fa);//TODO remove
                 long offset = fileRelativeTrackId - fa.getFileRegion().getTrackId();
                 var hwTid = fa.getHardwareTrackId();
-                System.out.printf("offset:%d hwTid:%s\n", offset, hwTid);//TODO remove
                 return new HardwareTrackId(hwTid.getLDATIndex(), hwTid.getTrackId() + offset);
             }
         }

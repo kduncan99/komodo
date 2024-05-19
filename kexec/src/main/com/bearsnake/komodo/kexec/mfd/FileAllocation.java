@@ -80,6 +80,6 @@ public class FileAllocation {
 
     @Override
     public String toString() {
-        return String.format("[Rgn:%s HWTrk:%s", _logicalExtent.toString(), _hardwareTrackId.toString());
+        return String.format("[Rgn:%s HWTrk:%s]", _logicalExtent.toString(), _hardwareTrackId.toString());
     }
 }
