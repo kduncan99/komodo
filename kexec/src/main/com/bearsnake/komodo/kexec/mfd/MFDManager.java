@@ -124,7 +124,7 @@ public class MFDManager implements Manager {
                                                    sectorAddr.getLDATIndex(),
                                                    sectorAddr.getTrackId(),
                                                    sectorAddr.getSectorId());
-                        var wbase = (int) (sector * 64);
+                        var wbase = (int) (sector * 28);
                         for (int wx = 0; wx < 28; wx += 7) {
                             var sb = new StringBuilder();
                             sb.append(indent).append("    ").append(prefix);
@@ -400,7 +400,8 @@ public class MFDManager implements Manager {
             var dirTrackArray = new long[1792];
             var dirTrack = new ArraySlice(dirTrackArray);
             _cachedMFDTracks.put(dirTrackAddr, dirTrack);
-            for (var sectorId = 0; sectorId <= 077; ++sectorId) {
+
+            for (var sectorId = 2; sectorId <= 077; ++sectorId) {
                 var sectorAddr = new MFDRelativeAddress(ldatIndex, 0, sectorId);
                 _freeMFDSectors.add(sectorAddr);
                 markDirectorySectorDirty(sectorAddr);
@@ -426,7 +427,7 @@ public class MFDManager implements Manager {
             // Leave +0 and +1 alone (We aren't doing HMBT/SMBT)
             // Set +2 and +3 to available tracks, +4 to pack-id
             // +5,H1 Bit35 needs to be set to indicate fixed pack
-            var sector1 = new ArraySlice(dirTrack, 1, 28);
+            var sector1 = new ArraySlice(dirTrack, 28, 28);
             sector1.set(2, packInfo.getTrackCount());
             sector1.set(3, packInfo.getTrackCount() - 2);
             String packId = String.format("%-6s", packInfo.getPackName());
@@ -455,11 +456,11 @@ public class MFDManager implements Manager {
 
         // Create MFD$$ file artifacts in the first directory track of the first disk pack,
         // then write the dirty sectors (i.e., the entire MFD) to disk.
-        createMFDFile(mfdFas);
-        writeDirtyCacheTracks();
+//TODO        createMFDFile(mfdFas);
+//TODO        writeDirtyCacheTracks();
 
         // I think we're all done here.
-        var elapsed = Duration.between(start, Instant.now()).get(ChronoUnit.MILLIS);
+        var elapsed = Duration.between(start, Instant.now()).getNano() / 1000;
         msg = String.format("Mass Storage Initialized %d MS.", elapsed);
         e.sendExecReadOnlyMessage(msg, ConsoleType.System);
         LogManager.logTrace(LOG_SOURCE, "initializeMassStorage exiting");

@@ -49,21 +49,21 @@ public class MFDRelativeAddress implements Comparable<MFDRelativeAddress> {
     public MFDRelativeAddress setLDATIndex(
         final long value
     ) {
-        _value = (value & 0777777) | ((value & 07777) << 18);
+        _value = (_value & 0777777) | ((value & 07777) << 18);
         return this;
     }
 
     public MFDRelativeAddress setTrackId(
         final long value
     ) {
-        _value = (value & 07777000077) | ((value & 07777) << 6);
+        _value = (_value & 07777000077) | ((value & 07777) << 6);
         return this;
     }
 
     public MFDRelativeAddress setSectorId(
         final long value
     ) {
-        _value = (value & 07777777700) | (value & 077);
+        _value = (_value & 07777777700) | (value & 077);
         return this;
     }
 
