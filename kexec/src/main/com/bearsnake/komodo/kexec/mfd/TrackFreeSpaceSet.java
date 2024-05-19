@@ -79,7 +79,7 @@ public class TrackFreeSpaceSet {
         }
 
         final long highest = trackId + trackCount - 1;
-        if (highest >= trackCount) {
+        if (highest >= _trackCount) {
             return false;
         }
 

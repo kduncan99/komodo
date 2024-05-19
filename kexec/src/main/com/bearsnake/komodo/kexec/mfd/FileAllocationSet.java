@@ -187,8 +187,10 @@ public class FileAllocationSet {
     public synchronized HardwareTrackId resolveFileRelativeTrackId(final long fileRelativeTrackId) {
         for (var fa : _fileAllocations) {
             if (fa.containsFileRelativeTrack(fileRelativeTrackId)) {
+                System.out.println(fa);//TODO remove
                 long offset = fileRelativeTrackId - fa.getFileRegion().getTrackId();
                 var hwTid = fa.getHardwareTrackId();
+                System.out.printf("offset:%d hwTid:%s\n", offset, hwTid);//TODO remove
                 return new HardwareTrackId(hwTid.getLDATIndex(), hwTid.getTrackId() + offset);
             }
         }

@@ -1212,6 +1212,7 @@ public class MFDManager implements Manager {
             var ldat = hwTid.getLDATIndex();
             var trackId = hwTid.getTrackId();
             var nodeInfo = _logicalDATable.get(ldat);
+            System.out.println(hwTid);//TODO remove
             var packInfo = (PackInfo) nodeInfo.getMediaInfo();
             var blocksPerTrack = 1792 / packInfo.getPrepFactor();
             var blockId = trackId * blocksPerTrack;

@@ -1849,9 +1849,9 @@ public class FacilitiesManager implements Manager {
         final DiskDevice disk,
         final ArraySlice diskLabel
     ) throws NoRouteForIOException, ExecStoppedException {
-        var dirTrackAddr = diskLabel.get(3);
+        var dirTrackId = diskLabel.get(3) / 1792;
         var blocksPerTrack = Word36.getH1(diskLabel.get(4));
-        var dirBlockAddr = dirTrackAddr * blocksPerTrack;
+        var dirBlockAddr = dirTrackId * blocksPerTrack;
         var channel = selectRoute(disk);
         var cw = new ChannelProgram.ControlWord().setDirection(ChannelProgram.Direction.Increment)
                                                  .setBuffer(new ArraySlice(new long[1792]))
