@@ -408,7 +408,7 @@ public class MFDManager implements Manager {
             }
 
             packInfo.setMFDTrackCount(1);
-            var faRegion = new LogicalTrackExtent(dirTrackAddr.getValue(), 1);
+            var faRegion = new LogicalTrackExtent(dirTrackAddr.getValue() >> 6, 1);
             var hwTid = new HardwareTrackId(ldatIndex, packInfo.getDirectoryTrackAddress());
             mfdFas.mergeIntoFileAllocationSet(new FileAllocation(faRegion, hwTid));
 
@@ -456,8 +456,8 @@ public class MFDManager implements Manager {
 
         // Create MFD$$ file artifacts in the first directory track of the first disk pack,
         // then write the dirty sectors (i.e., the entire MFD) to disk.
-//TODO        createMFDFile(mfdFas);
-//TODO        writeDirtyCacheTracks();
+        createMFDFile(mfdFas);
+        writeDirtyCacheTracks();
 
         // I think we're all done here.
         var elapsed = Duration.between(start, Instant.now()).getNano() / 1000;
@@ -544,7 +544,7 @@ public class MFDManager implements Manager {
     ) throws ExecStoppedException,
              AbsoluteCycleConflictException,
              AbsoluteCycleOutOfRangeException {
-        // If fsInfo is empty, we don't need to verify absolute file cycle.
+        // If fsInfo has no file cycles, we don't need to verify absolute file cycle.
         if (fsInfo.getCycleCount() > 0) {
             for (var fci : fsInfo.getCycleInfo()) {
                 if (fci.getAbsoluteCycle() == fcInfo.getAbsoluteCycle()) {
@@ -664,6 +664,9 @@ public class MFDManager implements Manager {
             fcInfo.setUnitSelectionIndicators(usInd)
                   .setFileFlags(fFlags)
                   .setPCHARFlags(pchFlags)
+                  .setQualifier(mfdQualifier)
+                  .setFilename(mfdFilename)
+                  .setProjectId(mfdProjectId)
                   .setAccountId(mfdAccountId)
                   .setAbsoluteCycle(1)
                   .setAssignMnemonic(mfdEquip)
@@ -934,6 +937,9 @@ public class MFDManager implements Manager {
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "persistDADTables for %s", mainItem0Address.toString());
 
+        // Get the main item 0 sector so we can make sure the link is correct
+        var mainItem0 = getMFDSector(mainItem0Address);
+
         // Go get the current chain of DAD entries.
         // It might be smaller or larger than we need (or non-existent), but we'll deal with that presently.
         var dadChain = getDADChain(mainItem0Address);
@@ -942,11 +948,19 @@ public class MFDManager implements Manager {
         // and clear the link in the main item.
         var allocations = faSet.getFileAllocations();
         if (allocations.isEmpty()) {
+            var w = mainItem0.get(0);
+            w = (w | 0_400000_000000L) & 0_740000_000000L;
+            mainItem0.set(0, w);
+            markDirectorySectorDirty(mainItem0Address);
+
             dadChain.stream().map(MFDSector::getAddress).forEach(this::releaseDirectorySector);
             LogManager.logTrace(LOG_SOURCE, "persistDADTables return empty");
             return;
         }
 
+        for (var fa : allocations) {
+            System.out.printf("FAlloc FileRegion=%s HWTid=%s\n", fa.getFileRegion(), fa.getHardwareTrackId());
+        }
         // Set ax to the index of the next allocation to be persisted.
         // Also, set dx to the index of the dad sector being populated (for now, -1), and ex to the index
         // of the next entry in that sector to be populated (for now, 8) -- these settings will ensure that
@@ -978,7 +992,10 @@ public class MFDManager implements Manager {
                         newDAD.set(1, currentDADAddr.getValue());
                     } else {
                         // If it *is* the first, then the previous link needs to point to the main item
+                        // and the main item needs to point here.
                         newDAD.set(1, mainItem0Address.getValue());
+                        mainItem0.set(0, 0_200000_000000L | (newDADAddr.getValue() & 0_037777_777777L));
+                        markDirectorySectorDirty(mainItem0Address);
                     }
                 }
                 currentDADAddr = dadChain.get(dx).getAddress();
@@ -995,24 +1012,33 @@ public class MFDManager implements Manager {
                 currentDAD.set(2, fileRegion.getTrackId() * 1792);
                 currentDAD.set(3, fileRegion.getTrackId() * 1792);
                 expectedNextTrackId = fileRegion.getTrackId();
+            } else {
+                // Otherwise, the previous entry maybe had the last-entry flag set. Unset it.
+                int wx = (3 * (ex - 1)) + 4;
+                var flags = currentDAD.getH1(wx + 2);
+                flags &= 0_777773;
+                currentDAD.setH1(wx + 2, flags);
             }
 
             // Does this entry immediately follow the previous entry in the file-relative address space?
             // If not, we need to create a hole DAD.
-            if ((ax > 0) && (fileRegion.getTrackId() != expectedNextTrackId)) {
+            long gapTrackCount = fileRegion.getTrackId() - expectedNextTrackId;
+            if ((ax > 0) && (gapTrackCount > 0)) {
                 // If this hole entry would go into the last entry of the DAD, there's no reason to create it.
                 if (ex < 7) {
                     int wx = (3 * ex) + 4;
-                    currentDAD.set(wx, expectedNextTrackId * 1792);
-                    currentDAD.set(wx + 1, (fileRegion.getTrackId() - expectedNextTrackId) * 1792);
+                    currentDAD.set(wx, 0); // no device-relative address for hole descriptors
+                    currentDAD.set(wx + 1, gapTrackCount * 1792);
                     currentDAD.setH2(wx + 2, 0_400000);
                 }
                 ex++;
+                expectedNextTrackId += gapTrackCount;
+                continue; // go back through things again
             }
 
-            // Now create a DAD entry (and update the last word + 1 in the header)
+            // Now create a DAD entry (and update the last word + 1 in the header).
             // Always set this entry as the last in the DAD... we'll unset it on the next entry in the DAD
-            // if there is a next one, and leave it be if there isn't.
+            //   if there is a next one, and leave it be if there isn't.
             int wx = (3 * ex) + 4;
             currentDAD.set(wx, hwTid.getTrackId() * 1792);
             currentDAD.set(wx + 1, fileRegion.getTrackCount() * 1792);

@@ -139,7 +139,7 @@ public abstract class FileCycleInfo {
         var iter = mfdSectors.iterator();
         var msFirst = iter.next();
         var msSecond = iter.next();
-        msFirst.getSector().set(0, 0_200000_000000L);
+        msFirst.getSector().set(0, 0_600000_000000L); // assume no DAD/REEL table - we'll fix that later.
         msFirst.getSector().set(013, _leadItem0Address.getValue());
         msFirst.getSector().set(015, msSecond.getAddress().getValue());
 
