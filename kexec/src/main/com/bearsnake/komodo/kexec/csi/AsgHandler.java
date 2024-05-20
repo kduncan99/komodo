@@ -362,7 +362,7 @@ class AsgHandler extends Handler {
                 WORD_ADDRESSABLE_DISK -> handleCatalogedDiskFile(hp, fileSpecification, equip);
             case TAPE -> handleCatalogedTapeFile(hp, fileSpecification);
             default -> {
-                fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured);
+                fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ equip });
                 fsResult.mergeStatusBits(0_600000_000000L);
             }
         }

@@ -737,9 +737,7 @@ public class FacilitiesManager implements Manager {
                                          true,
                                          fsResult);
 
-        LogManager.logTrace(LOG_SOURCE,
-                            "assignDiskUnitToExec result:%s",
-                            fsResult.toString());
+        fsResult.log(Trace, LOG_SOURCE);
         return result;
     }
 
@@ -913,10 +911,7 @@ public class FacilitiesManager implements Manager {
             return false;
         }
 
-        LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s result:%s",
-                            runControlEntry.getRunId(),
-                            node.getNodeName(),
-                            fsResult.toString());
+        fsResult.log(Trace, LOG_SOURCE);
         return true;
     }
 
@@ -1003,9 +998,49 @@ public class FacilitiesManager implements Manager {
 
         fiTable.addFacilitiesItem(facItem, rce.getUseItemTable());
 
+        fsResult.log(Trace, LOG_SOURCE);
+        return true;
+    }
+
+    /**
+     * Catalogs a disk file.
+     * @param fileSpecification needed for creating facilities item
+     * @param fsResult fac status result
+     * @return true if we are successful
+     * @throws ExecStoppedException if the exec is stopped
+     */
+    public synchronized boolean catalogDiskFile(
+        final FileSpecification fileSpecification,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
-                            "assignFixedDiskUnitToExec result:%s",
-                            fsResult.toString());
+                            "catalogDiskFile %s",
+                            fileSpecification.toString());
+
+        // TODO
+
+        fsResult.log(Trace, LOG_SOURCE);
+        return true;
+    }
+
+    /**
+     * Catalogs a tape file.
+     * @param fileSpecification needed for creating facilities item
+     * @param fsResult fac status result
+     * @return true if we are successful
+     * @throws ExecStoppedException if the exec is stopped
+     */
+    public synchronized boolean catalogTapeFile(
+        final FileSpecification fileSpecification,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE,
+                            "catalogTapeFile %s",
+                            fileSpecification.toString());
+
+        // TODO
+
+        fsResult.log(Trace, LOG_SOURCE);
         return true;
     }
 
