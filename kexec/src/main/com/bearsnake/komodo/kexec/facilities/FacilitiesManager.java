@@ -24,6 +24,7 @@ import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
+import com.bearsnake.komodo.kexec.exceptions.FileSetAlreadyExistsException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
@@ -42,6 +43,7 @@ import com.bearsnake.komodo.kexec.mfd.FileType;
 import com.bearsnake.komodo.kexec.mfd.RemovableDiskFileCycleInfo;
 import com.bearsnake.komodo.logger.LogManager;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
@@ -1003,42 +1005,207 @@ public class FacilitiesManager implements Manager {
     }
 
     /**
-     * Catalogs a disk file.
+     * Catalogs a disk file - to be used when no fileset exists.
      * @param fileSpecification needed for creating facilities item
+     * @param type assign mnemonic to be used
+     * @param projectId project id for the fileset/file cycle
+     * @param accountId account id for the file cycle
+     * @param isGuarded true for G-option files
+     * @param packIds collection of pack names (populated for removable, empty for fixed)
      * @param fsResult fac status result
      * @return true if we are successful
      * @throws ExecStoppedException if the exec is stopped
      */
     public synchronized boolean catalogDiskFile(
         final FileSpecification fileSpecification,
+        final String type,
+        final String projectId,
+        final String accountId,
+        final boolean isGuarded,
+        final Collection<String> packIds,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
                             "catalogDiskFile %s",
                             fileSpecification.toString());
 
-        // TODO
+        var e = Exec.getInstance();
+        var mType = e.getConfiguration().getMnemonicType(type);
+        if (mType == null) {
+            fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
+            fsResult.mergeStatusBits(0_600000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
+            return false;
+        }
+
+        var mm = e.getMFDManager();
+        var plusOne = fileSpecification.hasFileCycleSpecification()
+                      && fileSpecification.getFileCycleSpecification().isRelative()
+                      && fileSpecification.getFileCycleSpecification().getCycle() == 1;
+
+        var fsInfo = new FileSetInfo().setQualifier(fileSpecification.getQualifier())
+                                      .setFilename(fileSpecification.getFilename())
+                                      .setIsGuarded(isGuarded)
+                                      .setPlusOneExists(plusOne)
+                                      .setProjectId(projectId)
+                                      .setReadKey(fileSpecification.getReadKey())
+                                      .setWriteKey(fileSpecification.getWriteKey())
+                                      .setFileType(packIds.isEmpty() ? FileType.Fixed : FileType.Removable);
+        try {
+            mm.createFileSet(fsInfo);
+        } catch (FileSetAlreadyExistsException ex) {
+            // TODO should not happen if the caller is honest
+        }
+
+        // TODO now create file cycle stuff
 
         fsResult.log(Trace, LOG_SOURCE);
         return true;
     }
 
     /**
-     * Catalogs a tape file.
+     * Catalogs an additional disk file cycle in an existing fileset.
      * @param fileSpecification needed for creating facilities item
+     * @param fileSetInfo describes the existing fileset
+     * @param type assign mnemonic to be used
+     * @param fsResult fac status result
+     * @return true if we are successful
+     * @throws ExecStoppedException if the exec is stopped
+     */
+    public synchronized boolean catalogDiskFileCycle(
+        final FileSpecification fileSpecification,
+        final FileSetInfo fileSetInfo,
+        final String type,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE,
+                            "catalogDiskFile %s",
+                            fileSpecification.toString());
+
+        var e = Exec.getInstance();
+        var mType = e.getConfiguration().getMnemonicType(type);
+        if (mType == null) {
+            fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
+            fsResult.mergeStatusBits(0_600000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
+            return false;
+        }
+
+        // Does a file set exist for this file?
+        fsResult.log(Trace, LOG_SOURCE);
+        return true;
+    }
+
+    /**
+     * Catalogs a file after figuring out whether it should be disk or tape.
+     * If there is an existing fileset, we know which it is.
+     * Also, there is an algorithm for figuring out what equipment type to use.
+     * If there is NOT an existing fileset, use the configured default for sector-addressable mass storage.
+     * @param fileSpecification needed for creating facilities item
+     * @param fsResult fac status result
+     * @return true if we are successful
+     * @throws ExecStoppedException if the exec is stopped
+     */
+    public synchronized boolean catalogFile(
+        final FileSpecification fileSpecification,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE,
+                            "catalogFile %s",
+                            fileSpecification.toString());
+
+        var e = Exec.getInstance();
+        var mm = e.getMFDManager();
+        try {
+            // If a fileset exists, we use the "latest" existing (i.e., not to-be) cycle for the equipment type.
+            // If all cycles are to-be, use the highest cycle. For "latest" we use the highest cycle, not the newest cycle.
+            var fsInfo = mm.getFileSetInfo(fileSpecification.getQualifier(), fileSpecification.getFilename());
+            var fsci = fsInfo.getCycleInfo().getFirst();
+            if (fsci.isToBeCataloged() || fsci.isToBeDropped()) {
+                for (var f : fsInfo.getCycleInfo()) {
+                    if (!fsci.isToBeDropped() && !fsci.isToBeCataloged()) {
+                        fsci = f;
+                        break;
+                    }
+                }
+            }
+
+            var fcInfo = mm.getFileCycleInfo(fileSpecification.getQualifier(),
+                                             fileSpecification.getFilename(),
+                                             fsci.getAbsoluteCycle());
+
+            return switch (fsInfo.getFileType()) {
+                case Fixed, Removable -> catalogDiskFileCycle(fileSpecification, fsInfo, fcInfo.getAssignMnemonic(), fsResult);
+                case Tape -> catalogTapeFileCycle(fileSpecification, fsInfo, fcInfo.getAssignMnemonic(), fsResult);
+            };
+        } catch (FileCycleDoesNotExistException ex) {
+            // this happens if getFileCycleInfo() fails... which should never happen here
+            LogManager.logFatal(LOG_SOURCE, "getFileCycleInfo() should not have failed");
+            e.stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        } catch (FileSetDoesNotExistException ex) {
+            var type = e.getConfiguration().getMassStorageDefaultMnemonic();
+            return catalogDiskFile(fileSpecification, type, fsResult);
+        }
+    }
+
+    /**
+     * Catalogs a tape file - to be used when no fileset exists.
+     * @param fileSpecification needed for creating facilities item
+     * @param type assign mnemonic to be used
      * @param fsResult fac status result
      * @return true if we are successful
      * @throws ExecStoppedException if the exec is stopped
      */
     public synchronized boolean catalogTapeFile(
         final FileSpecification fileSpecification,
+        final String type,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
                             "catalogTapeFile %s",
                             fileSpecification.toString());
 
-        // TODO
+        var e = Exec.getInstance();
+        var mType = e.getConfiguration().getMnemonicType(type);
+        if (mType == null) {
+            fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
+            fsResult.mergeStatusBits(0_600000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
+            return false;
+        }
+
+        fsResult.log(Trace, LOG_SOURCE);
+        return true;
+    }
+
+    /**
+     * Catalogs an additional tape file cycle in an existing fileset.
+     * @param fileSpecification needed for creating facilities item
+     * @param fileSetInfo describes the existing fileset
+     * @param type assign mnemonic to be used
+     * @param fsResult fac status result
+     * @return true if we are successful
+     * @throws ExecStoppedException if the exec is stopped
+     */
+    public synchronized boolean catalogTapeFileCycle(
+        final FileSpecification fileSpecification,
+        final FileSetInfo fileSetInfo,
+        final String type,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE,
+                            "catalogTapeFileCycle %s",
+                            fileSpecification.toString());
+
+        var e = Exec.getInstance();
+        var mType = e.getConfiguration().getMnemonicType(type);
+        if (mType == null) {
+            fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
+            fsResult.mergeStatusBits(0_600000_000000L);
+            fsResult.log(Trace, LOG_SOURCE);
+            return false;
+        }
 
         fsResult.log(Trace, LOG_SOURCE);
         return true;

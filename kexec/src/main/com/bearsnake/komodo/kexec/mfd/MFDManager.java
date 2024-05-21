@@ -280,6 +280,36 @@ public class MFDManager implements Manager {
     }
 
     /**
+     * Creates MFD sector(s) describing an empty fileset.
+     * Normally, empty file sets do not exist. The caller must follow this up by calling createFileCycle.
+     * The fileset has no security words, and is initialized to allow a max of 32 file cycles.
+     * @param fileSetInfo Fully describes the fileset to be created (and cataloged), excepting the leadItem0Address field
+     *                    which is populated by us.
+     * @return MFD sector address of the lead item sector 0
+     * @throws ExecStoppedException if something goes badly
+     */
+    public synchronized MFDRelativeAddress createFileSet(
+        final FileSetInfo fileSetInfo
+    ) throws ExecStoppedException, FileSetAlreadyExistsException {
+        var luKey = composeLookupKey(fileSetInfo.getQualifier(), fileSetInfo.getFilename());
+        if (_leadItemLookupTable.containsKey(luKey)) {
+            throw new FileSetAlreadyExistsException();
+        }
+
+        var mfdSectors = new LinkedList<MFDSector>();
+        var mainItemCount = fileSetInfo.isSector1Required() ? 2 : 1;
+        for (int sx = 0; sx < mainItemCount; sx++) {
+            mfdSectors.add(allocateDirectorySector());
+        }
+
+        fileSetInfo.populateLeadItemSectors(mfdSectors);
+        fileSetInfo._leadItem0Address = mfdSectors.getFirst().getAddress();
+        markDirectorySectorsDirty(mfdSectors);
+        _leadItemLookupTable.put(luKey, fileSetInfo);
+        return mfdSectors.getFirst().getAddress();
+    }
+
+    /**
      * Decelerates a file cycle. This involves decrementing the acceleration count for an accelerated
      * file cycle, and unloading the corresponding meta information if the count goes to zero.
      * @param fcInfo describes the file cycle to be accelerated
@@ -640,33 +670,6 @@ public class MFDManager implements Manager {
     }
 
     /**
-     * Creates MFD sector(s) describing an empty fileset.
-     * Normally, empty file sets do not exist. The caller must follow this up by calling createFileCycle.
-     * THe fileset has no security words, and is initialized to allow a max of 32 file cycles.
-     * @return MFD sector address of the lead item sector 0
-     * @throws ExecStoppedException if something goes badly
-     */
-    private synchronized MFDRelativeAddress createFileSet(
-        final FileSetInfo fsInfo
-    ) throws ExecStoppedException, FileSetAlreadyExistsException {
-        var luKey = composeLookupKey(fsInfo.getQualifier(), fsInfo.getFilename());
-        if (_leadItemLookupTable.containsKey(luKey)) {
-            throw new FileSetAlreadyExistsException();
-        }
-
-        var mfdSectors = new LinkedList<MFDSector>();
-        var mainItemCount = fsInfo.isSector1Required() ? 2 : 1;
-        for (int sx = 0; sx < mainItemCount; sx++) {
-            mfdSectors.add(allocateDirectorySector());
-        }
-
-        fsInfo.populateLeadItemSectors(mfdSectors);
-        markDirectorySectorsDirty(mfdSectors);
-        _leadItemLookupTable.put(luKey, fsInfo);
-        return mfdSectors.getFirst().getAddress();
-    }
-
-    /**
      * Part of an initial boot - this code creates the artifacts which comprise the MFDF$$ file.
      * @param mfdAllocationSet FileAllocationSet describing the layout of the master file directory file's content.
      */
@@ -690,7 +693,6 @@ public class MFDManager implements Manager {
                                           .setFilename(mfdFilename)
                                           .setProjectId(mfdProjectId)
                                           .setIsGuarded(true);
-            fsInfo._leadItem0Address = createFileSet(fsInfo);
 
             var fcInfo = new FixedDiskFileCycleInfo();
             fcInfo.setUnitSelectionIndicators(usInd)

@@ -135,12 +135,9 @@ class CatHandler extends Handler {
             return;
         }
 
-        // Type is not specified.
-        // If a fileset exists with the given qualifier and filename, use that information to determine which
-        // method to invoke on the fac manager.
-        // TODO
-
-        // No type and no fileset - assume default mass storage equipment and invoke fac manager.
-        // TODO
+        // Type is not specified -- Facilities needs to figure out what to do.
+        // We could, but we'd have to go to MFD, *then* fac, and this would introduce a potential race condition
+        // since we're not locking between those two calls (and can't, at least not easily).
+        fm.catalogFile(fileSpec, fsResult);
     }
 }
