@@ -107,8 +107,9 @@ public abstract class FileCycleInfo {
      * Because we completely rewrite the entries, we *will* lose the links (if any) to DAD tables or reel tables.
      * Thus, caller must account for this, taking steps to (re-)establish those links after return from here.
      * @param mfdSectors enough MFDSectors to store all the information required for this file cycle.
+     * @return number of sectors populated (for us, it is always 2)
      */
-    public void populateMainItems(
+    public int populateMainItems(
         final LinkedList<MFDSector> mfdSectors
     ) throws ExecStoppedException {
         if (mfdSectors.size() < getRequiredNumberOfMainItems()) {
@@ -203,5 +204,6 @@ public abstract class FileCycleInfo {
 
         // Fill in sector 1 information common to all formats of main item sector 1
         sector1.setT3(7, _absoluteCycle);
+        return 2;
     }
 }

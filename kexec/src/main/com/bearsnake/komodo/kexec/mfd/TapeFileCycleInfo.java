@@ -21,7 +21,7 @@ public class TapeFileCycleInfo extends FileCycleInfo {
     private String _tapeTranslator;
     private String _ctlPool;
 
-    TapeFileCycleInfo(){}
+    public TapeFileCycleInfo(){}
 
     public LinkedList<String> getReelTable() { return _reelTable; }
     public TapeDensity getDensity() { return _density; }

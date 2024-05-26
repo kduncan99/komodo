@@ -5,7 +5,10 @@
 package com.bearsnake.komodo.kexec.mfd;
 
 /**
- * Describes one disk pack upon which a removable disk file may be stored partially or fully
+ * Describes one disk pack upon which a removable disk file may be stored partially or fully.
+ * These entries exist so that we can find the main item for this file as it is stored on the removable pack.
+ * For fixed files, we really don't need to track these since the main item is always like, right there.
+ * So... fixed files don't have DPEs, only removable files.
  */
 public final class DiskPackEntry {
 

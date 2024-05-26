@@ -25,21 +25,20 @@ public class Configuration {
     private final String WordAddressableDefaultMnemonic = "D";
 
     // The following can be changed when the config file is loaded (once per execution)
-    public long AccountInitialReserve            = 10;               // initial reserve for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
-    public String AccountAssignMnemonic          = "F";              // assign mnemonic for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
-    public String DLOCAssignMnemonic             = "F";              // assign mnemonic for SYS$*DLOC$ file
-    private int _execThreadPoolSize              = 25;               // number of threads in Exec thread pool
+    private String _accountAssignMnemonic        = "F";              // assign mnemonic for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
+    private long _accountInitialReserve          = 10;               // initial reserve for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
+    private String _dlocAssignMnemonic           = "F";              // assign mnemonic for SYS$*DLOC$ file
     private boolean _filesPrivateByAccount       = true;             // if false, files are private by project-id
-    public long GenFInitialReserve               = 128;              // initial reserve for SYS$*GENF$ file
-    public String GenFAssignMnemonic             = "F";              // assign mnemonic for SYS$*GENF$ file
-    public long LibInitialReserve                = 128;              // initial reserve for SYS$*LIB$ file
-    public String LibAssignMnemonic              = "F";              // assign mnemonic for SYS$*LIB$ file
-    public long LibMaximumSize                   = 9999;             // max granules for SYS$*LIB$ file
+    private String _genFAssignMnemonic           = "F";              // assign mnemonic for SYS$*GENF$ file
+    private long _genFInitialReserve             = 128;              // initial reserve for SYS$*GENF$ file
+    private String _libAssignMnemonic            = "F";              // assign mnemonic for SYS$*LIB$ file
+    private long _libInitialReserve              = 128;              // initial reserve for SYS$*LIB$ file
+    private long _libMaximumSize                 = 9999;             // max granules for SYS$*LIB$ file
     private boolean _logConsoleMessages          = true;
     private boolean _logIOs                      = true;
     private String _masterAccountId              = "SYSTEM";         // could be empty, in which case operator is prompted when ACCOUNT$R1 is created
     private long _maxCards                       = 256;
-    public long MaxGranules                      = 256;              // max granules if not specified on @ASG or @CAT
+    private long _maxGranules                    = 256;              // max granules if not specified on @ASG or @CAT
     private long _maxPages                       = 256;
     public String OverheadAccountId              = "INSTALLATION";   // account ID for overhead runs such as SYS and ROLOUT/ROLBACK
     public String OverheadUserId                 = "INSTALLATION";   // User ID for overhead runs
@@ -47,16 +46,16 @@ public class Configuration {
     public boolean ReleaseUnusedReserve          = true;
     public boolean ReleaseUnusedRemovableReserve = false;
     public boolean ResidueClear                  = false;            // zero out tracks when allocated
-    public long RunInitialReserve                = 10;               // initial reserve for SYS$*RUN$ file
-    public String RunAssignMnemonic              = "F";              // assign mnemonic for SYS$*RUN$ file
-    public long RunMaximumSize                   = 256;              // max granules for SYS$*RUN$ file
-    public long SacrdInitialReserve              = 10;               // initial reserve for SYS$*SEC@ACR$ file
-    public String SacrdAssignMnemonic            = "F";              // assign mnemonic for SYS$*SEC@ACR$ file
+    private String _runAssignMnemonic            = "F";              // assign mnemonic for SYS$*RUN$ file
+    private long _runInitialReserve              = 10;               // initial reserve for SYS$*RUN$ file
+    private long _runMaximumSize                 = 256;              // max granules for SYS$*RUN$ file
+    private String _sacrdAssignMnemonic          = "F";              // assign mnemonic for SYS$*SEC@ACR$ file
+    private long _sacrdInitialReserve            = 10;               // initial reserve for SYS$*SEC@ACR$ file
     public double StandardRoloutAvailabilityGoal = 1.50;
     public double StandardRoloutStartThreshold   = 3.00;
     public String SecurityOfficerUserId          = "";               // could be empty, in which case operator is prompted at boot time
     public long SymbiontBufferSize               = 224;              // Buffer size used for standard and alternate read/write buffers
-    public String SystemTapeEquipment            = "T";              // assign mnemonic for exec tape requests
+    private String _systemTapeEquipment          = "T";              // assign mnemonic for exec tape requests
     public boolean TapeAccessRestrictedByAccount = false;
     public boolean TerminateMaxCards             = false;
     public boolean TerminateMaxPages             = false;
@@ -66,20 +65,36 @@ public class Configuration {
     public String TIPWriteKey                    = "++++++";
     public String TPFAssignMnemonic              = "F";
     public long TPFMaxSize                       = 128;
-    public long UserInitialReserve               = 10;               // initial reserve for SYS$*SEC@USERID$ file
-    public String UserAssignMnemonic             = "F";              // assign mnemonic for SYS$*SEC@USERID$ file
+    private String _userAssignMnemonic           = "F";              // assign mnemonic for SYS$*SEC@USERID$ file
+    private long _userInitialReserve             = 10;               // initial reserve for SYS$*SEC@USERID$ file
 
     // Currently there are no configuration items which can be changed dynamically
 
     // -----------------------------------------------------------------------------------------------------------------
-    public int getExecThreadPoolSize() { return _execThreadPoolSize; }
+    public String getAccountAssignMnemonic() { return _accountAssignMnemonic; }
+    public long getAccountInitialReserve() { return _accountInitialReserve; }
+    public String getDLOCAssignMnemonic() { return _dlocAssignMnemonic; }
     public boolean getFilesPrivateByAccount() { return _filesPrivateByAccount; }
+    public String getGENFAssignMnemonic() { return _genFAssignMnemonic; }
+    public long getGENFInitialReserve() { return _genFInitialReserve; }
+    public String getLibAssignMnemonic() { return _libAssignMnemonic; }
+    public long getLibInitialReserve() { return _libInitialReserve; }
+    public long getLibMaximumSize() { return _libMaximumSize; }
     public boolean getLogConsoleMessages() { return _logConsoleMessages; }
     public boolean getLogIos() { return _logIOs; }
     public String getMassStorageDefaultMnemonic() { return _massStorageDefaultMnemonic; }
     public String getMasterAccountId() { return _masterAccountId; }
     public long getMaxCards() { return _maxCards; }
+    public long getMaxGranules() { return _maxGranules; }
     public long getMaxPages() { return _maxPages; }
+    public String getRunAssignMnemonic() { return _runAssignMnemonic; }
+    public long getRunInitialReserve() { return _runInitialReserve; }
+    public long getRunMaximumSize() { return _runMaximumSize; }
+    public String getSACRDAssignMnemonic() { return _sacrdAssignMnemonic; }
+    public long getSACRDInitialReserve() { return _sacrdInitialReserve; }
+    public String getSystemTapeEquipment() { return _systemTapeEquipment; }
+    public String getUserAssignMnemonic() { return _userAssignMnemonic; }
+    public long getUserInitialReserve() { return _userInitialReserve; }
 
     public void updateFromFile(final String filename) throws KExecException {
         // TODO

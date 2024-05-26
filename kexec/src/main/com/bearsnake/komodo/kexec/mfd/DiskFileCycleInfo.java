@@ -22,9 +22,6 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
     protected long _highestTrackWritten = 0;
     protected long[] _quotaGroupGranules = new long[8];
     protected BackupInfo _backupInfo = new BackupInfo();
-    protected LinkedList<DiskPackEntry> _diskPackEntries = new LinkedList<>();
-
-    public final DiskFileCycleInfo addDiskPackEntry(final DiskPackEntry value) { _diskPackEntries.add(value); return this; }
 
     public final Instant getTimeOfFirstWriteOrUnload() { return _timeOfFirstWriteOrUnload; }
     public final FileFlags getFileFlags() { return _fileFlags; }
@@ -36,7 +33,6 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
     public final long getHighestTrackWritten() { return _highestTrackWritten; }
     public final long[] getQuotaGroupGranules() { return _quotaGroupGranules; }
     public final BackupInfo getBackupInfo() { return _backupInfo; }
-    public final LinkedList<DiskPackEntry> getDiskPackEntries() { return _diskPackEntries; }
 
     public final DiskFileCycleInfo setTimeOfFirstWriteOrUnload(final Instant value) { _timeOfFirstWriteOrUnload = value; return this; }
     public final DiskFileCycleInfo setFileFlags(final FileFlags value) { _fileFlags = value; return this; }
@@ -48,21 +44,18 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
     public final DiskFileCycleInfo setHighestTrackWritten(final long value) { _highestTrackWritten = value; return this; }
     public final DiskFileCycleInfo setQuotaGroupGranules(final long[] array) { _quotaGroupGranules = array ; return this; }
     public final DiskFileCycleInfo setBackupInfo(final BackupInfo value) { _backupInfo = value; return this; }
-    public final DiskFileCycleInfo setDiskPackEntries(final LinkedList<DiskPackEntry> list) { _diskPackEntries = list; return this; }
 
     @Override
     public int getRequiredNumberOfMainItems() {
         int count = super.getRequiredNumberOfMainItems();
-        int mod = (_diskPackEntries.size() - 5) / 10;
-        count += ((_diskPackEntries.size() - 5) / 10) + (mod > 0 ? 1 : 0);
-        mod = (_backupInfo.getBackupReelNumbers().size() - 2) / 20;
+        int mod = (_backupInfo.getBackupReelNumbers().size() - 2) / 20;
         count += ((_backupInfo.getBackupReelNumbers().size() - 2) / 20) + (mod > 0 ? 1 : 0);
         return count;
     }
 
     /**
      * Loads this object from the content in the given main item MFD sector chain.
-     * Should be overridden by sub-classes.
+     * Should be overridden by subclasses.
      * @param mfdSectors main item chain
      */
     public void loadFromMainItemChain(
@@ -100,53 +93,21 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
                 }
             }
         }
-
-        // disk pack entries
-        _diskPackEntries.clear();
-        long numberOfDPEs = sector1.getT3(021);
-        for (int dpx = 0; (dpx < 5) && (dpx < numberOfDPEs); dpx++) {
-            var wx = 022 + (2 * dpx);
-            var packName = Word36.toStringFromFieldata(sector1.get(wx));
-            var mainItemAddr = sector1.get(wx + 1);
-            _diskPackEntries.add(new DiskPackEntry(packName, new MFDRelativeAddress(mainItemAddr)));
-        }
-
-        for (int sx = 2; sx < mfdSectors.size(); sx++) {
-            var sector = mfdSectors.get(sx).getSector();
-            var entryType = sector.getS1(07);
-            if (entryType == 0) {
-                // Up to 10 disk pack entries (of 2 words each).
-                // Total number of disk pack entries is in T3 of sector1[021]
-                for (int ex = 0; (ex < 10) && (_diskPackEntries.size() < numberOfDPEs); ex++) {
-                    var wx = 010 + (2 * ex);
-                    var packName = Word36.toStringFromFieldata(sector1.get(wx));
-                    var mainItemAddr = sector1.get(wx + 1);
-                    _diskPackEntries.add(new DiskPackEntry(packName, new MFDRelativeAddress(mainItemAddr)));
-                }
-            } else if ((_backupInfo != null)
-                && (entryType == 1)
-                && (_backupInfo.getBackupReelNumbers().size() < numberOfBackupWords)) {
-                // Up to 20 backup reel entries (of 1 word each) -
-                // Total number of backup reel entries can be derived from number-of-backup-words.
-                // If we support only one level of backups, then this will be the number of reels.
-                for (int ex = 0; (ex < 20) && (_backupInfo.getBackupReelNumbers().size() < numberOfBackupWords); ex++) {
-                    _backupInfo.addBackupReelNumber(Word36.toStringFromFieldata(sector.get(8 + ex)));
-                }
-            }
-        }
     }
 
     /**
-     * Populates cataloged file main item sectors 0 and 1 - completely overwriting anything previous.
+     * Populates cataloged file main item sectors 0 and 1, and beyond (if necessary),
+     * completely overwriting anything previous.
      * Invokes super class to do the most common things, then fills in anything related to mass storage.
      * _leadItem0Address must already be populated.
      * @param mfdSectors enough MFDSectors to store all the information required for this file cycle.
+     * @return number of sectors we populated (with more than 2 backup reels, we'll populate more than 2 sectors)
      */
     @Override
-    public void populateMainItems(
+    public int populateMainItems(
         final LinkedList<MFDSector> mfdSectors
     ) throws ExecStoppedException {
-        super.populateMainItems(mfdSectors);
+        var sectorsUsed = super.populateMainItems(mfdSectors);
         var sector0 = mfdSectors.get(0).getSector();
         var sector1 = mfdSectors.get(1).getSector();
 
@@ -164,24 +125,7 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
             sector0.setH2(20 + x, _quotaGroupGranules[x]);
         }
 
-        // disk pack entries
-        sector1.setT3(021, _diskPackEntries.size());
-        int wx = 022;
-        int sx = 1;
-        var dpeSector = sector1;
-        for (DiskPackEntry dpe : _diskPackEntries) {
-            dpeSector.set(wx, Word36.stringToWordFieldata(dpe.getPackName()));
-            dpeSector.set(wx + 1, dpe.getMainItem0Address().getValue());
-            wx++;
-            if (wx == 28) {
-                sx++;
-                dpeSector = mfdSectors.get(sx).getSector();
-                dpeSector.setS1(7, 0); // entry type
-                wx = 8;
-            }
-        }
-
-        // backup info
+        // backup info - with more than 2 reels we will start using additional main item sectors.
         if (_backupInfo == null) {
             // no backup info
             sector1.setT1(7, 0); // number of backup words
@@ -196,16 +140,15 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
                 sector1.set(9, Word36.stringToWordFieldata(reelNums.getFirst()));
                 if (reelNums.size() > 1) {
                     sector1.set(10, Word36.stringToWordFieldata(reelNums.get(1)));
-                    sx++;
-                    var rnSector = mfdSectors.get(sx).getSector();
+                    var rnSector = mfdSectors.get(sectorsUsed).getSector();
                     rnSector.setS1(7, 1); // entry type
-                    wx = 8;
+                    int wx = 8;
                     for (int rnx = 2; rnx < reelNums.size(); rnx++) {
                         rnSector.set(wx, Word36.stringToWordFieldata(reelNums.get(rnx)));
                         wx++;
                         if (wx == 28) {
-                            sx++;
-                            rnSector = mfdSectors.get(sx).getSector();
+                            sectorsUsed++;
+                            rnSector = mfdSectors.get(sectorsUsed).getSector();
                             rnSector.setS1(7, 1); // entry type
                             wx = 8;
                         }
@@ -213,5 +156,7 @@ public abstract class DiskFileCycleInfo extends FileCycleInfo {
                 }
             }
         }
+
+        return sectorsUsed;
     }
 }

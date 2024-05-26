@@ -18,6 +18,7 @@ import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.hardwarelib.NodeCategory;
 import com.bearsnake.komodo.hardwarelib.TapeChannel;
 import com.bearsnake.komodo.hardwarelib.TapeDevice;
+import com.bearsnake.komodo.kexec.Configuration;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
@@ -35,15 +36,21 @@ import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.FixedDiskItemFile;
 import com.bearsnake.komodo.kexec.facilities.facItems.RemovableDiskItemFile;
+import com.bearsnake.komodo.kexec.mfd.DescriptorFlags;
+import com.bearsnake.komodo.kexec.mfd.DisableFlags;
 import com.bearsnake.komodo.kexec.mfd.DiskFileCycleInfo;
 import com.bearsnake.komodo.kexec.mfd.DiskPackEntry;
 import com.bearsnake.komodo.kexec.mfd.FileCycleInfo;
+import com.bearsnake.komodo.kexec.mfd.FileFlags;
 import com.bearsnake.komodo.kexec.mfd.FileSetInfo;
 import com.bearsnake.komodo.kexec.mfd.FileType;
+import com.bearsnake.komodo.kexec.mfd.FixedDiskFileCycleInfo;
+import com.bearsnake.komodo.kexec.mfd.InhibitFlags;
+import com.bearsnake.komodo.kexec.mfd.PCHARFlags;
 import com.bearsnake.komodo.kexec.mfd.RemovableDiskFileCycleInfo;
+import com.bearsnake.komodo.kexec.mfd.UnitSelectionIndicators;
 import com.bearsnake.komodo.logger.LogManager;
 
-import java.io.File;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
@@ -67,6 +74,12 @@ import static com.bearsnake.komodo.baselib.Word36.Y_OPTION;
 import static com.bearsnake.komodo.logger.Level.Trace;
 
 public class FacilitiesManager implements Manager {
+
+    private static class AbsoluteCycleCatalogResult {
+        public boolean isAllowed;
+        public int absoluteCycle;
+        public boolean requiresDroppingOldestCycle;
+    }
 
     public enum DeleteBehavior {
         None,
@@ -1011,6 +1024,14 @@ public class FacilitiesManager implements Manager {
      * @param projectId project id for the fileset/file cycle
      * @param accountId account id for the file cycle
      * @param isGuarded true for G-option files
+     * @param isPrivate true for private files
+     * @param isUnloadInhibited true for files which should not be unloaded
+     * @param isReadOnly to ensure the file is read-only
+     * @param isWriteOnly to ensure the file is write-only
+     * @param saveOnCheckpoint true to set the save-on-checkpoint state of this file
+     * @param granularity to be used for the file - null defaults to Track
+     * @param initialGranules tracks/positions to be allocated on assign
+     * @param maxGranules maximum size of file in tracks/positions
      * @param packIds collection of pack names (populated for removable, empty for fixed)
      * @param fsResult fac status result
      * @return true if we are successful
@@ -1022,16 +1043,24 @@ public class FacilitiesManager implements Manager {
         final String projectId,
         final String accountId,
         final boolean isGuarded,
-        final Collection<String> packIds,
+        final boolean isPrivate,
+        final boolean isUnloadInhibited,
+        final boolean isReadOnly,
+        final boolean isWriteOnly,
+        final boolean saveOnCheckpoint,
+        final Granularity granularity,
+        final long initialGranules,
+        final long maxGranules,
+        final LinkedList<String> packIds,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
-                            "catalogDiskFile %s",
-                            fileSpecification.toString());
+                            "catalogDiskFile %s type=%s proj=%s acct=%s",
+                            fileSpecification.toString(), type, projectId, accountId);
 
         var e = Exec.getInstance();
-        var mType = e.getConfiguration().getMnemonicType(type);
-        if (mType == null) {
+        var mnemonicType = e.getConfiguration().getMnemonicType(type);
+        if (mnemonicType == null) {
             fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
             fsResult.mergeStatusBits(0_600000_000000L);
             fsResult.log(Trace, LOG_SOURCE);
@@ -1042,6 +1071,23 @@ public class FacilitiesManager implements Manager {
         var plusOne = fileSpecification.hasFileCycleSpecification()
                       && fileSpecification.getFileCycleSpecification().isRelative()
                       && fileSpecification.getFileCycleSpecification().getCycle() == 1;
+
+        var absInfo = getAbsoluteCycleForCatalog(null, fileSpecification, fsResult);
+        if (!absInfo.isAllowed) {
+            return false;
+        }
+
+        // Check initial and max granularity
+        if (initialGranules > maxGranules) {
+            fsResult.postMessage(FacStatusCode.MaximumIsLessThanInitialReserve);
+            fsResult.mergeStatusBits(0_600000_000000L);
+            return false;
+        }
+
+        // Ensure pack-ids (if specified) are correct.
+        // There should be no duplicates, there should be no more than 510,
+        // and they should all be known removable packs.
+        //  TODO
 
         var fsInfo = new FileSetInfo().setQualifier(fileSpecification.getQualifier())
                                       .setFilename(fileSpecification.getFilename())
@@ -1054,20 +1100,49 @@ public class FacilitiesManager implements Manager {
         try {
             mm.createFileSet(fsInfo);
         } catch (FileSetAlreadyExistsException ex) {
-            // TODO should not happen if the caller is honest
+            LogManager.logFatal(LOG_SOURCE, "file set %s should not already exist", fsInfo);
+            e.stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
         }
 
-        // TODO now create file cycle stuff
+        boolean result = catalogDiskFileCycleCommon(fsInfo,
+                                                    absInfo.absoluteCycle,
+                                                    type,
+                                                    mnemonicType,
+                                                    accountId,
+                                                    isGuarded,
+                                                    isPrivate,
+                                                    isUnloadInhibited,
+                                                    isReadOnly,
+                                                    isWriteOnly,
+                                                    saveOnCheckpoint,
+                                                    granularity,
+                                                    initialGranules,
+                                                    maxGranules,
+                                                    packIds,
+                                                    false,
+                                                    fsResult);
 
         fsResult.log(Trace, LOG_SOURCE);
-        return true;
+        return result;
     }
 
     /**
      * Catalogs an additional disk file cycle in an existing fileset.
+     * It is expected (but I'm not sure that it is required) that the fileset contains at least one cycle.
      * @param fileSpecification needed for creating facilities item
      * @param fileSetInfo describes the existing fileset
-     * @param type assign mnemonic to be used
+     * @param accountId account id for the file cycle
+     * @param isGuarded true for G-option files
+     * @param isPrivate true for private files
+     * @param isUnloadInhibited true for files which should not be unloaded
+     * @param isReadOnly to ensure the file is read-only
+     * @param isWriteOnly to ensure the file is write-only
+     * @param saveOnCheckpoint true to set the save-on-checkpoint state of this file
+     * @param granularity to be used for the file - null defaults to Track
+     * @param initialGranules tracks/positions to be allocated on assign
+     * @param maxGranules maximum size of file in tracks/positions
+     * @param packIds only for removable - pack ids for this file (there are restrictions on this)
      * @param fsResult fac status result
      * @return true if we are successful
      * @throws ExecStoppedException if the exec is stopped
@@ -1076,6 +1151,17 @@ public class FacilitiesManager implements Manager {
         final FileSpecification fileSpecification,
         final FileSetInfo fileSetInfo,
         final String type,
+        final String accountId,
+        final boolean isGuarded,
+        final boolean isPrivate,
+        final boolean isUnloadInhibited,
+        final boolean isReadOnly,
+        final boolean isWriteOnly,
+        final boolean saveOnCheckpoint,
+        final Granularity granularity,
+        final long initialGranules,
+        final long maxGranules,
+        final LinkedList<String> packIds,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
@@ -1091,62 +1177,58 @@ public class FacilitiesManager implements Manager {
             return false;
         }
 
-        // Does a file set exist for this file?
-        fsResult.log(Trace, LOG_SOURCE);
-        return true;
-    }
+        // Check read/write keys in fileSpecification against fileSetInfo
+        //  TODO
 
-    /**
-     * Catalogs a file after figuring out whether it should be disk or tape.
-     * If there is an existing fileset, we know which it is.
-     * Also, there is an algorithm for figuring out what equipment type to use.
-     * If there is NOT an existing fileset, use the configured default for sector-addressable mass storage.
-     * @param fileSpecification needed for creating facilities item
-     * @param fsResult fac status result
-     * @return true if we are successful
-     * @throws ExecStoppedException if the exec is stopped
-     */
-    public synchronized boolean catalogFile(
-        final FileSpecification fileSpecification,
-        final FacStatusResult fsResult
-    ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE,
-                            "catalogFile %s",
-                            fileSpecification.toString());
+        // Cannot create a file cycle if we do not have write access
+        //  TODO
 
-        var e = Exec.getInstance();
-        var mm = e.getMFDManager();
-        try {
-            // If a fileset exists, we use the "latest" existing (i.e., not to-be) cycle for the equipment type.
-            // If all cycles are to-be, use the highest cycle. For "latest" we use the highest cycle, not the newest cycle.
-            var fsInfo = mm.getFileSetInfo(fileSpecification.getQualifier(), fileSpecification.getFilename());
-            var fsci = fsInfo.getCycleInfo().getFirst();
-            if (fsci.isToBeCataloged() || fsci.isToBeDropped()) {
-                for (var f : fsInfo.getCycleInfo()) {
-                    if (!fsci.isToBeDropped() && !fsci.isToBeCataloged()) {
-                        fsci = f;
-                        break;
-                    }
-                }
+        var absInfo = getAbsoluteCycleForCatalog(fileSetInfo, fileSpecification, fsResult);
+        if (!absInfo.isAllowed)
+            return false;
+
+        // If we need to drop the oldest cycle, make sure we have access to do so
+        if (absInfo.requiresDroppingOldestCycle) {
+            // TODO
+        }
+
+        // Check initial and max granularity
+        if (initialGranules > maxGranules) {
+            fsResult.postMessage(FacStatusCode.MaximumIsLessThanInitialReserve);
+            fsResult.mergeStatusBits(0_600000_000000L);
+            return false;
+        }
+
+        // Ensure pack-ids are not specified for fixed, and that if specified for removable, they are correct.
+        if (!packIds.isEmpty()) {
+            if (fileSetInfo.getFileType() != FileType.Removable) {
+                // TODO
             }
 
-            var fcInfo = mm.getFileCycleInfo(fileSpecification.getQualifier(),
-                                             fileSpecification.getFilename(),
-                                             fsci.getAbsoluteCycle());
-
-            return switch (fsInfo.getFileType()) {
-                case Fixed, Removable -> catalogDiskFileCycle(fileSpecification, fsInfo, fcInfo.getAssignMnemonic(), fsResult);
-                case Tape -> catalogTapeFileCycle(fileSpecification, fsInfo, fcInfo.getAssignMnemonic(), fsResult);
-            };
-        } catch (FileCycleDoesNotExistException ex) {
-            // this happens if getFileCycleInfo() fails... which should never happen here
-            LogManager.logFatal(LOG_SOURCE, "getFileCycleInfo() should not have failed");
-            e.stop(StopCode.FacilitiesComplex);
-            throw new ExecStoppedException();
-        } catch (FileSetDoesNotExistException ex) {
-            var type = e.getConfiguration().getMassStorageDefaultMnemonic();
-            return catalogDiskFile(fileSpecification, type, fsResult);
+            //  TODO
         }
+
+        var mnemonicType = e.getConfiguration().getMnemonicType(type);
+        boolean result = catalogDiskFileCycleCommon(fileSetInfo,
+                                                    absInfo.absoluteCycle,
+                                                    type,
+                                                    mnemonicType,
+                                                    accountId,
+                                                    isGuarded,
+                                                    isPrivate,
+                                                    isUnloadInhibited,
+                                                    isReadOnly,
+                                                    isWriteOnly,
+                                                    saveOnCheckpoint,
+                                                    granularity == null ? Granularity.Track : granularity,
+                                                    initialGranules,
+                                                    maxGranules,
+                                                    packIds,
+                                                    absInfo.requiresDroppingOldestCycle,
+                                                    fsResult);
+
+        fsResult.log(Trace, LOG_SOURCE);
+        return result;
     }
 
     /**
@@ -1409,6 +1491,8 @@ public class FacilitiesManager implements Manager {
         LogManager.logTrace(LOG_SOURCE, "startup()");
 
         var e = Exec.getInstance();
+        var cfg = e.getConfiguration();
+
         dropTapes();
         readDiskLabels();
         var fixedDisks = getAccessibleFixedDisks();
@@ -1421,6 +1505,28 @@ public class FacilitiesManager implements Manager {
         var mm = Exec.getInstance().getMFDManager();
         if (Exec.getInstance().isJumpKeySet(13)) {
             mm.initializeMassStorage(fixedDisks);
+
+            // TODO SYS$*ACCOUNT$R1
+            // TODO SYS$*SEC@ACCTINFO
+            // public long AccountInitialReserve            = 10;               // initial reserve for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
+            // public String AccountAssignMnemonic          = "F";              // assign mnemonic for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
+
+            // TODO SYS$*SEC@ACR$
+            // public long SacrdInitialReserve              = 10;               // initial reserve for SYS$*SEC@ACR$ file
+            // public String SacrdAssignMnemonic            = "F";              // assign mnemonic for SYS$*SEC@ACR$ file
+
+            // TODO SYS$*SEC@USERID$
+            // public long UserInitialReserve               = 10;               // initial reserve for SYS$*SEC@USERID$ file
+            // public String UserAssignMnemonic             = "F";              // assign mnemonic for SYS$*SEC@USERID$ file
+
+            // Create DLOC$ (privilege file) and GENF$ (spool file)
+            e.catalogDiskFileForExec("SYS$", "DLOC$", cfg.getDLOCAssignMnemonic(), 0, 0);
+            e.catalogDiskFileForExec("SYS$", "GENF$", cfg.getGENFAssignMnemonic(), cfg.getGENFInitialReserve(), 0);
+
+            // Create and load library files (move this to a separate method)
+            e.catalogDiskFileForExec("SYS$", "LIB$", cfg.getLibAssignMnemonic(), cfg.getLibInitialReserve(), cfg.getLibMaximumSize());
+            e.catalogDiskFileForExec("SYS$", "RUN$", cfg.getRunAssignMnemonic(), cfg.getRunInitialReserve(), cfg.getRunMaximumSize());
+            e.catalogDiskFileForExec("SYS$", "RLIB$", cfg.getMassStorageDefaultMnemonic(), 1, 128);
         } else {
             mm.recoverMassStorage(fixedDisks);
         }
@@ -1431,6 +1537,101 @@ public class FacilitiesManager implements Manager {
     // -------------------------------------------------------------------------
     // Core
     // -------------------------------------------------------------------------
+
+    /**
+     * Private version which may be called by either catalogDiskFile() or catalogDiskFileCycle()
+     * Mostly exists so that we don't have to do preliminary checking in catalogDiskFileCycle()
+     * if it were to be called by catalogDiskFile().
+     * The given fileset might not have a cycle (it might have just been created).
+     * Do all sanity checks *before* invoking this.
+     * @param fileSetInfo describes the fileset into which the cycle is to be cataloged
+     */
+    private boolean catalogDiskFileCycleCommon(
+        final FileSetInfo fileSetInfo,
+        final int absoluteCycle,
+        final String type,
+        final Configuration.MnemonicType mnemonicType,
+        final String accountId,
+        final boolean isGuarded,
+        final boolean isPrivate,
+        final boolean isUnloadInhibited,
+        final boolean isReadOnly,
+        final boolean isWriteOnly,
+        final boolean saveOnCheckpoint,
+        final Granularity granularity,
+        final long initialGranules,
+        final long maxGranules,
+        final LinkedList<String> packIds, // only for removable, can be empty if fileSetInfo has a cycle
+        final boolean dropOldestCycle,
+        final FacStatusResult fsResult
+    ) throws ExecStoppedException {
+        var e = Exec.getInstance();
+
+        DiskFileCycleInfo fcInfo;
+        if (fileSetInfo.getFileType() == FileType.Fixed) {
+            fcInfo = new FixedDiskFileCycleInfo().setUnitSelectionIndicators(new UnitSelectionIndicators());
+        } else if (fileSetInfo.getFileType() == FileType.Removable) {
+            fcInfo = new RemovableDiskFileCycleInfo().setReadKey(fileSetInfo.getReadKey())
+                                                     .setWriteKey(fileSetInfo.getWriteKey());
+        } else {
+            // we should never get here if we're not fixed or removable disk.
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
+
+        var pcf = new PCHARFlags().setGranularity(granularity)
+                                  .setIsWordAddressable(mnemonicType == Configuration.MnemonicType.WORD_ADDRESSABLE_DISK);
+
+        var inh = new InhibitFlags().setIsGuarded(isGuarded)
+                                    .setIsPrivate(isPrivate)
+                                    .setIsUnloadInhibited(isUnloadInhibited)
+                                    .setIsReadOnly(isReadOnly)
+                                    .setIsWriteOnly(isWriteOnly);
+
+        var desc = new DescriptorFlags().setSaveOnCheckPoint(saveOnCheckpoint)
+                                        .setIsRemovableDiskFile(fileSetInfo.getFileType() == FileType.Removable)
+                                        .setIsTapeFile(fileSetInfo.getFileType() == FileType.Tape);
+
+        fcInfo.setFileFlags(new FileFlags())
+              .setPCHARFlags(pcf)
+              .setInitialGranulesReserved(initialGranules)
+              .setMaxGranules(maxGranules)
+              .setQualifier(fileSetInfo.getQualifier())
+              .setFilename(fileSetInfo.getFilename())
+              .setProjectId(fileSetInfo.getProjectId())
+              .setAccountId(accountId)
+              .setAssignMnemonic(type)
+              .setAbsoluteCycle(absoluteCycle)
+              .setInhibitFlags(inh)
+              .setDescriptorFlags(desc)
+              .setDisableFlags(new DisableFlags());
+
+        var mm = e.getMFDManager();
+
+        // If this cycle is guarded, ensure the fileset is also guarded (it might not be).
+        if (isGuarded && !fileSetInfo.isGuarded()) {
+            fileSetInfo.setIsGuarded(true);
+        }
+
+        // Do we need to drop the oldest cycle? If so, do it now.
+        if (dropOldestCycle) {
+            // TODO
+        }
+
+        // Add this new cycle to the cycle info in the fsInfo, and persist the main items.
+        // TODO
+
+        // If this is removable, we need to create main item(s) on the various removable packs,
+        // then update the disk pack entry list in the real main item.
+        if (fcInfo instanceof RemovableDiskFileCycleInfo rmFci) {
+            // TODO
+        }
+
+        // Invoke MFD to create the file cycle
+        // TODO
+
+        return true;
+    }
 
     /**
      * Checks the file cycle info to see whether the corresponding file is disabled,
@@ -1804,6 +2005,157 @@ public class FacilitiesManager implements Manager {
                 }
             }
         }
+    }
+
+    /**
+     * Determines the absolute cycle to be used for cataloging a new file cycle,
+     * given the current fileset state and the specified file cycle.
+     * We do not hold a run for file cycle conflict; maybe one day we will.
+     * @param fileSetInfo fileset info if a fileset exists for the given qualifier/filename, null if it does not.
+     * @param fileSpecification file specification provided for cataloging the file
+     * @param facStatusResult where we post any necessary facility status messages, usually due to returning 0.
+     * @return AbsoluteCycleCatalogResult object
+     */
+    private AbsoluteCycleCatalogResult getAbsoluteCycleForCatalog(
+        final FileSetInfo fileSetInfo,
+        final FileSpecification fileSpecification,
+        final FacStatusResult facStatusResult
+    ) {
+        var result = new AbsoluteCycleCatalogResult();
+
+        // If fileSetInfo is null, there is no existing file set.
+        // We would allow any valid absolute cycle, or any positive valid relative cycle.
+        // If there is no file cycle, assume absolute cycle one.
+        if (fileSetInfo == null) {
+            if (fileSpecification.hasFileCycleSpecification()) {
+                var fcs = fileSpecification.getFileCycleSpecification();
+                if (fcs.isAbsolute()) {
+                    if (fcs.getCycle() >= 1 && fcs.getCycle() <= 999) {
+                        result.isAllowed = true;
+                        result.absoluteCycle = fcs.getCycle();
+                    } else {
+                        facStatusResult.postMessage(FacStatusCode.FileCycleOutOfRange);
+                        facStatusResult.mergeStatusBits(0_400000_000040L);
+                    }
+                } else {
+                    if (fcs.getCycle() >= 0) {
+                        result.isAllowed = true;
+                        result.absoluteCycle = 1;
+                    } else {
+                        facStatusResult.postMessage(FacStatusCode.FileCycleOutOfRange);
+                        facStatusResult.mergeStatusBits(0_400000_000040L);
+                    }
+                }
+            } else {
+                result.isAllowed = true;
+                result.absoluteCycle = 1;
+            }
+
+            return result;
+        }
+
+        // There is a fileSetInfo, so we have to do some trick-sy things.
+        if (!fileSpecification.hasFileCycleSpecification()) {
+            // no cycle specified - file is already cataloged, so we cannot do this.
+            facStatusResult.postMessage(FacStatusCode.FileAlreadyCataloged);
+            facStatusResult.mergeStatusBits(0_500000_000000L);
+            return result;
+        }
+
+        var fcs = fileSpecification.getFileCycleSpecification();
+        if (fcs.isAbsolute()) {
+            // Absolute cycle specified - this is the max trick-sy part.
+            // First, simply check whether the absolute cycle already exists. That is easy.
+            var cycInfo = fileSetInfo.getCycleInfo();
+            for (var fsci : cycInfo) {
+                if (fsci.getAbsoluteCycle() == fcs.getCycle()) {
+                    facStatusResult.postMessage(FacStatusCode.FileAlreadyCataloged);
+                    facStatusResult.mergeStatusBits(0_500000_000000L);
+                    return result;
+                }
+            }
+
+            int highestExisting = cycInfo.getFirst().getAbsoluteCycle();
+            int lowestExisting = cycInfo.getLast().getAbsoluteCycle();
+            if (lowestExisting > highestExisting) {
+                // We are in a split situation - the highest cycle has wrapped around from 999 to 1,
+                // but the lowest cycle is still slightly below 999.
+                // We are guaranteed that the highest is between 1 and 31, and the lowest is between 969 and 999.
+                // If we are higher than the lowest or lower than the highest, we are okay.
+                if ((fcs.getCycle() > lowestExisting) || (fcs.getCycle() < highestExisting)) {
+                    result.isAllowed = true;
+                    result.absoluteCycle = fcs.getCycle();
+                    return result;
+                }
+            } else {
+                // We are not split. If the proposed cycle is between the highest and lowest, it is okay.
+                if ((fcs.getCycle() > lowestExisting) && (fcs.getCycle() < highestExisting)) {
+                    result.isAllowed = true;
+                    result.absoluteCycle = fcs.getCycle();
+                    return result;
+                }
+            }
+
+            // It still might be okay...
+            // The proposed cycle is outside the current range. Is it too far outside?
+            int additional = 0;
+            if (fcs.getCycle() - highestExisting < 32) {
+                additional = fcs.getCycle() - highestExisting;
+            } else if (lowestExisting - fcs.getCycle() < 32) {
+                additional = lowestExisting - fcs.getCycle();
+            } else {
+                // not allowed
+                return result;
+            }
+
+            int newRange = fileSetInfo.getCurrentCycleRange() + additional;
+            if (newRange <= fileSetInfo.getMaxCycleRange()) {
+                // We're within the max range, it's okay.
+                result.isAllowed = true;
+            } else if (newRange == fileSetInfo.getMaxCycleRange() + 1) {
+                // We're outside the range, but just by one.
+                result.isAllowed = true;
+                result.requiresDroppingOldestCycle = true;
+            }
+            return result;
+        }
+
+        // Relative cycle specified.
+        // If zero, this is the same as no specification at all. Reject it.
+        if (fcs.getCycle() == 0) {
+            facStatusResult.postMessage(FacStatusCode.FileAlreadyCataloged);
+            facStatusResult.mergeStatusBits(0_500000_000000L);
+            return result;
+        }
+
+        // If +1, we can do it if there is not already a plus-one.
+        // This is the only case where we can catalog a file via relative file cycle.
+        // We *might* need to drop the oldest cycle.
+        if (fcs.getCycle() == 1) {
+            if (fileSetInfo.plusOneExists()) {
+                facStatusResult.postMessage(FacStatusCode.RelativeFCycleConflict);
+                facStatusResult.mergeStatusBits(0_400000_000040L);
+            } else {
+                if (fileSetInfo.getCurrentCycleRange() == fileSetInfo.getMaxCycleRange()) {
+                    result.requiresDroppingOldestCycle = true;
+                }
+                result.absoluteCycle = fileSetInfo.getHighestAbsoluteCycle() + 1;
+                result.isAllowed = true;
+            }
+            return result;
+        }
+
+        var fcx = Math.abs(fcs.getCycle());
+        var cycInfo = fileSetInfo.getCycleInfo();
+        if (fcx < cycInfo.size()) {
+            facStatusResult.postMessage(FacStatusCode.FileAlreadyCataloged);
+            facStatusResult.mergeStatusBits(0_500000_000000L);
+        } else {
+            facStatusResult.postMessage(FacStatusCode.RelativeFCycleConflict);
+            facStatusResult.mergeStatusBits(0_400000_000040L);
+        }
+
+        return result;
     }
 
     /**

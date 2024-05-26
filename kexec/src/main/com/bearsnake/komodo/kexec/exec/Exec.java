@@ -6,6 +6,8 @@ package com.bearsnake.komodo.kexec.exec;
 
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.Configuration;
+import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
@@ -14,6 +16,7 @@ import com.bearsnake.komodo.kexec.consoles.ReadOnlyMessage;
 import com.bearsnake.komodo.kexec.consoles.ReadReplyMessage;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
+import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
 import com.bearsnake.komodo.kexec.mfd.MFDManager;
@@ -23,6 +26,7 @@ import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.stream.IntStream;
@@ -130,6 +134,36 @@ public class Exec {
         }
 
         LogManager.logTrace(LOG_SOURCE, "boot complete");
+    }
+
+    /**
+     * Convenience wrapper
+     */
+    public boolean catalogDiskFileForExec(
+        final String qualifier,
+        final String filename,
+        final String type,
+        final long initialGranules,
+        final long maxGranules
+    ) throws ExecStoppedException {
+        var fs = new FileSpecification(qualifier, filename, null, null, null);
+        var fsResult = new FacStatusResult();
+        var packIds = new LinkedList<String>();
+        return _facilitiesManager.catalogDiskFile(fs,
+                                                  type,
+                                                  _runControlEntry.getProjectId(),
+                                                  _runControlEntry.getAccountId(),
+                                                  true,
+                                                  true,
+                                                  true,
+                                                  false,
+                                                  false,
+                                                  false,
+                                                  Granularity.Track,
+                                                  initialGranules,
+                                                  maxGranules,
+                                                  packIds,
+                                                  fsResult);
     }
 
     /**
