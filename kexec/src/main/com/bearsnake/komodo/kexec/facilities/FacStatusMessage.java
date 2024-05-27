@@ -90,6 +90,7 @@ public class FacStatusMessage {
         putError(FacStatusCode.AssignMnemonicTooLong, "Assign mnemonic cannot be longer than 6 characters.");
         putError(FacStatusCode.AttemptToChangeGenericType, "Attempt to change generic type of the file.");
         putError(FacStatusCode.AttemptToChangeGranularity, "Attempt to change granularity.");
+        putError(FacStatusCode.CannotCatalogReadWriteInhibited, "Cannot catalog file because read or write access not allowed.");
         putError(FacStatusCode.DeviceAlreadyInUseByThisRun, "Device %s already in use by this run.");
         putError(FacStatusCode.DeviceIsFixed, "Device %s is fixed.");
         putError(FacStatusCode.DeviceIsNotUp, "%s is not up.");

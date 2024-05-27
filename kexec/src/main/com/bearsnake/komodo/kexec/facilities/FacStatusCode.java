@@ -64,6 +64,7 @@ public enum FacStatusCode {
     AttemptToChangeGranularity(0241733),
     IllegalValueForFCycle(0242433),
     FileCycleOutOfRange(0242533),
+    CannotCatalogReadWriteInhibited(0242633),
     IllegalDroppingPrivateFile(0243233),
     DuplicateMediaIdsAreNotAllowed(0243433),
     SyntaxErrorInImage(0243533),
@@ -130,7 +131,7 @@ public enum FacStatusCode {
 	1*	Field error in control statement other than syntax.
 		Option conflict (for example, MHL, OE, or IB) or noise constant specification error.
 		Requested hardware not currently part of the system.
-		CSF$ returns a Status of 600000000000 when there is not adequate storage available for either
+		CSF$ returns a Status of 600000000000 when there is inadequate storage available for either
 		a fixed (absolute request) or removable request.
 	2	File specified is already assigned or cataloged (@ASG and @CAT), already released (@FREE),
 		or not assigned (@MODE). The request is rejected for @CAT and @MODE control statements.

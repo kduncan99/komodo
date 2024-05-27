@@ -442,7 +442,7 @@ public class FacilitiesManager implements Manager {
             }
 
             var remInfo = (RemovableDiskFileCycleInfo) fcInfo;
-            if (!packIds.isEmpty() && !checkPackIds(fsInfo, remInfo, optionsWord, packIds, fsResult)) {
+            if (!packIds.isEmpty() && !checkPackIdsForAssign(fsInfo, remInfo, optionsWord, packIds, fsResult)) {
                 fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
@@ -1087,7 +1087,9 @@ public class FacilitiesManager implements Manager {
         // Ensure pack-ids (if specified) are correct.
         // There should be no duplicates, there should be no more than 510,
         // and they should all be known removable packs.
-        //  TODO
+        if (!checkPackIdsForCatalog(packIds, fsResult)) {
+            return false;
+        }
 
         var fsInfo = new FileSetInfo().setQualifier(fileSpecification.getQualifier())
                                       .setFilename(fileSpecification.getFilename())
@@ -1130,6 +1132,7 @@ public class FacilitiesManager implements Manager {
     /**
      * Catalogs an additional disk file cycle in an existing fileset.
      * It is expected (but I'm not sure that it is required) that the fileset contains at least one cycle.
+     * @param runControlEntry rce for requesting run
      * @param fileSpecification needed for creating facilities item
      * @param fileSetInfo describes the existing fileset
      * @param accountId account id for the file cycle
@@ -1148,6 +1151,7 @@ public class FacilitiesManager implements Manager {
      * @throws ExecStoppedException if the exec is stopped
      */
     public synchronized boolean catalogDiskFileCycle(
+        final RunControlEntry runControlEntry,
         final FileSpecification fileSpecification,
         final FileSetInfo fileSetInfo,
         final String type,
@@ -1178,10 +1182,19 @@ public class FacilitiesManager implements Manager {
         }
 
         // Check read/write keys in fileSpecification against fileSetInfo
-        //  TODO
+        if (!checkKeys(runControlEntry, fileSetInfo, fileSpecification, fsResult)) {
+            fsResult.log(Trace, LOG_SOURCE);
+            return false;
+        }
+        var readInhibit = (fsResult.getStatusWord() & 0_000100_000000L) != 0;
+        var writeInhibit = (fsResult.getStatusWord() & 0_000200_000000L) != 0;
 
-        // Cannot create a file cycle if we do not have write access
-        //  TODO
+        // Cannot create a file cycle if we do not have read and write access
+        if (readInhibit || writeInhibit) {
+            fsResult.postMessage(FacStatusCode.CannotCatalogReadWriteInhibited);
+            fsResult.mergeStatusBits(0_400000_000000L);
+            return false;
+        }
 
         var absInfo = getAbsoluteCycleForCatalog(fileSetInfo, fileSpecification, fsResult);
         if (!absInfo.isAllowed)
@@ -1200,12 +1213,8 @@ public class FacilitiesManager implements Manager {
         }
 
         // Ensure pack-ids are not specified for fixed, and that if specified for removable, they are correct.
-        if (!packIds.isEmpty()) {
-            if (fileSetInfo.getFileType() != FileType.Removable) {
-                // TODO
-            }
-
-            //  TODO
+        if (!checkPackIdsForCatalog(packIds, fsResult)) {
+            return false;
         }
 
         var mnemonicType = e.getConfiguration().getMnemonicType(type);
@@ -1767,11 +1776,13 @@ public class FacilitiesManager implements Manager {
      *  Packs must only be added with the A option but *NOT* with the Y option.
      *  Packs cannot be added if the fileset has more than one cycle, or if the cycle is currently assigned.
      *  Adding packs requires delete access (for fundamental security, cycle must not be write-inhibited)
+     * @param optionWord options specified on @ASG
+     * @param fcInfo file cycle info for removable file cycle being assigned
      * @param packIds pack ids from caller
      * @param fsResult where we post fac status messages and codes
      * @return true if the check passes, else false
      */
-    private boolean checkPackIds(
+    private boolean checkPackIdsForAssign(
         final FileSetInfo fsInfo,
         final RemovableDiskFileCycleInfo fcInfo,
         final long optionWord,
@@ -1835,6 +1846,37 @@ public class FacilitiesManager implements Manager {
             // Any subsequent pack-ids in the given list must refer to removable packs
             for (int px = existingPackIds.size(); px < packIds.size(); px++) {
                 //TODO E:202233 Pack pack-id is not a removable pack.
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * A smaller subset of pack-id checking...
+     * ensure there aren't too many pack ids, and that there are no duplicates.
+     * @param packIds pack ids from caller
+     * @param fsResult where we post fac status messages and codes
+     * @return true if the check passes, else false
+     */
+    private boolean checkPackIdsForCatalog(
+        final List<String> packIds,
+        final FacStatusResult fsResult
+    ) {
+        if (!packIds.isEmpty()) {
+            for (int px = 0; px < packIds.size(); px++) {
+                for (int py = px + 1; py < packIds.size(); py++) {
+                    if (packIds.get(px).equalsIgnoreCase(packIds.get(py))) {
+                        fsResult.postMessage(FacStatusCode.DuplicateMediaIdsAreNotAllowed);
+                        fsResult.mergeStatusBits(0_400004_000000L);
+                        return false;
+                    }
+                }
+            }
+            if (packIds.size() > 510) {
+                fsResult.postMessage(FacStatusCode.MaximumNumberOfPackIdsExceeded);
+                fsResult.mergeStatusBits(0_600000_000000L);
+                return false;
             }
         }
 

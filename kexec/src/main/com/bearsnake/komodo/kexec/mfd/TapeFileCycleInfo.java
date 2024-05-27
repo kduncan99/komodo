@@ -105,9 +105,10 @@ public class TapeFileCycleInfo extends FileCycleInfo {
      * Populates cataloged file main item sectors 0 and 1
      * Invokes super class to do the most common things, then fills in anything related to mass storage
      * @param mfdSectors enough MFDSectors to store all of the information required for this file cycle.
+     * @return number of main items populated
      */
     @Override
-    public void populateMainItems(
+    public int populateMainItems(
         final LinkedList<MFDSector> mfdSectors
     ) throws ExecStoppedException {
         super.populateMainItems(mfdSectors);
@@ -143,5 +144,7 @@ public class TapeFileCycleInfo extends FileCycleInfo {
                 sector0.set(033, Word36.stringToWordFieldata(reel));
             }
         }
+
+        return 2;
     }
 }
