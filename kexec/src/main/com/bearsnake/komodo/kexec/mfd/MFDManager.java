@@ -724,8 +724,7 @@ public class MFDManager implements Manager {
             var msg = String.format("Created %s*%s", mfdQualifier, mfdFilename);
             e.sendExecReadOnlyMessage(msg);
         } catch (AbsoluteCycleOutOfRangeException
-                 | AbsoluteCycleConflictException
-                 | FileSetAlreadyExistsException ex) {
+                 | AbsoluteCycleConflictException ex) {
             LogManager.logCatching(LOG_SOURCE, ex);
             Exec.getInstance().stop(StopCode.DirectoryErrors);
             throw new ExecStoppedException();

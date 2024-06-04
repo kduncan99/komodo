@@ -59,6 +59,7 @@ public class RemovableDiskFileCycleInfo extends DiskFileCycleInfo {
             _diskPackEntries.add(new DiskPackEntry(packName, new MFDRelativeAddress(mainItemAddr)));
         }
 
+        long numberOfBackupWords = sector1.getT1(07);
         for (int sx = 2; sx < mfdSectors.size(); sx++) {
             var sector = mfdSectors.get(sx).getSector();
             var entryType = sector.getS1(07);

@@ -39,10 +39,11 @@ public class FixedDiskFileCycleInfo extends DiskFileCycleInfo {
      * @param mfdSectors enough MFDSectors to store all the information required for this file cycle.
      */
     @Override
-    public void populateMainItems(
+    public int populateMainItems(
         final LinkedList<MFDSector> mfdSectors
     ) throws ExecStoppedException {
-        super.populateMainItems(mfdSectors);
+        int result = super.populateMainItems(mfdSectors);
         mfdSectors.getFirst().getSector().setH1(27, _unitSelectionIndicators.compose());
+        return result;
     }
 }
