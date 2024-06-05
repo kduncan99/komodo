@@ -35,7 +35,6 @@ public class FacilitiesItemTable {
 
     /**
      * Searches for facilities item which is an exact match on the given file specification.
-     * This is useful primarily for dealing with temporary file assignments.
      * There must be an exact match on qualifier and filename.
      * If there is no file cycle spec in the file specification, the facilities item must have:
      *      no absolute or relative file cycle (is this possible?)
@@ -131,6 +130,18 @@ public class FacilitiesItemTable {
             }
         }
         return null;
+    }
+
+    /**
+     * If filename is an internal name for a facilities item return that item.
+     * @param name internal filename
+     * @return fac item if found, else null
+     */
+    public synchronized FacilitiesItem getFacilitiesItemByInternalName(
+        final String name
+    ) {
+        var upper = name.toUpperCase();
+        return _content.stream().filter(fi -> fi.hasInternalName(upper)).findFirst().orElse(null);
     }
 
     /**

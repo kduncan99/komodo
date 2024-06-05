@@ -34,6 +34,7 @@ import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
+import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.FixedDiskItemFile;
 import com.bearsnake.komodo.kexec.facilities.facItems.NameItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.RemovableDiskItemFile;
@@ -221,6 +222,9 @@ public class FacilitiesManager implements Manager {
 
     // -------------------------------------------------------------------------
     // Services interface
+    // These routines are generally better for internal use, as they may have
+    // certain expectations which are not filtered out otherwise.
+    // Where possible, CSI should be used as the interface to facilities.
     // -------------------------------------------------------------------------
 
     // short-cut for exec assign of cataloged fixed disk file for system purposes.
@@ -261,6 +265,12 @@ public class FacilitiesManager implements Manager {
         return result;
     }
 
+    /**
+     * Assigns a cataloged disk file...
+     * Parameters are generally apparent, but note that fileSpecification must be resolved w.r.t.
+     * internal use names and default/implied qualifiers.
+     * @throws ExecStoppedException if the exec is found to be stopped (or we stop it) during execution
+     */
     public synchronized boolean assignCatalogedDiskFileToRun(
         final RunControlEntry runControlEntry,
         final FileSpecification fileSpecification,
@@ -430,6 +440,7 @@ public class FacilitiesManager implements Manager {
         }
 
         var isRemovable = fsInfo.getFileType() == FileType.Removable;
+        // TODO what should we do about NameItem fac items?
         var wasAlreadyAssigned = (facItem != null);
         if (wasAlreadyAssigned) {
             // We need to filter out the effects of D,E,K,R, and M since we are already assigned.
@@ -775,7 +786,7 @@ public class FacilitiesManager implements Manager {
 
     /**
      * For assigning a reserved disk to a run.
-     * This assignment can only be temporary.
+     * This assignment can only be temporary, and fileSpecification must be fully resolved.
      * @param runControlEntry describes the run
      * @param fileSpecification describes the qualifier, file name, and file cycle for the fac item
      * @param nodeIdentifier node identifier of the device
@@ -849,6 +860,7 @@ public class FacilitiesManager implements Manager {
 
         // If there is a facilities item in the rce which matches the file specification which does not refer
         // to an absolute assign of this same unit, fail.
+        // TODO what should we do about NameItem fac items?
         var fiTable = runControlEntry.getFacilitiesItemTable();
         var existingFacItem = fiTable.getExactFacilitiesItem(fileSpecification);
         if (existingFacItem != null) {
@@ -949,7 +961,7 @@ public class FacilitiesManager implements Manager {
 
     /**
      * For assigning a reserved disk to a run.
-     * This assignment can only be temporary.
+     * This assignment can only be temporary, and fileSpecification must be fully resolved.
      * @param fileSpecification needed for creating facilities item
      * @param nodeIdentifier node identifier of the device
      * @param packName only for removable disk unit, null for fixed
@@ -997,6 +1009,7 @@ public class FacilitiesManager implements Manager {
 
         // If there is a facilities item in the rce which matches the file specification which does not refer
         // to an absolute assign of this same unit, fail.
+        // TODO what should we do about NameItem fac items?
         var fiTable = rce.getFacilitiesItemTable();
         var existingFacItem = fiTable.getExactFacilitiesItem(fileSpecification);
         if (existingFacItem != null) {
@@ -1036,7 +1049,7 @@ public class FacilitiesManager implements Manager {
 
     /**
      * Catalogs a disk file - to be used when no fileset exists.
-     * @param fileSpecification needed for creating facilities item
+     * @param fileSpecification needed for creating facilities item - must be fully resolved
      * @param type assign mnemonic to be used
      * @param projectId project id for the fileset/file cycle
      * @param accountId account id for the file cycle
@@ -1150,7 +1163,7 @@ public class FacilitiesManager implements Manager {
      * Catalogs an additional disk file cycle in an existing fileset.
      * It is expected (but I'm not sure that it is required) that the fileset contains at least one cycle.
      * @param runControlEntry rce for requesting run
-     * @param fileSpecification needed for creating facilities item
+     * @param fileSpecification needed for creating facilities item - must be fully resolved
      * @param fileSetInfo describes the existing fileset
      * @param accountId account id for the file cycle
      * @param isGuarded true for G-option files
@@ -1259,7 +1272,7 @@ public class FacilitiesManager implements Manager {
 
     /**
      * Catalogs a tape file - to be used when no fileset exists.
-     * @param fileSpecification needed for creating facilities item
+     * @param fileSpecification needed for creating facilities item - must be fully resolved
      * @param type assign mnemonic to be used
      * @param fsResult fac status result
      * @return true if we are successful
@@ -1289,7 +1302,7 @@ public class FacilitiesManager implements Manager {
 
     /**
      * Catalogs an additional tape file cycle in an existing fileset.
-     * @param fileSpecification needed for creating facilities item
+     * @param fileSpecification needed for creating facilities item - must be fully resolved
      * @param fileSetInfo describes the existing fileset
      * @param type assign mnemonic to be used
      * @param fsResult fac status result
@@ -1323,7 +1336,7 @@ public class FacilitiesManager implements Manager {
      * Establishes a use item in the given run control entry
      * @param runControlEntry run control entry of interest
      * @param internalName internal name to be applied
-     * @param fileSpecification file specification indicating the external or referenced name
+     * @param fileSpecification file specification indicating the external or referenced name - must be fully resolved
      * @param releaseOnTaskEnd true to release this use item at the next task termination
      */
     public void establishUseItem(
@@ -1506,6 +1519,8 @@ public class FacilitiesManager implements Manager {
      * Releases a facilities item or use items (or some combination thereof).
      * @param runControlEntry indicates which run is requesting this release
      * @param fileSpecification File specification of interest - if it is an internal name, it may refer to a use item.
+     *                          Unliked most other APIs here, this does not need to be fully resolved, indeed it must not
+     *                          be, in order for the various optional parameters to be properly effective.
      * @param behavior indicates whether the file, or a use item, or all use items, are to be released
      * @param deleteFileCycle forces deletion of the referenced file cycle (even if assigned with C/U option)
      * @param inhibitCatalog forces deletion of the referenced file cycle ONLY if it was assigned with C/U option
@@ -1534,6 +1549,24 @@ public class FacilitiesManager implements Manager {
 
         var e = Exec.getInstance();
         var mm = e.getMFDManager();
+
+        // Resolve file spec to a facilities item and whether it is an internal name
+        FacilitiesItem facItem = null;
+        var fiTable = runControlEntry.getFacilitiesItemTable();
+        if (fileSpecification.couldBeInternalName()) {
+            facItem = fiTable.getFacilitiesItemByInternalName(fileSpecification.getFilename());
+        }
+
+        boolean isInternal = facItem != null;
+        if (!isInternal) {
+            facItem = fiTable.getExactFacilitiesItem(fileSpecification);
+        }
+
+        if (facItem == null) {
+            fsResult.postMessage(FacStatusCode.FilenameNotKnown);
+            fsResult.mergeStatusBits(0_100000_000000L);
+            return false;
+        }
 
         // TODO
 
