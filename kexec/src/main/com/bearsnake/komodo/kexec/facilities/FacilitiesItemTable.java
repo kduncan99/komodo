@@ -15,19 +15,13 @@ public class FacilitiesItemTable {
     private static final ConcurrentLinkedQueue<FacilitiesItem> _content = new ConcurrentLinkedQueue<>();
 
     /**
-     * Adds the facilities item to the table,
-     * then checks the use items in the useItemTable and updates them if/as necessary.
+     * Adds the facilities item to the table.
      * @param facItem new facilities item
-     * @param useItemTable associated use item table
      */
     void addFacilitiesItem(
-        final FacilitiesItem facItem,
-        final UseItemTable useItemTable
+        final FacilitiesItem facItem
     ) {
         _content.add(facItem);
-        synchronized (useItemTable) {
-            // TODO
-        }
     }
 
     public void dump(final PrintStream out,
@@ -85,6 +79,10 @@ public class FacilitiesItemTable {
         return null;
     }
 
+    /**
+     * Retrieves the facilities item which matches the given qualifier, filename, and absolute file cycle
+     * @return facilities item if found, else null
+     */
     synchronized FacilitiesItem getFacilitiesItemByAbsoluteCycle(
         final String qualifier,
         final String filename,
@@ -100,12 +98,28 @@ public class FacilitiesItemTable {
         return null;
     }
 
+    /**
+     * If filename is an internal name, we return the corresponding facilities item.
+     * Otherwise, we return the first facilities item which has a matching filename component.
+     * @param filename filename component
+     * @return facilities item if found, else null
+     */
     synchronized FacilitiesItem getFacilitiesItemByFilename(
         final String filename
     ) {
+        var upper = filename.toUpperCase();
+        for (var fi : _content) {
+            if (fi.hasInternalName(upper)) {
+                return fi;
+            }
+        }
         return _content.stream().filter(fi -> fi.getFilename().equals(filename)).findFirst().orElse(null);
     }
 
+    /**
+     * Retrieves the facilities item which matches the given qualifier, filename, and relative file cycle
+     * @return facilities item if found, else null
+     */
     synchronized FacilitiesItem getFacilitiesItemByRelativeCycle(
         final String qualifier,
         final String filename,
@@ -123,19 +137,13 @@ public class FacilitiesItemTable {
     }
 
     /**
-     * Removes the facilities item to the table,
-     * then checks the use items in the useItemTable and updates them if/as necessary.
+     * Removes the facilities from the table.
      * @param facItem new facilities item
-     * @param useItemTable associated use item table
      */
     void removeFacilitiesItem(
-        final FacilitiesItem facItem,
-        final UseItemTable useItemTable
+        final FacilitiesItem facItem
     ) {
         _content.remove(facItem);
-        synchronized (useItemTable) {
-            // TODO
-        }
     }
 
 }

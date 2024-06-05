@@ -6,7 +6,6 @@ package com.bearsnake.komodo.kexec.exec;
 
 import com.bearsnake.komodo.kexec.facilities.FacilitiesItemTable;
 import com.bearsnake.komodo.kexec.FileSpecification;
-import com.bearsnake.komodo.kexec.facilities.UseItemTable;
 import com.bearsnake.komodo.kexec.tasks.Task;
 
 import java.io.PrintStream;
@@ -23,7 +22,6 @@ public abstract class RunControlEntry {
     protected final String _runId;
     protected final RunType _runType;
     protected final String _userId;
-    protected final UseItemTable _useItemTable = new UseItemTable();
 
     protected long _cardCount;
     protected long _cardLimit;
@@ -73,7 +71,6 @@ public abstract class RunControlEntry {
     public final String getRunId() { return _runId; }
     public final RunType getRunType() { return _runType; }
     public final String getUserId() { return _userId; }
-    public final UseItemTable getUseItemTable() { return _useItemTable; }
     public final boolean hasTask() { return _activeTask != null; }
     public void incrementWaitingForMassStorage() { _waitingForMassStorageCounter.incrementAndGet(); }
     public void incrementWaitingForPeripheral() { _waitingForPeripheralCounter.incrementAndGet(); }

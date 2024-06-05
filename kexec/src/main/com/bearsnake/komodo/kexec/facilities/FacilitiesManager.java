@@ -35,6 +35,7 @@ import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.FixedDiskItemFile;
+import com.bearsnake.komodo.kexec.facilities.facItems.NameItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.RemovableDiskItemFile;
 import com.bearsnake.komodo.kexec.mfd.DescriptorFlags;
 import com.bearsnake.komodo.kexec.mfd.DisableFlags;
@@ -91,6 +92,22 @@ public class FacilitiesManager implements Manager {
         None,
         DirectoryOnlyMountPacks,
         DirectoryOnlyDoNotMountPacks,
+    }
+
+    public enum ReleaseBehavior {
+        // If this is an internal name, release the underlying file and all internal names
+        Normal,
+
+        // If this is an internal name, release only the internal name
+        // Otherwise, assume Normal behavior
+        ReleaseUseItemOnly,
+
+        // If this is an internal name, release it.
+        // If it is the only internal name for the referenced file, release the referenced file as well
+        ReleaseUseItemOnlyUnlessLast,
+
+        // Retain use items, but release the referenced file.
+        RetainUseItems
     }
 
     private enum PlacementType {
@@ -711,7 +728,7 @@ public class FacilitiesManager implements Manager {
             }
 
             // Now (finally) add the new facItem to the facItemTable
-            fiTable.addFacilitiesItem(facItem, runControlEntry.getUseItemTable());
+            fiTable.addFacilitiesItem(facItem);
         }
 
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s result:%s",
@@ -863,7 +880,7 @@ public class FacilitiesManager implements Manager {
             fsResult.mergeStatusBits(0_004000_000000L);
         }
 
-        fiTable.addFacilitiesItem(facItem, runControlEntry.getUseItemTable());
+        fiTable.addFacilitiesItem(facItem);
 
         // Wait for the unit if necessary...
         var startTime = Instant.now();
@@ -908,7 +925,7 @@ public class FacilitiesManager implements Manager {
         if (!facItem.isAssigned()) {
             LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun promptLoadPack returns false");
             // z-option bail-out
-            fiTable.removeFacilitiesItem(facItem, runControlEntry.getUseItemTable());
+            fiTable.removeFacilitiesItem(facItem);
             fsResult.postMessage(FacStatusCode.HoldForDiskUnitRejected);
             fsResult.mergeStatusBits(0_400001_000000L);
             fsResult.log(Trace, LOG_SOURCE);
@@ -917,7 +934,7 @@ public class FacilitiesManager implements Manager {
 
         if (!promptLoadPack(runControlEntry, nodeInfo, disk, packName)) {
             LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun promptLoadPack returns false");
-            fiTable.removeFacilitiesItem(facItem, runControlEntry.getUseItemTable());
+            fiTable.removeFacilitiesItem(facItem);
             nodeInfo.setAssignedTo(null);
             var params = new String[]{packName};
             fsResult.postMessage(FacStatusCode.OperatorDoesNotAllowAbsoluteAssign, params);
@@ -1011,7 +1028,7 @@ public class FacilitiesManager implements Manager {
             fsResult.mergeStatusBits(0_004000_000000L);
         }
 
-        fiTable.addFacilitiesItem(facItem, rce.getUseItemTable());
+        fiTable.addFacilitiesItem(facItem);
 
         fsResult.log(Trace, LOG_SOURCE);
         return true;
@@ -1321,9 +1338,32 @@ public class FacilitiesManager implements Manager {
                             fileSpecification.toString(),
                             releaseOnTaskEnd);
 
-        var ui = new UseItem(internalName, fileSpecification, releaseOnTaskEnd);
-        var uiTable = runControlEntry.getUseItemTable();
-        uiTable.addUseItem(ui);
+        var fiTable = runControlEntry.getFacilitiesItemTable();
+        synchronized (fiTable) {
+            var facItem = fiTable.getExactFacilitiesItem(fileSpecification);
+            if (facItem == null) {
+                // create a name item
+                facItem = new NameItem().setQualifier(fileSpecification.getQualifier())
+                                        .setFilename(fileSpecification.getFilename())
+                                        .setIsTemporary(true);
+                if (fileSpecification.hasFileCycleSpecification()) {
+                    var fcSpec = fileSpecification.getFileCycleSpecification();
+                    if (fcSpec.isAbsolute()) {
+                        facItem.setAbsoluteCycle(fcSpec.getCycle());
+                    } else if (fcSpec.isRelative()) {
+                        facItem.setRelativeCycle(fcSpec.getCycle());
+                    }
+                }
+
+                fiTable.addFacilitiesItem(facItem);
+            }
+
+            if (releaseOnTaskEnd) {
+                facItem.setReleaseOnTaskEnd(true);
+            }
+
+            facItem.setInternalName(internalName);
+        }
 
         LogManager.logTrace(LOG_SOURCE, "establishUseItem %s exit", runControlEntry.getRunId());
     }
@@ -1460,6 +1500,46 @@ public class FacilitiesManager implements Manager {
         }
 
         return false;
+    }
+
+    /**
+     * Releases a facilities item or use items (or some combination thereof).
+     * @param runControlEntry indicates which run is requesting this release
+     * @param fileSpecification File specification of interest - if it is an internal name, it may refer to a use item.
+     * @param behavior indicates whether the file, or a use item, or all use items, are to be released
+     * @param deleteFileCycle forces deletion of the referenced file cycle (even if assigned with C/U option)
+     * @param inhibitCatalog forces deletion of the referenced file cycle ONLY if it was assigned with C/U option
+     * @param releaseExclusiveUseOnly releases exclusive use of the file, but nothing else
+     * @param retainPhysicalTapeUnit releases the file, but retains assignment of the physical tape unit(s)
+     * @param fsResult where we post facilities status messages
+     * @return true if we are successful, else false
+     */
+    public boolean releaseFile(
+        final RunControlEntry runControlEntry,
+        final FileSpecification fileSpecification,
+        final ReleaseBehavior behavior,
+        final boolean deleteFileCycle,
+        final boolean inhibitCatalog,
+        final boolean releaseExclusiveUseOnly,
+        final boolean retainPhysicalTapeUnit,
+        final FacStatusResult fsResult
+    ) {
+        LogManager.logTrace(LOG_SOURCE,
+                            "releaseFile %s %s inh=%s del=%s inhCat=%s relX=%s",
+                            fileSpecification.toString(),
+                            behavior,
+                            deleteFileCycle,
+                            inhibitCatalog,
+                            releaseExclusiveUseOnly);
+
+        var e = Exec.getInstance();
+        var mm = e.getMFDManager();
+
+        // TODO
+
+        var result = true;
+        fsResult.log(Trace, LOG_SOURCE);
+        return result;
     }
 
     /**
