@@ -35,9 +35,9 @@ import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
-import com.bearsnake.komodo.kexec.facilities.facItems.FixedDiskItemFile;
+import com.bearsnake.komodo.kexec.facilities.facItems.FixedDiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.NameItem;
-import com.bearsnake.komodo.kexec.facilities.facItems.RemovableDiskItemFile;
+import com.bearsnake.komodo.kexec.facilities.facItems.RemovableDiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.mfd.DescriptorFlags;
 import com.bearsnake.komodo.kexec.mfd.DisableFlags;
 import com.bearsnake.komodo.kexec.mfd.DiskFileCycleInfo;
@@ -511,7 +511,7 @@ public class FacilitiesManager implements Manager {
             writeInhibit |= readOnly || (directoryOnlyBehavior != DirectoryOnlyBehavior.None);
 
             // Create new fac item with option-driven settings as necessary and add it to the fac item table.
-            facItem = isRemovable ? new RemovableDiskItemFile() : new FixedDiskItemFile();
+            facItem = isRemovable ? new RemovableDiskFileFacilitiesItem() : new FixedDiskFileFacilitiesItem();
             facItem.setIsExclusive(exclusiveUse)
                    .setDeleteOnNormalRunTermination(deleteBehavior == DeleteBehavior.DeleteOnNormalRunTermination)
                    .setDeleteOnAnyRunTermination(deleteBehavior == DeleteBehavior.DeleteOnAnyRunTermination)
@@ -1517,6 +1517,9 @@ public class FacilitiesManager implements Manager {
 
     /**
      * Releases a facilities item or use items (or some combination thereof).
+     * Specification of semantically contradictory options produces undefined behavior... e.g.:
+     *      ReleaseBehavior.ReleaseUseItemOnly with deleteFileCycle, inhibitCatalog, releaseExclusiveUseOnly
+     *      deleteFileCycle or inhibitCatalog with releaseExclusiveUseOnly
      * @param runControlEntry indicates which run is requesting this release
      * @param fileSpecification File specification of interest - if it is an internal name, it may refer to a use item.
      *                          Unliked most other APIs here, this does not need to be fully resolved, indeed it must not
@@ -1565,14 +1568,52 @@ public class FacilitiesManager implements Manager {
         if (facItem == null) {
             fsResult.postMessage(FacStatusCode.FilenameNotKnown);
             fsResult.mergeStatusBits(0_100000_000000L);
-            return false;
+            fsResult.log(Trace, LOG_SOURCE);
+            return true;
         }
 
-        // TODO
+        // TODO - prechecks
+        //E:245133 Attempt to delete via @FREE,D but file was not assigned
+        //E:246433 Read and/or write keys are needed. (for free,d maybe?)
+        //E:252533 Incorrect privacy key for private file. (for free,d?)
+        //E:266233 Free not allowed. File is in use by the exec. (when does this make sense?)
 
-        var result = true;
+        boolean releaseExplicitUseItem = (behavior == ReleaseBehavior.ReleaseUseItemOnly)
+            || (behavior == ReleaseBehavior.ReleaseUseItemOnlyUnlessLast);
+        boolean releaseFacItem = !releaseExplicitUseItem && !releaseExclusiveUseOnly;
+        boolean releaseAllUseItems = behavior != ReleaseBehavior.Normal;
+
+        if (releaseExclusiveUseOnly && (facItem instanceof DiskFileFacilitiesItem dfi) && dfi.isExclusive()) {
+            // Specifically clear exclusive use in the MFD here, even if we eventually would do so anyway.
+            // Because we might *not* eventually do so.
+            // TODO
+        }
+
+        if (releaseExplicitUseItem) {
+            facItem.removeInternalName(fileSpecification.getFilename());
+            if ((behavior == ReleaseBehavior.ReleaseUseItemOnlyUnlessLast) && (facItem.getInternalNames().isEmpty())) {
+                releaseFacItem = true;
+            }
+        }
+
+        if (releaseFacItem) {
+            if (facItem instanceof NameItem) {
+                // A name item is simple - just remove it.
+                // Unless, that is, we are supposed to retain the use names, in which case this is a NOP.
+                if (releaseAllUseItems) {
+                    fiTable.removeFacilitiesItem(facItem);
+                }
+                fsResult.log(Trace, LOG_SOURCE);
+                return true;
+            } else if (facItem instanceof AbsoluteDiskItem adi) {
+                // TODO
+            } else if (facItem instanceof DiskFileFacilitiesItem dfi) {
+                // TODO
+            }
+        }
+
         fsResult.log(Trace, LOG_SOURCE);
-        return result;
+        return true;
     }
 
     /**

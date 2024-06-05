@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RemovableDiskItemFile extends DiskFileFacilitiesItem {
+public class RemovableDiskFileFacilitiesItem extends DiskFileFacilitiesItem {
 
     // Names of any packs we are waiting for.
     // Note that a multi-activity program may have activities waiting on different portions of the file,

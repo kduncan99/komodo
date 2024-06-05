@@ -4,5 +4,5 @@
 
 package com.bearsnake.komodo.kexec.facilities.facItems;
 
-public class FixedDiskItemFile extends DiskFileFacilitiesItem {
+public class FixedDiskFileFacilitiesItem extends DiskFileFacilitiesItem {
 }
