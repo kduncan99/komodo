@@ -23,9 +23,9 @@ public class FileSpecification {
     // specified filename - this is the only item which is non-optional
     private final String _filename;
 
-    private final FileCycleSpecification _fileCycleSpecification;
-    private final String _readKey; // if null, there was no read key specified
-    private final String _writeKey; // if null, there was no write key specified
+    private final FileCycleSpecification _fileCycleSpecification; // if null, no cycle was specified
+    private final String _readKey; // if null, no read key was specified
+    private final String _writeKey; // if null, no write key was specified
 
     public FileSpecification(
         final String qualifier,
@@ -34,11 +34,11 @@ public class FileSpecification {
         final String readKey,
         final String writeKey
     ) {
-        _qualifier = qualifier;
-        _filename = fileName;
+        _qualifier = qualifier == null ? null : qualifier.toUpperCase();
+        _filename = fileName.toUpperCase();
         _fileCycleSpecification = fileCycle;
-        _readKey = readKey;
-        _writeKey = writeKey;
+        _readKey = (readKey == null) || (readKey.isEmpty()) ? null : readKey.toUpperCase();
+        _writeKey = (writeKey == null) || (writeKey.isEmpty()) ? null : writeKey.toUpperCase();
     }
 
     public boolean couldBeInternalName() {

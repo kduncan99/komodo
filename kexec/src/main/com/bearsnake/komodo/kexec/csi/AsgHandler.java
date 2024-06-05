@@ -151,7 +151,7 @@ class AsgHandler extends Handler {
             return;
         }
 
-        fileSpec = rce.getUseItemTable().resolveFileSpecification(fileSpec);
+        fileSpec = rce.getFacilitiesItemTable().resolveInternalFilename(fileSpec);
         fileSpec = rce.resolveQualifier(fileSpec);
 
         // Brief sanity check

@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.facilities;
 
+import com.bearsnake.komodo.kexec.FileCycleSpecification;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
 
@@ -99,21 +100,17 @@ public class FacilitiesItemTable {
     }
 
     /**
-     * If filename is an internal name, we return the corresponding facilities item.
-     * Otherwise, we return the first facilities item which has a matching filename component.
+     * We return the first facilities item which has a matching filename component.
      * @param filename filename component
      * @return facilities item if found, else null
      */
     synchronized FacilitiesItem getFacilitiesItemByFilename(
         final String filename
     ) {
-        var upper = filename.toUpperCase();
-        for (var fi : _content) {
-            if (fi.hasInternalName(upper)) {
-                return fi;
-            }
-        }
-        return _content.stream().filter(fi -> fi.getFilename().equals(filename)).findFirst().orElse(null);
+        return _content.stream()
+                       .filter(fi -> fi.getFilename().equalsIgnoreCase(filename))
+                       .findFirst()
+                       .orElse(null);
     }
 
     /**
@@ -126,14 +123,39 @@ public class FacilitiesItemTable {
         final int relativeCycle
     ) {
         for (var fi : _content) {
-            if (fi.getQualifier().equals(qualifier)
-                && fi.getFilename().equals(filename)
+            if (fi.getQualifier().equalsIgnoreCase(qualifier)
+                && fi.getFilename().equalsIgnoreCase(filename)
                 && fi.hasRelativeCycle()
                 && fi.getRelativeCycle() == relativeCycle) {
                 return fi;
             }
         }
         return null;
+    }
+
+    /**
+     * If filename is an internal name for a facilities item create a new FileSpec representing
+     * Otherwise, return the first facilities item with a matching filename component.
+     * @param fileSpecification original FileSpecification
+     * @return new FileSpecification representing the external qual*file *if* the given file spec is an internal name;
+     *          otherwise we just return the input.
+     */
+    public synchronized FileSpecification resolveInternalFilename(
+        final FileSpecification fileSpecification
+    ) {
+        if (fileSpecification.couldBeInternalName()) {
+            for (var fi : _content) {
+                if (fi.hasInternalName(fileSpecification.getFilename())) {
+                    FileCycleSpecification fcs = null;
+                    if (fi.hasAbsoluteCycle()) {
+                        fcs = FileCycleSpecification.newAbsoluteSpecification(fi.getAbsoluteCycle());
+                    }
+                    return new FileSpecification(fi.getQualifier(), fi.getFilename(), fcs, null, null);
+                }
+            }
+        }
+
+        return fileSpecification;
     }
 
     /**

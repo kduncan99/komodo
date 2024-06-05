@@ -13,7 +13,7 @@ public abstract class FacilitiesItem {
 
     private Integer _absoluteCycle;
     private String _filename;
-    private Set<String> _internalNames = new HashSet<>();
+    private final Set<String> _internalNames = new HashSet<>();
     private boolean _isTemporary;
     private long _optionsWord;
     private String _qualifier;
@@ -50,11 +50,11 @@ public abstract class FacilitiesItem {
 
     public final void removeInternalName(final String name) { _internalNames.remove(name); }
     public final FacilitiesItem setAbsoluteCycle(final int cycle) { _absoluteCycle = cycle; return this; }
-    public final FacilitiesItem setFilename(final String filename) { _filename = filename; return this; }
-    public final void setInternalName(final String name) { _internalNames.add(name); }
+    public final FacilitiesItem setFilename(final String filename) { _filename = filename.toUpperCase(); return this; }
+    public final void setInternalName(final String name) { _internalNames.add(name.toUpperCase()); }
     public final FacilitiesItem setIsTemporary(final boolean value) { _isTemporary = value; return this; }
     public final FacilitiesItem setOptionsWord(final long value) { _optionsWord = value; return this; }
-    public final FacilitiesItem setQualifier(final String qualifier) { _qualifier = qualifier; return this; }
+    public final FacilitiesItem setQualifier(final String qualifier) { _qualifier = qualifier.toUpperCase(); return this; }
     public final FacilitiesItem setRelativeCycle(final int cycle) { _relativeCycle = cycle; return this; }
     public final FacilitiesItem setReleaseOnTaskEnd(final boolean value) { _releaseOnTaskEnd = value; return this; }
 

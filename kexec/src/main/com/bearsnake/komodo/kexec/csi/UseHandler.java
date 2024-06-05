@@ -91,6 +91,9 @@ class UseHandler extends Handler {
             return;
         }
 
+        fileSpec = rce.getFacilitiesItemTable().resolveInternalFilename(fileSpec);
+        fileSpec = rce.resolveQualifier(fileSpec);
+
         var iOption = (hp._optionWord & I_OPTION) != 0;
         var fm = Exec.getInstance().getFacilitiesManager();
         fm.establishUseItem(rce, internal, fileSpec, iOption);
