@@ -45,6 +45,29 @@ public class MFDManager implements Manager {
     static final String LOG_SOURCE = "MFDMgr";
     public static final long INVALID_LINK = 0_400000_000000L;
 
+    // Used for finding the DAS entry for a particular directory sector.
+    private static class DASLocation {
+
+        public final long _dasTrackId; // MFD-relative track-id of track containing DAS for a given sector address
+        public final int _trackOffset; // track id % 9, indicates a particular word-pair within DAS
+        public final int _wordMod;  // indicates which word in the word-pair
+        public final int _bit;      // indicates the bit, 0 is left-most bit while 31 is right most, with 4 trailing unused bits
+
+        public DASLocation(final MFDRelativeAddress sectorAddress) {
+            var ldat = sectorAddress.getLDATIndex();
+            var trackId = sectorAddress.getTrackId();
+            var sectorId = sectorAddress.getSectorId();
+            _dasTrackId = (ldat << 12) | (trackId / 9);
+            _trackOffset = (int)(trackId % 9);
+            _wordMod = (int)sectorId >> 5;
+            _bit = (int)sectorId & 037;
+        }
+
+        public MFDRelativeAddress getDASTrackAddress() {
+            return new MFDRelativeAddress(_dasTrackId << 6);
+        }
+    }
+
     // This is in-core MFD. Each track is keyed with the MFD relative address of sector 0 of the directory track.
     private MFDRelativeAddress _mfdFileAddress;
     private final HashMap<MFDRelativeAddress, ArraySlice> _cachedMFDTracks = new HashMap<>();
@@ -335,6 +358,61 @@ public class MFDManager implements Manager {
     }
 
     /**
+     * Deletes a cataloged file cycle, deleting the fileset as well if it has no other cataloged cycles.
+     * If the file is currently accelerated we will just mark it do-be-dropped (if it is not already).
+     * (accelerated is functionally equivalent to assigned).
+     * @param qualifier qualifier of the file
+     * @param filename filename of the file
+     * @param absoluteCycle absolute cycle of the file
+     */
+    public synchronized void deleteFileCycle(
+        final String qualifier,
+        final String filename,
+        final int absoluteCycle
+    ) throws ExecStoppedException,
+             FileCycleDoesNotExistException,
+             FileSetDoesNotExistException {
+        LogManager.logTrace(LOG_SOURCE, "dropFileCycleInfo %s*%s(%d)", qualifier, filename, absoluteCycle);
+
+        var luKey = composeLookupKey(qualifier, filename);
+        var fsInfo = _leadItemLookupTable.get(luKey);
+        if (fsInfo == null) {
+            throw new FileSetDoesNotExistException();
+        }
+
+        for (var cycInfo : fsInfo.getCycleInfo()) {
+            if (cycInfo.getAbsoluteCycle() == absoluteCycle) {
+                var mainItem0Addr = cycInfo.getMainItem0Address();
+                var acInfo = _acceleratedFileCycles.get(mainItem0Addr);
+                if (acInfo != null) {
+                    if (!cycInfo.isToBeDropped()) {
+                        // we must update the file cycle info in the MFD manually.
+                        var fcInfo = acInfo.getFileCycleInfo();
+                        cycInfo.setToBeDropped(true);
+                        var e = Exec.getInstance();
+                        var mm = e.getMFDManager();
+                        var sector0 = mm.getMFDSector(mainItem0Addr);
+                        var df = new DescriptorFlags().extract(sector0.getT1(014));
+                        df.setToBeDropped(true);
+                        sector0.setT1(014, df.compose());
+                        mm.markDirectorySectorDirty(mainItem0Addr);
+
+                        // but we can update the file set info automatically... sort of.
+                        fcInfo.getDescriptorFlags().setToBeDropped(true);
+                        persistLeadItems(fsInfo);
+                    }
+                } else {
+                    dropCycle(fsInfo, mainItem0Addr);
+                }
+
+                return;
+            }
+        }
+
+        throw new FileCycleDoesNotExistException();
+    }
+
+    /**
      * Creates a FileCycleInfo object for a particular file cycle.
      * @param qualifier qualifier of the file
      * @param filename filename of the file
@@ -580,6 +658,14 @@ public class MFDManager implements Manager {
             throw new ExecStoppedException();
         }
 
+        var dasLoc = new DASLocation(addr);
+        var dasAddr = dasLoc.getDASTrackAddress();
+        var das = getMFDSector(dasAddr);
+        var wx = (dasLoc._trackOffset * 3) + 1;
+        var mask = 0_400000_000000L >> dasLoc._bit;
+        das.set(wx, das.get(wx) | mask);
+        markDirectorySectorDirty(dasAddr);
+
         var result = new MFDSector(addr, getMFDSector(addr));
         LogManager.logTrace(LOG_SOURCE, "allocateDirectorySector returning addr %s", addr);
         return result;
@@ -732,10 +818,117 @@ public class MFDManager implements Manager {
     }
 
     /**
+     * Drops the file cycle indicated my the main item address,
+     * Releases DAD tables and/or reel tables if/as appropriate as well as all main item sectors.
+     * Drops the file set if this file cycle is the only file cycle.
+     * @param mainItem0Address MFD relative address of main item 0 sector for the file cycle.
+     */
+    private void dropCycle(
+        final FileSetInfo fsInfo,
+        final MFDRelativeAddress mainItem0Address
+    ) throws ExecStoppedException {
+        var miChain = getMainItemChain(mainItem0Address);
+        var sector0 = miChain.getFirst().getSector();
+
+        // Update the fileset first
+        var fsChain = getLeadItemChain(fsInfo._leadItem0Address);
+        if (fsInfo.getCycleCount() == 1) {
+            // There is only the one cycle -
+            for (var fce : fsChain) {
+                releaseDirectorySector(fce.getAddress());
+            }
+        } else {
+            // Are we deleting the highest or the lowest cycle? Note it for later.
+            var ciList = fsInfo.getCycleInfo();
+            boolean isHighest = ciList.getFirst().getMainItem0Address().equals(mainItem0Address);
+            boolean isLowest = ciList.getFirst().getMainItem0Address().equals(mainItem0Address);
+
+            // Remove the cycle info for the cycle to be deleted and update the current cycle count.
+            var iter = ciList.iterator();
+            while (iter.hasNext()) {
+                var ci = iter.next();
+                if (ci.getMainItem0Address().equals(mainItem0Address)) {
+                    iter.remove();
+                    fsInfo.setCycleCount(ciList.size());
+                    break;
+                }
+            }
+
+            // Re-evaluate whether plus-one-exists...
+            // If it *did* exist, and we're deleting the highest cycle, then it no longer exists.
+            if (fsInfo.plusOneExists() && isHighest) {
+                fsInfo.setPlusOneExists(false);
+            }
+
+            // If the cycle being deleted is guarded, then we have to re-evaluate whether the file set is guarded,
+            // which it is if any of the surviving cycles are guarded.
+            var inh = new InhibitFlags().extract(sector0.getS2(021));
+            if (fsInfo.isGuarded() && inh.isGuarded()) {
+                fsInfo.setIsGuarded(false);
+
+                // To do this, we have to read main item sector 0's until we find a guarded one,
+                // or until we run out of main items.
+                for (var ci : fsInfo.getCycleInfo()) {
+                    var mainItems = getMainItemChain(ci.getMainItem0Address());
+                    FileCycleInfo fci;
+                    fci = switch (fsInfo.getFileType()) {
+                        case FileType.Fixed -> new FixedDiskFileCycleInfo();
+                        case FileType.Removable -> new RemovableDiskFileCycleInfo();
+                        case FileType.Tape -> new TapeFileCycleInfo();
+                    };
+
+                    fci.populateMainItems(mainItems);
+                    if (fci.getInhibitFlags().isGuarded()) {
+                        fsInfo.setIsGuarded(true);
+                        break;
+                    }
+                }
+            }
+
+            // If the cycle being deleted is the first or last, we need to re-evaluate the current cycle range.
+            // Also re-evaluate the current highest cycle.
+            if (isHighest || isLowest) {
+                var highestAbsolute = ciList.getFirst().getAbsoluteCycle();
+                var lowestAbsolute = ciList.getLast().getAbsoluteCycle();
+                var newRange = highestAbsolute >= lowestAbsolute ?
+                    highestAbsolute - lowestAbsolute + 1 : highestAbsolute + 999 - lowestAbsolute + 1;
+                fsInfo.setCurrentCycleRange(newRange);
+                fsInfo.setHighestAbsoluteCycle(ciList.getFirst().getAbsoluteCycle());
+            }
+
+            // Finally we need to rewrite the lead items.
+            fsInfo.populateLeadItemSectors(fsChain);
+            markDirectorySectorsDirty(fsChain);
+        }
+
+        // Now turn our attention to the mfd sectors for the file cycle
+        var df = new DescriptorFlags().extract(sector0.getT1(014));
+        if (df.isTapeFile()) {
+            // lose reel table
+            var reelChain = getReelTableChain(mainItem0Address);
+            for (var rce : reelChain) {
+                releaseDirectorySector(rce.getAddress());
+            }
+        } else {
+            // lose DAD table
+            var dadChain = getDADChain(mainItem0Address);
+            for (var dce : dadChain) {
+                releaseDirectorySector(dce.getAddress());
+            }
+        }
+
+        // lose main items
+        for (var ce : miChain) {
+            releaseDirectorySector(ce.getAddress());
+        }
+    }
+
+    /**
      * Adds a directory track to the current fixed MFD.
      * Chooses the pack which has the most free space for the new directory track.
      * @throws ExecStoppedException if something goes wrong
      */
+    // TODO can this be not synchronized?
     private synchronized void expandDirectory() throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "expandDirectory");
 
@@ -990,7 +1183,9 @@ public class MFDManager implements Manager {
             mainItem0.set(0, w);
             markDirectorySectorDirty(mainItem0Address);
 
-            dadChain.stream().map(MFDSector::getAddress).forEach(this::releaseDirectorySector);
+            for (var ds : dadChain) {
+                releaseDirectorySector(ds.getAddress());
+            }
             LogManager.logTrace(LOG_SOURCE, "persistDADTables return empty");
             return;
         }
@@ -1139,7 +1334,9 @@ public class MFDManager implements Manager {
         // Special case - fewer than two reels in the file.
         // If there is a chain, release all the entries on the chain and clear the link in the main item.
         if (reelTable.size() < 2) {
-            reelTableChain.stream().map(MFDSector::getAddress).forEach(this::releaseDirectorySector);
+            for (var ds : reelTableChain) {
+                releaseDirectorySector(ds.getAddress());
+            }
             LogManager.logTrace(LOG_SOURCE, "persistReelTables return empty");
             return;
         }
@@ -1194,11 +1391,19 @@ public class MFDManager implements Manager {
     }
 
     /**
-     * Releases an MFD directory sector
+     * Releases an MFD directory sector.
+     * Clears the DAS bit for the sector, and adds the MFD relative address to the available chain.
      */
     private void releaseDirectorySector(
         final MFDRelativeAddress address
-    ) {
+    ) throws ExecStoppedException {
+        var dasLoc = new DASLocation(address);
+        var dasAddr = dasLoc.getDASTrackAddress();
+        var das = getMFDSector(dasAddr);
+        var wx = (dasLoc._trackOffset * 3) + 1;
+        var mask = 0_400000_000000L >> dasLoc._bit;
+        das.set(wx, ~((~das.get(wx)) | mask));
+        markDirectorySectorDirty(dasAddr);
         _freeMFDSectors.add(address);
     }
 
