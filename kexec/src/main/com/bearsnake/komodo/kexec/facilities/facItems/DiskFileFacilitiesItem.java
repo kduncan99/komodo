@@ -42,7 +42,7 @@ public abstract class DiskFileFacilitiesItem extends FacilitiesItem {
     public final boolean isWriteable() { return _isWriteable; }
 
     public boolean isWaiting() {
-        return _waitingForExclusiveRelease | _waitingForExclusiveUse | _waitingForRollback;
+        return _waitingForExclusiveRelease || _waitingForExclusiveUse || _waitingForRollback;
     }
 
     public final DiskFileFacilitiesItem setDeleteOnAnyRunTermination(final boolean value) { _deleteOnAnyRunTermination = value; return this; }

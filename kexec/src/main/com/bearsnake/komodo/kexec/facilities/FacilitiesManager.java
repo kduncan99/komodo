@@ -38,6 +38,7 @@ import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.FixedDiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.NameItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.RemovableDiskFileFacilitiesItem;
+import com.bearsnake.komodo.kexec.facilities.facItems.TapeFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.mfd.DescriptorFlags;
 import com.bearsnake.komodo.kexec.mfd.DisableFlags;
 import com.bearsnake.komodo.kexec.mfd.DiskFileCycleInfo;
@@ -1622,10 +1623,19 @@ public class FacilitiesManager implements Manager {
                     } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
                         // TODO stop the exec
                     }
-                    // TODO release fac item now
                 }
-                // TODO
-            } // else if TapeFileFacilitiesItem as above, AND release unit(s) (maybe)
+                // TODO release fac item
+            } else if (facItem instanceof TapeFileFacilitiesItem tfi) {
+                if (deleteFileCycle || tfi.deleteOnAnyRunTermination() || tfi.deleteOnNormalRunTermination()) {
+                    try {
+                        mm.deleteFileCycle(facItem.getQualifier(), facItem.getFilename(), facItem.getAbsoluteCycle());
+                    } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
+                        // TODO stop the exec
+                    }
+                }
+                // TODO release fac item
+                // TODO maybe release tape units
+            }
         }
 
         fsResult.log(Trace, LOG_SOURCE);
