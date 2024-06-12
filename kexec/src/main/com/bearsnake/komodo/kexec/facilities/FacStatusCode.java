@@ -73,6 +73,7 @@ public enum FacStatusCode {
     FileAlreadyCataloged(0244433),
     FileIsNotCataloged(0244533),
     DisabledCorruptedDirectory(0244633),
+    FreeDFileNotAssigned(0245133),
     IllegalValueForGranularity(0245233),
     InternalNameRequired(0245533),
     IllegalInitialReserve(0246333),

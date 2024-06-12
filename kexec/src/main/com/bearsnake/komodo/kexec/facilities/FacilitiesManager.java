@@ -1541,7 +1541,7 @@ public class FacilitiesManager implements Manager {
         final boolean releaseExclusiveUseOnly,
         final boolean retainPhysicalTapeUnit,
         final FacStatusResult fsResult
-    ) {
+    ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
                             "releaseFile %s %s inh=%s del=%s inhCat=%s relX=%s",
                             fileSpecification.toString(),
@@ -1566,17 +1566,25 @@ public class FacilitiesManager implements Manager {
         }
 
         if (facItem == null) {
-            fsResult.postMessage(FacStatusCode.FilenameNotKnown);
-            fsResult.mergeStatusBits(0_100000_000000L);
-            fsResult.log(Trace, LOG_SOURCE);
-            return true;
+            if (deleteFileCycle) {
+                fsResult.postMessage(FacStatusCode.FilenameNotKnown);
+                fsResult.mergeStatusBits(0_100000_000000L);
+                fsResult.log(Trace, LOG_SOURCE);
+                return false;
+            } else {
+                fsResult.postMessage(FacStatusCode.FilenameNotKnown);
+                fsResult.mergeStatusBits(0_100000_000000L);
+                fsResult.log(Trace, LOG_SOURCE);
+                return true;
+            }
         }
 
-        // TODO - prechecks
-        //E:245133 Attempt to delete via @FREE,D but file was not assigned
-        //E:246433 Read and/or write keys are needed. (for free,d maybe?)
-        //E:252533 Incorrect privacy key for private file. (for free,d?)
-        //E:266233 Free not allowed. File is in use by the exec. (when does this make sense?)
+        if (deleteFileCycle) {
+            // TODO
+            //E:246433 Read and/or write keys are needed. (for free,d maybe?)
+            //E:252533 Incorrect privacy key for private file. (for free,d?)
+            //E:266233 Free not allowed. File is in use by the exec. (when does this make sense?)
+        }
 
         boolean releaseExplicitUseItem = (behavior == ReleaseBehavior.ReleaseUseItemOnly)
             || (behavior == ReleaseBehavior.ReleaseUseItemOnlyUnlessLast);
@@ -1606,10 +1614,18 @@ public class FacilitiesManager implements Manager {
                 fsResult.log(Trace, LOG_SOURCE);
                 return true;
             } else if (facItem instanceof AbsoluteDiskItem adi) {
-                // TODO
+                // TODO release fac item and unit
             } else if (facItem instanceof DiskFileFacilitiesItem dfi) {
+                if (deleteFileCycle || dfi.deleteOnAnyRunTermination() || dfi.deleteOnNormalRunTermination()) {
+                    try {
+                        mm.deleteFileCycle(facItem.getQualifier(), facItem.getFilename(), facItem.getAbsoluteCycle());
+                    } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
+                        // TODO stop the exec
+                    }
+                    // TODO release fac item now
+                }
                 // TODO
-            }
+            } // else if TapeFileFacilitiesItem as above, AND release unit(s) (maybe)
         }
 
         fsResult.log(Trace, LOG_SOURCE);
