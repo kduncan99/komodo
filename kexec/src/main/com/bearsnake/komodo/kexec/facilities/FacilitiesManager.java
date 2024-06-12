@@ -1529,7 +1529,7 @@ public class FacilitiesManager implements Manager {
      * @param deleteFileCycle forces deletion of the referenced file cycle (even if assigned with C/U option)
      * @param inhibitCatalog forces deletion of the referenced file cycle ONLY if it was assigned with C/U option
      * @param releaseExclusiveUseOnly releases exclusive use of the file, but nothing else
-     * @param retainPhysicalTapeUnit releases the file, but retains assignment of the physical tape unit(s)
+     * @param retainPhysicalTapeUnits releases the file, but retains assignment of the physical tape unit(s)
      * @param fsResult where we post facilities status messages
      * @return true if we are successful, else false
      */
@@ -1540,7 +1540,7 @@ public class FacilitiesManager implements Manager {
         final boolean deleteFileCycle,
         final boolean inhibitCatalog,
         final boolean releaseExclusiveUseOnly,
-        final boolean retainPhysicalTapeUnit,
+        final boolean retainPhysicalTapeUnits,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
@@ -1566,10 +1566,17 @@ public class FacilitiesManager implements Manager {
             facItem = fiTable.getExactFacilitiesItem(fileSpecification);
         }
 
+        var deleteFlag = deleteFileCycle;
+        if (facItem instanceof DiskFileFacilitiesItem dfi) {
+            deleteFlag |= dfi.deleteOnNormalRunTermination() | dfi.deleteOnAnyRunTermination();
+        } else if (facItem instanceof TapeFileFacilitiesItem tfi) {
+            deleteFlag |= tfi.deleteOnNormalRunTermination() | tfi.deleteOnAnyRunTermination();
+        }
+
         if (facItem == null) {
             if (deleteFileCycle) {
-                fsResult.postMessage(FacStatusCode.FilenameNotKnown);
-                fsResult.mergeStatusBits(0_100000_000000L);
+                fsResult.postMessage(FacStatusCode.FreeDFileNotAssigned);
+                fsResult.mergeStatusBits(0_600000_000000L);
                 fsResult.log(Trace, LOG_SOURCE);
                 return false;
             } else {
@@ -1582,9 +1589,9 @@ public class FacilitiesManager implements Manager {
 
         if (deleteFileCycle) {
             // TODO
-            //E:246433 Read and/or write keys are needed. (for free,d maybe?)
-            //E:252533 Incorrect privacy key for private file. (for free,d?)
-            //E:266233 Free not allowed. File is in use by the exec. (when does this make sense?)
+            //E:246433 Read and/or write keys are needed.
+            //E:252533 Incorrect privacy key for private file.
+            //E:266233 Free not allowed. File is in use by the exec. (assigned to Exec, so we cannot @FREE,D it)
         }
 
         boolean releaseExplicitUseItem = (behavior == ReleaseBehavior.ReleaseUseItemOnly)
@@ -1624,7 +1631,8 @@ public class FacilitiesManager implements Manager {
                         // TODO stop the exec
                     }
                 }
-                // TODO release fac item
+
+                fiTable.removeFacilitiesItem(facItem);
             } else if (facItem instanceof TapeFileFacilitiesItem tfi) {
                 if (deleteFileCycle || tfi.deleteOnAnyRunTermination() || tfi.deleteOnNormalRunTermination()) {
                     try {
@@ -1633,8 +1641,12 @@ public class FacilitiesManager implements Manager {
                         // TODO stop the exec
                     }
                 }
-                // TODO release fac item
-                // TODO maybe release tape units
+
+                fiTable.removeFacilitiesItem(facItem);
+
+                if (!retainPhysicalTapeUnits) {
+                    // TODO release tape units
+                }
             }
         }
 

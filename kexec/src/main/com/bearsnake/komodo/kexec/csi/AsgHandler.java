@@ -159,6 +159,10 @@ class AsgHandler extends Handler {
             return;
         }
 
+        if (!checkMutuallyExclusiveOptions(hp, D_OPTION | K_OPTION)) {
+            return;
+        }
+
         /* TODO
             The options field, if left blank, defaults to the A option unless the file is already assigned,
             in which case the options on the previous assign are used. If the file specified is not cataloged,
