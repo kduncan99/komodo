@@ -114,6 +114,7 @@ public enum FacStatusCode {
     DisabledForCacheDrainFailure(0260633),
     DirectoryAndQualifierMayNotAppear(0262633),
     DirectoryOrQualifierMustAppear(0263033),
+    FreeNotAllowedFileInUseByExec(0266233),
     PacksCanOnlyBeAddedWithAOption(0271333),
     PacksCanNotBeAddedWithYOption(0271433),
     PacksCanNotBeAddedIfAssigned(0271533),

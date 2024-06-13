@@ -107,6 +107,7 @@ public class FacStatusMessage {
         putError(FacStatusCode.FileNotCatalogedWithReadKey, "File is not cataloged with a read key.");
         putError(FacStatusCode.FileNotCatalogedWithWriteKey, "File is not cataloged with a write key.");
         putError(FacStatusCode.FreeDFileNotAssigned, "Attempt to delete via @FREE,D but file was not assigned.");
+        putError(FacStatusCode.FreeNotAllowedFileInUseByExec, "Free not allowed. File is in use by the exec.");
         putError(FacStatusCode.HoldForReelRejected, "Hold for reel rejected because of Z option.");
         putError(FacStatusCode.HoldForPackRejected, "Hold for pack rejected because of Z option.");
         putError(FacStatusCode.HoldForTapeUnitRejected, "Hold for tape unit rejected because of Z option.");

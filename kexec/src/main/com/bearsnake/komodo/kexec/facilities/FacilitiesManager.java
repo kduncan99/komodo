@@ -500,9 +500,13 @@ public class FacilitiesManager implements Manager {
 
         if (!wasAlreadyAssigned) {
             // Check public/private - not necessary if the file was already assigned, but it wasn't, so...
-            if (!checkPrivateAccess(runControlEntry, fcInfo, fsResult)) {
-                fsResult.log(Trace, LOG_SOURCE);
-                return false;
+            if (!runControlEntry.isPrivileged() || fcInfo.getInhibitFlags().isGuarded()) {
+                if (!checkPrivateAccess(runControlEntry, fcInfo)) {
+                    fsResult.postMessage(FacStatusCode.IncorrectPrivacyKey);
+                    fsResult.mergeStatusBits(0_400000_020000L);
+                    fsResult.log(Trace, LOG_SOURCE);
+                    return false;
+                }
             }
 
             // Is the file read-only or write-only?
@@ -1566,13 +1570,18 @@ public class FacilitiesManager implements Manager {
             facItem = fiTable.getExactFacilitiesItem(fileSpecification);
         }
 
-        var deleteFlag = deleteFileCycle;
+        // deleteFileCycle is true for @FREE,D
+        // facItemDeleteFlag is true if there is a facItem assigned with @ASG,D or @ASG,K
+        // deleteFlag is true if any of the above are true
+        var facItemDeleteFlag = false;
         if (facItem instanceof DiskFileFacilitiesItem dfi) {
-            deleteFlag |= dfi.deleteOnNormalRunTermination() | dfi.deleteOnAnyRunTermination();
+            facItemDeleteFlag = dfi.deleteOnAnyRunTermination() || dfi.deleteOnNormalRunTermination();
         } else if (facItem instanceof TapeFileFacilitiesItem tfi) {
-            deleteFlag |= tfi.deleteOnNormalRunTermination() | tfi.deleteOnAnyRunTermination();
+            facItemDeleteFlag = tfi.deleteOnNormalRunTermination() || tfi.deleteOnAnyRunTermination();
         }
+        var deleteFlag = deleteFileCycle || facItemDeleteFlag;
 
+        // If there is no facitem, a @FREE without a D option is a warning; with a D option is an error
         if (facItem == null) {
             if (deleteFileCycle) {
                 fsResult.postMessage(FacStatusCode.FreeDFileNotAssigned);
@@ -1587,11 +1596,47 @@ public class FacilitiesManager implements Manager {
             }
         }
 
-        if (deleteFileCycle) {
-            // TODO
-            //E:246433 Read and/or write keys are needed.
-            //E:252533 Incorrect privacy key for private file.
-            //E:266233 Free not allowed. File is in use by the exec. (assigned to Exec, so we cannot @FREE,D it)
+        // Check read/write keys if they were provided (if not, we'll do further checks later if needed).
+        // TODO
+
+        // There is no check against deleteFileCycle (@FREE,D) for a non-cataloged file.
+        // In this case, @FREE,D is silently ignored.
+        // There cannot be facItemDeleteFlag (@ASG,D/K) for a non-cataloged file.
+        // We *do* need an fcInfo if there *is* a cataloged file if we are deleting the thing...
+        // Note that our algorithm properly prefers @FREE,D over @ASG,C/P and will result in the file
+        // not being cataloged.
+        FileCycleInfo fcInfo = null;
+        if (deleteFlag) {
+            try {
+                fcInfo = mm.getFileCycleInfo(facItem.getQualifier(), facItem.getFilename(), facItem.getAbsoluteCycle());
+            } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
+                // do nothing here = fcInfo is already (and should be) null.
+            }
+        }
+
+        if (deleteFileCycle && !facItemDeleteFlag && (fcInfo != null)) {
+            if (!runControlEntry.isPrivileged() || fcInfo.getInhibitFlags().isGuarded()) {
+                // TODO if current fac item shows file was not assigned with necessary read or write keys,
+                //  ensure they were specified on the @FREE - this may require us to store some sort of flag
+                //  in the fac item at @asg time.
+                //E:246433 Read and/or write keys are needed.
+
+                // If the run's account / project does not match the file and the file is not public, disallow
+                if (!checkPrivateAccess(runControlEntry, fcInfo)) {
+                    fsResult.postMessage(FacStatusCode.IncorrectPrivacyKey);
+                    fsResult.mergeStatusBits(0_400000_020000L);
+                    fsResult.log(Trace, LOG_SOURCE);
+                    return false;
+                }
+            }
+
+            if ((runControlEntry.getRunType() != RunType.Exec)
+                && e.getRunControlEntry().getFacilitiesItemTable().getExactFacilitiesItem(fileSpecification) != null) {
+                fsResult.postMessage(FacStatusCode.FreeNotAllowedFileInUseByExec);
+                fsResult.mergeStatusBits(0_600000_000000L);
+                fsResult.log(Trace, LOG_SOURCE);
+                return false;
+            }
         }
 
         boolean releaseExplicitUseItem = (behavior == ReleaseBehavior.ReleaseUseItemOnly)
@@ -1602,7 +1647,7 @@ public class FacilitiesManager implements Manager {
         if (releaseExclusiveUseOnly && (facItem instanceof DiskFileFacilitiesItem dfi) && dfi.isExclusive()) {
             // Specifically clear exclusive use in the MFD here, even if we eventually would do so anyway.
             // Because we might *not* eventually do so.
-            // TODO
+            // TODO we really really really need an API in MFDManager which persists the fcInfo in acInfo.
         }
 
         if (releaseExplicitUseItem) {
@@ -1633,6 +1678,7 @@ public class FacilitiesManager implements Manager {
                 }
 
                 fiTable.removeFacilitiesItem(facItem);
+                // TODO decelerate (and clear x-use if appropriate)
             } else if (facItem instanceof TapeFileFacilitiesItem tfi) {
                 if (deleteFileCycle || tfi.deleteOnAnyRunTermination() || tfi.deleteOnNormalRunTermination()) {
                     try {
@@ -1643,6 +1689,7 @@ public class FacilitiesManager implements Manager {
                 }
 
                 fiTable.removeFacilitiesItem(facItem);
+                // TODO decelerate (and clear x-use if appropriate)
 
                 if (!retainPhysicalTapeUnits) {
                     // TODO release tape units
@@ -2185,13 +2232,12 @@ public class FacilitiesManager implements Manager {
 
     /**
      * If the indicated file cycle is private, check the options and rce to see if the caller
-     * is allowed to access the file. We produce fac status accordingly.
+     * is allowed to access the file.
      * @return true if access is allowed, else false.
      */
     private boolean checkPrivateAccess(
         final RunControlEntry rce,
-        final FileCycleInfo fcInfo,
-        final FacStatusResult fsResult
+        final FileCycleInfo fcInfo
     ) {
         // if file is not private, we're good
         if (!fcInfo.getInhibitFlags().isPrivate()) {
@@ -2200,23 +2246,10 @@ public class FacilitiesManager implements Manager {
 
         // if account/project matches, we're good
         if (Exec.getInstance().getConfiguration().getFilesPrivateByAccount()) {
-            if (rce.getAccountId().equals(fcInfo.getAccountId())) {
-                return true;
-            }
+            return rce.getAccountId().equals(fcInfo.getAccountId());
         } else {
-            if (rce.getProjectId().equals(fcInfo.getProjectId())) {
-                return true;
-            }
+            return rce.getProjectId().equals(fcInfo.getProjectId());
         }
-
-        // if it's guarded, and we get to this point, we're not going to allow it.
-        if (fcInfo.getInhibitFlags().isGuarded()) {
-            return false;
-        }
-
-        // It's not guarded but it *is* private, and we didn't match the account/project.
-        // If we are privileged, we can still access the thing.
-        return rce.isPrivileged();
     }
 
     /**
