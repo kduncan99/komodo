@@ -134,8 +134,8 @@ public class FileSetInfo {
         sector0.set(5, Word36.stringToWordFieldata(paddedProjectId.substring(0, 6)));
         sector0.set(6, Word36.stringToWordFieldata(paddedProjectId.substring(6)));
 
-        sector0.set(7, Word36.stringToWordFieldata(_readKey));
-        sector0.set(8, Word36.stringToWordFieldata(_writeKey));
+        sector0.set(7, _readKey == null ? 0 : Word36.stringToWordFieldata(_readKey));
+        sector0.set(8, _writeKey == null ? 0 : Word36.stringToWordFieldata(_writeKey));
 
         sector0.setS1(9, _fileType.getValue());
         sector0.setS2(9, _cycleCount);
