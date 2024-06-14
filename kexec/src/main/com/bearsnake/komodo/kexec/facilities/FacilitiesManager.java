@@ -278,16 +278,16 @@ public class FacilitiesManager implements Manager {
     public synchronized boolean assignCatalogedDiskFileToRun(
         final RunControlEntry runControlEntry,
         final FileSpecification fileSpecification,
-        final long optionsWord,        // only to be used to populate a new facItem
-        final String mnemonic,         // type/assign-mnemonic
-        final Integer initialReserve,  // null if not specified, attempt to change existing value
-        final Granularity granularity, // null if not specified, must match existing file otherwise
-        final Integer maxGranules,     // null if not specified, attempt to change existing value
-        final String placement,        // only for fixed, can be null (must be null for removable)
-        final List<String> packIds,    // should be empty for fixed, optional for removable
+        final long optionsWord,                            // only to be used to populate a new facItem
+        final String mnemonic,                             // type/assign-mnemonic
+        final Integer initialReserve,                      // null if not specified, attempt to change existing value
+        final Granularity granularity,                     // null if not specified, must match existing file otherwise
+        final Integer maxGranules,                         // null if not specified, attempt to change existing value
+        final String placement,                            // only for fixed, can be null (must be null for removable)
+        final List<String> packIds,                        // should be empty for fixed, optional for removable
         final DeleteBehavior deleteBehavior,               // D/K options
         final DirectoryOnlyBehavior directoryOnlyBehavior, // E/Y options
-        final boolean saveOnCheckpoint,                    // M option (TODO update MFD item?)
+        final boolean saveOnCheckpoint,                    // M option (TODO CHKPT)
         final boolean assignIfDisabled,                    // Q option
         final boolean readOnly,                            // R option
         final boolean exclusiveUse,                        // X option
@@ -1289,6 +1289,8 @@ public class FacilitiesManager implements Manager {
     public synchronized boolean catalogTapeFile(
         final FileSpecification fileSpecification,
         final String type,
+        // TODO TAPE
+        // lots of tape-related options
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
@@ -1321,6 +1323,8 @@ public class FacilitiesManager implements Manager {
         final FileSpecification fileSpecification,
         final FileSetInfo fileSetInfo,
         final String type,
+        // TODO TAPE
+        // lots of tape-related options
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,

@@ -317,6 +317,9 @@ public class MFDManager implements Manager {
     ) throws ExecStoppedException,
              AbsoluteCycleConflictException,
              AbsoluteCycleOutOfRangeException {
+        LogManager.logTrace(LOG_SOURCE, "createFileCycle for %s*%s(%d)",
+                            fsInfo.getQualifier(), fsInfo.getFilename(), fcInfo.getAbsoluteCycle());
+
         // If fsInfo has no file cycles, we don't need to verify absolute file cycle.
         if (fsInfo.getCycleCount() > 0) {
             for (var fci : fsInfo.getCycleInfo()) {
@@ -391,6 +394,8 @@ public class MFDManager implements Manager {
     public synchronized MFDRelativeAddress createFileSet(
         final FileSetInfo fileSetInfo
     ) throws ExecStoppedException, FileSetAlreadyExistsException {
+        LogManager.logTrace(LOG_SOURCE, "createFileSet for %s*%s", fileSetInfo.getQualifier(), fileSetInfo.getFilename());
+
         var luKey = composeLookupKey(fileSetInfo.getQualifier(), fileSetInfo.getFilename());
         if (_leadItemLookupTable.containsKey(luKey)) {
             throw new FileSetAlreadyExistsException();
@@ -699,6 +704,8 @@ public class MFDManager implements Manager {
     public synchronized void persistFileCycleInfo(
         final FileCycleInfo fileCycleInfo
     ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "persistFileCycleInfo");
+
         var mainChain = getMainItemChain(fileCycleInfo._mainItem0Address);
         var link = mainChain.getFirst().getSector().get(0);
         var reqItemCount = fileCycleInfo.getRequiredNumberOfMainItems();
@@ -824,6 +831,10 @@ public class MFDManager implements Manager {
                   .setAbsoluteCycle(1)
                   .setAssignMnemonic(mfdEquip)
                   .setInhibitFlags(inhFlags);
+
+            var leadMFDSector = allocateDirectorySector();
+            leadMFDSector.getSector().set(0, INVALID_LINK);
+            fsInfo._leadItem0Address = leadMFDSector.getAddress();
 
             createFileCycle(fsInfo, fcInfo);
             _mfdFileAddress = fcInfo._mainItem0Address;
@@ -961,8 +972,7 @@ public class MFDManager implements Manager {
      * Chooses the pack which has the most free space for the new directory track.
      * @throws ExecStoppedException if something goes wrong
      */
-    // TODO can this be not synchronized?
-    private synchronized void expandDirectory() throws ExecStoppedException {
+    private void expandDirectory() throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "expandDirectory");
 
         // Find the pack with the largest number of free tracks,
@@ -1339,6 +1349,8 @@ public class MFDManager implements Manager {
     private void persistLeadItems(
         final FileSetInfo fsInfo
     ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "persistLeadItems for %s*%s", fsInfo.getQualifier(), fsInfo.getFilename());
+
         var chain = getLeadItemChain(fsInfo._leadItem0Address);
         if (fsInfo.isSector1Required() && (chain.size() == 1)) {
             chain.add(allocateDirectorySector());
