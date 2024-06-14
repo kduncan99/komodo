@@ -835,6 +835,8 @@ public class MFDManager implements Manager {
             var leadMFDSector = allocateDirectorySector();
             leadMFDSector.getSector().set(0, INVALID_LINK);
             fsInfo._leadItem0Address = leadMFDSector.getAddress();
+            var luKey = composeLookupKey(fsInfo.getQualifier(), fsInfo.getFilename());
+            _leadItemLookupTable.put(luKey, fsInfo);
 
             createFileCycle(fsInfo, fcInfo);
             _mfdFileAddress = fcInfo._mainItem0Address;
