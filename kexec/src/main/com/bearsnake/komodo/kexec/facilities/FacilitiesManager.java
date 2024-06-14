@@ -23,6 +23,8 @@ import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
+import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleConflictException;
+import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleOutOfRangeException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetAlreadyExistsException;
@@ -54,6 +56,7 @@ import com.bearsnake.komodo.kexec.mfd.RemovableDiskFileCycleInfo;
 import com.bearsnake.komodo.kexec.mfd.UnitSelectionIndicators;
 import com.bearsnake.komodo.logger.LogManager;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
@@ -1644,10 +1647,14 @@ public class FacilitiesManager implements Manager {
         boolean releaseFacItem = !releaseExplicitUseItem && !releaseExclusiveUseOnly;
         boolean releaseAllUseItems = behavior != ReleaseBehavior.Normal;
 
-        if (releaseExclusiveUseOnly && (facItem instanceof DiskFileFacilitiesItem dfi) && dfi.isExclusive()) {
+        if (releaseExclusiveUseOnly
+            && (facItem instanceof DiskFileFacilitiesItem dfi) && dfi.isExclusive()
+            && (fcInfo != null)) {
             // Specifically clear exclusive use in the MFD here, even if we eventually would do so anyway.
             // Because we might *not* eventually do so.
-            // TODO we really really really need an API in MFDManager which persists the fcInfo in acInfo.
+            fcInfo.getInhibitFlags().setIsAssignedExclusively(false);
+            dfi.setIsExclusive(false);
+            mm.persistFileCycleInfo(fcInfo);
         }
 
         if (releaseExplicitUseItem) {
@@ -1678,7 +1685,7 @@ public class FacilitiesManager implements Manager {
                 }
 
                 fiTable.removeFacilitiesItem(facItem);
-                // TODO decelerate (and clear x-use if appropriate)
+                mm.decelerateFileCycle(fcInfo);
             } else if (facItem instanceof TapeFileFacilitiesItem tfi) {
                 if (deleteFileCycle || tfi.deleteOnAnyRunTermination() || tfi.deleteOnNormalRunTermination()) {
                     try {
@@ -1689,7 +1696,7 @@ public class FacilitiesManager implements Manager {
                 }
 
                 fiTable.removeFacilitiesItem(facItem);
-                // TODO decelerate (and clear x-use if appropriate)
+                mm.decelerateFileCycle(fcInfo);
 
                 if (!retainPhysicalTapeUnits) {
                     // TODO release tape units
@@ -1754,27 +1761,42 @@ public class FacilitiesManager implements Manager {
         if (Exec.getInstance().isJumpKeySet(13)) {
             mm.initializeMassStorage(fixedDisks);
 
-            // TODO SYS$*ACCOUNT$R1
-            // TODO SYS$*SEC@ACCTINFO
-            // public long AccountInitialReserve            = 10;               // initial reserve for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
-            // public String AccountAssignMnemonic          = "F";              // assign mnemonic for SYS$*ACCOUNT$R1 and SYS$SEC@ACCTINFO files
+            // Create all the system files
+            e.sendExecReadOnlyMessage("Creating Account files...");
+            e.catalogDiskFileForExec("SYS$", "ACCOUNT$R1", cfg.getAccountAssignMnemonic(), cfg.getAccountInitialReserve(), 9999);
+            e.catalogDiskFileForExec("SYS$", "SEC@ACCTINFO", cfg.getAccountAssignMnemonic(), cfg.getAccountInitialReserve(), 9999);
 
-            // TODO SYS$*SEC@ACR$
-            // public long SacrdInitialReserve              = 10;               // initial reserve for SYS$*SEC@ACR$ file
-            // public String SacrdAssignMnemonic            = "F";              // assign mnemonic for SYS$*SEC@ACR$ file
+            e.sendExecReadOnlyMessage("Creating ACR file...");
+            e.catalogDiskFileForExec("SYS$", "SEC@ACR$", cfg.getSACRDAssignMnemonic(), cfg.getSACRDInitialReserve(), 9999);
 
-            // TODO SYS$*SEC@USERID$
-            // public long UserInitialReserve               = 10;               // initial reserve for SYS$*SEC@USERID$ file
-            // public String UserAssignMnemonic             = "F";              // assign mnemonic for SYS$*SEC@USERID$ file
+            e.sendExecReadOnlyMessage("Creating UserID file...");
+            e.catalogDiskFileForExec("SYS$", "SEC@USERID$", cfg.getUserAssignMnemonic(), cfg.getUserInitialReserve(), 9999);
 
-            // Create DLOC$ (privilege file) and GENF$ (spool file)
-            e.catalogDiskFileForExec("SYS$", "DLOC$", cfg.getDLOCAssignMnemonic(), 0, 0);
-            e.catalogDiskFileForExec("SYS$", "GENF$", cfg.getGENFAssignMnemonic(), cfg.getGENFInitialReserve(), 0);
+            e.sendExecReadOnlyMessage("Creating privilege file...");
+            e.catalogDiskFileForExec("SYS$", "DLOC$", cfg.getDLOCAssignMnemonic(), 0, 1);
 
-            // Create and load library files (move this to a separate method)
+            e.sendExecReadOnlyMessage("Creating spool file...");
+            e.catalogDiskFileForExec("SYS$", "GENF$", cfg.getGENFAssignMnemonic(), cfg.getGENFInitialReserve(), 9999);
+
+            e.sendExecReadOnlyMessage("Creating system library files...");
             e.catalogDiskFileForExec("SYS$", "LIB$", cfg.getLibAssignMnemonic(), cfg.getLibInitialReserve(), cfg.getLibMaximumSize());
             e.catalogDiskFileForExec("SYS$", "RUN$", cfg.getRunAssignMnemonic(), cfg.getRunInitialReserve(), cfg.getRunMaximumSize());
             e.catalogDiskFileForExec("SYS$", "RLIB$", cfg.getMassStorageDefaultMnemonic(), 1, 128);
+
+            // Assign the files to the exec (most of them)
+            var filenames = new String[]{ "ACCOUNT$R1", "SEC@ACCTINFO", "SEC@ACR$", "SEC@USERID$", "GENF$", "LIB$", "RUN$", "RLIB$" };
+            var fm = e.getFacilitiesManager();
+            var fsResult = new FacStatusResult();
+            for (var filename : filenames) {
+                var fs = new FileSpecification("MFD$", filename);
+                fm.assignCatalogedDiskFileToExec(fs, true, fsResult);
+                if (fsResult.hasErrorMessages()) {
+                    // TODO
+                }
+            }
+
+            // Load the library files from tape
+            //  TODO
         } else {
             mm.recoverMassStorage(fixedDisks);
         }
@@ -1863,20 +1885,29 @@ public class FacilitiesManager implements Manager {
 
         // Do we need to drop the oldest cycle? If so, do it now.
         if (dropOldestCycle) {
-            // TODO
+            try {
+                mm.deleteFileCycle(fileSetInfo.getQualifier(), fileSetInfo.getFilename(), fcInfo.getAbsoluteCycle());
+            } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
+                LogManager.logCatching(LOG_SOURCE, ex);
+                e.stop(StopCode.FacilitiesComplex);
+                throw new ExecStoppedException();
+            }
         }
 
-        // Add this new cycle to the cycle info in the fsInfo, and persist the main items.
-        // TODO
+        // Create the file cycle
+        try {
+            mm.createFileCycle(fileSetInfo, fcInfo);
+        } catch (AbsoluteCycleConflictException | AbsoluteCycleOutOfRangeException ex) {
+            LogManager.logCatching(LOG_SOURCE, ex);
+            e.stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
 
         // If this is removable, we need to create main item(s) on the various removable packs,
         // then update the disk pack entry list in the real main item.
         if (fcInfo instanceof RemovableDiskFileCycleInfo rmFci) {
-            // TODO
+            // TODO REMOVABLE
         }
-
-        // Invoke MFD to create the file cycle
-        // TODO
 
         return true;
     }
@@ -2084,7 +2115,8 @@ public class FacilitiesManager implements Manager {
 
             // Any subsequent pack-ids in the given list must refer to removable packs
             for (int px = existingPackIds.size(); px < packIds.size(); px++) {
-                //TODO E:202233 Pack pack-id is not a removable pack.
+                // TODO REMOVABLE
+                //E:202233 Pack pack-id is not a removable pack.
             }
         }
 

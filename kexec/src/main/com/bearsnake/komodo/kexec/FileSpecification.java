@@ -29,16 +29,23 @@ public class FileSpecification {
 
     public FileSpecification(
         final String qualifier,
-        final String fileName,
+        final String filename,
         final FileCycleSpecification fileCycle,
         final String readKey,
         final String writeKey
     ) {
         _qualifier = qualifier == null ? null : qualifier.toUpperCase();
-        _filename = fileName.toUpperCase();
+        _filename = filename.toUpperCase();
         _fileCycleSpecification = fileCycle;
         _readKey = (readKey == null) || (readKey.isEmpty()) ? null : readKey.toUpperCase();
         _writeKey = (writeKey == null) || (writeKey.isEmpty()) ? null : writeKey.toUpperCase();
+    }
+
+    public FileSpecification(
+        final String qualifier,
+        final String filename
+    ) {
+        this(qualifier, filename, null, null, null);
     }
 
     public boolean couldBeInternalName() {

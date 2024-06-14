@@ -303,6 +303,83 @@ public class MFDManager implements Manager {
     }
 
     /**
+     * Creates MFD sector(s) describing a file cycle.
+     * Updates the MFD sector(s) describing the file set accordingly.
+     * Updates the main item sector addresses in the fcInfo object
+     * @param fsInfo FileSetInfo describing the file set (which might be empty)
+     *               MUST have the leadItem0Address value set properly.
+     * @param fcInfo FileCycleInfo describing the file cycle to be created
+     * @throws ExecStoppedException if something fatal occurs
+     */
+    public synchronized void createFileCycle(
+        final FileSetInfo fsInfo,
+        final FileCycleInfo fcInfo
+    ) throws ExecStoppedException,
+             AbsoluteCycleConflictException,
+             AbsoluteCycleOutOfRangeException {
+        // If fsInfo has no file cycles, we don't need to verify absolute file cycle.
+        if (fsInfo.getCycleCount() > 0) {
+            for (var fci : fsInfo.getCycleInfo()) {
+                if (fci.getAbsoluteCycle() == fcInfo.getAbsoluteCycle()) {
+                    throw new AbsoluteCycleConflictException();
+                }
+            }
+
+            // Check file cycle constraints - can we actually do this?
+            // Bear in mind that we cycle around below 1 and above 999.
+            if ((fsInfo.getHighestAbsoluteCycle() >= 967) && (fcInfo.getAbsoluteCycle() <= 32)) {
+                // wrap-around, and new cycle is logically higher than existing highest cycle.
+                var effectiveNew = fcInfo.getAbsoluteCycle() + 999;
+                var lowestExisting = fsInfo.getCycleInfo().getLast().getAbsoluteCycle();
+                int newCycleRange = effectiveNew - lowestExisting + 1;
+                if (newCycleRange > fsInfo.getMaxCycleRange()) {
+                    throw new AbsoluteCycleOutOfRangeException();
+                }
+            } else if ((fsInfo.getHighestAbsoluteCycle() <= 32) && (fcInfo.getAbsoluteCycle() >= 967)) {
+                // wrap-around, new cycle is logically less than the existing highest cycle.
+                var effectiveHighest = fsInfo.getHighestAbsoluteCycle() + 999;
+                var potentialCycleRange = effectiveHighest - fcInfo.getAbsoluteCycle() + 1;
+                if (potentialCycleRange > fsInfo.getMaxCycleRange()) {
+                    throw new AbsoluteCycleOutOfRangeException();
+                }
+            } else {
+                // no wrap-around
+                if (fcInfo.getAbsoluteCycle() > fsInfo.getHighestAbsoluteCycle()) {
+                    // new absolute is higher than the current highest
+                    var lowestExisting = fsInfo.getCycleInfo().getLast().getAbsoluteCycle();
+                    int newCycleRange = fcInfo.getAbsoluteCycle() - lowestExisting + 1;
+                    if (newCycleRange > fsInfo.getMaxCycleRange()) {
+                        throw new AbsoluteCycleOutOfRangeException();
+                    }
+                } else {
+                    // new absolute is lower than the current highest
+                    var potentialCycleRange = fsInfo.getHighestAbsoluteCycle() - fcInfo.getAbsoluteCycle() + 1;
+                    if (potentialCycleRange > fsInfo.getMaxCycleRange()) {
+                        throw new AbsoluteCycleOutOfRangeException();
+                    }
+                }
+            }
+        }
+
+        // Populate the main items
+        var mainItems = new LinkedList<MFDSector>();
+        for (var mix = 0; mix < fcInfo.getRequiredNumberOfMainItems(); mix++) {
+            mainItems.add(allocateDirectorySector());
+        }
+
+        fcInfo._leadItem0Address = fsInfo._leadItem0Address;
+        fcInfo._mainItem0Address = mainItems.getFirst().getAddress();
+        fcInfo.populateMainItems(mainItems);
+
+        // Link main item sector 0 into the lead item(s) and update the cycle information in the lead item.
+        var cycInfo = new FileSetCycleInfo().setAbsoluteCycle(fcInfo.getAbsoluteCycle())
+                                            .setMainItem0Address(mainItems.getFirst().getAddress())
+                                            .setToBeCataloged(fcInfo.getDescriptorFlags().toBeCataloged());
+        fsInfo.mergeFileSetCycleInfo(cycInfo);
+        persistLeadItems(fsInfo);
+    }
+
+    /**
      * Creates MFD sector(s) describing an empty fileset.
      * Normally, empty file sets do not exist. The caller must follow this up by calling createFileCycle.
      * The fileset has no security words, and is initialized to allow a max of 32 file cycles.
@@ -339,12 +416,17 @@ public class MFDManager implements Manager {
      */
     public void decelerateFileCycle(
         final FileCycleInfo fcInfo
-    ) {
+    ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
                             "accelerateFileCycle %s*%s(%d)",
                             fcInfo.getQualifier(),
                             fcInfo.getFilename(),
                             fcInfo.getAbsoluteCycle());
+
+        if (fcInfo.getInhibitFlags().isAssignedExclusively()) {
+            fcInfo.getInhibitFlags().setIsAssignedExclusively(false);
+            persistFileCycleInfo(fcInfo);
+        }
 
         var acInfo = _acceleratedFileCycles.get(fcInfo._mainItem0Address);
         if (acInfo != null) {
@@ -607,6 +689,34 @@ public class MFDManager implements Manager {
         LogManager.logTrace(LOG_SOURCE, "initializeMassStorage exiting");
     }
 
+    /**
+     * Persists the information provided in the given fileCycleInfo object.
+     * Takes special care to preserve DAD or reel tables, if they exist.
+     * Assumes the addresses in the object are set (and correct), implying the file is cataloged.
+     * @param fileCycleInfo describes the file cycle.
+     * @throws ExecStoppedException if something goes wrong
+     */
+    public synchronized void persistFileCycleInfo(
+        final FileCycleInfo fileCycleInfo
+    ) throws ExecStoppedException {
+        var mainChain = getMainItemChain(fileCycleInfo._mainItem0Address);
+        var link = mainChain.getFirst().getSector().get(0);
+        var reqItemCount = fileCycleInfo.getRequiredNumberOfMainItems();
+
+        while (mainChain.size() > reqItemCount) {
+            var mfdSector = mainChain.pollLast();
+            if (mfdSector != null) {
+                releaseDirectorySector(mfdSector.getAddress());
+            }
+        }
+        while (mainChain.size() < reqItemCount) {
+            mainChain.addLast(allocateDirectorySector());
+        }
+
+        fileCycleInfo.populateMainItems(mainChain);
+        mainChain.getFirst().getSector().set(0, link);
+    }
+
     public void recoverMassStorage(
         final Collection<NodeInfo> fixedDiskInfo
     ) throws ExecStoppedException {
@@ -676,83 +786,6 @@ public class MFDManager implements Manager {
         final String filename
     ) {
         return qualifier + "*" + filename;
-    }
-
-    /**
-     * Creates MFD sector(s) describing a file cycle.
-     * Updates the MFD sector(s) describing the file set accordingly.
-     * Updates the main item sector addresses in the fcInfo object
-     * @param fsInfo FileSetInfo describing the file set (which might be empty)
-     *               MUST have the leadItem0Address value set (by us).
-     * @param fcInfo FileCycleInfo describing the file cycle to be created
-     * @throws ExecStoppedException if something fatal occurs
-     */
-    private synchronized void createFileCycle(
-        final FileSetInfo fsInfo,
-        final FileCycleInfo fcInfo
-    ) throws ExecStoppedException,
-             AbsoluteCycleConflictException,
-             AbsoluteCycleOutOfRangeException {
-        // If fsInfo has no file cycles, we don't need to verify absolute file cycle.
-        if (fsInfo.getCycleCount() > 0) {
-            for (var fci : fsInfo.getCycleInfo()) {
-                if (fci.getAbsoluteCycle() == fcInfo.getAbsoluteCycle()) {
-                    throw new AbsoluteCycleConflictException();
-                }
-            }
-
-            // Check file cycle constraints - can we actually do this?
-            // Bear in mind that we cycle around below 1 and above 999.
-            if ((fsInfo.getHighestAbsoluteCycle() >= 967) && (fcInfo.getAbsoluteCycle() <= 32)) {
-                // wrap-around, and new cycle is logically higher than existing highest cycle.
-                var effectiveNew = fcInfo.getAbsoluteCycle() + 999;
-                var lowestExisting = fsInfo.getCycleInfo().getLast().getAbsoluteCycle();
-                int newCycleRange = effectiveNew - lowestExisting + 1;
-                if (newCycleRange > fsInfo.getMaxCycleRange()) {
-                    throw new AbsoluteCycleOutOfRangeException();
-                }
-            } else if ((fsInfo.getHighestAbsoluteCycle() <= 32) && (fcInfo.getAbsoluteCycle() >= 967)) {
-                // wrap-around, new cycle is logically less than the existing highest cycle.
-                var effectiveHighest = fsInfo.getHighestAbsoluteCycle() + 999;
-                var potentialCycleRange = effectiveHighest - fcInfo.getAbsoluteCycle() + 1;
-                if (potentialCycleRange > fsInfo.getMaxCycleRange()) {
-                    throw new AbsoluteCycleOutOfRangeException();
-                }
-            } else {
-                // no wrap-around
-                if (fcInfo.getAbsoluteCycle() > fsInfo.getHighestAbsoluteCycle()) {
-                    // new absolute is higher than the current highest
-                    var lowestExisting = fsInfo.getCycleInfo().getLast().getAbsoluteCycle();
-                    int newCycleRange = fcInfo.getAbsoluteCycle() - lowestExisting + 1;
-                    if (newCycleRange > fsInfo.getMaxCycleRange()) {
-                        throw new AbsoluteCycleOutOfRangeException();
-                    }
-                } else {
-                    // new absolute is lower than the current highest
-                    var potentialCycleRange = fsInfo.getHighestAbsoluteCycle() - fcInfo.getAbsoluteCycle() + 1;
-                    if (potentialCycleRange > fsInfo.getMaxCycleRange()) {
-                        throw new AbsoluteCycleOutOfRangeException();
-                    }
-                }
-            }
-        }
-
-        // Populate the main items
-        var mainItems = new LinkedList<MFDSector>();
-        for (var mix = 0; mix < fcInfo.getRequiredNumberOfMainItems(); mix++) {
-            mainItems.add(allocateDirectorySector());
-        }
-
-        fcInfo._leadItem0Address = fsInfo._leadItem0Address;
-        fcInfo._mainItem0Address = mainItems.getFirst().getAddress();
-        fcInfo.populateMainItems(mainItems);
-
-        // Link main item sector 0 into the lead item(s) and update the cycle information in the lead item.
-        var cycInfo = new FileSetCycleInfo().setAbsoluteCycle(fcInfo.getAbsoluteCycle())
-                                            .setMainItem0Address(mainItems.getFirst().getAddress())
-                                            .setToBeCataloged(fcInfo.getDescriptorFlags().toBeCataloged());
-        fsInfo.mergeFileSetCycleInfo(cycInfo);
-        persistLeadItems(fsInfo);
     }
 
     /**
