@@ -26,12 +26,11 @@ import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.stream.IntStream;
 
-public class Exec {
+public class Exec extends Run {
 
     public static final int INVALID_LDAT = 0_400000;
     public static final int EXEC_VERSION = 1;
@@ -49,8 +48,7 @@ public class Exec {
     private final boolean[] _jumpKeys;
     private final LinkedList<Manager> _managers = new LinkedList<>();
     private Phase _phase;
-    private ExecRunControlEntry _runControlEntry;
-    private final HashMap<String, RunControlEntry> _runControlEntries = new HashMap<>(); // keyed by RunId
+    private final HashMap<String, Run> _runEntries = new HashMap<>(); // keyed by RunId
     private int _session = 0;
     private StopCode _stopCode;
     private boolean _stopFlag = false;
@@ -61,6 +59,8 @@ public class Exec {
     private MFDManager _mfdManager;
 
     public Exec(final boolean[] jumpKeyTable) {
+        super(RunType.Exec, "EXEC-8", "EXEC-8", "SYS$", "", "EXEC8");
+
         _jumpKeys = jumpKeyTable;
         _allowRecoveryBoot = false;
         _phase = Phase.NotStarted;
@@ -72,6 +72,12 @@ public class Exec {
         _mfdManager = new MFDManager();
     }
 
+    @Override public String getAccountId() { return _configuration.getMasterAccountId(); }
+    @Override public final boolean isFinished() { return false; }
+    @Override public final boolean isPrivileged() { return true; }
+    @Override public final boolean isStarted() { return true; }
+    @Override public final boolean isSuspended() { return false; }
+
     public Configuration getConfiguration() { return _configuration; }
     public ConsoleManager getConsoleManager() { return _consoleManager; }
     public FacilitiesManager getFacilitiesManager() { return _facilitiesManager; }
@@ -79,14 +85,15 @@ public class Exec {
     public MFDManager getMFDManager() { return _mfdManager; }
     public KeyinManager getKeyinManager() { return _keyinManager; }
     public Phase getPhase() { return _phase; }
-    public RunControlEntry getRunControlEntry() { return _runControlEntry; }
     public StopCode getStopCode() { return _stopCode; }
     public boolean isJumpKeySet(final int jumpKey) { return _jumpKeys[jumpKey - 1]; }
     public boolean isRecoveryBootAllowed() { return _allowRecoveryBoot; }
     public boolean isStopped() { return _phase == Phase.Stopped; }
     public synchronized void managerRegister(final Manager manager) { _managers.add(manager); }
     public synchronized void managerUnregister(final Manager manager) { _managers.remove(manager); }
+
     public void setConfiguration(final Configuration config) { _configuration = config; }
+
     public void setJumpKeyValue(final int jumpKey, final boolean value) { _jumpKeys[jumpKey - 1] = value; }
 
     public void boot(final boolean recoveryBoot,
@@ -96,9 +103,8 @@ public class Exec {
         _stopFlag = false;
         _session = session;
 
-        _runControlEntries.clear();
-        _runControlEntry = new ExecRunControlEntry(_configuration.getMasterAccountId());
-        _runControlEntries.put(_runControlEntry._runId, _runControlEntry);
+        _runEntries.clear();
+        _runEntries.put(_runId, this);
 
         for (var m : _managers) {
             m.boot(recoveryBoot);
@@ -151,8 +157,8 @@ public class Exec {
         var packIds = new LinkedList<String>();
         return _facilitiesManager.catalogDiskFile(fs,
                                                   type,
-                                                  _runControlEntry.getProjectId(),
-                                                  _runControlEntry.getAccountId(),
+                                                  getProjectId(),
+                                                  getAccountId(),
                                                   true,
                                                   true,
                                                   true,
@@ -240,7 +246,7 @@ public class Exec {
         out.printf("  Allow Recovery: %s\n", _allowRecoveryBoot);
 
         out.println("  Run Control Entries:");
-        for (var rce : _runControlEntries.values()) {
+        for (var rce : _runEntries.values()) {
             rce.dump(out, "    ", verbose);
         }
 
@@ -359,7 +365,7 @@ public class Exec {
     public void sendExecReadOnlyMessage(
         final String message
     ) {
-        var romsg = new ReadOnlyMessage(_runControlEntry, null, message, true);
+        var romsg = new ReadOnlyMessage(this, null, message, true);
         _consoleManager.sendReadOnlyMessage(romsg);
     }
 
@@ -367,7 +373,7 @@ public class Exec {
         final String message,
         final ConsoleId routing
     ) {
-        var romsg = new ReadOnlyMessage(_runControlEntry, routing, null, message, true);
+        var romsg = new ReadOnlyMessage(this, routing, null, message, true);
         _consoleManager.sendReadOnlyMessage(romsg);
     }
 
@@ -375,7 +381,7 @@ public class Exec {
         final String message,
         final ConsoleType consoleType
     ) {
-        var romsg = new ReadOnlyMessage(_runControlEntry, consoleType, null, message, true);
+        var romsg = new ReadOnlyMessage(this, consoleType, null, message, true);
         _consoleManager.sendReadOnlyMessage(romsg);
     }
 
@@ -408,7 +414,7 @@ public class Exec {
         final ConsoleId routing,
         final ConsoleType consoleType
     ) throws ExecStoppedException {
-        var rrmsg = new ReadReplyMessage(_runControlEntry,
+        var rrmsg = new ReadReplyMessage(this,
                                          routing,
                                          consoleType,
                                          null,
@@ -468,7 +474,7 @@ public class Exec {
             }
         }
 
-        var rrmsg = new ReadReplyMessage(_runControlEntry,
+        var rrmsg = new ReadReplyMessage(this,
                                          routing,
                                          consoleType,
                                          null,

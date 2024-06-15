@@ -10,7 +10,7 @@ import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.RunControlEntry;
+import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.DeviceNodeInfo;
@@ -69,7 +69,7 @@ class RVKeyinHandler extends FacHandler implements Runnable {
         }
 
         var requiresStop = false;
-        var runsToAbort = new HashSet<RunControlEntry>();
+        var runsToAbort = new HashSet<Run>();
         for (var ni : nodeInfos) {
             var node = (Device) ni.getNode();
             var rce = ni.getAssignedTo();

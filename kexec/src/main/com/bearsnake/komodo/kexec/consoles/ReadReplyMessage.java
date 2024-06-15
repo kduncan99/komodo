@@ -4,11 +4,11 @@
 
 package com.bearsnake.komodo.kexec.consoles;
 
-import com.bearsnake.komodo.kexec.exec.RunControlEntry;
+import com.bearsnake.komodo.kexec.exec.Run;
 
 public class ReadReplyMessage {
     private final MessageId _messageId;
-    private final RunControlEntry _source;
+    private final Run _source;
     private final ConsoleId _routing; // may be null
     private final ConsoleType _consoleType; // may be null
     private final String _runId; // for logging purposes - may not match RCE of instigator, and may be null
@@ -23,7 +23,7 @@ public class ReadReplyMessage {
 
     private String _response;
 
-    public ReadReplyMessage(final RunControlEntry source,
+    public ReadReplyMessage(final Run source,
                             final String runId,
                             final String text,
                             final boolean doNotEmitRunId,
@@ -32,7 +32,7 @@ public class ReadReplyMessage {
         this(source, null, null, runId, text, doNotEmitRunId, doNotLogResponse, maxReplyLength);
     }
 
-    public ReadReplyMessage(final RunControlEntry source,
+    public ReadReplyMessage(final Run source,
                             final ConsoleId routing,
                             final String runId,
                             final String text,
@@ -42,7 +42,7 @@ public class ReadReplyMessage {
         this(source, routing, null, runId, text, doNotEmitRunId, doNotLogResponse, maxReplyLength);
     }
 
-    public ReadReplyMessage(final RunControlEntry source,
+    public ReadReplyMessage(final Run source,
                             final ConsoleType consoleType,
                             final String runId,
                             final String text,
@@ -52,7 +52,7 @@ public class ReadReplyMessage {
         this(source, null, consoleType, runId, text, doNotEmitRunId, doNotLogResponse, maxReplyLength);
     }
 
-    public ReadReplyMessage(final RunControlEntry source,
+    public ReadReplyMessage(final Run source,
                             final ConsoleId routing,
                             final ConsoleType consoleType,
                             final String runId,
@@ -91,7 +91,7 @@ public class ReadReplyMessage {
     public final int getResponseConsoleMessageIndex() { return _responseConsoleMessageIndex; }
     public final ConsoleId getRouting() { return _routing; }
     public final String getRunId() { return _runId; }
-    public final RunControlEntry getSource() { return _source; }
+    public final Run getSource() { return _source; }
     public final String getText() { return _text; }
     public final boolean hasResponse() { return _response != null; }
     public final boolean isAssignedToConsole() { return _responseConsoleId != null; }

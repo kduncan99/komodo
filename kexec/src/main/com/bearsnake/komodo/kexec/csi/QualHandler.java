@@ -47,7 +47,7 @@ class QualHandler extends Handler {
         }
         if (!checkIllegalFieldsAndSubfields(hp, VALID_SUBFIELD_SPECS, null)) {
             if (hp._sourceIsExecRequest) {
-                hp._runControlEntry.postContingency(012, 04, 040);
+                hp._run.postContingency(012, 04, 040);
             }
             return;
         }
@@ -56,7 +56,7 @@ class QualHandler extends Handler {
         if ((qualifier != null) && !Exec.isValidQualifier(qualifier)) {
             LogManager.logInfo(Interpreter.LOG_SOURCE,
                                "[%s] Invalid qualifier:%s",
-                               hp._runControlEntry.getRunId(),
+                               hp._run.getRunId(),
                                hp._statement._originalStatement);
             postSyntaxError(hp);
             return;
@@ -67,52 +67,52 @@ class QualHandler extends Handler {
             if (qualifier == null) {
                 LogManager.logInfo(Interpreter.LOG_SOURCE,
                                    "[%s] Missing qualifier:%s",
-                                   hp._runControlEntry.getRunId(),
+                                   hp._run.getRunId(),
                                    hp._statement._originalStatement);
                 if (hp._sourceIsExecRequest) {
-                    hp._runControlEntry.postContingency(012, 04, 040);
+                    hp._run.postContingency(012, 04, 040);
                 }
                 hp._statement._facStatusResult.postMessage(FacStatusCode.DirectoryOrQualifierMustAppear);
                 hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
 
-            hp._runControlEntry.setImpliedQualifier(qualifier);
+            hp._run.setImpliedQualifier(qualifier);
             hp._statement._facStatusResult.postMessage(FacStatusCode.Complete, new String[]{"QUAL"});
         } else if (hp._optionWord == D_OPTION) {
             // set default qualifier
             if (qualifier == null) {
                 LogManager.logInfo(Interpreter.LOG_SOURCE,
                                    "[%s] Missing qualifier:%s",
-                                   hp._runControlEntry.getRunId(),
+                                   hp._run.getRunId(),
                                    hp._statement._originalStatement);
                 if (hp._sourceIsExecRequest) {
-                    hp._runControlEntry.postContingency(012, 04, 040);
+                    hp._run.postContingency(012, 04, 040);
                 }
                 hp._statement._facStatusResult.postMessage(FacStatusCode.DirectoryOrQualifierMustAppear);
                 hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
 
-            hp._runControlEntry.setDefaultQualifier(qualifier);
+            hp._run.setDefaultQualifier(qualifier);
             hp._statement._facStatusResult.postMessage(FacStatusCode.Complete, new String[]{"QUAL"});
         } else if (hp._optionWord == R_OPTION) {
             // reset default and implied qualifiers
             if (qualifier != null) {
                 LogManager.logInfo(Interpreter.LOG_SOURCE,
                                    "[%s] Qualifier should not be specified:%s",
-                                   hp._runControlEntry.getRunId(),
+                                   hp._run.getRunId(),
                                    hp._statement._originalStatement);
                 if (hp._sourceIsExecRequest) {
-                    hp._runControlEntry.postContingency(012, 04, 040);
+                    hp._run.postContingency(012, 04, 040);
                 }
                 hp._statement._facStatusResult.postMessage(FacStatusCode.DirectoryAndQualifierMayNotAppear);
                 hp._statement._facStatusResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
 
-            hp._runControlEntry.setDefaultQualifier(hp._runControlEntry.getProjectId());
-            hp._runControlEntry.setImpliedQualifier(hp._runControlEntry.getProjectId());
+            hp._run.setDefaultQualifier(hp._run.getProjectId());
+            hp._run.setImpliedQualifier(hp._run.getProjectId());
             hp._statement._facStatusResult.postMessage(FacStatusCode.Complete, new String[]{"QUAL"});
         }
     }

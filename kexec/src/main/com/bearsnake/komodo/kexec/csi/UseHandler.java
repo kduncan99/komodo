@@ -36,7 +36,7 @@ class UseHandler extends Handler {
 
     @Override
     public void handle(final HandlerPacket hp) {
-        var rce = hp._runControlEntry;
+        var rce = hp._run;
         var fsResult = hp._statement._facStatusResult;
 
         if (cleanOptions(hp)) {

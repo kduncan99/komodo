@@ -5,9 +5,9 @@
 package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.kexec.Configuration;
-import com.bearsnake.komodo.kexec.exec.BatchRunControlEntry;
+import com.bearsnake.komodo.kexec.exec.BatchRun;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.RunControlEntry;
+import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
 import org.junit.Before;
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 public class TestInterpreter {
 
-    private RunControlEntry _rce;
+    private Run _rce;
 
     @Before
     public void setup() {
@@ -28,7 +28,7 @@ public class TestInterpreter {
         LogManager.setGlobalLevel(Level.Trace);
         var ex = new Exec(new boolean[36]);
         ex.setConfiguration(new Configuration());
-        _rce = new BatchRunControlEntry("RUNID", "RUNID", "PROJ", "ACCT", "USER");
+        _rce = new BatchRun("RUNID", "RUNID", "PROJ", "ACCT", "USER");
     }
 
     @Test

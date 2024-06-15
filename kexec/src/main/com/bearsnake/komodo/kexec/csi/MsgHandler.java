@@ -69,9 +69,9 @@ class MsgHandler extends Handler {
                     types.add(ConsoleType.System);
                 }
 
-                var roMsg = new ReadOnlyMessage(hp._runControlEntry,
+                var roMsg = new ReadOnlyMessage(hp._run,
                                                 types.isEmpty() ? null : types,
-                                                hp._runControlEntry.getRunId(),
+                                                hp._run.getRunId(),
                                                 msg,
                                                 false);
                 cm.sendReadOnlyMessage(roMsg);
@@ -86,9 +86,9 @@ class MsgHandler extends Handler {
                     default -> null;
                 };
 
-                var rrMsg = new ReadReplyMessage(hp._runControlEntry,
+                var rrMsg = new ReadReplyMessage(hp._run,
                                                  consType,
-                                                 hp._runControlEntry.getRunId(),
+                                                 hp._run.getRunId(),
                                                  msg,
                                                  false,
                                                  false, 0);

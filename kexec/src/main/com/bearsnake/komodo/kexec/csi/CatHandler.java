@@ -11,7 +11,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.RunControlEntry;
+import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
@@ -88,7 +88,7 @@ class CatHandler extends Handler {
         final HandlerPacket hp
     ) throws ExecStoppedException {
         var e = Exec.getInstance();
-        var rce = hp._runControlEntry;
+        var rce = hp._run;
         var fsResult = hp._statement._facStatusResult;
 
         // get the filename field
@@ -155,7 +155,7 @@ class CatHandler extends Handler {
                     }
                     handleDisk(hp._optionWord,
                                hp._statement._operandFields,
-                               hp._runControlEntry,
+                               hp._run,
                                fileSpec,
                                typeField,
                                isGuarded,
@@ -170,7 +170,7 @@ class CatHandler extends Handler {
                     }
                     handleTape(hp._optionWord,
                                hp._statement._operandFields,
-                               hp._runControlEntry,
+                               hp._run,
                                fileSpec,
                                typeField,
                                isGuarded,
@@ -184,7 +184,7 @@ class CatHandler extends Handler {
             // Type is not specified.
             handleUnknown(hp._optionWord,
                           hp._statement._operandFields,
-                          hp._runControlEntry,
+                          hp._run,
                           fileSpec,
                           isGuarded,
                           isPrivate,
@@ -198,7 +198,7 @@ class CatHandler extends Handler {
     handleDisk(
         final long optionWord,
         final Map<SubfieldSpecifier, String> operands,
-        final RunControlEntry rce,
+        final Run rce,
         final FileSpecification fileSpecification,
         final String type,
         final boolean isGuarded,
@@ -298,7 +298,7 @@ class CatHandler extends Handler {
     handleTape(
         final long optionWord,
         final Map<SubfieldSpecifier, String> operands,
-        final RunControlEntry rce,
+        final Run rce,
         final FileSpecification fileSpecification,
         final String type,
         final boolean isGuarded,
@@ -314,7 +314,7 @@ class CatHandler extends Handler {
     handleUnknown(
         final long optionWord,
         final Map<SubfieldSpecifier, String> operands,
-        final RunControlEntry rce,
+        final Run rce,
         final FileSpecification fileSpecification,
         final boolean isGuarded,
         final boolean isPrivate,

@@ -803,12 +803,12 @@ public class MFDManager implements Manager {
         final FileAllocationSet mfdAllocationSet
     ) throws ExecStoppedException {
         try {
-            var e = Exec.getInstance();
-            var mfdQualifier = e.getRunControlEntry().getDefaultQualifier();
+            var exec = Exec.getInstance();
+            var mfdQualifier = exec.getDefaultQualifier();
             var mfdFilename = "MFDF$$";
-            var mfdProjectId = e.getRunControlEntry().getProjectId();
-            var mfdAccountId = e.getRunControlEntry().getAccountId();
-            var mfdEquip = e.getConfiguration().getMassStorageDefaultMnemonic();
+            var mfdProjectId = exec.getProjectId();
+            var mfdAccountId = exec.getAccountId();
+            var mfdEquip = exec.getConfiguration().getMassStorageDefaultMnemonic();
             var fFlags = new FileFlags().setIsLargeFile(true);
             var inhFlags = new InhibitFlags().setIsGuarded(true).setIsPrivate(true).setIsUnloadInhibited(true);
             var pchFlags = new PCHARFlags().setGranularity(Granularity.Track);
@@ -847,14 +847,14 @@ public class MFDManager implements Manager {
             // Assign MFDF$$ to the exec
             var fs = new FileSpecification(mfdQualifier, mfdFilename, null, null, null);
             var fr = new FacStatusResult();
-            var result = e.getFacilitiesManager().assignCatalogedDiskFileToExec(fs, true, fr);
+            var result = exec.getFacilitiesManager().assignCatalogedDiskFileToExec(fs, true, fr);
             if (!result) {
-                e.stop(StopCode.FileAssignErrorOccurredDuringSystemInitialization);
+                exec.stop(StopCode.FileAssignErrorOccurredDuringSystemInitialization);
                 throw new ExecStoppedException();
             }
 
             var msg = String.format("Created %s*%s", mfdQualifier, mfdFilename);
-            e.sendExecReadOnlyMessage(msg);
+            exec.sendExecReadOnlyMessage(msg);
         } catch (AbsoluteCycleOutOfRangeException
                  | AbsoluteCycleConflictException ex) {
             LogManager.logCatching(LOG_SOURCE, ex);
@@ -1464,8 +1464,8 @@ public class MFDManager implements Manager {
         // *by* fac mgr so that the fcinfo is accelerated.
         var acInfo = _acceleratedFileCycles.get(_mfdFileAddress);
         var faSet = acInfo.getFileAllocationSet();
-        var e = Exec.getInstance();
-        var fm = e.getFacilitiesManager();
+        var exec = Exec.getInstance();
+        var fm = exec.getFacilitiesManager();
         var iter = _dirtyCacheTracks.iterator();
         while (iter.hasNext()) {
             var mfdRelativeTrackId = iter.next();
@@ -1493,7 +1493,7 @@ public class MFDManager implements Manager {
                     Exec.sleep(10);
                 }
             } catch (NoRouteForIOException ex) {
-                e.stop(StopCode.InternalExecIOFailed);
+                exec.stop(StopCode.InternalExecIOFailed);
                 throw new ExecStoppedException();
             }
         }

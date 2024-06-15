@@ -31,7 +31,7 @@ import com.bearsnake.komodo.kexec.exceptions.FileSetAlreadyExistsException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.RunControlEntry;
+import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
@@ -56,7 +56,6 @@ import com.bearsnake.komodo.kexec.mfd.RemovableDiskFileCycleInfo;
 import com.bearsnake.komodo.kexec.mfd.UnitSelectionIndicators;
 import com.bearsnake.komodo.logger.LogManager;
 
-import java.io.File;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
@@ -244,9 +243,9 @@ public class FacilitiesManager implements Manager {
             optionsWord |= X_OPTION;
         }
 
-        var e = Exec.getInstance();
-        var cfg = e.getConfiguration();
-        var result = assignCatalogedDiskFileToRun(e.getRunControlEntry(),
+        var exec = Exec.getInstance();
+        var cfg = exec.getConfiguration();
+        var result = assignCatalogedDiskFileToRun(exec,
                                                   fileSpecification,
                                                   optionsWord,
                                                   cfg.getMassStorageDefaultMnemonic(),
@@ -276,7 +275,7 @@ public class FacilitiesManager implements Manager {
      * @throws ExecStoppedException if the exec is found to be stopped (or we stop it) during execution
      */
     public synchronized boolean assignCatalogedDiskFileToRun(
-        final RunControlEntry runControlEntry,
+        final Run run,
         final FileSpecification fileSpecification,
         final long optionsWord,                            // only to be used to populate a new facItem
         final String mnemonic,                             // type/assign-mnemonic
@@ -296,10 +295,10 @@ public class FacilitiesManager implements Manager {
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedDiskFileToRun %s %s",
-                            runControlEntry.getRunId(),
+                            run.getRunId(),
                             fileSpecification.toString());
 
-        var e = Exec.getInstance();
+        var exec = Exec.getInstance();
 
         // --------------------------------------------------------
         // Pre-checks which are very generic
@@ -333,7 +332,7 @@ public class FacilitiesManager implements Manager {
         }
 
         // Check read/write keys
-        if (!checkKeys(runControlEntry, fsInfo, fileSpecification, fsResult)) {
+        if (!checkKeys(run, fsInfo, fileSpecification, fsResult)) {
             fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
@@ -350,7 +349,7 @@ public class FacilitiesManager implements Manager {
         String qualifier = fileSpecification.getQualifier();
         String filename = fileSpecification.getFilename();
         int absCycle;
-        var fiTable = runControlEntry.getFacilitiesItemTable();
+        var fiTable = run.getFacilitiesItemTable();
 
         if (fileSpecification.hasFileCycleSpecification()
             && fileSpecification.getFileCycleSpecification().isAbsolute()) {
@@ -400,7 +399,7 @@ public class FacilitiesManager implements Manager {
                     LogManager.logFatal(LOG_SOURCE,
                                         "MFD cannot find a file cycle which must exist %s*%s(%d)",
                                         qualifier, filename, absCycle);
-                    e.stop(StopCode.FacilitiesComplex);
+                    exec.stop(StopCode.FacilitiesComplex);
                     throw new ExecStoppedException();
                 }
             } else {
@@ -430,7 +429,7 @@ public class FacilitiesManager implements Manager {
                     LogManager.logFatal(LOG_SOURCE,
                                         "MFD cannot find a file cycle which must exist %s*%s(%d)",
                                         qualifier, filename, absCycle);
-                    e.stop(StopCode.FacilitiesComplex);
+                    exec.stop(StopCode.FacilitiesComplex);
                     throw new ExecStoppedException();
                 }
 
@@ -503,8 +502,8 @@ public class FacilitiesManager implements Manager {
 
         if (!wasAlreadyAssigned) {
             // Check public/private - not necessary if the file was already assigned, but it wasn't, so...
-            if (!runControlEntry.isPrivileged() || fcInfo.getInhibitFlags().isGuarded()) {
-                if (!checkPrivateAccess(runControlEntry, fcInfo)) {
+            if (!run.isPrivileged() || fcInfo.getInhibitFlags().isGuarded()) {
+                if (!checkPrivateAccess(run, fcInfo)) {
                     fsResult.postMessage(FacStatusCode.IncorrectPrivacyKey);
                     fsResult.mergeStatusBits(0_400000_020000L);
                     fsResult.log(Trace, LOG_SOURCE);
@@ -742,7 +741,7 @@ public class FacilitiesManager implements Manager {
                                     fsInfo.getQualifier(),
                                     fsInfo.getFilename(),
                                     facItem.getAbsoluteCycle());
-                e.stop(StopCode.FacilitiesComplex);
+                exec.stop(StopCode.FacilitiesComplex);
                 throw new ExecStoppedException();
             }
 
@@ -751,7 +750,7 @@ public class FacilitiesManager implements Manager {
         }
 
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s result:%s",
-                            runControlEntry.getRunId(),
+                            run.getRunId(),
                             fsResult.toString());
         fsResult.log(Trace, LOG_SOURCE);
         return true;
@@ -779,7 +778,7 @@ public class FacilitiesManager implements Manager {
                             nodeIdentifier);
 
         var optionsWord = T_OPTION | X_OPTION;
-        var result = assignDiskUnitToRun(Exec.getInstance().getRunControlEntry(),
+        var result = assignDiskUnitToRun(Exec.getInstance(),
                                          fileSpecification,
                                          nodeIdentifier,
                                          packName,
@@ -795,7 +794,7 @@ public class FacilitiesManager implements Manager {
     /**
      * For assigning a reserved disk to a run.
      * This assignment can only be temporary, and fileSpecification must be fully resolved.
-     * @param runControlEntry describes the run
+     * @param run describes the run
      * @param fileSpecification describes the qualifier, file name, and file cycle for the fac item
      * @param nodeIdentifier node identifier of the device
      * @param packName pack name requested for the device
@@ -807,7 +806,7 @@ public class FacilitiesManager implements Manager {
      * @throws ExecStoppedException if the exec is stopped
      */
     public synchronized boolean assignDiskUnitToRun(
-        final RunControlEntry runControlEntry,
+        final Run run,
         final FileSpecification fileSpecification,
         final int nodeIdentifier,
         final String packName,
@@ -817,7 +816,7 @@ public class FacilitiesManager implements Manager {
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s node:%d pack:%s I:%s Z:%s",
-                            runControlEntry.getRunId(),
+                            run.getRunId(),
                             fileSpecification.toString(),
                             nodeIdentifier,
                             packName,
@@ -839,7 +838,7 @@ public class FacilitiesManager implements Manager {
         }
 
         var disk = (DiskDevice) node;
-        if (!runControlEntry.isPrivileged() && nodeInfo.getNodeStatus() != NodeStatus.Reserved) {
+        if (!run.isPrivileged() && nodeInfo.getNodeStatus() != NodeStatus.Reserved) {
             var params = new String[]{nodeInfo.getNode().getNodeName()};
             fsResult.postMessage(FacStatusCode.UnitIsNotReserved, params);
             fsResult.mergeStatusBits(0_600000_000000L);
@@ -849,7 +848,7 @@ public class FacilitiesManager implements Manager {
 
         // Check the node assignment for the device - if it is already assigned to us, then fail.
         var dni = (DeviceNodeInfo) nodeInfo;
-        if (Objects.equals(dni.getAssignedTo(), runControlEntry)) {
+        if (Objects.equals(dni.getAssignedTo(), run)) {
             var params = new String[]{node.getNodeName()};
             fsResult.postMessage(FacStatusCode.DeviceAlreadyInUseByThisRun, params);
             fsResult.mergeStatusBits(0_400000_000000L);
@@ -861,7 +860,7 @@ public class FacilitiesManager implements Manager {
         //   TODO E:201733 Pack pack-id already in use by this run.
 
         // If we are not the Exec make sure the pack is removable and that the device is not fixed
-        if (!runControlEntry.isPrivileged()) {
+        if (!run.isPrivileged()) {
             //   TODO E:202233 Pack pack-id is not a removable pack.
             //   TODO E:200433 Device device-Name is fixed.
         }
@@ -869,7 +868,7 @@ public class FacilitiesManager implements Manager {
         // If there is a facilities item in the rce which matches the file specification which does not refer
         // to an absolute assign of this same unit, fail.
         // TODO what should we do about NameItem fac items?
-        var fiTable = runControlEntry.getFacilitiesItemTable();
+        var fiTable = run.getFacilitiesItemTable();
         var existingFacItem = fiTable.getExactFacilitiesItem(fileSpecification);
         if (existingFacItem != null) {
             fsResult.postMessage(FacStatusCode.IllegalAttemptToChangeAssignmentType);
@@ -909,12 +908,12 @@ public class FacilitiesManager implements Manager {
             if (!Exec.getInstance().isRunning()) {
                 throw new ExecStoppedException();
             }
-            runControlEntry.incrementWaitingForPeripheral();
+            run.incrementWaitingForPeripheral();
             synchronized (nodeInfo) {
                 if (nodeInfo.getAssignedTo() == null) {
-                    nodeInfo.setAssignedTo(runControlEntry);
+                    nodeInfo.setAssignedTo(run);
                     facItem.setIsAssigned(true);
-                    runControlEntry.decrementWaitingForPeripheral();
+                    run.decrementWaitingForPeripheral();
                     break;
                 }
             }
@@ -932,12 +931,12 @@ public class FacilitiesManager implements Manager {
             var now = Instant.now();
             if (now.isAfter(nextMessageTime)) {
                 nextMessageTime = nextMessageTime.plusSeconds(120);
-                if (!runControlEntry.hasTask()
-                    && ((runControlEntry.getRunType() == RunType.Batch) || (runControlEntry.getRunType() == RunType.Demand))) {
+                if (!run.hasTask()
+                    && ((run.getRunType() == RunType.Batch) || (run.getRunType() == RunType.Demand))) {
                     long minutes = Duration.between(now, startTime).getSeconds() / 60;
-                    var params = new Object[]{runControlEntry.getRunId(), minutes};
+                    var params = new Object[]{run.getRunId(), minutes};
                     var facMsg = new FacStatusMessageInstance(FacStatusCode.RunHeldForDiskUnitAvailability, params);
-                    runControlEntry.postToPrint(facMsg.toString(), 1);
+                    run.postToPrint(facMsg.toString(), 1);
                 }
             }
         }
@@ -952,7 +951,7 @@ public class FacilitiesManager implements Manager {
             return false;
         }
 
-        if (!promptLoadPack(runControlEntry, nodeInfo, disk, packName)) {
+        if (!promptLoadPack(run, nodeInfo, disk, packName)) {
             LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun promptLoadPack returns false");
             fiTable.removeFacilitiesItem(facItem);
             nodeInfo.setAssignedTo(null);
@@ -1005,9 +1004,9 @@ public class FacilitiesManager implements Manager {
         var disk = (DiskDevice) node;
 
         // Check the node assignment for the device - if it is already assigned to us, then fail.
-        var rce = Exec.getInstance().getRunControlEntry();
+        var exec = Exec.getInstance();
         var dni = (DeviceNodeInfo) nodeInfo;
-        if (Objects.equals(dni.getAssignedTo(), rce)) {
+        if (Objects.equals(dni.getAssignedTo(), exec)) {
             var params = new String[]{node.getNodeName()};
             fsResult.postMessage(FacStatusCode.DeviceAlreadyInUseByThisRun, params);
             fsResult.mergeStatusBits(0_400000_000000L);
@@ -1018,7 +1017,7 @@ public class FacilitiesManager implements Manager {
         // If there is a facilities item in the rce which matches the file specification which does not refer
         // to an absolute assign of this same unit, fail.
         // TODO what should we do about NameItem fac items?
-        var fiTable = rce.getFacilitiesItemTable();
+        var fiTable = exec.getFacilitiesItemTable();
         var existingFacItem = fiTable.getExactFacilitiesItem(fileSpecification);
         if (existingFacItem != null) {
             fsResult.postMessage(FacStatusCode.IllegalAttemptToChangeAssignmentType);
@@ -1096,8 +1095,8 @@ public class FacilitiesManager implements Manager {
                             "catalogDiskFile %s type=%s proj=%s acct=%s",
                             fileSpecification.toString(), type, projectId, accountId);
 
-        var e = Exec.getInstance();
-        var mnemonicType = e.getConfiguration().getMnemonicType(type);
+        var exec = Exec.getInstance();
+        var mnemonicType = exec.getConfiguration().getMnemonicType(type);
         if (mnemonicType == null) {
             fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
             fsResult.mergeStatusBits(0_600000_000000L);
@@ -1105,7 +1104,7 @@ public class FacilitiesManager implements Manager {
             return false;
         }
 
-        var mm = e.getMFDManager();
+        var mm = exec.getMFDManager();
         var plusOne = fileSpecification.hasFileCycleSpecification()
                       && fileSpecification.getFileCycleSpecification().isRelative()
                       && fileSpecification.getFileCycleSpecification().getCycle() == 1;
@@ -1141,7 +1140,7 @@ public class FacilitiesManager implements Manager {
             mm.createFileSet(fsInfo);
         } catch (FileSetAlreadyExistsException ex) {
             LogManager.logFatal(LOG_SOURCE, "file set %s should not already exist", fsInfo);
-            e.stop(StopCode.FacilitiesComplex);
+            exec.stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
 
@@ -1170,7 +1169,7 @@ public class FacilitiesManager implements Manager {
     /**
      * Catalogs an additional disk file cycle in an existing fileset.
      * It is expected (but I'm not sure that it is required) that the fileset contains at least one cycle.
-     * @param runControlEntry rce for requesting run
+     * @param run rce for requesting run
      * @param fileSpecification needed for creating facilities item - must be fully resolved
      * @param fileSetInfo describes the existing fileset
      * @param accountId account id for the file cycle
@@ -1189,7 +1188,7 @@ public class FacilitiesManager implements Manager {
      * @throws ExecStoppedException if the exec is stopped
      */
     public synchronized boolean catalogDiskFileCycle(
-        final RunControlEntry runControlEntry,
+        final Run run,
         final FileSpecification fileSpecification,
         final FileSetInfo fileSetInfo,
         final String type,
@@ -1210,8 +1209,8 @@ public class FacilitiesManager implements Manager {
                             "catalogDiskFile %s",
                             fileSpecification.toString());
 
-        var e = Exec.getInstance();
-        var mType = e.getConfiguration().getMnemonicType(type);
+        var exec = Exec.getInstance();
+        var mType = exec.getConfiguration().getMnemonicType(type);
         if (mType == null) {
             fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
             fsResult.mergeStatusBits(0_600000_000000L);
@@ -1220,7 +1219,7 @@ public class FacilitiesManager implements Manager {
         }
 
         // Check read/write keys in fileSpecification against fileSetInfo
-        if (!checkKeys(runControlEntry, fileSetInfo, fileSpecification, fsResult)) {
+        if (!checkKeys(run, fileSetInfo, fileSpecification, fsResult)) {
             fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
@@ -1255,7 +1254,7 @@ public class FacilitiesManager implements Manager {
             return false;
         }
 
-        var mnemonicType = e.getConfiguration().getMnemonicType(type);
+        var mnemonicType = exec.getConfiguration().getMnemonicType(type);
         boolean result = catalogDiskFileCycleCommon(fileSetInfo,
                                                     absInfo.absoluteCycle,
                                                     type,
@@ -1297,8 +1296,8 @@ public class FacilitiesManager implements Manager {
                             "catalogTapeFile %s",
                             fileSpecification.toString());
 
-        var e = Exec.getInstance();
-        var mType = e.getConfiguration().getMnemonicType(type);
+        var exec = Exec.getInstance();
+        var mType = exec.getConfiguration().getMnemonicType(type);
         if (mType == null) {
             fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
             fsResult.mergeStatusBits(0_600000_000000L);
@@ -1331,8 +1330,8 @@ public class FacilitiesManager implements Manager {
                             "catalogTapeFileCycle %s",
                             fileSpecification.toString());
 
-        var e = Exec.getInstance();
-        var mType = e.getConfiguration().getMnemonicType(type);
+        var exec = Exec.getInstance();
+        var mType = exec.getConfiguration().getMnemonicType(type);
         if (mType == null) {
             fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
             fsResult.mergeStatusBits(0_600000_000000L);
@@ -1346,24 +1345,24 @@ public class FacilitiesManager implements Manager {
 
     /**
      * Establishes a use item in the given run control entry
-     * @param runControlEntry run control entry of interest
+     * @param run run control entry of interest
      * @param internalName internal name to be applied
      * @param fileSpecification file specification indicating the external or referenced name - must be fully resolved
      * @param releaseOnTaskEnd true to release this use item at the next task termination
      */
     public void establishUseItem(
-        final RunControlEntry runControlEntry,
+        final Run run,
         final String internalName,
         final FileSpecification fileSpecification,
         final boolean releaseOnTaskEnd
     ) {
         LogManager.logTrace(LOG_SOURCE, "establishUseItem %s %s->%s I:%s",
-                            runControlEntry.getRunId(),
+                            run.getRunId(),
                             internalName,
                             fileSpecification.toString(),
                             releaseOnTaskEnd);
 
-        var fiTable = runControlEntry.getFacilitiesItemTable();
+        var fiTable = run.getFacilitiesItemTable();
         synchronized (fiTable) {
             var facItem = fiTable.getExactFacilitiesItem(fileSpecification);
             if (facItem == null) {
@@ -1390,7 +1389,7 @@ public class FacilitiesManager implements Manager {
             facItem.setInternalName(internalName);
         }
 
-        LogManager.logTrace(LOG_SOURCE, "establishUseItem %s exit", runControlEntry.getRunId());
+        LogManager.logTrace(LOG_SOURCE, "establishUseItem %s exit", run.getRunId());
     }
 
     /**
@@ -1532,7 +1531,7 @@ public class FacilitiesManager implements Manager {
      * Specification of semantically contradictory options produces undefined behavior... e.g.:
      *      ReleaseBehavior.ReleaseUseItemOnly with deleteFileCycle, inhibitCatalog, releaseExclusiveUseOnly
      *      deleteFileCycle or inhibitCatalog with releaseExclusiveUseOnly
-     * @param runControlEntry indicates which run is requesting this release
+     * @param run indicates which run is requesting this release
      * @param fileSpecification File specification of interest - if it is an internal name, it may refer to a use item.
      *                          Unliked most other APIs here, this does not need to be fully resolved, indeed it must not
      *                          be, in order for the various optional parameters to be properly effective.
@@ -1545,7 +1544,7 @@ public class FacilitiesManager implements Manager {
      * @return true if we are successful, else false
      */
     public boolean releaseFile(
-        final RunControlEntry runControlEntry,
+        final Run run,
         final FileSpecification fileSpecification,
         final ReleaseBehavior behavior,
         final boolean deleteFileCycle,
@@ -1562,12 +1561,12 @@ public class FacilitiesManager implements Manager {
                             inhibitCatalog,
                             releaseExclusiveUseOnly);
 
-        var e = Exec.getInstance();
-        var mm = e.getMFDManager();
+        var exec = Exec.getInstance();
+        var mm = exec.getMFDManager();
 
         // Resolve file spec to a facilities item and whether it is an internal name
         FacilitiesItem facItem = null;
-        var fiTable = runControlEntry.getFacilitiesItemTable();
+        var fiTable = run.getFacilitiesItemTable();
         if (fileSpecification.couldBeInternalName()) {
             facItem = fiTable.getFacilitiesItemByInternalName(fileSpecification.getFilename());
         }
@@ -1622,14 +1621,14 @@ public class FacilitiesManager implements Manager {
         }
 
         if (deleteFileCycle && !facItemDeleteFlag && (fcInfo != null)) {
-            if (!runControlEntry.isPrivileged() || fcInfo.getInhibitFlags().isGuarded()) {
+            if (!run.isPrivileged() || fcInfo.getInhibitFlags().isGuarded()) {
                 // TODO if current fac item shows file was not assigned with necessary read or write keys,
                 //  ensure they were specified on the @FREE - this may require us to store some sort of flag
                 //  in the fac item at @asg time.
                 //E:246433 Read and/or write keys are needed.
 
                 // If the run's account / project does not match the file and the file is not public, disallow
-                if (!checkPrivateAccess(runControlEntry, fcInfo)) {
+                if (!checkPrivateAccess(run, fcInfo)) {
                     fsResult.postMessage(FacStatusCode.IncorrectPrivacyKey);
                     fsResult.mergeStatusBits(0_400000_020000L);
                     fsResult.log(Trace, LOG_SOURCE);
@@ -1637,8 +1636,8 @@ public class FacilitiesManager implements Manager {
                 }
             }
 
-            if ((runControlEntry.getRunType() != RunType.Exec)
-                && e.getRunControlEntry().getFacilitiesItemTable().getExactFacilitiesItem(fileSpecification) != null) {
+            if ((run.getRunType() != RunType.Exec)
+                && exec.getFacilitiesItemTable().getExactFacilitiesItem(fileSpecification) != null) {
                 fsResult.postMessage(FacStatusCode.FreeNotAllowedFileInUseByExec);
                 fsResult.mergeStatusBits(0_600000_000000L);
                 fsResult.log(Trace, LOG_SOURCE);
@@ -1749,15 +1748,15 @@ public class FacilitiesManager implements Manager {
     public void startup() throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "startup()");
 
-        var e = Exec.getInstance();
-        var cfg = e.getConfiguration();
+        var exec = Exec.getInstance();
+        var cfg = exec.getConfiguration();
 
         dropTapes();
         readDiskLabels();
         var fixedDisks = getAccessibleFixedDisks();
         if (fixedDisks.isEmpty()) {
-            e.sendExecReadOnlyMessage("No Fixed Disk Configured");
-            e.stop(StopCode.InitializationSystemConfigurationError);
+            exec.sendExecReadOnlyMessage("No Fixed Disk Configured");
+            exec.stop(StopCode.InitializationSystemConfigurationError);
             throw new ExecStoppedException();
         }
 
@@ -1766,30 +1765,30 @@ public class FacilitiesManager implements Manager {
             mm.initializeMassStorage(fixedDisks);
 
             // Create all the system files
-            e.sendExecReadOnlyMessage("Creating Account files...");
-            e.catalogDiskFileForExec("SYS$", "ACCOUNT$R1", cfg.getAccountAssignMnemonic(), cfg.getAccountInitialReserve(), 9999);
-            e.catalogDiskFileForExec("SYS$", "SEC@ACCTINFO", cfg.getAccountAssignMnemonic(), cfg.getAccountInitialReserve(), 9999);
+            exec.sendExecReadOnlyMessage("Creating Account files...");
+            exec.catalogDiskFileForExec("SYS$", "ACCOUNT$R1", cfg.getAccountAssignMnemonic(), cfg.getAccountInitialReserve(), 9999);
+            exec.catalogDiskFileForExec("SYS$", "SEC@ACCTINFO", cfg.getAccountAssignMnemonic(), cfg.getAccountInitialReserve(), 9999);
 
-            e.sendExecReadOnlyMessage("Creating ACR file...");
-            e.catalogDiskFileForExec("SYS$", "SEC@ACR$", cfg.getSACRDAssignMnemonic(), cfg.getSACRDInitialReserve(), 9999);
+            exec.sendExecReadOnlyMessage("Creating ACR file...");
+            exec.catalogDiskFileForExec("SYS$", "SEC@ACR$", cfg.getSACRDAssignMnemonic(), cfg.getSACRDInitialReserve(), 9999);
 
-            e.sendExecReadOnlyMessage("Creating UserID file...");
-            e.catalogDiskFileForExec("SYS$", "SEC@USERID$", cfg.getUserAssignMnemonic(), cfg.getUserInitialReserve(), 9999);
+            exec.sendExecReadOnlyMessage("Creating UserID file...");
+            exec.catalogDiskFileForExec("SYS$", "SEC@USERID$", cfg.getUserAssignMnemonic(), cfg.getUserInitialReserve(), 9999);
 
-            e.sendExecReadOnlyMessage("Creating privilege file...");
-            e.catalogDiskFileForExec("SYS$", "DLOC$", cfg.getDLOCAssignMnemonic(), 0, 1);
+            exec.sendExecReadOnlyMessage("Creating privilege file...");
+            exec.catalogDiskFileForExec("SYS$", "DLOC$", cfg.getDLOCAssignMnemonic(), 0, 1);
 
-            e.sendExecReadOnlyMessage("Creating spool file...");
-            e.catalogDiskFileForExec("SYS$", "GENF$", cfg.getGENFAssignMnemonic(), cfg.getGENFInitialReserve(), 9999);
+            exec.sendExecReadOnlyMessage("Creating spool file...");
+            exec.catalogDiskFileForExec("SYS$", "GENF$", cfg.getGENFAssignMnemonic(), cfg.getGENFInitialReserve(), 9999);
 
-            e.sendExecReadOnlyMessage("Creating system library files...");
-            e.catalogDiskFileForExec("SYS$", "LIB$", cfg.getLibAssignMnemonic(), cfg.getLibInitialReserve(), cfg.getLibMaximumSize());
-            e.catalogDiskFileForExec("SYS$", "RUN$", cfg.getRunAssignMnemonic(), cfg.getRunInitialReserve(), cfg.getRunMaximumSize());
-            e.catalogDiskFileForExec("SYS$", "RLIB$", cfg.getMassStorageDefaultMnemonic(), 1, 128);
+            exec.sendExecReadOnlyMessage("Creating system library files...");
+            exec.catalogDiskFileForExec("SYS$", "LIB$", cfg.getLibAssignMnemonic(), cfg.getLibInitialReserve(), cfg.getLibMaximumSize());
+            exec.catalogDiskFileForExec("SYS$", "RUN$", cfg.getRunAssignMnemonic(), cfg.getRunInitialReserve(), cfg.getRunMaximumSize());
+            exec.catalogDiskFileForExec("SYS$", "RLIB$", cfg.getMassStorageDefaultMnemonic(), 1, 128);
 
             // Assign the files to the exec (most of them)
             var filenames = new String[]{ "ACCOUNT$R1", "SEC@ACCTINFO", "SEC@ACR$", "SEC@USERID$", "GENF$", "LIB$", "RUN$", "RLIB$" };
-            var fm = e.getFacilitiesManager();
+            var fm = exec.getFacilitiesManager();
             var fsResult = new FacStatusResult();
             for (var filename : filenames) {
                 var fs = new FileSpecification("MFD$", filename);
@@ -1839,7 +1838,7 @@ public class FacilitiesManager implements Manager {
         final boolean dropOldestCycle,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
-        var e = Exec.getInstance();
+        var exec = Exec.getInstance();
 
         DiskFileCycleInfo fcInfo;
         if (fileSetInfo.getFileType() == FileType.Fixed) {
@@ -1880,7 +1879,7 @@ public class FacilitiesManager implements Manager {
               .setDescriptorFlags(desc)
               .setDisableFlags(new DisableFlags());
 
-        var mm = e.getMFDManager();
+        var mm = exec.getMFDManager();
 
         // If this cycle is guarded, ensure the fileset is also guarded (it might not be).
         if (isGuarded && !fileSetInfo.isGuarded()) {
@@ -1893,7 +1892,7 @@ public class FacilitiesManager implements Manager {
                 mm.deleteFileCycle(fileSetInfo.getQualifier(), fileSetInfo.getFilename(), fcInfo.getAbsoluteCycle());
             } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
                 LogManager.logCatching(LOG_SOURCE, ex);
-                e.stop(StopCode.FacilitiesComplex);
+                exec.stop(StopCode.FacilitiesComplex);
                 throw new ExecStoppedException();
             }
         }
@@ -1903,7 +1902,7 @@ public class FacilitiesManager implements Manager {
             mm.createFileCycle(fileSetInfo, fcInfo);
         } catch (AbsoluteCycleConflictException | AbsoluteCycleOutOfRangeException ex) {
             LogManager.logCatching(LOG_SOURCE, ex);
-            e.stop(StopCode.FacilitiesComplex);
+            exec.stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
 
@@ -1976,7 +1975,7 @@ public class FacilitiesManager implements Manager {
      * @return true if no problems exist, else false
      */
     private boolean checkKeys(
-        final RunControlEntry rce,
+        final Run rce,
         final FileSetInfo fsInfo,
         final FileSpecification fileSpec,
         final FacStatusResult fsResult
@@ -2272,7 +2271,7 @@ public class FacilitiesManager implements Manager {
      * @return true if access is allowed, else false.
      */
     private boolean checkPrivateAccess(
-        final RunControlEntry rce,
+        final Run rce,
         final FileCycleInfo fcInfo
     ) {
         // if file is not private, we're good
@@ -2467,7 +2466,7 @@ public class FacilitiesManager implements Manager {
      */
     private Collection<NodeInfo> getAccessibleFixedDisks() throws ExecStoppedException {
         var list = new LinkedList<NodeInfo>();
-        var execQualifier = Exec.getInstance().getRunControlEntry().getProjectId();
+        var execQualifier = Exec.getInstance().getProjectId();
         for (var ni : _nodeGraph.values()) {
             var node = ni.getNode();
             if ((node instanceof DiskDevice)
@@ -2613,7 +2612,7 @@ public class FacilitiesManager implements Manager {
     /**
      * Prompts the operator to load a pack on a disk unit,
      * waits for it to happen, then verifies the packname.
-     * @param runControlEntry describes the invoking run
+     * @param run describes the invoking run
      * @param nodeInfo NodeInfo object tracking exec information regarding the disk unit
      * @param disk DiskDevice object associated with the disk unit
      * @param packName pack name requested by the run
@@ -2621,7 +2620,7 @@ public class FacilitiesManager implements Manager {
      * @throws ExecStoppedException if we notice the exec has stopped during processing
      */
     private boolean promptLoadPack(
-        final RunControlEntry runControlEntry,
+        final Run run,
         final NodeInfo nodeInfo,
         final DiskDevice disk,
         final String packName
@@ -2631,7 +2630,7 @@ public class FacilitiesManager implements Manager {
         var loadMsg = String.format("Load %s %s %s",
                                     packName,
                                     disk.getNodeName(),
-                                    runControlEntry.getRunId());
+                                    run.getRunId());
         Exec.getInstance().sendExecReadOnlyMessage(loadMsg, ConsoleType.InputOutput);
         var serviceMsg = loadMsg.replace("Load", "Service");
 

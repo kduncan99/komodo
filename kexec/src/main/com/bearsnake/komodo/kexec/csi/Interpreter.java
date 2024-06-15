@@ -6,8 +6,8 @@ package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
-import com.bearsnake.komodo.kexec.exec.RunControlEntry;
-import com.bearsnake.komodo.kexec.exec.TIPRunControlEntry;
+import com.bearsnake.komodo.kexec.exec.Run;
+import com.bearsnake.komodo.kexec.exec.TIPRun;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.logger.LogManager;
@@ -54,43 +54,43 @@ public class Interpreter {
     }
 
     public void handleControlStatement(
-        final RunControlEntry runControlEntry,
+        final Run run,
         final StatementSource source,
         final ParsedStatement statement
     ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE, "HandleControlStatement [%s]", runControlEntry.getRunId());
-        var hp = new HandlerPacket(runControlEntry, source, statement);
+        LogManager.logTrace(LOG_SOURCE, "HandleControlStatement [%s]", run.getRunId());
+        var hp = new HandlerPacket(run, source, statement);
         var handler = HANDLERS.get(statement._mnemonic);
         if (handler == null) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] invalid control statement:%s",
-                                  runControlEntry.getRunId(),
+                                  run.getRunId(),
                                   statement._originalStatement);
-            runControlEntry.postContingency(012, 04, 040);
+            run.postContingency(012, 04, 040);
             statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage);
             hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
         } else if ((source == StatementSource.ER_CSI) && !handler.allowCSI()) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] %s not allowed for ER CSI$",
-                                  runControlEntry.getRunId(),
+                                  run.getRunId(),
                                   statement._mnemonic);
-            runControlEntry.postContingency(012, 04, 042);
+            run.postContingency(012, 04, 042);
             statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement);
             hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
         } else if ((source == StatementSource.ER_CSF) && !handler.allowCSF()) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] %s not allowed for ER CSF$",
-                                  runControlEntry.getRunId(),
+                                  run.getRunId(),
                                   statement._mnemonic);
-            runControlEntry.postContingency(012, 04, 042);
+            run.postContingency(012, 04, 042);
             statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement);
             hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
-        } else if ((runControlEntry instanceof TIPRunControlEntry) && !handler.allowTIP()) {
+        } else if ((run instanceof TIPRun) && !handler.allowTIP()) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] %s not allowed in TIP program",
-                                  runControlEntry.getRunId(),
+                                  run.getRunId(),
                                   statement._mnemonic);
-            runControlEntry.postContingency(012, 04, 042);
+            run.postContingency(012, 04, 042);
             statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement);
             hp._statement._facStatusResult.mergeStatusBits(0_400000_000000L);
         } else {
@@ -99,7 +99,7 @@ public class Interpreter {
 
         LogManager.logTrace(LOG_SOURCE,
                             "HandleControlStatement [%s] returning code %012o",
-                            runControlEntry.getRunId(),
+                            run.getRunId(),
                             statement._facStatusResult.getStatusWord());
     }
 
@@ -126,10 +126,10 @@ public class Interpreter {
      * @return ParseStatement object
      */
     public static ParsedStatement parseControlStatement(
-        final RunControlEntry runControlEntry,
+        final Run run,
         final String statement
     ) {
-        LogManager.logTrace(LOG_SOURCE, "parseControlStatement [%s] %s", runControlEntry.getRunId(), statement);
+        LogManager.logTrace(LOG_SOURCE, "parseControlStatement [%s] %s", run.getRunId(), statement);
 
         var ps = new ParsedStatement();
         ps._originalStatement = statement;
@@ -144,8 +144,8 @@ public class Interpreter {
         // start parsing - look for masterspace
         var p = new Parser(working);
         if (p.atEnd() || !p.parseChar('@')) {
-            LogManager.logWarning(LOG_SOURCE, "[%s] statement does not begin with '@'", runControlEntry.getRunId());
-            runControlEntry.postContingency(012, 04, 040);
+            LogManager.logWarning(LOG_SOURCE, "[%s] statement does not begin with '@'", run.getRunId());
+            run.postContingency(012, 04, 040);
             postSyntaxError(ps._facStatusResult);
             return ps;
         }

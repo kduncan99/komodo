@@ -11,7 +11,7 @@ import com.bearsnake.komodo.kexec.tasks.Task;
 import java.io.PrintStream;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class RunControlEntry {
+public abstract class Run {
 
     protected final String _accountId;
     protected String _defaultQualifier;
@@ -38,30 +38,28 @@ public abstract class RunControlEntry {
 
     // TODO privileges
 
-    public RunControlEntry(final RunType runType,
-                           final String runId,
-                           final String originalRunId,
-                           final String projectId,
-                           final String accountId,
-                           final String userId) {
+    public Run(final RunType runType,
+               final String runId,
+               final String originalRunId,
+               final String projectId,
+               final String accountId,
+               final String userId) {
+        // Nothing here can rely on the Configuration - we go here when Exec is instantiated,
+        // and that happens well before we have a Configuration object.
         _runType = runType;
         _accountId = accountId;
         _originalRunId = originalRunId;
         _projectId = projectId;
         _runId = runId;
         _userId = userId;
-
         _runConditionWord = new RunConditionWord();
-        _cardLimit = Exec.getInstance().getConfiguration().getMaxCards();
-        _pageLimit = Exec.getInstance().getConfiguration().getMaxPages();
-
         _defaultQualifier = projectId;
         _impliedQualifier = projectId;
     }
 
     public void decrementWaitingForMassStorage() { _waitingForMassStorageCounter.decrementAndGet(); }
     public void decrementWaitingForPeripheral() { _waitingForPeripheralCounter.decrementAndGet(); }
-    public final String getAccountId() { return _accountId; }
+    public String getAccountId() { return _accountId; }
     public final String getDefaultQualifier() { return _defaultQualifier; }
     public final FacilitiesItemTable getFacilitiesItemTable() { return _facilitiesItemTable; }
     public final String getImpliedQualifier() { return _impliedQualifier; }

@@ -121,7 +121,7 @@ class AsgHandler extends Handler {
             return;
         }
 
-        var rce = hp._runControlEntry;
+        var rce = hp._run;
         var fsResult = hp._statement._facStatusResult;
 
         // get the filename field
@@ -288,7 +288,7 @@ class AsgHandler extends Handler {
         var doNotHoldRun = (hp._optionWord & Z_OPTION) != 0;
 
         var fm = Exec.getInstance().getFacilitiesManager();
-        if (fm.assignDiskUnitToRun(hp._runControlEntry,
+        if (fm.assignDiskUnitToRun(hp._run,
                                    fs,
                                    device.getNodeIdentifier(),
                                    packName,
@@ -493,7 +493,7 @@ class AsgHandler extends Handler {
         var doNotHoldRun = (hp._optionWord & Z_OPTION) != 0;
 
         var fm = Exec.getInstance().getFacilitiesManager();
-        if (fm.assignCatalogedDiskFileToRun(hp._runControlEntry,
+        if (fm.assignCatalogedDiskFileToRun(hp._run,
                                             fileSpecification,
                                             hp._optionWord,
                                             equip,

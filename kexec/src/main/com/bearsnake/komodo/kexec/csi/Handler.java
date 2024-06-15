@@ -52,7 +52,7 @@ abstract class Handler {
         }
 
         if (!result && hp._sourceIsExecRequest) {
-            hp._runControlEntry.postContingency(012, 04, 040);
+            hp._run.postContingency(012, 04, 040);
         }
 
         return result;
@@ -122,7 +122,7 @@ abstract class Handler {
         }
 
         if (!result && hp._sourceIsExecRequest) {
-            hp._runControlEntry.postContingency(012, 04, 040);
+            hp._run.postContingency(012, 04, 040);
         }
 
         return result;
@@ -190,7 +190,7 @@ abstract class Handler {
                 if (!Character.isAlphabetic(ch)) {
                     LogManager.logWarning(hp._statement._mnemonic, "Error in options field:%s", optStr);
                     if (hp._sourceIsExecRequest) {
-                        hp._runControlEntry.postContingency(012, 04, 040);
+                        hp._run.postContingency(012, 04, 040);
                     }
                     return false;
                 }
