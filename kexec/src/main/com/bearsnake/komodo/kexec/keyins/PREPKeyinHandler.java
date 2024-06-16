@@ -75,7 +75,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         var cw = new ChannelProgram.ControlWord().setBuffer(labelSlice)
                                                  .setDirection(ChannelProgram.Direction.Increment)
                                                  .setBufferOffset(0)
-                                                 .setTransferCount(28);
+                                                 .setTransferCountWords(28);
         var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
                                      .setNodeIdentifier(device.getNodeIdentifier())
                                      .setBlockId(0)
@@ -228,7 +228,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         var cw = new ChannelProgram.ControlWord().setBuffer(dirTrackSlice)
                                                  .setDirection(ChannelProgram.Direction.Increment)
                                                  .setBufferOffset(0)
-                                                 .setTransferCount(1792);
+                                                 .setTransferCountWords(1792);
         var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
                                      .setNodeIdentifier(device.getNodeIdentifier())
                                      .setBlockId(directoryTrackBlockAddress)
@@ -281,7 +281,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         var cw = new ChannelProgram.ControlWord().setBuffer(new ArraySlice(label))
                                                  .setDirection(ChannelProgram.Direction.Increment)
                                                  .setBufferOffset(0)
-                                                 .setTransferCount(PrepFactor.getPrepFactorFromBlockSize(blockSize));
+                                                 .setTransferCountWords(PrepFactor.getPrepFactorFromBlockSize(blockSize));
         var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
                                      .setNodeIdentifier(device.getNodeIdentifier())
                                      .setBlockId(0)

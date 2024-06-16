@@ -72,11 +72,19 @@ public class Exec extends Run {
         _mfdManager = new MFDManager();
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+    // Run interface
+    // -----------------------------------------------------------------------------------------------------------------
+
     @Override public String getAccountId() { return _configuration.getMasterAccountId(); }
     @Override public final boolean isFinished() { return false; }
     @Override public final boolean isPrivileged() { return true; }
     @Override public final boolean isStarted() { return true; }
     @Override public final boolean isSuspended() { return false; }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // public
+    // -----------------------------------------------------------------------------------------------------------------
 
     public Configuration getConfiguration() { return _configuration; }
     public ConsoleManager getConsoleManager() { return _consoleManager; }
@@ -181,6 +189,67 @@ public class Exec extends Run {
         _facilitiesManager = null;
         _keyinManager = null;
         _mfdManager = null;
+    }
+
+    /**
+     * Given an original runid (which should be uppercase already, but we don't trust that)
+     * we generate a new unique runid so that we never have duplicated runids.
+     * Because we force uppercase, the caller should *always* use the result of this
+     * algorithm for the actual runid of a run.
+     * @param runid proposed (original) runid
+     * @return unique runid
+     */
+    public String createUniqueRunid(
+        final String runid
+    ) throws ExecStoppedException {
+        var original = runid.toUpperCase();
+        var proposed = original;
+        synchronized (_runEntries) {
+            if (!_runEntries.containsKey(proposed)) {
+                return proposed;
+            }
+
+            if (proposed.length() < 6) {
+                proposed += 'A';
+                while (_runEntries.containsKey(proposed)) {
+                    var baseLen = proposed.length() - 1;
+                    var lastChar = proposed.charAt(baseLen);
+                    if (lastChar == '9') {
+                        // This allows us to move on from CMSA to CMSAA etc, or to use the standard
+                        // six-character rotation thereafter
+                        return createUniqueRunid(proposed);
+                    }
+
+                    lastChar = (lastChar == 'Z') ? '0' : lastChar++;
+                    proposed = proposed.substring(0, baseLen) + lastChar;
+                }
+            } else {
+                while (!_runEntries.containsKey(proposed)) {
+                    var chars = proposed.getBytes();
+                    int bx = 5;
+                    while (bx >= 0) {
+                        var ch = chars[bx];
+                        if (ch == '9') {
+                            chars[bx] = 'A';
+                            bx--;
+                        } else if (ch == 'Z') {
+                            chars[bx] = '0';
+                            break;
+                        } else {
+                            chars[bx]++;
+                            break;
+                        }
+                    }
+                    proposed = new String(chars);
+                    if (proposed.equals(original)) {
+                        stop(StopCode.FullCycleReachedForRunIds);
+                        throw new ExecStoppedException();
+                    }
+                }
+            }
+        }
+
+        return proposed;
     }
 
     public void displayDateAndTime() {
@@ -455,6 +524,39 @@ public class Exec extends Run {
         return sendExecRestrictedReadReplyMessage(message, candidates, null, consoleType);
     }
 
+    /**
+     * this is stupid, but handy
+     */
+    public static void sleep(final int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ex) {
+            // do nothing
+        }
+    }
+
+    /**
+     * All exec code should invoke this in order to stop the exec.
+     * It does NOT immediately shut things down, but it will cause that to happen fairly soon,
+     * as the exec thread notices and responds.
+     * @param stopCode reason for stopping
+     */
+    public void stop(final StopCode stopCode) {
+        LogManager.logTrace(LOG_SOURCE, "stop(%s)", stopCode);
+        if (_phase == Phase.Stopped) {
+            LogManager.logError(LOG_SOURCE, "Already stopped");
+        } else {
+            _stopCode = stopCode;
+            _stopFlag = true;
+            _phase = Phase.Stopped;
+            _managers.forEach(Manager::stop);
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // private
+    // -----------------------------------------------------------------------------------------------------------------
+
     private String sendExecRestrictedReadReplyMessage(
         final String message,
         final String[] candidates,
@@ -502,32 +604,4 @@ public class Exec extends Run {
         return rrmsg.getResponse().toUpperCase();
     }
 
-    /**
-     * this is stupid, but handy
-     */
-    public static void sleep(final int millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ex) {
-            // do nothing
-        }
-    }
-
-    /**
-     * All exec code should invoke this in order to stop the exec.
-     * It does NOT immediately shut things down, but it will cause that to happen fairly soon,
-     * as the exec thread notices and responds.
-     * @param stopCode reason for stopping
-     */
-    public void stop(final StopCode stopCode) {
-        LogManager.logTrace(LOG_SOURCE, "stop(%s)", stopCode);
-        if (_phase == Phase.Stopped) {
-            LogManager.logError(LOG_SOURCE, "Already stopped");
-        } else {
-            _stopCode = stopCode;
-            _stopFlag = true;
-            _phase = Phase.Stopped;
-            _managers.forEach(Manager::stop);
-        }
-    }
 }

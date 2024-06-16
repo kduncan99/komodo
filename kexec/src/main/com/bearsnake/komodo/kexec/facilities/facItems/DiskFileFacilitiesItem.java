@@ -4,10 +4,13 @@
 
 package com.bearsnake.komodo.kexec.facilities.facItems;
 
+import com.bearsnake.komodo.kexec.mfd.AcceleratedCycleInfo;
+
 import java.io.PrintStream;
 
 public abstract class DiskFileFacilitiesItem extends FacilitiesItem {
 
+    protected AcceleratedCycleInfo _acceleratedCycleInfo; // only for cataloged disk files
     protected boolean _deleteOnAnyRunTermination;
     protected boolean _deleteOnNormalRunTermination;
     protected boolean _isExclusive;
@@ -34,6 +37,7 @@ public abstract class DiskFileFacilitiesItem extends FacilitiesItem {
 
     public final boolean deleteOnAnyRunTermination() { return _deleteOnAnyRunTermination; }
     public final boolean deleteOnNormalRunTermination() { return _deleteOnNormalRunTermination; }
+    public final AcceleratedCycleInfo getAcceleratedCycleInfo() { return _acceleratedCycleInfo; }
     public final boolean isExclusive(){ return _isExclusive; }
     public final boolean isReadable() { return _isReadable; }
     public final boolean isWaitingForExclusiveRelease() { return _waitingForExclusiveRelease; }
@@ -45,6 +49,7 @@ public abstract class DiskFileFacilitiesItem extends FacilitiesItem {
         return _waitingForExclusiveRelease || _waitingForExclusiveUse || _waitingForRollback;
     }
 
+    public final DiskFileFacilitiesItem setAcceleratedCycleInfo(final AcceleratedCycleInfo value) { _acceleratedCycleInfo = value; return this; }
     public final DiskFileFacilitiesItem setDeleteOnAnyRunTermination(final boolean value) { _deleteOnAnyRunTermination = value; return this; }
     public final DiskFileFacilitiesItem setDeleteOnNormalRunTermination(final boolean value) { _deleteOnNormalRunTermination = value; return this; }
     public final DiskFileFacilitiesItem setIsExclusive(final boolean value) { _isExclusive = value; return this; }

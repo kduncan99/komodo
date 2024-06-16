@@ -4,10 +4,13 @@
 
 package com.bearsnake.komodo.kexec.facilities.facItems;
 
+import com.bearsnake.komodo.kexec.mfd.AcceleratedCycleInfo;
+
 import java.io.PrintStream;
 
 public class TapeFileFacilitiesItem extends FacilitiesItem {
 
+    protected AcceleratedCycleInfo _acceleratedCycleInfo; // only for cataloged tape files
     protected boolean _deleteOnAnyRunTermination;
     protected boolean _deleteOnNormalRunTermination;
     protected boolean _waitingForFile;     // some other run(s) has/have assigned the file.
@@ -17,10 +20,10 @@ public class TapeFileFacilitiesItem extends FacilitiesItem {
     public void dump(final PrintStream out,
                      final String indent) {
         super.dump(out, indent);
-        out.printf("%s  delAnyTerm:%s delNormTerm:%s waitFile:%s waitUnit:%s\n",
+        out.printf("%s  delAnyTerm:%s delNormTerm:%s\n",
                    indent, _deleteOnAnyRunTermination, _deleteOnNormalRunTermination);
         if (_waitingForFile || _waitingForTapeUnit) {
-            out.printf("%s  HOLDS:%s%s%s\n", indent,
+            out.printf("%s  HOLDS:%s%s\n", indent,
                        _waitingForFile ? " FILE" : "",
                        _waitingForTapeUnit ? " UNIT" : "");
         }
@@ -28,6 +31,7 @@ public class TapeFileFacilitiesItem extends FacilitiesItem {
 
     public final boolean deleteOnAnyRunTermination() { return _deleteOnAnyRunTermination; }
     public final boolean deleteOnNormalRunTermination() { return _deleteOnNormalRunTermination; }
+    public final AcceleratedCycleInfo getAcceleratedCycleInfo() { return _acceleratedCycleInfo; }
     public final boolean isWaitingForFile() { return _waitingForFile; }
     public final boolean isWaitingForTapeUnit() { return _waitingForTapeUnit; }
 
@@ -35,6 +39,7 @@ public class TapeFileFacilitiesItem extends FacilitiesItem {
         return _waitingForFile || _waitingForTapeUnit;
     }
 
+    public final TapeFileFacilitiesItem setAcceleratedCycleInfo(final AcceleratedCycleInfo value) { _acceleratedCycleInfo = value; return this; }
     public final TapeFileFacilitiesItem setDeleteOnAnyRunTermination(final boolean value) { _deleteOnAnyRunTermination = value; return this; }
     public final TapeFileFacilitiesItem setDeleteOnNormalRunTermination(final boolean value) { _deleteOnNormalRunTermination = value; return this; }
     public final TapeFileFacilitiesItem setIsWaitingForFile(final boolean value) { _waitingForFile = value; return this; }

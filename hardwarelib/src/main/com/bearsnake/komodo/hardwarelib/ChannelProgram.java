@@ -45,17 +45,17 @@ public class ChannelProgram {
         private Direction _direction = Direction.Increment;
         private ArraySlice _buffer;
         private int _bufferOffset;   // index into _buffer
-        private int _transferCount;  // in words
+        private int _transferCountWords;  // in words
 
         public final Direction getDirection() { return _direction; }
         public final ArraySlice getBuffer() { return _buffer; }
         public final int getBufferOffset() { return _bufferOffset; }
-        public final int getTransferCount() { return _transferCount; }
+        public final int getTransferCount() { return _transferCountWords; }
 
         public ControlWord setDirection(Direction value) { _direction = value; return this; }
         public ControlWord setBuffer(ArraySlice value) { _buffer = value; return this; }
         public ControlWord setBufferOffset(int value) { _bufferOffset = value; return this; }
-        public ControlWord setTransferCount(int value) { _transferCount = value; return this; }
+        public ControlWord setTransferCountWords(int value) { _transferCountWords = value; return this; }
     }
 
     long _blockId;
@@ -87,7 +87,7 @@ public class ChannelProgram {
         sb.append(String.format("Node:%d Func:%s SubFunc:%s BlkId:%d",
                                 _nodeIdentifier, _function, _subFunction, _blockId));
         for (var cw : _controlWords) {
-            sb.append(String.format(" [%s off:%d xfr:%d]", cw._direction, cw._bufferOffset, cw._transferCount));
+            sb.append(String.format(" [%s off:%d xfr:%d]", cw._direction, cw._bufferOffset, cw._transferCountWords));
         }
         return sb.toString();
     }

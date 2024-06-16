@@ -232,12 +232,12 @@ public class MFDManager implements Manager {
      * @param qualifier qualifier of the file
      * @param filename filename of the file
      * @param absoluteCycle absolute cycle of the file
-     * @return FileCycleInfo object describing (some of) the meta-information
+     * @return AcceleratedCycleInfo object describing (some of) the meta-information
      * @throws ExecStoppedException if something goes monkey-wise
      * @throws FileCycleDoesNotExistException the cycle indicated by the absolute cycle does not exist
      * @throws FileSetDoesNotExistException no cycle with the given qualifier and filename exists
      */
-    public synchronized FileCycleInfo accelerateFileCycle(
+    public synchronized AcceleratedCycleInfo accelerateFileCycle(
         final String qualifier,
         final String filename,
         final int absoluteCycle
@@ -299,7 +299,7 @@ public class MFDManager implements Manager {
         fcInfo.setCurrentAssignCount(curCount);
         markDirectorySectorDirty(fcInfo._mainItem0Address);
 
-        return acInfo.getFileCycleInfo();
+        return acInfo;
     }
 
     /**
@@ -568,6 +568,17 @@ public class MFDManager implements Manager {
         }
 
         return fsInfo;
+    }
+
+    /**
+     * Retrieves NodeInfo for a particular LDAT
+     * @param ldatIndex ldat index
+     * @return NodeInfo object, or null if the LDAT is not known
+     */
+    public NodeInfo getNodeInfoForLDAT(
+        final int ldatIndex
+    ) {
+        return _logicalDATable.get(ldatIndex);
     }
 
     /**
@@ -1482,7 +1493,7 @@ public class MFDManager implements Manager {
             var mfdRelAddr = new MFDRelativeAddress(mfdRelativeTrackId << 6);
             var cw = new ChannelProgram.ControlWord().setBuffer(_cachedMFDTracks.get(mfdRelAddr))
                                                      .setDirection(ChannelProgram.Direction.Increment)
-                                                     .setTransferCount(1792);
+                                                     .setTransferCountWords(1792);
             var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
                                          .setBlockId(blockId)
                                          .setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier())

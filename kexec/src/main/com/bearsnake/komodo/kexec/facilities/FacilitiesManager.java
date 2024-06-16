@@ -368,7 +368,6 @@ public class FacilitiesManager implements Manager {
                 fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
-
         } else {
             // It's either relative or unspecified. If unspecified, we treat it like relative +0.
             // Check the fac items to see if the file is already assigned with this relative cycle number.
@@ -734,7 +733,8 @@ public class FacilitiesManager implements Manager {
 
             // Accelerate it via MFD (it should not have been yet).
             try {
-                mm.accelerateFileCycle(facItem.getQualifier(), facItem.getFilename(), facItem.getAbsoluteCycle());
+                var acInfo = mm.accelerateFileCycle(qualifier, filename, absCycle);
+                facItem.setAcceleratedCycleInfo(acInfo);
             } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
                 LogManager.logFatal(LOG_SOURCE,
                                     "MFD cannot find a file cycle which must exist %s*%s(%d)",
@@ -748,6 +748,8 @@ public class FacilitiesManager implements Manager {
             // Now (finally) add the new facItem to the facItemTable
             fiTable.addFacilitiesItem(facItem);
         }
+
+        // TODO (re)allocate initial reserve?
 
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s result:%s",
                             run.getRunId(),
@@ -1505,6 +1507,339 @@ public class FacilitiesManager implements Manager {
     }
 
     /**
+     * Reads from a disk file for the exec - sector addressable only.
+     * If the logical IO spans logical tracks, it will be broken up into multiple physical IOs on track boundaries.
+     * If the first physical IO is not aligned on a physical block, we do double-buffering for that IO.
+     * @param internalName internal filename, resolvable in the exec facilities table
+     * @param address sector address for start of IO
+     * @param buffer buffer into which words are to be read (must be at least as many words as transferCount)
+     * @param transferCount number of words to be read (should be a multiple of 28).
+     * @throws ExecStoppedException If the exec stops during this process
+     */
+    public void ioExecReadFromDiskFile(
+        final String internalName,
+        final long address,
+        final ArraySlice buffer,
+        final int transferCount
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE,
+                            "ioExecReadFromDiskFile('%s', addr=%d words=%d",
+                            internalName, address, transferCount);
+        var exec = Exec.getInstance();
+        var mm = exec.getMFDManager();
+
+        if (buffer.getSize() < transferCount) {
+            LogManager.logFatal(LOG_SOURCE, "Conflict between buffer size and transfer count");
+            exec.stop(StopCode.InternalExecIOFailed);
+            throw new ExecStoppedException();
+        }
+
+        var fit = exec.getFacilitiesItemTable();
+        var facItem = fit.getFacilitiesItemByInternalName(internalName);
+        if (facItem == null) {
+            LogManager.logFatal(LOG_SOURCE, "Cannot find facItem for file %s", internalName);
+            exec.stop(StopCode.InternalExecIOFailed);
+            throw new ExecStoppedException();
+        }
+
+        var dfi = (DiskFileFacilitiesItem) facItem;
+        var aci = dfi.getAcceleratedCycleInfo();
+        var fas = aci.getFileAllocationSet();
+
+        int destOffset = 0;
+        int wordsRemaining = transferCount;
+        long nextAddress = address;
+        while (wordsRemaining > 0) {
+            // Find the ldat and device-relative track address or the next relative address.
+            var relativeTrack = nextAddress >> 6;
+            var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
+
+            // Find the block address corresponding to the hardware track address.
+            // We need pack info to figure this out.
+            var ni = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
+            var pi = (PackInfo)ni.getMediaInfo();
+            int blocksPerTrack = 1792 / pi.getPrepFactor();
+            int sectorsPerBlock = pi.getPrepFactor() / 28;
+            long baseBlock = hwTid.getTrackId() * blocksPerTrack;
+
+            // Considering that the requested address may not be aligned to the containing block...
+            // What is the sector offset requested, from the beginning of the containing track?
+            // Use that, with the number of sectors per block, to calculate the sector offset
+            // from the containing block, and the block offset from the containing track.
+            var sectorOffsetFromTrack = nextAddress & 077;
+            var sectorOffsetFromBlock = sectorOffsetFromTrack % sectorsPerBlock;
+            var blockOffsetFromTrack = sectorOffsetFromTrack / sectorsPerBlock;
+
+            // Do we need to double-buffer (yes, if the sector is not aligned with the containing block)
+            if (sectorOffsetFromBlock > 0) {
+                // How many words are we going to transfer from disk?
+                // This is not necessarily the same as the number of words we're going to put into the user buffer.
+                // Calculate the requested amount first. This is the amount (if any) in the block ahead of the
+                // desired sector (see sectorOffsetFromBlock), added to the remaining word count.
+                // Then calculate the limit based on the number of blocks from the starting block to the end of the track.
+                int preWords = (int) (sectorOffsetFromBlock * 28);
+                int reqWords = preWords + wordsRemaining;
+                int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
+                int transferWordCount = Math.min(reqWords, limitWords);
+
+                // Set up a channel program and route the IO
+                var tempBuffer = new ArraySlice(new long[transferWordCount]);
+                var blockId = baseBlock + blockOffsetFromTrack;
+                var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
+                                                         .setBuffer(tempBuffer)
+                                                         .setDirection(ChannelProgram.Direction.Increment);
+                var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
+                                             .setNodeIdentifier(ni.getNode().getNodeIdentifier())
+                                             .setBlockId(blockId)
+                                             .addControlWord(cw);
+                try {
+                    routeIo(cp);
+                    while (cp.getIoStatus() == IoStatus.InProgress) {
+                        Exec.sleep(10);
+                    }
+                } catch (NoRouteForIOException ex) {
+                    LogManager.logCatching(LOG_SOURCE, ex);
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+
+                if (cp.getIoStatus() != IoStatus.Complete) {
+                    LogManager.logFatal(LOG_SOURCE,
+                                        "IO Error file=%s status=%s",
+                                        internalName,
+                                        cp.getIoStatus().toString());
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+
+                // transfer from cp buffer to user buffer and update counters and indices
+                for (int sx = preWords; sx < transferWordCount; sx++) {
+                    buffer.set(destOffset++, tempBuffer.get(sx));
+                }
+                int actualWords = transferWordCount - preWords;
+                wordsRemaining -= actualWords;
+                nextAddress += actualWords / 28;
+            } else {
+                // we can do IO directly into the caller's buffer
+                // The following algorithm is a simpler version of the above, given preWords is zero.
+                int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
+                int transferWordCount = Math.min(wordsRemaining, limitWords);
+
+                // Set up a channel program and route the IO
+                var blockId = baseBlock + blockOffsetFromTrack;
+                var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
+                                                         .setBuffer(buffer)
+                                                         .setBufferOffset(destOffset)
+                                                         .setDirection(ChannelProgram.Direction.Increment);
+                var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
+                                             .setNodeIdentifier(ni.getNode().getNodeIdentifier())
+                                             .setBlockId(blockId)
+                                             .addControlWord(cw);
+                try {
+                    routeIo(cp);
+                    while (cp.getIoStatus() == IoStatus.InProgress) {
+                        Exec.sleep(10);
+                    }
+                } catch (NoRouteForIOException ex) {
+                    LogManager.logCatching(LOG_SOURCE, ex);
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+
+                if (cp.getIoStatus() != IoStatus.Complete) {
+                    LogManager.logFatal(LOG_SOURCE,
+                                        "IO Error file=%s status=%s",
+                                        internalName,
+                                        cp.getIoStatus().toString());
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+
+                wordsRemaining -= transferWordCount;
+                nextAddress += transferWordCount / 28;
+            }
+        }
+    }
+
+    /**
+     * Writes to a disk file for the exec - sector addressable only.
+     * If the logical IO spans logical tracks, it will be broken up into multiple physical IOs on track boundaries.
+     * If the first physical IO is not aligned on a physical block, we do double-buffering for that IO.
+     * @param internalName internal filename, resolvable in the exec facilities table
+     * @param address sector address for start of IO
+     * @param buffer buffer from which words are to be written (must be at least as many words as transferCount)
+     * @param transferCount number of words to be written (should be a multiple of 28).
+     * @throws ExecStoppedException If the exec stops during this process
+     */
+    public void ioExecWriteToDiskFile(
+        final String internalName,
+        final long address,
+        final ArraySlice buffer,
+        final int transferCount
+    ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE,
+                            "ioExecWriteToDiskFile('%s', addr=%d words=%d",
+                            internalName, address, transferCount);
+        var exec = Exec.getInstance();
+        var mm = exec.getMFDManager();
+
+        if (buffer.getSize() < transferCount) {
+            LogManager.logFatal(LOG_SOURCE, "Conflict between buffer size and transfer count");
+            exec.stop(StopCode.InternalExecIOFailed);
+            throw new ExecStoppedException();
+        }
+
+        var fit = exec.getFacilitiesItemTable();
+        var facItem = fit.getFacilitiesItemByInternalName(internalName);
+        if (facItem == null) {
+            LogManager.logFatal(LOG_SOURCE, "Cannot find facItem for file %s", internalName);
+            exec.stop(StopCode.InternalExecIOFailed);
+            throw new ExecStoppedException();
+        }
+
+        var dfi = (DiskFileFacilitiesItem) facItem;
+        var aci = dfi.getAcceleratedCycleInfo();
+        var fas = aci.getFileAllocationSet();
+
+        int destOffset = 0;
+        int wordsRemaining = transferCount;
+        long nextAddress = address;
+        while (wordsRemaining > 0) {
+            // Find the ldat and device-relative track address or the next relative address.
+            var relativeTrack = nextAddress >> 6;
+            var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
+
+            // Find the block address corresponding to the hardware track address.
+            // We need pack info to figure this out.
+            var ni = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
+            var pi = (PackInfo)ni.getMediaInfo();
+            int blocksPerTrack = 1792 / pi.getPrepFactor();
+            int sectorsPerBlock = pi.getPrepFactor() / 28;
+            long baseBlock = hwTid.getTrackId() * blocksPerTrack;
+
+            // Considering that the requested address may not be aligned to the containing block...
+            // What is the sector offset requested, from the beginning of the containing track?
+            // Use that, with the number of sectors per block, to calculate the sector offset
+            // from the containing block, and the block offset from the containing track.
+            var sectorOffsetFromTrack = nextAddress & 077;
+            var sectorOffsetFromBlock = sectorOffsetFromTrack % sectorsPerBlock;
+            var blockOffsetFromTrack = sectorOffsetFromTrack / sectorsPerBlock;
+
+            // Do we need to double-buffer (yes, if the sector is not aligned with the containing block)
+            if (sectorOffsetFromBlock > 0) {
+                // How many words are we going to transfer from disk?
+                // This is not necessarily the same as the number of words we're going to put into the user buffer.
+                // Calculate the requested amount first. This is the amount (if any) in the block ahead of the
+                // desired sector (see sectorOffsetFromBlock), added to the remaining word count.
+                // Then calculate the limit based on the number of blocks from the starting block to the end of the track.
+                int preWords = (int) (sectorOffsetFromBlock * 28);
+                int reqWords = preWords + wordsRemaining;
+                int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
+                int transferWordCount = Math.min(reqWords, limitWords);
+
+                // We need to do a read-before-write. Do so...
+                var tempBuffer = new ArraySlice(new long[transferWordCount]);
+                var blockId = baseBlock + blockOffsetFromTrack;
+                var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
+                                                         .setBuffer(tempBuffer)
+                                                         .setDirection(ChannelProgram.Direction.Increment);
+                var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
+                                             .setNodeIdentifier(ni.getNode().getNodeIdentifier())
+                                             .setBlockId(blockId)
+                                             .addControlWord(cw);
+                try {
+                    routeIo(cp);
+                    while (cp.getIoStatus() == IoStatus.InProgress) {
+                        Exec.sleep(10);
+                    }
+                } catch (NoRouteForIOException ex) {
+                    LogManager.logCatching(LOG_SOURCE, ex);
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+
+                if (cp.getIoStatus() != IoStatus.Complete) {
+                    LogManager.logFatal(LOG_SOURCE,
+                                        "IO Error file=%s status=%s",
+                                        internalName,
+                                        cp.getIoStatus().toString());
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+
+                // Now copy user data from the caller's buffer into the temporary buffer and write it back out.
+                var sx = 0;
+                for (int dx = preWords; dx < transferWordCount; dx++) {
+                    tempBuffer.set(dx, buffer.get(sx++));
+                }
+                cp.setFunction(ChannelProgram.Function.Write);
+
+                try {
+                    routeIo(cp);
+                    while (cp.getIoStatus() == IoStatus.InProgress) {
+                        Exec.sleep(10);
+                    }
+                } catch (NoRouteForIOException ex) {
+                    LogManager.logCatching(LOG_SOURCE, ex);
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+
+                if (cp.getIoStatus() != IoStatus.Complete) {
+                    LogManager.logFatal(LOG_SOURCE,
+                                        "IO Error file=%s status=%s",
+                                        internalName,
+                                        cp.getIoStatus().toString());
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+
+                int actualWords = transferWordCount - preWords;
+                wordsRemaining -= actualWords;
+                nextAddress += actualWords / 28;
+            } else {
+                // we can do IO directly from the caller's buffer
+                // The following algorithm is a simpler version of the above, given preWords is zero.
+                int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
+                int transferWordCount = Math.min(wordsRemaining, limitWords);
+
+                // Set up a channel program and route the IO
+                var blockId = baseBlock + blockOffsetFromTrack;
+                var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
+                                                         .setBuffer(buffer)
+                                                         .setBufferOffset(destOffset)
+                                                         .setDirection(ChannelProgram.Direction.Increment);
+                var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
+                                             .setNodeIdentifier(ni.getNode().getNodeIdentifier())
+                                             .setBlockId(blockId)
+                                             .addControlWord(cw);
+                try {
+                    routeIo(cp);
+                    while (cp.getIoStatus() == IoStatus.InProgress) {
+                        Exec.sleep(10);
+                    }
+                } catch (NoRouteForIOException ex) {
+                    LogManager.logCatching(LOG_SOURCE, ex);
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+
+                if (cp.getIoStatus() != IoStatus.Complete) {
+                    LogManager.logFatal(LOG_SOURCE,
+                                        "IO Error file=%s status=%s",
+                                        internalName,
+                                        cp.getIoStatus().toString());
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+
+                wordsRemaining -= transferWordCount;
+                nextAddress += transferWordCount / 28;
+            }
+        }
+    }
+
+    /**
      * Indicates whether the device with the given identifier is accessible
      * (it has at least one channel path for which the channel is not DN).
      * @param nodeIdentifier identifier of the device
@@ -1686,6 +2021,8 @@ public class FacilitiesManager implements Manager {
                         // TODO stop the exec
                     }
                 }
+
+                // TODO release unused reserve?
 
                 fiTable.removeFacilitiesItem(facItem);
                 mm.decelerateFileCycle(fcInfo);
@@ -2711,7 +3048,7 @@ public class FacilitiesManager implements Manager {
         var channel = selectRoute(disk);
         var cw = new ChannelProgram.ControlWord().setDirection(ChannelProgram.Direction.Increment)
                                                  .setBuffer(new ArraySlice(new long[1792]))
-                                                 .setTransferCount(1792);
+                                                 .setTransferCountWords(1792);
         var cp = new ChannelProgram().addControlWord(cw)
                                      .setFunction(ChannelProgram.Function.Read)
                                      .setBlockId(dirBlockAddr)
@@ -2733,7 +3070,7 @@ public class FacilitiesManager implements Manager {
         var channel = selectRoute(disk);
         var cw = new ChannelProgram.ControlWord().setDirection(ChannelProgram.Direction.Increment)
                                                  .setBuffer(new ArraySlice(new long[28]))
-                                                 .setTransferCount(28);
+                                                 .setTransferCountWords(28);
         var cp = new ChannelProgram().addControlWord(cw)
                                      .setFunction(ChannelProgram.Function.Read)
                                      .setBlockId(0)

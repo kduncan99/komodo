@@ -653,11 +653,6 @@ public class ArraySlice {
     public ArraySlice setT2(final int index, final long partial) { set(index, Word36.setT2(get(index), partial)); return this; }
     public ArraySlice setT3(final int index, final long partial) { set(index, Word36.setT3(get(index), partial)); return this; }
 
-    public void stringToWord36ASCI(
-        final String source
-    ) {
-    }
-
     /**
      * Produces a new object with quarter-words derived from the ASCII characters in the source string.
      * The last word is padded with ascii spaces if so needed.
