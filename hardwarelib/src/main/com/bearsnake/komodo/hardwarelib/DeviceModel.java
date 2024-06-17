@@ -6,5 +6,6 @@ package com.bearsnake.komodo.hardwarelib;
 
 public enum DeviceModel {
     FileSystemDisk,
+    FileSystemImageReader,
     FileSystemTape,
 }

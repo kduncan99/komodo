@@ -6,5 +6,6 @@ package com.bearsnake.komodo.hardwarelib;
 
 public enum ChannelType {
     DiskChannel,
+    SymbiontChannel,
     TapeChannel,
 }

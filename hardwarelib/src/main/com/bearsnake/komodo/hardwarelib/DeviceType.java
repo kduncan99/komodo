@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.hardwarelib;
 
 public enum DeviceType {
+    SymbiontDevice,
     DiskDevice,
     TapeDevice,
 }
