@@ -4,8 +4,6 @@
 
 package com.kadware.komodo.kex.kasm.expressions;
 
-import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
-import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
 import com.kadware.komodo.kex.kasm.*;
 import com.kadware.komodo.kex.kasm.dictionary.*;
 import com.kadware.komodo.kex.kasm.exceptions.ExpressionException;

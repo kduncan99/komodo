@@ -4,8 +4,6 @@
 
 package com.kadware.komodo.kex.klink;
 
-import com.kadware.komodo.baselib.AccessInfo;
-import com.kadware.komodo.baselib.AccessPermissions;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;

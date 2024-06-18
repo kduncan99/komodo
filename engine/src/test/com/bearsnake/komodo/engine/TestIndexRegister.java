@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib;
+package com.bearsnake.komodo.engine;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -10,7 +10,7 @@ import org.junit.Test;
 /**
  * Unit tests for IndexRegister class
  */
-public class Test_IndexRegister {
+public class TestIndexRegister {
 
     @Test
     public void getXM(

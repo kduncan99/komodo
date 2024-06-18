@@ -2,15 +2,14 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib;
+package com.bearsnake.komodo.engine;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
  * Unit tests for InstructionWord class
  */
-public class Test_InstructionWord {
+public class TestInstructionWord {
 
     //  Getters --------------------------------------------------------------------------------------------------------------------
 

@@ -4,10 +4,6 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 
-import com.kadware.komodo.baselib.FloatingPointComponents;
-import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
-import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
-import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.diagnostics.ErrorDiagnostic;

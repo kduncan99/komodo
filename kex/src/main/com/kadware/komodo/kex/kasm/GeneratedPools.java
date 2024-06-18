@@ -5,7 +5,6 @@
 package com.kadware.komodo.kex.kasm;
 
 import com.kadware.komodo.baselib.FieldDescriptor;
-import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.kex.kasm.diagnostics.Diagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.FatalDiagnostic;
 import com.kadware.komodo.kex.kasm.diagnostics.ValueDiagnostic;

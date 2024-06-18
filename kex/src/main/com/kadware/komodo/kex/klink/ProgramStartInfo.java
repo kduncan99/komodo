@@ -4,8 +4,6 @@
 
 package com.kadware.komodo.kex.klink;
 
-import com.kadware.komodo.baselib.VirtualAddress;
-
 /**
  * Contains useful info regarding the address at which the program starts.
  */

@@ -2,18 +2,22 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib;
+package com.bearsnake.komodo.engine;
 
-import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
-import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
-import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
+import com.bearsnake.komodo.baselib.DoubleWord36;
+import com.bearsnake.komodo.baselib.Word36;
+import org.junit.Test;
+
 import java.math.BigInteger;
 import java.util.Random;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import com.bearsnake.komodo.engine.exceptions.*;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
-public class Test_FloatingPointComponents {
+public class TestFloatingPointComponents {
 
     private String padZero(
         final String input,
@@ -51,7 +55,7 @@ public class Test_FloatingPointComponents {
         final FloatingPointComponents fpc
     ) throws CharacteristicOverflowException, CharacteristicUnderflowException {
         DoubleWord36 dw36 = fpc.toDoubleWord36();
-        BigInteger bits = dw36._value;
+        BigInteger bits = dw36.get();
         long sign = bits.shiftRight(71).longValue();
         long characteristic = bits.shiftRight(60).and(BigInteger.valueOf(03777)).longValue();
         long mantissa = bits.and(BigInteger.valueOf(0_7777_7777).shiftLeft(36).or(BigInteger.valueOf(0_777777_777777L))).longValue();

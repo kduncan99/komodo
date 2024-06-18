@@ -354,28 +354,28 @@ public class Word36 implements Comparable<Word36> {
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
-//    public AdditionResult add(Word36 addend)    { return new AdditionResult(add(_value, addend._value)); }
-//    public int compare(Word36 operand)          { return compare(_value, operand._value); }
-//    public DoubleWord36 multiply(Word36 factor) { return new DoubleWord36(multiply(_value, factor._value)); }
-//    public Word36 negate()                      { return new Word36(negate(_value)); }
+    public AdditionResult add(Word36 addend)    { return new AdditionResult(add(_value, addend._value)); }
+    public int compare(Word36 operand)          { return compare(_value, operand._value); }
+    public DoubleWord36 multiply(Word36 factor) { return new DoubleWord36(multiply(_value, factor._value)); }
+    public Word36 negate()                      { _value ^= 0_777777_777777L; return this; }
 
 
     //  Logical Operations ---------------------------------------------------------------------------------------------------------
 
-//    public Word36 logicalAnd(Word36 operand)    { return new Word36(logicalAnd(_value, operand._value)); }
-//    public Word36 logicalNot()                  { return new Word36(logicalNot(_value)); }
-//    public Word36 logicalOr(Word36 operand)     { return new Word36(logicalOr(_value, operand._value)); }
-//    public Word36 logicalXor(Word36 operand)    { return new Word36(logicalXor(_value, operand._value)); }
+    public Word36 logicalAnd(Word36 operand)    { _value = logicalAnd(_value, operand._value); return this; }
+    public Word36 logicalNot()                  { _value = logicalNot(_value); return this; }
+    public Word36 logicalOr(Word36 operand)     { _value = logicalOr(_value, operand._value); return this; }
+    public Word36 logicalXor(Word36 operand)    { _value = logicalXor(_value, operand._value); return this; }
 
 
     //  Shift Operations -----------------------------------------------------------------------------------------------------------
 
-//    public Word36 leftShiftAlgebraic(int count)   { return new Word36(leftShiftAlgebraic(_value, count)); }
-//    public Word36 leftShiftCircular(int count)    { return new Word36(leftShiftCircular(_value, count)); }
-//    public Word36 leftShiftLogical(int count)     { return new Word36(leftShiftLogical(_value, count)); }
-//    public Word36 rightShiftAlgebraic(int count)  { return new Word36(rightShiftAlgebraic(_value, count)); }
-//    public Word36 rightShiftCircular(int count)   { return new Word36(rightShiftCircular(_value, count)); }
-//    public Word36 rightShiftLogical(int count)    { return new Word36(rightShiftLogical(_value, count)); }
+    public Word36 leftShiftAlgebraic(int count)   { _value = leftShiftAlgebraic(_value, count); return this; }
+    public Word36 leftShiftCircular(int count)    { _value = leftShiftCircular(_value, count); return this; }
+    public Word36 leftShiftLogical(int count)     { _value = leftShiftLogical(_value, count); return this; }
+    public Word36 rightShiftAlgebraic(int count)  { _value = rightShiftAlgebraic(_value, count); return this; }
+    public Word36 rightShiftCircular(int count)   { _value = rightShiftCircular(_value, count); return this; }
+    public Word36 rightShiftLogical(int count)    { _value = rightShiftLogical(_value, count); return this; }
 
 
     //  Conversions ----------------------------------------------------------------------------------------------------------------

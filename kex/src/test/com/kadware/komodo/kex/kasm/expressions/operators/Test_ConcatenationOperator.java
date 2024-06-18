@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.kex.kasm.expressions.operators;
 
-import com.kadware.komodo.baselib.FloatingPointComponents;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.CharacterMode;
 import com.kadware.komodo.kex.kasm.InstrumentedAssembler;

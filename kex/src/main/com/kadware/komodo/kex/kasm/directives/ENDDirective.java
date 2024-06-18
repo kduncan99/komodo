@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.kex.kasm.directives;
 
-import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.AssemblerOption;
 import com.kadware.komodo.kex.kasm.LabelFieldComponents;

@@ -1,21 +1,23 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib;
+package com.bearsnake.komodo.engine;
 
-import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
-import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
-import com.kadware.komodo.baselib.exceptions.DivideByZeroException;
+import com.bearsnake.komodo.baselib.DoubleWord36;
+import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.engine.exceptions.CharacteristicOverflowException;
+import com.bearsnake.komodo.engine.exceptions.CharacteristicUnderflowException;
+import com.bearsnake.komodo.engine.exceptions.DivideByZeroException;
+
 import java.math.BigInteger;
 
 /**
  * This class captures all floating point manipulations.
- * The plan is to keep everything componetized internally,
+ * The plan is to keep everything stored as components internally,
  * ingesting various FP formats and emitting them as necessary.
  * It is invariant on purpose, so ... there's a bit of a performance hit.
  */
-@SuppressWarnings("Duplicates")
 public class FloatingPointComponents {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -115,11 +117,6 @@ public class FloatingPointComponents {
         final double value
     ) {
         if (value == 0.0) {
-            _exponent = 0;
-            _mantissa = 0;
-            _integral = 0;
-            _isNegative = false;
-        } else if (value == -0.0) {
             _exponent = 0;
             _mantissa = 0;
             _integral = 0;

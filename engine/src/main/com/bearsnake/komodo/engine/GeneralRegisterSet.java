@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.engine.exceptions.NotFoundEngineException;
+import com.bearsnake.komodo.engine.exceptions.NotFoundException;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.BufferedWriter;
@@ -161,18 +161,18 @@ public class GeneralRegisterSet {
      * Given a string, we return the GRS address of the indicated register if it is in fact a register name
      * @param registerName for which we search
      * @return GRS address of the register
-     * @throws NotFoundEngineException if the given name isn't a register name
+     * @throws NotFoundException if the given name isn't a register name
      */
     public static int getGRSIndex(
         final String registerName
-    ) throws NotFoundEngineException {
+    ) throws NotFoundException {
         for (int rx = 0; rx < NAMES.length; rx++) {
             if (registerName.equals( NAMES[rx] )) {
                 return rx;
             }
         }
 
-        throw new NotFoundEngineException(registerName);
+        throw new NotFoundException(registerName);
     }
 
     /**

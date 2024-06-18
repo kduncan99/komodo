@@ -4,8 +4,6 @@
 
 package com.bearsnake.komodo.hardwarelib;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
-
 import java.nio.ByteBuffer;
 
 /**
@@ -73,15 +71,10 @@ public class SymbiontChannel extends Channel {
             return;
         }
 
-        var array = ArraySlice.stringToWord36ASCII(new String(ioPkt.getBuffer().array()));
-        var destBuffer = cw.getBuffer();
-        var sx = 0;
-        var dx = 0;
-        while (dx < destBuffer.getSize() && sx < array._length) {
-            destBuffer.set(dx++, array.get(sx++));
-        }
+        var arr = ioPkt.getBuffer().array();
+        cw.getBuffer().unpack(arr, false);
 
-        channelProgram.setWordsTransferred(array._length / 4);
+        channelProgram.setWordsTransferred(arr.length / 4);
         channelProgram.setIoStatus(ioPkt.getStatus());
     }
 
@@ -124,11 +117,12 @@ public class SymbiontChannel extends Channel {
             return;
         }
 
-        var ascii = cw.getBuffer().toASCII(false);
+        var bytes = new byte[cw.getBuffer().getSize()];
+        cw.getBuffer().pack(bytes);
         var totalWordCount = cw.getTransferCount();
         var ioPkt = new SymbiontIoPacket();
         ioPkt.setWordCount(totalWordCount)
-             .setBuffer(ByteBuffer.wrap(ascii.getBytes()))
+             .setBuffer(ByteBuffer.wrap(bytes))
              .setFunction(IoFunction.Write);
         device.startIo(ioPkt);
         if (ioPkt.getStatus() != IoStatus.Complete) {

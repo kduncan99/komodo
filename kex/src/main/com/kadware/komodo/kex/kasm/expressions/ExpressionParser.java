@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.kex.kasm.expressions;
 
-import com.kadware.komodo.baselib.FloatingPointComponents;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.AssemblerOption;
 import com.kadware.komodo.kex.kasm.Locale;

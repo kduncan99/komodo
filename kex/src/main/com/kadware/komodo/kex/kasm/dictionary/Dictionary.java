@@ -4,7 +4,6 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 
-import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.kex.kasm.Locale;
 import java.util.HashMap;
 import java.util.Map;

@@ -5,9 +5,6 @@
 package com.kadware.komodo.kex.kasm;
 
 import com.kadware.komodo.baselib.*;
-import com.kadware.komodo.baselib.exceptions.CharacteristicOverflowException;
-import com.kadware.komodo.baselib.exceptions.CharacteristicUnderflowException;
-import com.kadware.komodo.baselib.exceptions.NotFoundException;
 import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.diagnostics.*;
 import com.kadware.komodo.kex.kasm.dictionary.*;

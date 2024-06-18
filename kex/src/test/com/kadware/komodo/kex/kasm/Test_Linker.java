@@ -4,9 +4,6 @@
 
 package com.kadware.komodo.kex.kasm;
 
-import com.kadware.komodo.baselib.AccessInfo;
-import com.kadware.komodo.baselib.AccessPermissions;
-import com.kadware.komodo.baselib.BankType;
 import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.klink.BankDeclaration;
 import com.kadware.komodo.kex.klink.LoadableBank;

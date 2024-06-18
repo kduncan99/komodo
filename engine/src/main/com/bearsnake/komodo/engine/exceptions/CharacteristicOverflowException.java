@@ -1,14 +1,14 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib.exceptions;
+package com.bearsnake.komodo.engine.exceptions;
 
 /**
  * Exception thrown by a method when it is asked to do perform a floating point operation which would
  * result in a characteristic overflow.
  */
-public class CharacteristicOverflowException extends Exception {
+public class CharacteristicOverflowException extends EngineException {
 
     public CharacteristicOverflowException() {}
 }

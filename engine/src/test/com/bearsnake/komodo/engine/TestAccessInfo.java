@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
  */
 
-package com.kadware.komodo.baselib;
+package com.bearsnake.komodo.engine;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -12,7 +12,7 @@ import java.util.Random;
 /**
  * Unit tests for InstructionWord class
  */
-public class Test_AccessInfo {
+public class TestAccessInfo {
 
     private static final Random _random = new Random(System.currentTimeMillis());
 
