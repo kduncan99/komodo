@@ -110,13 +110,13 @@ public class Configuration {
         CHANNEL_MODULE_DISK("CM-DISK", DiskChannel.class),
         CHANNEL_MODULE_SYMBIONT("CM_SYM", SymbiontChannel.class),
         CHANNEL_MODULE_TAPE("CM-TAPE", TapeChannel.class),
-        // FILE_SYSTEM_CARD_PUNCH
+        // TODO FILE_SYSTEM_CARD_PUNCH
         FILE_SYSTEM_CARD_READER("FS-READER", FileSystemImageReaderDevice.class),
-        // FILE_SYSTEM_PRINTER
+        // TODO FILE_SYSTEM_PRINTER
         FILE_SYSTEM_DISK("FS-DISK", FileSystemDiskDevice.class),
         FILE_SYSTEM_TAPE("FS-TAPE", FileSystemTapeDevice.class);
-        // NETWORK_CARD_READER
-        // SYSTEM_PRINTER (something configured on the host computer - can we even do this in Java?)
+        // TODO NETWORK_CARD_READER
+        // TODO SYSTEM_PRINTER (something configured on the host computer - can we even do this in Java?)
 
         private final Class<?> _class;
         private final String _token;

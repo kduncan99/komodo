@@ -700,6 +700,18 @@ public class ArraySlice {
     }
 
     /**
+     * Creates a string containing the representation of this buffer in consecutive 4-character strings
+     * @return display string
+     */
+    public String toASCII() {
+        StringBuilder builder = new StringBuilder();
+        for (int wx = 0; wx < getSize(); ++wx) {
+            builder.append(Word36.toStringFromASCII(get(wx)));
+        }
+        return builder.toString();
+    }
+
+    /**
      * Creates a string containing the representation of this buffer in consecutive 4-character strings,
      * possibly delimited by spaces.
      * @param delimitFlag true to delimit between words with a blank character

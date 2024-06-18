@@ -37,35 +37,13 @@ public class DiskChannel extends Channel {
             return;
         }
 
+        int totalWordCount = 0;
         for (var cw : channelProgram._controlWords) {
             if (cw.getBuffer() == null) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
             }
 
-            if ((cw.getTransferCount() <= 0) || ((cw.getTransferCount() & 0x01) != 0)) {
-                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
-                return;
-            }
-
-            if ((cw.getBufferOffset() < 0) || (cw.getBufferOffset() >= cw.getBuffer().getSize())) {
-                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
-                return;
-            }
-
-            if ((cw.getDirection() == ChannelProgram.Direction.Increment)
-                && (cw.getBufferOffset() + cw.getTransferCount() > cw.getBuffer().getSize())) {
-                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
-                return;
-            } else if ((cw.getDirection() == ChannelProgram.Direction.Decrement)
-                && (cw.getBufferOffset() + 1 - cw.getTransferCount() < 0)) {
-                channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
-                return;
-            }
-        }
-
-        int totalWordCount = 0;
-        for (var cw : channelProgram._controlWords) {
             if ((cw.getTransferCount() <= 0) || ((cw.getTransferCount() & 0x01) != 0)) {
                 channelProgram.setIoStatus(IoStatus.InvalidChannelProgram);
                 return;
