@@ -27,9 +27,12 @@ import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 import com.bearsnake.komodo.kexec.facilities.PackInfo;
 import com.bearsnake.komodo.logger.LogManager;
 
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
@@ -497,6 +500,97 @@ public class MFDManager implements Manager {
         }
 
         throw new FileCycleDoesNotExistException();
+    }
+
+    public synchronized String dumpFileContent(
+        final String qualifier,
+        final String filename
+    ) throws FileSetDoesNotExistException, FileCycleDoesNotExistException {
+        var luKey = composeLookupKey(qualifier, filename);
+        var fsInfo = _leadItemLookupTable.get(luKey);
+        if (fsInfo == null) {
+            throw new FileSetDoesNotExistException();
+        } else if (fsInfo.getCycleInfo().isEmpty()) {
+            throw new FileCycleDoesNotExistException();
+        }
+
+        var cycInfo = fsInfo.getCycleInfo().getLast();
+        var absCycle = cycInfo.getAbsoluteCycle();
+
+        var dateTime = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+        String dtStr = dateTime.format(formatter);
+        var dumpFilename = String.format("mfd-%s.dump", dtStr);
+        PrintStream out;
+        try {
+            out = new PrintStream(dumpFilename);
+        } catch (FileNotFoundException ex) {
+            return null;
+        }
+
+        out.printf("File Content Dump for %s*%s(%d) ----------------------------------------------------\n",
+                   filename, qualifier, absCycle);
+
+        var fm = Exec.getInstance().getFacilitiesManager();
+        var buffer = new ArraySlice(new long[1792]);
+        var cw = new ChannelProgram.ControlWord().setBuffer(buffer)
+                                                 .setDirection(ChannelProgram.Direction.Increment)
+                                                 .setTransferCountWords(1792);
+        var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
+                                     .addControlWord(cw);
+        try {
+            var dadChain = getDADChain(cycInfo.getMainItem0Address());
+            var faSet = FileAllocationSet.createFromDADChain(dadChain);
+            for (var fa : faSet.getFileAllocations()) {
+                var fr = fa.getFileRegion();
+                var frTrackId = fr.getTrackId();
+                var trackCount = fr.getTrackCount();
+                var ht = fa.getHardwareTrackId();
+                var ldat = ht.getLDATIndex();
+                var devTrackId = ht.getTrackId();
+
+                var nodeInfo = _logicalDATable.get(ldat);
+                var packInfo = (PackInfo)nodeInfo.getMediaInfo();
+
+                var blocksPerTrack = 1792 / packInfo.getPrepFactor();
+                cp.setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier());
+                for (int tx = 0; tx < trackCount; tx++) {
+                    out.printf("\nFileRel TrackID:%08o LDAT:%04o DevTrackId:%08o\n",
+                               frTrackId, ldat, devTrackId);
+                    var blockId = devTrackId * blocksPerTrack;
+                    cp.setBlockId(blockId);
+                    fm.routeIo(cp);
+                    while (cp.getIoStatus() == IoStatus.InProgress) {
+                        Exec.sleep(10);
+                    }
+                }
+
+                var bx = 0;
+                for (int sx = 0; sx < 64; sx++) {
+                    var prefix = String.format("%010o", (frTrackId << 6) | sx);
+                    for (int wx = 0; wx < 28; wx += 7) {
+                        var oct = new StringBuilder();
+                        var fd = new StringBuilder();
+                        var asc = new StringBuilder();
+                        for (int wy = 0; wy < 7; wy++) {
+                            var word = buffer.get(bx++);
+                            oct.append(' ').append(Word36.toOctal(word));
+                            fd.append(' ').append(Word36.toStringFromFieldata(word));
+                            asc.append(' ').append(Word36.toStringFromASCII(word));
+                        }
+
+                        out.printf("%s: %s %s %s\n", prefix, oct, fd, asc);
+                        prefix = "          ";
+                    }
+                }
+            }
+        } catch (ExecStoppedException | NoRouteForIOException ex) {
+            LogManager.logCatching(LOG_SOURCE, ex);
+            out.printf("ERROR: %s\n", ex);
+        }
+
+        out.close();
+        return dumpFilename;
     }
 
     /**

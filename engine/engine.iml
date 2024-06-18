@@ -9,6 +9,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="baselib" exported="" />
+    <orderEntry type="module" module-name="logger" exported="" />
     <orderEntry type="library" exported="" name="lib" level="project" />
   </component>
 </module>

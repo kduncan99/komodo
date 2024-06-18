@@ -40,6 +40,7 @@ public class KeyinManager implements Manager {
         // CTL
         _handlerClasses.put(DKeyinHandler.COMMAND.toUpperCase(), DKeyinHandler.class);
         // DC
+        _handlerClasses.put(DFKeyinHandler.COMMAND.toUpperCase(), DFKeyinHandler.class);
         // DISPLVL
         _handlerClasses.put(DJKeyinHandler.COMMAND.toUpperCase(), DJKeyinHandler.class);
         _handlerClasses.put(DNKeyinHandler.COMMAND.toUpperCase(), DNKeyinHandler.class);
