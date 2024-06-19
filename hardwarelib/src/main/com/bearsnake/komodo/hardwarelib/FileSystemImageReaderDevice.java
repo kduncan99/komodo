@@ -27,6 +27,7 @@ public class FileSystemImageReaderDevice extends SymbiontDevice implements Runna
     ) {
         super(nodeName);
         _fileSystemPath = fileSystemPath.endsWith("/") ? fileSystemPath : fileSystemPath + '/';
+        new Thread(this).start();
     }
 
     @Override

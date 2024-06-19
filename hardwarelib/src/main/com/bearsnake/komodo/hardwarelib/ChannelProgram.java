@@ -38,6 +38,7 @@ public class ChannelProgram {
         MoveFile,
         MoveFileBackward,
         Rewind,
+        Reset,
         Unload,
     }
 

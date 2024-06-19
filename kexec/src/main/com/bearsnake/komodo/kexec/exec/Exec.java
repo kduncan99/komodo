@@ -151,6 +151,7 @@ public class Exec extends Run {
             //   well, at some point. probably not here.
         }
 
+        _phase = Phase.Running;
         LogManager.logTrace(LOG_SOURCE, "boot complete");
     }
 
@@ -194,67 +195,6 @@ public class Exec extends Run {
         _keyinManager = null;
         _mfdManager = null;
         _symbiontManager = null;
-    }
-
-    /**
-     * Given an original runid (which should be uppercase already, but we don't trust that)
-     * we generate a new unique runid so that we never have duplicated runids.
-     * Because we force uppercase, the caller should *always* use the result of this
-     * algorithm for the actual runid of a run.
-     * @param runid proposed (original) runid
-     * @return unique runid
-     */
-    public String createUniqueRunid(
-        final String runid
-    ) throws ExecStoppedException {
-        var original = runid.toUpperCase();
-        var proposed = original;
-        synchronized (_runEntries) {
-            if (!_runEntries.containsKey(proposed)) {
-                return proposed;
-            }
-
-            if (proposed.length() < 6) {
-                proposed += 'A';
-                while (_runEntries.containsKey(proposed)) {
-                    var baseLen = proposed.length() - 1;
-                    var lastChar = proposed.charAt(baseLen);
-                    if (lastChar == '9') {
-                        // This allows us to move on from CMSA to CMSAA etc, or to use the standard
-                        // six-character rotation thereafter
-                        return createUniqueRunid(proposed);
-                    }
-
-                    lastChar = (lastChar == 'Z') ? '0' : lastChar++;
-                    proposed = proposed.substring(0, baseLen) + lastChar;
-                }
-            } else {
-                while (!_runEntries.containsKey(proposed)) {
-                    var chars = proposed.getBytes();
-                    int bx = 5;
-                    while (bx >= 0) {
-                        var ch = chars[bx];
-                        if (ch == '9') {
-                            chars[bx] = 'A';
-                            bx--;
-                        } else if (ch == 'Z') {
-                            chars[bx] = '0';
-                            break;
-                        } else {
-                            chars[bx]++;
-                            break;
-                        }
-                    }
-                    proposed = new String(chars);
-                    if (proposed.equals(original)) {
-                        stop(StopCode.FullCycleReachedForRunIds);
-                        throw new ExecStoppedException();
-                    }
-                }
-            }
-        }
-
-        return proposed;
     }
 
     public void displayDateAndTime() {
@@ -561,6 +501,69 @@ public class Exec extends Run {
     // -----------------------------------------------------------------------------------------------------------------
     // private
     // -----------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Given an original runid (which should be uppercase already, but we don't trust that)
+     * we generate a new unique runid so that we never have duplicated runids.
+     * Because we force uppercase, the caller should *always* use the result of this
+     * algorithm for the actual runid of a run.
+     * This needs to be invoked under synchronization during the process of adding a RunEntry,
+     * thus it is internal to the Exec class.
+     * @param runid proposed (original) runid
+     * @return unique runid
+     */
+    private String createUniqueRunid(
+        final String runid
+    ) throws ExecStoppedException {
+        var original = runid.toUpperCase();
+        var proposed = original;
+        synchronized (_runEntries) {
+            if (!_runEntries.containsKey(proposed)) {
+                return proposed;
+            }
+
+            if (proposed.length() < 6) {
+                proposed += 'A';
+                while (_runEntries.containsKey(proposed)) {
+                    var baseLen = proposed.length() - 1;
+                    var lastChar = proposed.charAt(baseLen);
+                    if (lastChar == '9') {
+                        // This allows us to move on from CMSA to CMSAA etc, or to use the standard
+                        // six-character rotation thereafter
+                        return createUniqueRunid(proposed);
+                    }
+
+                    lastChar = (lastChar == 'Z') ? '0' : lastChar++;
+                    proposed = proposed.substring(0, baseLen) + lastChar;
+                }
+            } else {
+                while (!_runEntries.containsKey(proposed)) {
+                    var chars = proposed.getBytes();
+                    int bx = 5;
+                    while (bx >= 0) {
+                        var ch = chars[bx];
+                        if (ch == '9') {
+                            chars[bx] = 'A';
+                            bx--;
+                        } else if (ch == 'Z') {
+                            chars[bx] = '0';
+                            break;
+                        } else {
+                            chars[bx]++;
+                            break;
+                        }
+                    }
+                    proposed = new String(chars);
+                    if (proposed.equals(original)) {
+                        stop(StopCode.FullCycleReachedForRunIds);
+                        throw new ExecStoppedException();
+                    }
+                }
+            }
+        }
+
+        return proposed;
+    }
 
     private String sendExecRestrictedReadReplyMessage(
         final String message,

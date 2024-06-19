@@ -8,6 +8,7 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.Phase;
 
 class DFKeyinHandler extends KeyinHandler implements Runnable {
 
@@ -38,8 +39,8 @@ class DFKeyinHandler extends KeyinHandler implements Runnable {
             return false;
         }
 
-        _qualifier = split[0];
-        _filename = split[1];
+        _qualifier = split[0].toUpperCase();
+        _filename = split[1].toUpperCase();
         return Exec.isValidQualifier(_qualifier) && Exec.isValidFilename(_filename);
     }
 
@@ -51,7 +52,7 @@ class DFKeyinHandler extends KeyinHandler implements Runnable {
 
     @Override
     boolean isAllowed() {
-        return true;
+        return Exec.getInstance().getPhase() == Phase.Running;
     }
 
     @Override

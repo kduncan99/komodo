@@ -59,17 +59,28 @@ class FSKeyinHandler extends FacHandler implements Runnable {
 
     @Override
     public void process() {
-        switch (_options.toUpperCase()) {
-            case "ALL" -> processAll();
-            case "DISK", "DISKS" -> processDisks();
-            case "FDISK" -> processFixedDisks();
-            case "MS" -> processMassStorage();
-            case "PACK", "PACKS" -> processPacks();
-            case "RDISK" -> processRemovableDisks();
-            case "TAPE", "TAPES" -> processTapes();
-            default -> {
-                var msg = String.format("Invalid option %s", _options.toUpperCase());
+        if (_options == null) {
+            var nodeName = _arguments.toUpperCase();
+            var ni = _facMgr.getNodeInfo(nodeName);
+            if (ni == null) {
+                var msg = String.format("%s is not a configured node", nodeName);
                 Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+            } else {
+                displayStatusForNode(ni);
+            }
+        } else {
+            switch (_options.toUpperCase()) {
+                case "ALL" -> processAll();
+                case "DISK", "DISKS" -> processDisks();
+                case "FDISK" -> processFixedDisks();
+                case "MS" -> processMassStorage();
+                case "PACK", "PACKS" -> processPacks();
+                case "RDISK" -> processRemovableDisks();
+                case "TAPE", "TAPES" -> processTapes();
+                default -> {
+                    var msg = String.format("Invalid option %s", _options.toUpperCase());
+                    Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+                }
             }
         }
     }

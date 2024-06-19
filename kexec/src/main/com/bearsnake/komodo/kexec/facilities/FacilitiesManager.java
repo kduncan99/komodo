@@ -13,9 +13,13 @@ import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.hardwarelib.DiskChannel;
 import com.bearsnake.komodo.hardwarelib.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemDiskDevice;
+import com.bearsnake.komodo.hardwarelib.FileSystemImagePrinterDevice;
+import com.bearsnake.komodo.hardwarelib.FileSystemImageReaderDevice;
+import com.bearsnake.komodo.hardwarelib.FileSystemImageWriterDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemTapeDevice;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.hardwarelib.NodeCategory;
+import com.bearsnake.komodo.hardwarelib.SymbiontChannel;
 import com.bearsnake.komodo.hardwarelib.TapeChannel;
 import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.Configuration;
@@ -2909,6 +2913,15 @@ public class FacilitiesManager implements Manager {
     void loadNodeGraph() {
         // Load node graph based on the configuration TODO
         // The following is temporary
+        var reader0 = new FileSystemImageReaderDevice("CR0", "media/reader/");
+        var punch0 = new FileSystemImageWriterDevice("CP0", "media/reader/");
+        var printer0 = new FileSystemImagePrinterDevice("PR0", "media/printer/");
+
+        var sch0 = new SymbiontChannel("CHSYM0");
+        sch0.attach(reader0);
+        sch0.attach(punch0);
+        sch0.attach(printer0);
+
         var disk0 = new FileSystemDiskDevice("DISK0", "media/disk0.pack", false);
         var disk1 = new FileSystemDiskDevice("DISK1", "media/disk1.pack", false);
         var disk2 = new FileSystemDiskDevice("DISK2", "media/disk2.pack", false);
@@ -2933,10 +2946,14 @@ public class FacilitiesManager implements Manager {
         tch.attach(tape0);
         tch.attach(tape1);
 
+        _nodeGraph.put(sch0.getNodeIdentifier(), new ChannelNodeInfo(sch0));
         _nodeGraph.put(dch0.getNodeIdentifier(), new ChannelNodeInfo(dch0));
         _nodeGraph.put(dch1.getNodeIdentifier(), new ChannelNodeInfo(dch1));
         _nodeGraph.put(tch.getNodeIdentifier(), new ChannelNodeInfo(tch));
 
+        _nodeGraph.put(reader0.getNodeIdentifier(), new DeviceNodeInfo(reader0));
+        _nodeGraph.put(punch0.getNodeIdentifier(), new DeviceNodeInfo(punch0));
+        _nodeGraph.put(printer0.getNodeIdentifier(), new DeviceNodeInfo(printer0));
         _nodeGraph.put(disk0.getNodeIdentifier(), new DeviceNodeInfo(disk0));
         _nodeGraph.put(disk1.getNodeIdentifier(), new DeviceNodeInfo(disk1));
         _nodeGraph.put(disk2.getNodeIdentifier(), new DeviceNodeInfo(disk2));
