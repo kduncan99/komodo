@@ -27,7 +27,7 @@ public class SymbiontChannel extends Channel {
         final ChannelProgram channelProgram,
         final Device device
     ) {
-        channelProgram.setIoStatus(IoStatus.InvalidFunction);
+        // TODO need to support WriteEndOfFile and StartFile
     }
 
     @Override
@@ -63,8 +63,7 @@ public class SymbiontChannel extends Channel {
 
         var totalWordCount = cw.getTransferCount();
         var ioPkt = new SymbiontIoPacket();
-        ioPkt.setWordCount(totalWordCount)
-             .setFunction(IoFunction.Read);
+        ioPkt.setFunction(IoFunction.Read);
         device.startIo(ioPkt);
         if (ioPkt.getStatus() != IoStatus.Complete) {
             channelProgram.setIoStatus(ioPkt.getStatus());
@@ -121,8 +120,7 @@ public class SymbiontChannel extends Channel {
         cw.getBuffer().pack(bytes);
         var totalWordCount = cw.getTransferCount();
         var ioPkt = new SymbiontIoPacket();
-        ioPkt.setWordCount(totalWordCount)
-             .setBuffer(ByteBuffer.wrap(bytes))
+        ioPkt.setBuffer(ByteBuffer.wrap(bytes))
              .setFunction(IoFunction.Write);
         device.startIo(ioPkt);
         if (ioPkt.getStatus() != IoStatus.Complete) {

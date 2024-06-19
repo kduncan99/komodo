@@ -20,10 +20,10 @@ import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
 import com.bearsnake.komodo.kexec.mfd.MFDManager;
+import com.bearsnake.komodo.kexec.symbionts.SymbiontManager;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -39,7 +39,6 @@ public class Exec extends Run {
     public static final String VERSION_STRING = String.format("%dR%d%s", EXEC_VERSION, EXEC_RELEASE, EXEC_PATCH);
 
     private static final DateTimeFormatter _dateTimeMsgFormat = DateTimeFormatter.ofPattern("EEE dd MMM yyyy HH:mm:ss");
-    private static final SimpleDateFormat _dumpFileNameFormat = new SimpleDateFormat("yyyyMMdd-HHmmss");
     private static Exec _instance = null;
     private static final String LOG_SOURCE = "Exec";
 
@@ -57,6 +56,7 @@ public class Exec extends Run {
     private FacilitiesManager _facilitiesManager;
     private KeyinManager _keyinManager;
     private MFDManager _mfdManager;
+    private SymbiontManager _symbiontManager;
 
     public Exec(final boolean[] jumpKeyTable) {
         super(RunType.Exec, "EXEC-8", "EXEC-8", "SYS$", "", "EXEC8");
@@ -70,6 +70,7 @@ public class Exec extends Run {
         _facilitiesManager = new FacilitiesManager();
         _keyinManager = new KeyinManager();
         _mfdManager = new MFDManager();
+        _symbiontManager = new SymbiontManager();
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -86,12 +87,15 @@ public class Exec extends Run {
     // public
     // -----------------------------------------------------------------------------------------------------------------
 
+    public static Exec getInstance() { return _instance; }
+
     public Configuration getConfiguration() { return _configuration; }
     public ConsoleManager getConsoleManager() { return _consoleManager; }
     public FacilitiesManager getFacilitiesManager() { return _facilitiesManager; }
-    public static Exec getInstance() { return _instance; }
+    public SymbiontManager getSymbiontManager() { return _symbiontManager; }
     public MFDManager getMFDManager() { return _mfdManager; }
     public KeyinManager getKeyinManager() { return _keyinManager; }
+
     public Phase getPhase() { return _phase; }
     public StopCode getStopCode() { return _stopCode; }
     public boolean isJumpKeySet(final int jumpKey) { return _jumpKeys[jumpKey - 1]; }
@@ -189,6 +193,7 @@ public class Exec extends Run {
         _facilitiesManager = null;
         _keyinManager = null;
         _mfdManager = null;
+        _symbiontManager = null;
     }
 
     /**
