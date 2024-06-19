@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.stream.Stream;
 
-public class FileSystemImageReaderDevice extends SymbiontDevice implements Runnable {
+public class FileSystemImageReaderDevice extends SymbiontReaderDevice implements Runnable {
 
     private final String _fileSystemPath;
     private boolean _terminate = false;
@@ -110,6 +110,7 @@ public class FileSystemImageReaderDevice extends SymbiontDevice implements Runna
         if (_fileName != null) {
             var f = new File(_fileName);
             try {
+                System.out.printf("Deleting %s...\n", f.toPath());// TODO remove
                 Files.deleteIfExists(f.toPath());
             } catch (IOException ex) {
                 // nothing to be done

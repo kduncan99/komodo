@@ -7,7 +7,9 @@ package com.bearsnake.komodo.kexec.symbionts;
 import com.bearsnake.komodo.hardwarelib.ChannelProgram;
 import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
-import com.bearsnake.komodo.hardwarelib.SymbiontDevice;
+import com.bearsnake.komodo.hardwarelib.SymbiontPrinterDevice;
+import com.bearsnake.komodo.hardwarelib.SymbiontReaderDevice;
+import com.bearsnake.komodo.hardwarelib.SymbiontWriterDevice;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
@@ -15,11 +17,12 @@ import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
+import com.bearsnake.komodo.kexec.facilities.NodeStatus;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 public class SymbiontManager implements Manager {
 
@@ -48,24 +51,32 @@ public class SymbiontManager implements Manager {
 
     // TODO
     //   symbiont SUSPENDED
-    //(Exec) This message is displayed in response to a UR symbiont or a SM symbiont S keyin. The specified remote device has been suspended.
+    //(Exec) This message is displayed in response to a UR symbiont or a SM symbiont S keyin.
+    // The specified remote device has been suspended.
 
-    private static class InputSession {
+    private enum SymbiontState {
+        Quiesced, // waiting for ready on input, or not handling any output
+        PreRun,   // have not yet found @RUN card on input
+    }
+
+    private static class InputSymbiontInfo {
 
         public final NodeInfo _nodeInfo;
-        public boolean _hasRunInfo;
-        public boolean _isDone;
+        public boolean _isSuspended;
+        public boolean _isLocked;
+        public SymbiontState _state;
 
-        public InputSession(
+        public InputSymbiontInfo(
             final NodeInfo nodeInfo
         ) {
-            _hasRunInfo = false;
-            _isDone = false;
             _nodeInfo = nodeInfo;
+            _isSuspended = false;
+            _isLocked = true;
+            _state = SymbiontState.Quiesced;
         }
     }
 
-    private final Map<NodeInfo, InputSession> _inputSessions = new HashMap<>();
+    private final List<InputSymbiontInfo> _inputSymbiontInfos = new LinkedList<>();
 
     public SymbiontManager() {
         Exec.getInstance().managerRegister(this);
@@ -97,18 +108,43 @@ public class SymbiontManager implements Manager {
     @Override
     public void dump(PrintStream out, String indent, boolean verbose) {
         out.printf("%sSymbiontManager ********************************\n", indent);
-        // TODO dump input and output queues
+
+        out.printf("%s  Input Symbionts:\n", indent);
+        for (var isInfo : _inputSymbiontInfos) {
+            out.printf("%s    %s Lock:%s Susp:%s State:%s\n", indent,
+                       isInfo._nodeInfo.getNode().getNodeName(), isInfo._isLocked, isInfo._isSuspended, isInfo._state);
+        }
+
+        out.printf("%s  Output Symbionts:\n", indent);
+        // TODO
+
+        out.printf("%s  Print Symbionts:\n", indent);
+        // TODO
     }
 
     /**
-     * Invoked for all managers when the exec is instantiated (presumably when the application starts)
+     * Invoked for all managers when the exec is instantiated (presumably when the application starts).
+     * We expect fac mgr to already be initialized.
      */
     @Override
     public void initialize() throws KExecException {
         LogManager.logTrace(LOG_SOURCE, "initialize()");
-        // TODO read group configuration (we have this janky temporary code for now)
 
-        // TODO end janky
+        var exec = Exec.getInstance();
+        var fm = exec.getFacilitiesManager();
+        var nodeInfos = fm.getNodeInfos(DeviceType.SymbiontDevice);
+        for (var nodeInfo : nodeInfos) {
+            if (nodeInfo.getNode() instanceof SymbiontReaderDevice srd) {
+                _inputSymbiontInfos.add(new InputSymbiontInfo(nodeInfo));
+            } else if (nodeInfo.getNode() instanceof SymbiontWriterDevice) {
+                // TODO
+            } else if (nodeInfo.getNode() instanceof SymbiontPrinterDevice) {
+                // TODO
+            }
+        }
+
+        // Get symbiont group configuration
+        //   TODO
     }
 
     /**
@@ -122,31 +158,27 @@ public class SymbiontManager implements Manager {
     }
 
     private void inputSessionHandle(
-        final InputSession session
+        final InputSymbiontInfo isInfo
     ) {
-        // TODO
-        // FACILITY WAIT FOR RUN-ID: run-id SOURCE - symbiont AT
-        //(Exec) The specified run being processed by the card reader symbiont cannot assign the facilities requested on the run @FILE card. The card reader idles until you answer and any necessary label checks are done.
-        //A assigns facilities or specifies that a tape unit has been reserved.
-        //T bypasses the remaining runstream, marks the run removed, and initiates the card reader.
+        var nodeInfo = (SymbiontReaderDevice)(isInfo._nodeInfo.getNode());
+        if (!nodeInfo.isReady() && (isInfo._state != SymbiontState.Quiesced)) {
+            // This should not happen - we are in the middle of reading a deck,
+            // and the device rudely went offline.
+        }
 
-//        if (!session._hasRunInfo) {
-//            //
-//        } else {
-//
-//        }
-        session._isDone = true; // TODO temporary
-    }
+        switch (isInfo._state) {
+            case Quiesced -> {
+                var exec = Exec.getInstance();
+                var msg = isInfo._nodeInfo.getNode().getNodeName() + " ACTIVE";
+                exec.sendExecReadOnlyMessage(msg);
+                isInfo._state = SymbiontState.PreRun;
+            }
+            case PreRun -> {
+                if (!nodeInfo.isReady()) {
 
-    private void inputSessionStart(
-        final NodeInfo nodeInfo
-    ) {
-        var exec = Exec.getInstance();
-        var msg = nodeInfo.getNode().getNodeName() + " ACTIVE";
-        exec.sendExecReadOnlyMessage(msg);
-
-        var is = new InputSession(nodeInfo);
-        _inputSessions.put(nodeInfo, is);
+                }
+            }
+        }
     }
 
     /**
@@ -154,7 +186,7 @@ public class SymbiontManager implements Manager {
      * Do NOT do any blocking IO - symbiont IO is conventionally slow (although most of the virtual devices are not).
      * @return true if any of the output devices are busy
      */
-    private boolean pollPrint() {
+    private boolean pollPrinters() {
         return false;// TODO
     }
 
@@ -163,7 +195,7 @@ public class SymbiontManager implements Manager {
      * Do NOT do any blocking IO - symbiont IO is conventionally slow (although most of the virtual devices are not).
      * @return true if any of the output devices are busy
      */
-    private boolean pollPunch() {
+    private boolean pollPunchers() {
         return false;// TODO
     }
 
@@ -173,35 +205,34 @@ public class SymbiontManager implements Manager {
      * Do NOT do any blocking IO - symbiont IO is conventionally slow (although most of the virtual devices are not).
      * @return true if any of the input devices are busy
      */
-    private boolean pollRead() throws ExecStoppedException {
-        boolean didSomething;
-        synchronized (_inputSessions) {
+    private boolean pollReaders() throws ExecStoppedException {
+        boolean didSomething = false;
+        synchronized (_inputSymbiontInfos) {
             var exec = Exec.getInstance();
             var fm = exec.getFacilitiesManager();
-            var nodeInfos = fm.getNodeInfos(DeviceType.SymbiontDevice);
 
             // Look for nodes which are ready, but there is no active session.
-            for (var nodeInfo : nodeInfos) {
-                // TODO is the thing DN or locked out or suspended?
-                if (nodeInfo.getNode() instanceof SymbiontDevice symDev) {
-                    if (symDev.isReady() && !_inputSessions.containsKey(nodeInfo)) {
-                        inputSessionStart(nodeInfo);
+            for (var isInfo : _inputSymbiontInfos) {
+                if ((isInfo._nodeInfo.getNodeStatus() == NodeStatus.Up) && !isInfo._isLocked && !isInfo._isSuspended) {
+                    if (isInfo._nodeInfo.getNode() instanceof SymbiontReaderDevice symDev) {
+                        inputSessionHandle(isInfo);
+                        didSomething = true;
                     }
                 }
             }
 
-            // Iterate over active input sessions
-            didSomething = !_inputSessions.isEmpty();
-            for (var ssn : _inputSessions.values()) {
-                if (!ssn._isDone) {
-                    inputSessionHandle(ssn);
-                } else {
-                    resetNode(ssn._nodeInfo);
-                    var msg = ssn._nodeInfo.getNode().getNodeName() + " INACTIVE";
-                    exec.sendExecReadOnlyMessage(msg);
-                    _inputSessions.remove(ssn._nodeInfo);
-                }
-            }
+//            // Iterate over active input sessions
+//            didSomething = !_inputSessions.isEmpty();
+//            for (var ssn : _inputSessions.values()) {
+//                if (!ssn._isDone) {
+//                    inputSessionHandle(ssn);
+//                } else {
+//                    resetNode(ssn._nodeInfo);
+//                    var msg = ssn._nodeInfo.getNode().getNodeName() + " INACTIVE";
+//                    exec.sendExecReadOnlyMessage(msg);
+//                    _inputSessions.remove(ssn._nodeInfo);
+//                }
+//            }
         }
 
         return didSomething;
@@ -248,7 +279,7 @@ public class SymbiontManager implements Manager {
             while (!_terminate && !exec.isStopped()) {
                 // TODO slow wait if the exec is not ready for symbionts
                 try {
-                    int delay = (pollPrint() | pollPunch() | pollRead()) ? 0 : POLL_DELAY;
+                    int delay = (pollPrinters() | pollPunchers() | pollReaders()) ? 0 : POLL_DELAY;
                     Exec.sleep(delay);
                 } catch (Throwable t) {
                     LogManager.logCatching(LOG_SOURCE, t);

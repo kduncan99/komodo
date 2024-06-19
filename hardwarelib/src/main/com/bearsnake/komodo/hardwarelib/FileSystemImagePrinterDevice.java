@@ -11,7 +11,7 @@ import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class FileSystemImagePrinterDevice extends SymbiontDevice {
+public class FileSystemImagePrinterDevice extends SymbiontPrinterDevice {
 
     private final String _fileSystemPath;
     private boolean _isReady = false;
