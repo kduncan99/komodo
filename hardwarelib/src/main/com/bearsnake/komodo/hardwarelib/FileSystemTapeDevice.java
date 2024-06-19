@@ -65,7 +65,7 @@ public class FileSystemTapeDevice extends TapeDevice {
                 doUnmount(tapePacket);
             case Write:
                 doWrite(tapePacket);
-            case WriteTapeMark:
+            case WriteEndOfFile:
                 doWriteTapeMark(tapePacket);
             default:
                 packet.setStatus(IoStatus.InvalidFunction);

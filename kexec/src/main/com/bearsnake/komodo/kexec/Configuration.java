@@ -7,6 +7,7 @@ package com.bearsnake.komodo.kexec;
 import com.bearsnake.komodo.hardwarelib.DiskChannel;
 import com.bearsnake.komodo.hardwarelib.FileSystemDiskDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemImageReaderDevice;
+import com.bearsnake.komodo.hardwarelib.FileSystemImageWriterDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemTapeDevice;
 import com.bearsnake.komodo.hardwarelib.SymbiontChannel;
 import com.bearsnake.komodo.hardwarelib.TapeChannel;
@@ -110,7 +111,7 @@ public class Configuration {
         CHANNEL_MODULE_DISK("CM-DISK", DiskChannel.class),
         CHANNEL_MODULE_SYMBIONT("CM_SYM", SymbiontChannel.class),
         CHANNEL_MODULE_TAPE("CM-TAPE", TapeChannel.class),
-        // TODO FILE_SYSTEM_CARD_PUNCH
+        FILE_SYSTEM_CARD_PUNCH("FS-PUNCH", FileSystemImageWriterDevice.class),
         FILE_SYSTEM_CARD_READER("FS-READER", FileSystemImageReaderDevice.class),
         // TODO FILE_SYSTEM_PRINTER
         FILE_SYSTEM_DISK("FS-DISK", FileSystemDiskDevice.class),
@@ -142,6 +143,9 @@ public class Configuration {
         }
     }
 
+    /**
+     * Mnemonic stuff - only applies to disk and tape files
+     */
     public enum MnemonicType {
         SECTOR_ADDRESSABLE_DISK,
         WORD_ADDRESSABLE_DISK,

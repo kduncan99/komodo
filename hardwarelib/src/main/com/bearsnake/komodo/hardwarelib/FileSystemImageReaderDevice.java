@@ -14,10 +14,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.stream.Stream;
 
-// TODO need to implement SymbiontChannel
-// TODO need a symbiontManager (in kexec) with a runnable which occasionally polls for this going ready,
-//   then does the needful, resulting in a READ$X<runid> file and a BL entry (persisted to GENF$)
-
 public class FileSystemImageReaderDevice extends SymbiontDevice implements Runnable {
 
     private final String _fileSystemPath;
@@ -42,6 +38,9 @@ public class FileSystemImageReaderDevice extends SymbiontDevice implements Runna
     public final boolean isReady() {
         return _reader != null;
     }
+
+    @Override
+    public final void setIsReady(final boolean flag) {} // cannot do this externally
 
     @Override
     public synchronized void startIo(final IoPacket packet) {

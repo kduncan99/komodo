@@ -14,7 +14,8 @@ public enum IoFunction {
     Reset,
     Rewind,
     RewindAndUnload,
+    StartFile,
     Unmount,
     Write,
-    WriteTapeMark,
+    WriteEndOfFile,
 }

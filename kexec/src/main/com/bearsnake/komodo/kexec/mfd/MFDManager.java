@@ -502,6 +502,15 @@ public class MFDManager implements Manager {
         throw new FileCycleDoesNotExistException();
     }
 
+    /**
+     * Dumps file content in octal, fieldata, and ASCII along with addresses to a dump file.
+     * Only acts on the highest absolute cycle if multiple cycles exist
+     * @param qualifier qualifier of the file
+     * @param filename filename of the file
+     * @return name of the host file created, null if something went wrong
+     * @throws FileSetDoesNotExistException if the indicated file set does not exist
+     * @throws FileCycleDoesNotExistException if the indicated file cycle does not exist
+     */
     public synchronized String dumpFileContent(
         final String qualifier,
         final String filename
