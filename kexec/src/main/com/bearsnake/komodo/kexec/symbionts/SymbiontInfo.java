@@ -31,7 +31,6 @@ abstract class SymbiontInfo {
     protected final ChannelProgram _channelProgram;
     protected final ChannelProgram.ControlWord _controlWord;
 
-    protected boolean _abort;
     protected boolean _isSuspended;
     protected boolean _isLocked;
     protected boolean _isWaiting;
@@ -55,6 +54,53 @@ abstract class SymbiontInfo {
     }
 
     /**
+     * For handling SM * E keyins - Terminates the active file
+     * For input, an EOF is written and the remainder of the input is discarded (but the run is not deleted)
+     * For output, no more output is produced for the file - it is effectively a skip-to-end.
+     */
+    abstract void end() throws ExecStoppedException;
+
+    /**
+     * For handling SM * I keyins - initiates the device
+     * (Re)starts the device.
+     */
+    abstract void initiate() throws ExecStoppedException;
+
+    /**
+     * For handling SM * L keyins - Locks out the device
+     * Any current file runs to completion, but no subsequent file is processed
+     */
+    abstract void lock() throws ExecStoppedException;
+
+    /**
+     * For handling SM * R keyins - Rewinds or advances by a number of pages or cards
+     * For input files the current file is bypassed until the next @RUN image, and the run is discarded.
+     * For output files a negative count rewinds by the given number of cards or pages and then output is resumed.
+     * A positive count advances printing by the given number of cards or pages.
+     * @param count number of cards or pages (must be zero for input symbiont)
+     */
+    abstract void reposition(final int count) throws ExecStoppedException;
+
+    /**
+     * For handling SM * Q keyins - Re-queues current file and locks the device
+     * Does not apply to input symbionts.
+     */
+    abstract void requeue() throws ExecStoppedException;
+
+    /**
+     * For handling SM * S keyins - Suspends the device
+     * Immediately pauses input or output.
+     */
+    abstract void suspend() throws ExecStoppedException;
+
+    /**
+     * For handling SM * T keyins - Terminates and locks out the device
+     * The remainder of the file is discarded and the devices is locked out.
+     * For input, the run is discarded.
+     */
+    abstract void terminate() throws ExecStoppedException;
+
+    /**
      * State machine for subclass
      * @return true if we did something useful, false if we are waiting for something.
      */
@@ -70,39 +116,67 @@ abstract class SymbiontInfo {
     }
 
     /**
-     * Issues a reset for the underlying node.
-     * Can be issued while another IO using the object's generic buffer is in progress.
-     * @return true generally, false if the IO failed
+     * Notifies the console that the symbiont encountered an IO error,
+     * and sets the device status to DN.
+     * @param detail detail message
+     * @return true if caller should retry, false if we abort
      */
-    private boolean resetNode(
-        final NodeInfo nodeInfo
+    protected boolean notifyConsoleIOError(
+        final String detail,
+        final boolean allowRetry
     ) throws ExecStoppedException {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
-
-        try {
-            var cp = new ChannelProgram().setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier())
-                                         .setFunction(ChannelProgram.Function.Control)
-                                         .setSubFunction(ChannelProgram.SubFunction.Reset);
-            exec.getFacilitiesManager().routeIo(cp);
-            while (cp.getIoStatus() == IoStatus.InProgress) {
-                Exec.sleep(10);
-            }
-            if (cp.getIoStatus() != IoStatus.Complete) {
-                var msg = String.format("%s IO error - %s", nodeInfo.getNode().getNodeName(), cp.getIoStatus());
-                exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
-                fm.setNodeStatus(_nodeIdentifier, NodeStatus.Down, ConsoleType.InputOutput);
-                _abort = true;
-                return false;
-            }
-        } catch (NoRouteForIOException e) {
-            var msg = String.format("%s IO error - no route to device", nodeInfo.getNode().getNodeName());
-            exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
+        String msg;
+        String[] responses;
+        if (allowRetry) {
+            msg = String.format("%s IO error - %s: AE", _node.getNodeName(), detail);
+            responses = new String[]{"A", "E"};
+        } else {
+            msg = String.format("%s IO error - %s: AE", _node.getNodeName(), detail);
+            responses = new String[]{"E"};
+        }
+        var response = exec.sendExecRestrictedReadReplyMessage(msg, responses, ConsoleType.InputOutput);
+        if (response.equalsIgnoreCase("E")) {
             fm.setNodeStatus(_nodeIdentifier, NodeStatus.Down, ConsoleType.InputOutput);
-            _abort = true;
             return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Issues a reset for the underlying node.
+     * Can be issued while another IO using the object's generic buffer is in progress.
+     * @return true generally, false if the IO (and all retries, if any) failed
+     */
+    protected boolean resetNode() throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        var fm = exec.getFacilitiesManager();
+        var failed = false;
+        var retry = true;
+        while (retry) {
+            try {
+                var cp = new ChannelProgram().setNodeIdentifier(_nodeIdentifier)
+                                             .setFunction(ChannelProgram.Function.Control)
+                                             .setSubFunction(ChannelProgram.SubFunction.Reset);
+                fm.routeIo(cp);
+                while (cp.getIoStatus() == IoStatus.InProgress) {
+                    Exec.sleep(10);
+                }
+
+                if (cp.getIoStatus() == IoStatus.Complete) {
+                    retry = false;
+                } else {
+                    retry = notifyConsoleIOError(cp.getIoStatus().toString(), true);
+                    failed = true;
+                }
+            } catch (NoRouteForIOException e) {
+                retry = notifyConsoleIOError("no route to device", true);
+                failed = true;
+            }
         }
 
-        return true;
+        return !failed;
     }
 }

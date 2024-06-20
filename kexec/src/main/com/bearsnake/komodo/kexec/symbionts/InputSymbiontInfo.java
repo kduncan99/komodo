@@ -6,13 +6,15 @@ package com.bearsnake.komodo.kexec.symbionts;
 
 import com.bearsnake.komodo.hardwarelib.ChannelProgram;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
+import com.bearsnake.komodo.kexec.consoles.ConsoleType;
+import com.bearsnake.komodo.kexec.csi.Interpreter;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 
 /**
- *
+ * Handles input symbionts - essentially card readers, virtual or otherwise.
  */
 class InputSymbiontInfo extends SymbiontInfo {
 
@@ -23,26 +25,76 @@ class InputSymbiontInfo extends SymbiontInfo {
         _channelProgram.setFunction(ChannelProgram.Function.Read);
     }
 
+    @Override
+    void end() throws ExecStoppedException {
+        // TODO
+    }
+
+    @Override
+    void initiate() throws ExecStoppedException {
+        // TODO
+    }
+
+    @Override
+    void lock() throws ExecStoppedException {
+        // TODO
+    }
+
+    @Override
+    void reposition(int count) throws ExecStoppedException {
+        // count must be zero, but we do not enforce that - we just ignore it.
+        // TODO
+    }
+
+    @Override
+    void requeue() throws ExecStoppedException {
+        // TODO
+    }
+
+    @Override
+    void suspend() throws ExecStoppedException {
+        // TODO
+    }
+
+    @Override
+    void terminate() throws ExecStoppedException {
+        // TODO
+    }
+
     /**
      * Implements state machine for InputSymbiontInfo
      * @return true if we did something useful, false if we are waiting for something.
      */
     @Override
     boolean poll() throws ExecStoppedException {
-        var exec = Exec.getInstance();
-        var fm = exec.getFacilitiesManager();
+        var result = false;
 
-        if (!_node.isReady() && (_state != SymbiontDeviceState.Quiesced)) {
-            // This should not happen - we are in the middle of reading a deck, and the device rudely went offline.
-            // TODO
-            return false;
+        if (!_isSuspended) {
+            var exec = Exec.getInstance();
+            var fm = exec.getFacilitiesManager();
+
+            if (!_node.isReady() && (_state != SymbiontDeviceState.Quiesced)) {
+                // This should not happen - we are in the middle of reading a deck, and the device rudely went offline.
+                // TODO
+            } else {
+                result = switch (_state) {
+                    case Quiesced -> pollQuiesced();
+                    case PreRun -> pollPreRun();
+                    default -> pollDefault();
+                };
+            }
         }
 
-        return switch (_state) {
-            case Quiesced -> pollQuiesced();
-            case PreRun -> pollPreRun();
-            default -> pollDefault();
-        };
+        return result;
+    }
+
+    /**
+     * Cancels reading the remainder of the deck from the input symbiont.
+     * Since we do not lock or suspend the device, we must ask that the input symbiont discard the deck.
+     * @throws ExecStoppedException
+     */
+    private void cancelDeck() throws ExecStoppedException {
+        resetNode();
     }
 
     /**
@@ -50,24 +102,41 @@ class InputSymbiontInfo extends SymbiontInfo {
      * If the IO is complete, do @RUN card processing.
      */
     private boolean pollPreRun() throws ExecStoppedException {
-        if (_channelProgram.getIoStatus() == IoStatus.InProgress) {
+        var exec = Exec.getInstance();
+        var ioStatus = _channelProgram.getIoStatus();
+        if (ioStatus == IoStatus.InProgress) {
             return false;
-        } else if (_channelProgram.getIoStatus() != IoStatus.Complete) {
+        } else if (ioStatus == IoStatus.EndOfFile) {
+            // TODO
+            return false;
+        } else if (ioStatus != IoStatus.Complete) {
             // IO error - abort the input, do NOT delete the deck, DN the device
             return false;
         } else {
             // We have an image - is it a @RUN card?
-            // If so, pull the necessary information from it, create a READ$ file,
-            // and advance the state. If not, do missing-@RUN-card algorithm
+            // If so, pull the necessary information from it, create a READ$ file, and advance the state.
             var image = _buffer.toASCII();
             var split = image.split("[, ]");
             if (split[0].equalsIgnoreCase("@RUN")) {
-                // TODO
+                var statement = Interpreter.parseControlStatement(exec, image);
+                // TODO interpret and validate @RUN card
                 return true;
-            } else {
-                // TODO
-                return false;
             }
+
+            // First card is not a @RUN card - if it is a legal comment card, ignore it.
+            if (image.equals("@") || image.startsWith("@ ")) {
+                return true;
+            }
+
+            // Deck is apparently missing the @RUN card.
+            var msg = _node.getNodeName() + " Missing @RUN card";
+            exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
+            resetNode();
+
+            msg = _node.getNodeName() + " INACTIVE";
+            exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
+            _state = SymbiontDeviceState.Quiesced;
+            return false;
         }
     }
 
