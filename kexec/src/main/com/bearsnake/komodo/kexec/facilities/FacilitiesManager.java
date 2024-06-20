@@ -26,6 +26,7 @@ import com.bearsnake.komodo.kexec.Configuration;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleConflictException;
 import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleOutOfRangeException;
@@ -2081,6 +2082,42 @@ public class FacilitiesManager implements Manager {
         }
 
         selectRoute((Device) node).routeIo(channelProgram);
+    }
+
+    /**
+     * Simple utility function to update the node status in NodeInfo
+     * and to emit a console message regarding such.
+     * Does NOT make any judgements whether exec should be stopped, whether the status is appropriate, etc.
+     * @param nodeId indicates the node to be affected
+     * @param status new status value
+     * @param consoleId indicates the console to which the message should be sent
+     */
+    public void setNodeStatus(
+        final int nodeId,
+        final NodeStatus status,
+        final ConsoleId consoleId
+    ) throws ExecStoppedException {
+        _nodeGraph.get(nodeId).setNodeStatus(status);
+        var nss = getNodeStatusString(nodeId);
+        Exec.getInstance().sendExecReadOnlyMessage(nss, consoleId);
+    }
+
+    /**
+     * Simple utility function to update the node status in NodeInfo
+     * and to emit a console message regarding such.
+     * Does NOT make any judgements whether exec should be stopped, whether the status is appropriate, etc.
+     * @param nodeId indicates the node to be affected
+     * @param status new status value
+     * @param consoleType indicates the console to which the message should be sent
+     */
+    public void setNodeStatus(
+        final int nodeId,
+        final NodeStatus status,
+        final ConsoleType consoleType
+    ) throws ExecStoppedException {
+        _nodeGraph.get(nodeId).setNodeStatus(status);
+        var nss = getNodeStatusString(nodeId);
+        Exec.getInstance().sendExecReadOnlyMessage(nss, consoleType);
     }
 
     /**

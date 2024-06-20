@@ -13,6 +13,7 @@ import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 import com.bearsnake.komodo.kexec.facilities.NodeStatus;
 import java.util.HashSet;
 
@@ -70,7 +71,7 @@ class DNKeyinHandler extends FacHandler implements Runnable {
         }
     }
 
-    private void processAll() {
+    private void processAll() throws ExecStoppedException {
         var nodeInfos = getNodeInfoListForChannel();
         if (nodeInfos == null) {
             return;
@@ -80,34 +81,37 @@ class DNKeyinHandler extends FacHandler implements Runnable {
         var runsToAbort = new HashSet<Run>();
         for (var ni : nodeInfos) {
             var node = (Device) ni.getNode();
-            var rce = ni.getAssignedTo();
-            if (rce != null) {
+            var runEntry = ni.getAssignedTo();
+            if (runEntry != null) {
                 if (node instanceof DiskDevice) {
-                    if (rce.getRunType() == RunType.Exec) {
+                    if (runEntry.getRunType() == RunType.Exec) {
                         if (!verifyOperation(node)) {
                             return;
                         }
                         requiresStop = true;
                     } else {
-                        runsToAbort.add(rce);
+                        runsToAbort.add(runEntry);
                     }
                 } else if (node instanceof TapeDevice) {
-                    if (rce.getRunType() == RunType.Exec) {
+                    if (runEntry.getRunType() == RunType.Exec) {
                         // TODO something special here, it's probably an audit tape or something like that
                     } else {
-                        runsToAbort.add(rce);
+                        runsToAbort.add(runEntry);
                     }
                 }
             }
         }
 
         if (!requiresStop) {
-            for (var rce : runsToAbort) {
+            for (var runEntry : runsToAbort) {
                 // abort the run
             }
         }
 
-        nodeInfos.forEach(ni -> ni.setNodeStatus(NodeStatus.Down));
+        for (NodeInfo ni : nodeInfos) {
+            _facMgr.setNodeStatus(ni.getNode().getNodeIdentifier(), NodeStatus.Down, _source);
+        }
+
         displayStatusForNodes(nodeInfos);
         if (requiresStop) {
             Exec.getInstance().stop(StopCode.ConsoleResponseRequiresReboot);
@@ -132,10 +136,10 @@ class DNKeyinHandler extends FacHandler implements Runnable {
         // TODO need to also check - are we a channel? and are we the last path to any devices?
         var requiresStop = false;
         var node = (Device) ni.getNode();
-        var rce = ni.getAssignedTo();
-        if (rce != null) {
+        var runEntry = ni.getAssignedTo();
+        if (runEntry != null) {
             if (node instanceof DiskDevice) {
-                if (rce.getRunType() == RunType.Exec) {
+                if (runEntry.getRunType() == RunType.Exec) {
                     if (!verifyOperation(node)) {
                         return;
                     }
@@ -144,7 +148,7 @@ class DNKeyinHandler extends FacHandler implements Runnable {
                     // TODO abort the run
                 }
             } else if (node instanceof TapeDevice) {
-                if (rce.getRunType() == RunType.Exec) {
+                if (runEntry.getRunType() == RunType.Exec) {
                     // TODO something special here, it's probably an audit tape or something like that
                 } else {
                     // TODO abort the run

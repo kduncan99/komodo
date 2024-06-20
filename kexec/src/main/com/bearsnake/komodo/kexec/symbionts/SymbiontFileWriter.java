@@ -9,6 +9,10 @@ import com.bearsnake.komodo.kexec.SDFFileType;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 
+/**
+ * Assists the exec in handling PRINT$ or PUNCH$ IO specifically to an SDF file or element for a run.
+ * (Generally not for an element, but it could happen I guess)
+ */
 public class SymbiontFileWriter implements SymbiontWriter {
 
 

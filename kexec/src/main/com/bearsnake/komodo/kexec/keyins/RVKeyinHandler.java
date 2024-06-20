@@ -72,29 +72,29 @@ class RVKeyinHandler extends FacHandler implements Runnable {
         var runsToAbort = new HashSet<Run>();
         for (var ni : nodeInfos) {
             var node = (Device) ni.getNode();
-            var rce = ni.getAssignedTo();
-            if (rce != null) {
+            var runEntry = ni.getAssignedTo();
+            if (runEntry != null) {
                 if (node instanceof DiskDevice) {
-                    if (rce.getRunType() == RunType.Exec) {
+                    if (runEntry.getRunType() == RunType.Exec) {
                         if (!verifyOperation(node)) {
                             return;
                         }
                         requiresStop = true;
                     } else {
-                        runsToAbort.add(rce);
+                        runsToAbort.add(runEntry);
                     }
                 } else if (node instanceof TapeDevice) {
-                    if (rce.getRunType() == RunType.Exec) {
+                    if (runEntry.getRunType() == RunType.Exec) {
                         // TODO something special here, it's probably an audit tape or something like that
                     } else {
-                        runsToAbort.add(rce);
+                        runsToAbort.add(runEntry);
                     }
                 }
             }
         }
 
         if (!requiresStop) {
-            for (var rce : runsToAbort) {
+            for (var runEntry : runsToAbort) {
                 // abort the run
             }
         }
@@ -124,10 +124,10 @@ class RVKeyinHandler extends FacHandler implements Runnable {
         var requiresStop = false;
         if (ni.getNodeStatus() != NodeStatus.Down) {
             var node = (Device) ni.getNode();
-            var rce = ni.getAssignedTo();
-            if (rce != null) {
+            var runEntry = ni.getAssignedTo();
+            if (runEntry != null) {
                 if (node instanceof DiskDevice) {
-                    if (rce.getRunType() == RunType.Exec) {
+                    if (runEntry.getRunType() == RunType.Exec) {
                         if (!verifyOperation(node)) {
                             return;
                         }
@@ -136,7 +136,7 @@ class RVKeyinHandler extends FacHandler implements Runnable {
                         // TODO abort the run
                     }
                 } else if (node instanceof TapeDevice) {
-                    if (rce.getRunType() == RunType.Exec) {
+                    if (runEntry.getRunType() == RunType.Exec) {
                         // TODO something special here, it's probably an audit tape or something like that
                     } else {
                         // TODO abort the run

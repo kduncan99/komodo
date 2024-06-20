@@ -14,6 +14,10 @@ import com.bearsnake.komodo.kexec.exec.Exec;
 
 import java.util.Arrays;
 
+/**
+ * Assists the exec in handling READ$ IO specifically from an SDF file or element for a run.
+ * (Generally not for an element, but it could happen I guess)
+ */
 public class SymbiontFileReader implements SymbiontReader {
 
     private final String _internalFileName;
