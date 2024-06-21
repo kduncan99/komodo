@@ -59,7 +59,7 @@ public class RunCardInfo {
     }
 
     private final ParsedStatement _statement;
-    private String _runid;
+    private String _runid ;
     private Character _schedulingPriority;
     private Long _optionWord;
     private Character _processorPriority;
@@ -78,12 +78,44 @@ public class RunCardInfo {
         _statement = statement;
     }
 
+    public String getAccountId() { return _accountId; }
+    public TimeSpecification getDeadlineTime() { return _deadlineTime; }
+    public Long getMaxCards() { return _maxCards; }
+    public Long getMaxPages() { return _maxPages; }
+    public Long getMaxTime() { return _maxTime; }
+    public Long getOptionWord() { return _optionWord; }
+    public Character getProcessorPriority() { return _processorPriority; }
+    public String getProjectId() { return _projectId; }
+    public String getRunId() { return _runid; }
+    public Character getSchedulingPriority() { return _schedulingPriority; }
+    public TimeSpecification getStartTime() { return _startTime; }
+    public ParsedStatement getStatement() { return _statement; }
+    public String getUserId() { return _userId; }
+
+    public RunCardInfo setAccountId(final String value) { _accountId = value; return this; }
+    public RunCardInfo setDeadlineTime(final TimeSpecification value) { _deadlineTime = value; return this; }
+    public RunCardInfo setMaxCards(final Long value) { _maxCards = value; return this; }
+    public RunCardInfo setMaxPages(final Long value) { _maxPages = value; return this; }
+    public RunCardInfo setMaxTime(final Long value) { _maxTime = value; return this; }
+    public RunCardInfo setOptionWord(final Long value) { _optionWord = value; return this; }
+    public RunCardInfo setProcessorPriority(final Character value) { _processorPriority = value; return this; }
+    public RunCardInfo setProjectId(final String value) { _projectId = value; return this; }
+    public RunCardInfo setRunId(final String value) { _runid = value; return this; }
+    public RunCardInfo setSchedulingPriority(final Character value) { _schedulingPriority = value; return this; }
+    public RunCardInfo setStartTime(final TimeSpecification value) { _startTime = value; return this; }
+    public RunCardInfo setUserId(final String value) { _userId = value; return this; }
+
+    /**
+     * Parses a @RUN card from a given image for a particular Run (usually the exec)
+     * @return a RunCardInfo representing the content of the @RUN image, null if it is not a @RUN image
+     * @throws Parser.SyntaxException with descriptive text
+     */
     public static RunCardInfo parse(
         final Run run,
         final String image
     ) throws Parser.SyntaxException {
         var statement = Interpreter.parseControlStatement(run, image);
-        return new RunCardInfo(statement).parse();
+        return statement._mnemonic.equalsIgnoreCase("RUN") ? new RunCardInfo(statement).parse() : null;
     }
 
     /**
@@ -98,7 +130,6 @@ public class RunCardInfo {
         var opts = _statement._optionsFields;
         var operands = _statement._operandFields;
         var exec = Exec.getInstance();
-        var cfg = exec.getConfiguration();
 
         if (opts.size() > 3) {
             throw new Parser.SyntaxException("Invalid field or subfield in @RUN card");
@@ -120,9 +151,7 @@ public class RunCardInfo {
         }
 
         _runid = operands.get(SS_RUNID);
-        if (_runid == null) {
-            _runid = "RUN000";
-        } else {
+        if (_runid != null) {
             _runid = _runid.toUpperCase();
             if (!Exec.isValidRunid(_runid)) {
                 throw new Parser.SyntaxException("Invalid RunId");
@@ -130,9 +159,7 @@ public class RunCardInfo {
         }
 
         _accountId = operands.get(SS_ACCOUNT_ID);
-        if (_accountId == null) {
-            _accountId = "000000";
-        } else {
+        if (_accountId != null) {
             _accountId = _accountId.toUpperCase();
             if (!Exec.isValidAccountId(_accountId)) {
                 throw new Parser.SyntaxException("Invalid AccountId");
@@ -148,42 +175,26 @@ public class RunCardInfo {
         }
 
         _projectId = operands.get(SS_PROJECT_ID);
-        if (_projectId == null) {
-            _projectId = "Q$Q$Q$";
-        } else {
+        if (_projectId != null) {
             _projectId = _projectId.toUpperCase();
             if (!Exec.isValidProjectId(_projectId)) {
                 throw new Parser.SyntaxException("Invalid ProjectId");
             }
         }
 
-        _maxTime = parseInteger(operands.get(SS_RUN_TIME), cfg.getMaxTime());
+        _maxTime = parseInteger(operands.get(SS_RUN_TIME));
         _deadlineTime = parseTimeSpecification(operands.get(SS_DEADLINE));
-        _maxPages = parseInteger(operands.get(SS_PAGES), cfg.getMaxPages());
-        _maxCards = parseInteger(operands.get(SS_CARDS), cfg.getMaxCards());
+        _maxPages = parseInteger(operands.get(SS_PAGES));
+        _maxCards = parseInteger(operands.get(SS_CARDS));
         _startTime = parseTimeSpecification(operands.get(SS_START_TIME));
 
         return this;
     }
 
-    public String getAccountId() { return _accountId; }
-    public TimeSpecification getDeadlineTime() { return _deadlineTime; }
-    public Long getMaxCards() { return _maxCards; }
-    public Long getMaxPages() { return _maxPages; }
-    public Long getOptionWord() { return _optionWord; }
-    public Character getProcessorPriority() { return _processorPriority; }
-    public String getProjectId() { return _projectId; }
-    public String getRunId() { return _runid; }
-    public Long getMaxTime() { return _maxTime; }
-    public Character getSchedulingPriority() { return _schedulingPriority; }
-    public ParsedStatement getStatement() { return _statement; }
-    public String getUserId() { return _userId; }
-
     private Long parseInteger(
-        final String source,
-        final Long defaultValue
+        final String source
     ) throws Parser.SyntaxException {
-        long result = defaultValue;
+        Long result = null;
         if (source != null) {
             try {
                 result = Long.parseLong(source);

@@ -300,7 +300,7 @@ public class FacilitiesManager implements Manager {
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedDiskFileToRun %s %s",
-                            run.getRunId(),
+                            run.getActualRunId(),
                             fileSpecification.toString());
 
         var exec = Exec.getInstance();
@@ -757,7 +757,7 @@ public class FacilitiesManager implements Manager {
         // TODO (re)allocate initial reserve?
 
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToRun %s result:%s",
-                            run.getRunId(),
+                            run.getActualRunId(),
                             fsResult.toString());
         fsResult.log(Trace, LOG_SOURCE);
         return true;
@@ -823,7 +823,7 @@ public class FacilitiesManager implements Manager {
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "assignDiskUnitToRun %s %s node:%d pack:%s I:%s Z:%s",
-                            run.getRunId(),
+                            run.getActualRunId(),
                             fileSpecification.toString(),
                             nodeIdentifier,
                             packName,
@@ -941,7 +941,7 @@ public class FacilitiesManager implements Manager {
                 if (!run.hasTask()
                     && ((run.getRunType() == RunType.Batch) || (run.getRunType() == RunType.Demand))) {
                     long minutes = Duration.between(now, startTime).getSeconds() / 60;
-                    var params = new Object[]{run.getRunId(), minutes};
+                    var params = new Object[]{run.getActualRunId(), minutes};
                     var facMsg = new FacStatusMessageInstance(FacStatusCode.RunHeldForDiskUnitAvailability, params);
                     run.postToPrint(facMsg.toString(), 1);
                 }
@@ -1364,7 +1364,7 @@ public class FacilitiesManager implements Manager {
         final boolean releaseOnTaskEnd
     ) {
         LogManager.logTrace(LOG_SOURCE, "establishUseItem %s %s->%s I:%s",
-                            run.getRunId(),
+                            run.getActualRunId(),
                             internalName,
                             fileSpecification.toString(),
                             releaseOnTaskEnd);
@@ -1396,7 +1396,7 @@ public class FacilitiesManager implements Manager {
             facItem.setInternalName(internalName);
         }
 
-        LogManager.logTrace(LOG_SOURCE, "establishUseItem %s exit", run.getRunId());
+        LogManager.logTrace(LOG_SOURCE, "establishUseItem %s exit", run.getActualRunId());
     }
 
     /**
@@ -1499,7 +1499,7 @@ public class FacilitiesManager implements Manager {
             // First part is printed if the drive is assigned
             // Second part is printed if a reel is mounted (could be not assigned, in the case of pre-mount)
             if (ni.getAssignedTo() != null) {
-                var runId = ni.getAssignedTo().getRunId();
+                var runId = ni.getAssignedTo().getActualRunId();
                 sb.append("* RUNID ").append(String.format("%-6s", runId)).append(" ");
             }
             if (ni.getMediaInfo() instanceof VolumeInfo vi) {
@@ -3021,7 +3021,7 @@ public class FacilitiesManager implements Manager {
         var loadMsg = String.format("Load %s %s %s",
                                     packName,
                                     disk.getNodeName(),
-                                    run.getRunId());
+                                    run.getActualRunId());
         Exec.getInstance().sendExecReadOnlyMessage(loadMsg, ConsoleType.InputOutput);
         var serviceMsg = loadMsg.replace("Load", "Service");
 

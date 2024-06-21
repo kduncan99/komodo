@@ -4,16 +4,14 @@
 
 package com.bearsnake.komodo.kexec.exec;
 
+import com.bearsnake.komodo.kexec.csi.RunCardInfo;
+
 public class TIPRun extends Run {
 
-    public TIPRun(String runId,
-                  String originalRunId,
-                  String projectId,
-                  String accountId,
-                  String userId) {
-        super(RunType.TIP, runId, originalRunId, projectId, accountId, userId);
-        _cardLimit = Exec.getInstance().getConfiguration().getMaxCards();
-        _pageLimit = Exec.getInstance().getConfiguration().getMaxPages();
+    public TIPRun(final String actualRunId,
+                  final RunCardInfo runCardInfo
+    ) {
+        super(RunType.TIP, actualRunId, runCardInfo);
     }
 
     @Override public final boolean isFinished() { return false; } // TODO

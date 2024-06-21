@@ -124,13 +124,7 @@ class InputSymbiontInfo extends SymbiontInfo {
             if (split[0].equalsIgnoreCase("@RUN")) {
                 try {
                     _runCardInfo = RunCardInfo.parse(exec, image);
-                    // TODO all the following should be in a separate function setupREAD$():
-                    //  generate effective Run-Id
-                    //  create and assign READ$ file
-                    //  set up SymbiontFileWriter
-                    //  write @RUN image to SymbiontFileWriter
-                    _state = SymbiontDeviceState.Loading;
-                    return true;
+                    return setupREADFile();
                 } catch (Parser.SyntaxException ex) {
                     var msg = _node.getNodeName() + " Invalid @RUN card";
                     exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
@@ -187,5 +181,22 @@ class InputSymbiontInfo extends SymbiontInfo {
         }
 
         return !failed;
+    }
+
+    private boolean setupREADFile() throws ExecStoppedException {
+        // Create BatchRun entity
+        var exec = Exec.getInstance();
+        var run = exec.createBatchRun(_runCardInfo);
+
+        // Create and assign READ$ file
+        //  TODO
+
+        // Set up SymbiontFileWriter for READ$ file.
+        // Yes, I know the the READ$ file needs a SymbiontFileReader, but that only happens when the run
+        // comes out of backlog.  First we have to write to the stupid thing.
+        //  TODO
+
+        _state = SymbiontDeviceState.Loading;
+        return true;
     }
 }

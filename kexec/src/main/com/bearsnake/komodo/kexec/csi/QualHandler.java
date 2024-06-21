@@ -56,7 +56,7 @@ class QualHandler extends Handler {
         if ((qualifier != null) && !Exec.isValidQualifier(qualifier)) {
             LogManager.logInfo(Interpreter.LOG_SOURCE,
                                "[%s] Invalid qualifier:%s",
-                               hp._run.getRunId(),
+                               hp._run.getActualRunId(),
                                hp._statement._originalStatement);
             postSyntaxError(hp);
             return;
@@ -67,7 +67,7 @@ class QualHandler extends Handler {
             if (qualifier == null) {
                 LogManager.logInfo(Interpreter.LOG_SOURCE,
                                    "[%s] Missing qualifier:%s",
-                                   hp._run.getRunId(),
+                                   hp._run.getActualRunId(),
                                    hp._statement._originalStatement);
                 if (hp._sourceIsExecRequest) {
                     hp._run.postContingency(012, 04, 040);
@@ -84,7 +84,7 @@ class QualHandler extends Handler {
             if (qualifier == null) {
                 LogManager.logInfo(Interpreter.LOG_SOURCE,
                                    "[%s] Missing qualifier:%s",
-                                   hp._run.getRunId(),
+                                   hp._run.getActualRunId(),
                                    hp._statement._originalStatement);
                 if (hp._sourceIsExecRequest) {
                     hp._run.postContingency(012, 04, 040);
@@ -101,7 +101,7 @@ class QualHandler extends Handler {
             if (qualifier != null) {
                 LogManager.logInfo(Interpreter.LOG_SOURCE,
                                    "[%s] Qualifier should not be specified:%s",
-                                   hp._run.getRunId(),
+                                   hp._run.getActualRunId(),
                                    hp._statement._originalStatement);
                 if (hp._sourceIsExecRequest) {
                     hp._run.postContingency(012, 04, 040);

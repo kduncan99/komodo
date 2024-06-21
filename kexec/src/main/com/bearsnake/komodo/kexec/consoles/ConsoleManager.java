@@ -97,7 +97,7 @@ public class ConsoleManager implements Manager {
         for (var msg : _queuedReadOnlyMessages) {
             out.printf("%s    src:%s [%s] rte:%s %s\n",
                        indent,
-                       msg.getSource().getRunId(),
+                       msg.getSource().getActualRunId(),
                        msg.getRunId(),
                        msg.getRouting() == null ? "<no routing>" : msg.getRouting().toString(),
                        msg.getText());
@@ -107,7 +107,7 @@ public class ConsoleManager implements Manager {
         for (var msg : _queuedReadReplyMessages.values()) {
             out.printf("%s    src:%s [%s] rte:%s %s resp:%s cons:%s consIdx:%d cancel:%s\n",
                        indent,
-                       msg.getSource().getRunId(),
+                       msg.getSource().getActualRunId(),
                        msg.getRunId(),
                        msg.getRouting() == null ? "<none>" : msg.getRouting().toString(),
                        msg.getText(),
@@ -138,7 +138,7 @@ public class ConsoleManager implements Manager {
     public void sendReadOnlyMessage(final ReadOnlyMessage message) {
         LogManager.logTrace(LOG_SOURCE,
                             "Queueing ReadOnly %s*%s",
-                            message.getSource().getRunId(),
+                            message.getSource().getActualRunId(),
                             message.getText());
         if (message.getSource().getRunType() != RunType.Exec) {
             message.getSource().postToTailSheet(message.getText());
@@ -153,7 +153,7 @@ public class ConsoleManager implements Manager {
     public void sendReadReplyMessage(final ReadReplyMessage message) {
         LogManager.logTrace(LOG_SOURCE,
                             "Queueing ReadReply %s*%s",
-                            message.getSource().getRunId(),
+                            message.getSource().getActualRunId(),
                             message.getText());
         if (message.getSource().getRunType() != RunType.Exec) {
             message.getSource().postToTailSheet(message.getText());

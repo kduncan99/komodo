@@ -4,19 +4,16 @@
 
 package com.bearsnake.komodo.kexec.exec;
 
+import com.bearsnake.komodo.kexec.csi.RunCardInfo;
+
 public class BatchRun extends Run implements Runnable {
 
     protected boolean _isSuspended = false;
 
-    public BatchRun(String runId,
-                    String originalRunId,
-                    String projectId,
-                    String accountId,
-                    String userId) {
-        super(RunType.Batch, runId, originalRunId, projectId, accountId, userId);
+    public BatchRun(final String actualRunId,
+                    final RunCardInfo runCardInfo) {
+        super(RunType.Batch, actualRunId, runCardInfo);
         var exec = Exec.getInstance();
-        _cardLimit = exec.getConfiguration().getMaxCards();
-        _pageLimit = exec.getConfiguration().getMaxPages();
     }
 
     @Override public final boolean isFinished() { return false; } // TODO

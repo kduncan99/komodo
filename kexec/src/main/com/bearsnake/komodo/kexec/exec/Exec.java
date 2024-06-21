@@ -14,6 +14,7 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.consoles.ReadOnlyMessage;
 import com.bearsnake.komodo.kexec.consoles.ReadReplyMessage;
+import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
@@ -58,8 +59,11 @@ public class Exec extends Run {
     private MFDManager _mfdManager;
     private SymbiontManager _symbiontManager;
 
+    private static final RunCardInfo RUN_CARD_INFO =
+        new RunCardInfo(null).setRunId("EXEC-8").setAccountId("SYSTEM").setProjectId("SYS$").setUserId("EXEC8");
+
     public Exec(final boolean[] jumpKeyTable) {
-        super(RunType.Exec, "EXEC-8", "EXEC-8", "SYS$", "", "EXEC8");
+        super(RunType.Exec, "EXEC-8", RUN_CARD_INFO);
 
         _jumpKeys = jumpKeyTable;
         _allowRecoveryBoot = false;
@@ -116,7 +120,7 @@ public class Exec extends Run {
         _session = session;
 
         _runEntries.clear();
-        _runEntries.put(_runId, this);
+        _runEntries.put(_actualRunId, this);
 
         for (var m : _managers) {
             m.boot(recoveryBoot);
@@ -195,6 +199,19 @@ public class Exec extends Run {
         _keyinManager = null;
         _mfdManager = null;
         _symbiontManager = null;
+    }
+
+    /**
+     * Atomic process to determine a unique run-id, then create the BatchRun entity,
+     * then store it in the runEntries table. Mostly exists to avoid run-id race conditions.
+     */
+    public synchronized Run createBatchRun(
+        final RunCardInfo runCardInfo
+    ) throws ExecStoppedException {
+        var actualRunId = createUniqueRunid(runCardInfo.getRunId());
+        var run = new BatchRun(actualRunId, runCardInfo);
+        _runEntries.put(actualRunId, run);
+        return run;
     }
 
     public void displayDateAndTime() {

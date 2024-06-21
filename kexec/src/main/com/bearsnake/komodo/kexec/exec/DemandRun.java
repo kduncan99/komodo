@@ -4,19 +4,17 @@
 
 package com.bearsnake.komodo.kexec.exec;
 
+import com.bearsnake.komodo.kexec.csi.RunCardInfo;
+
 public class DemandRun extends Run implements Runnable {
 
     protected boolean _isSuspended = false; // TODO can you suspend a demand run?
 
-    public DemandRun(String runId,
-                     String originalRunId,
-                     String projectId,
-                     String accountId,
-                     String userId) {
-        super(RunType.Demand, runId, originalRunId, projectId, accountId, userId);
+    public DemandRun(final String actualRunId,
+                     final RunCardInfo runCardInfo
+    ) {
+        super(RunType.Demand, actualRunId, runCardInfo);
         var exec = Exec.getInstance();
-        _cardLimit = exec.getConfiguration().getMaxCards();
-        _pageLimit = exec.getConfiguration().getMaxPages();
     }
 
     @Override public final boolean isFinished() { return false; } // TODO

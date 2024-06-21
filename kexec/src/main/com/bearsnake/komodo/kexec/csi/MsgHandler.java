@@ -71,7 +71,7 @@ class MsgHandler extends Handler {
 
                 var roMsg = new ReadOnlyMessage(hp._run,
                                                 types.isEmpty() ? null : types,
-                                                hp._run.getRunId(),
+                                                hp._run.getActualRunId(),
                                                 msg,
                                                 false);
                 cm.sendReadOnlyMessage(roMsg);
@@ -88,7 +88,7 @@ class MsgHandler extends Handler {
 
                 var rrMsg = new ReadReplyMessage(hp._run,
                                                  consType,
-                                                 hp._run.getRunId(),
+                                                 hp._run.getActualRunId(),
                                                  msg,
                                                  false,
                                                  false, 0);

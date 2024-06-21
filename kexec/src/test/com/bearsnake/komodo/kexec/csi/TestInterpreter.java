@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.csi;
 
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.Configuration;
 import com.bearsnake.komodo.kexec.exec.BatchRun;
 import com.bearsnake.komodo.kexec.exec.Exec;
@@ -23,12 +24,13 @@ public class TestInterpreter {
     private Run _rce;
 
     @Before
-    public void setup() {
+    public void setup() throws Parser.SyntaxException {
         LogManager.setGlobalEnabled(true);
         LogManager.setGlobalLevel(Level.Trace);
         var ex = new Exec(new boolean[36]);
         ex.setConfiguration(new Configuration());
-        _rce = new BatchRun("RUNID", "RUNID", "PROJ", "ACCT", "USER");
+        var rci = RunCardInfo.parse(_rce, "@RUN TEST");
+        _rce = new BatchRun("RUNID", rci);
     }
 
     @Test
@@ -149,8 +151,8 @@ public class TestInterpreter {
         assertEquals("LABEL", ps._label);
         assertTrue(ps._optionsFields.isEmpty());
         assertEquals(1, ps._operandFields.size());
-        assertEquals(1, ps._operandFields.get(0).size());
-        assertEquals("This is a funny frog", ps._operandFields.get(0).get(0));
+        assertEquals("This is a funny frog",
+                     ps._operandFields.get(new SubfieldSpecifier(0, 0)));
 
         assertFalse(ps._facStatusResult.hasErrorMessages());
         assertFalse(ps._facStatusResult.hasInfoMessages());

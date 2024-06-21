@@ -58,13 +58,13 @@ public class Interpreter {
         final StatementSource source,
         final ParsedStatement statement
     ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE, "HandleControlStatement [%s]", run.getRunId());
+        LogManager.logTrace(LOG_SOURCE, "HandleControlStatement [%s]", run.getActualRunId());
         var hp = new HandlerPacket(run, source, statement);
         var handler = HANDLERS.get(statement._mnemonic);
         if (handler == null) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] invalid control statement:%s",
-                                  run.getRunId(),
+                                  run.getActualRunId(),
                                   statement._originalStatement);
             run.postContingency(012, 04, 040);
             statement._facStatusResult.postMessage(FacStatusCode.SyntaxErrorInImage);
@@ -72,7 +72,7 @@ public class Interpreter {
         } else if ((source == StatementSource.ER_CSI) && !handler.allowCSI()) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] %s not allowed for ER CSI$",
-                                  run.getRunId(),
+                                  run.getActualRunId(),
                                   statement._mnemonic);
             run.postContingency(012, 04, 042);
             statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement);
@@ -80,7 +80,7 @@ public class Interpreter {
         } else if ((source == StatementSource.ER_CSF) && !handler.allowCSF()) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] %s not allowed for ER CSF$",
-                                  run.getRunId(),
+                                  run.getActualRunId(),
                                   statement._mnemonic);
             run.postContingency(012, 04, 042);
             statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement);
@@ -88,7 +88,7 @@ public class Interpreter {
         } else if ((run instanceof TIPRun) && !handler.allowTIP()) {
             LogManager.logWarning(LOG_SOURCE,
                                   "[%s] %s not allowed in TIP program",
-                                  run.getRunId(),
+                                  run.getActualRunId(),
                                   statement._mnemonic);
             run.postContingency(012, 04, 042);
             statement._facStatusResult.postMessage(FacStatusCode.IllegalControlStatement);
@@ -99,7 +99,7 @@ public class Interpreter {
 
         LogManager.logTrace(LOG_SOURCE,
                             "HandleControlStatement [%s] returning code %012o",
-                            run.getRunId(),
+                            run.getActualRunId(),
                             statement._facStatusResult.getStatusWord());
     }
 
@@ -129,7 +129,7 @@ public class Interpreter {
         final Run run,
         final String statement
     ) {
-        LogManager.logTrace(LOG_SOURCE, "parseControlStatement [%s] %s", run.getRunId(), statement);
+        LogManager.logTrace(LOG_SOURCE, "parseControlStatement [%s] %s", run.getActualRunId(), statement);
 
         var ps = new ParsedStatement();
         ps._originalStatement = statement;
@@ -144,7 +144,7 @@ public class Interpreter {
         // start parsing - look for masterspace
         var p = new Parser(working);
         if (p.atEnd() || !p.parseChar('@')) {
-            LogManager.logWarning(LOG_SOURCE, "[%s] statement does not begin with '@'", run.getRunId());
+            LogManager.logWarning(LOG_SOURCE, "[%s] statement does not begin with '@'", run.getActualRunId());
             run.postContingency(012, 04, 040);
             postSyntaxError(ps._facStatusResult);
             return ps;

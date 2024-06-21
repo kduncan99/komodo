@@ -33,6 +33,6 @@ class LogHandler extends Handler {
         }
 
         var opField = hp._statement._operandFields.get(new SubfieldSpecifier(0, 0));
-        LogManager.logInfo(hp._run.getRunId(), opField);
+        LogManager.logInfo(hp._run.getActualRunId(), opField);
     }
 }
