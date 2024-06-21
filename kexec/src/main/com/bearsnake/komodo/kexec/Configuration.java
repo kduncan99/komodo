@@ -43,6 +43,7 @@ public class Configuration {
     private long _maxCards                         = 256;
     private long _maxGranules                      = 256;              // max granules if not specified on @ASG or @CAT
     private long _maxPages                         = 256;
+    private long _maxTime                          = 600;              // max seconds for run time
     public String OverheadAccountId                = "INSTALLATION";   // account ID for overhead runs such as SYS and ROLOUT/ROLBACK
     public String OverheadUserId                   = "INSTALLATION";   // User ID for overhead runs
     public String PrivilegedAccountId              = "123456";         // account ID which can override reading tape label blocks
@@ -90,6 +91,7 @@ public class Configuration {
     public long getMaxCards() { return _maxCards; }
     public long getMaxGranules() { return _maxGranules; }
     public long getMaxPages() { return _maxPages; }
+    public long getMaxTime() { return _maxTime; }
     public boolean getReleaseUnusedReserve() { return _releaseUnusedReserve; }
     public boolean getReleaseUnusedRemovableReserve() { return _releaseUnusedRemovableReserve; }
     public boolean getResidueClear() { return _residueClear; }

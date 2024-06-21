@@ -282,6 +282,21 @@ public class Exec extends Run {
         return (_phase != Phase.Stopped) && (_phase != Phase.NotStarted);
     }
 
+    public static boolean isValidAccountId(
+        final String accountId
+    ) {
+        if (accountId.isEmpty() || (accountId.length() > 12)) {
+            return false;
+        }
+        return IntStream.range(0, accountId.length()).allMatch(chx -> isValidAccountIdChar(accountId.charAt(chx)));
+    }
+
+    public static boolean isValidAccountIdChar(
+        final char ch
+    ) {
+        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '.';
+    }
+
     public static boolean isValidFilename(
         final String filename
     ) {
@@ -294,7 +309,7 @@ public class Exec extends Run {
     public static boolean isValidFilenameChar(
         final char ch
     ) {
-        return (ch >= 'A' && ch <= 'Z') || ch == '-' || ch == '$';
+        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '$';
     }
 
     public static boolean isValidNodeName(
@@ -305,7 +320,7 @@ public class Exec extends Run {
         }
 
         for (var ch : deviceName.getBytes()) {
-            if ((ch < 'A' || ch > 'Z') && (ch < '0' || ch > '9')) {
+            if (!Character.isAlphabetic(ch) && !Character.isDigit(ch)) {
                 return false;
             }
         }
@@ -321,7 +336,7 @@ public class Exec extends Run {
         }
 
         for (var ch : packName.getBytes()) {
-            if ((ch < 'A' || ch > 'Z') && (ch < '0' || ch > '9')) {
+            if (!Character.isAlphabetic(ch) && !Character.isDigit(ch)) {
                 return false;
             }
         }
@@ -361,10 +376,25 @@ public class Exec extends Run {
         return true;
     }
 
+    public static boolean isValidProjectId(
+        final String projectId
+    ) {
+        if (projectId.isEmpty() || (projectId.length() > 12)) {
+            return false;
+        }
+        return IntStream.range(0, projectId.length()).allMatch(chx -> isValidProjectIdChar(projectId.charAt(chx)));
+    }
+
+    public static boolean isValidProjectIdChar(
+        final char ch
+    ) {
+        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '$';
+    }
+
     public static boolean isValidQualifier(
         final String qualifier
     ) {
-        if ((qualifier.isEmpty()) || (qualifier.length() > 12)) {
+        if (qualifier.isEmpty() || (qualifier.length() > 12)) {
             return false;
         }
         return IntStream.range(0, qualifier.length()).allMatch(chx -> isValidQualifierChar(qualifier.charAt(chx)));
@@ -373,7 +403,37 @@ public class Exec extends Run {
     public static boolean isValidQualifierChar(
         final char ch
     ) {
-        return (ch >= 'A' && ch <= 'Z') || ch == '-' || ch == '$';
+        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '$';
+    }
+
+    public static boolean isValidRunid(
+        final String runId
+    ) {
+        if (runId.isEmpty() || (runId.length() > 6)) {
+            return false;
+        }
+        return IntStream.range(0, runId.length()).allMatch(chx -> isValidQualifierChar(runId.charAt(chx)));
+    }
+
+    public static boolean isValidRunIdChar(
+        final char ch
+    ) {
+        return Character.isAlphabetic(ch) || Character.isDigit(ch);
+    }
+
+    public static boolean isValidUserId(
+        final String accountId
+    ) {
+        if (accountId.isEmpty() || (accountId.length() > 12)) {
+            return false;
+        }
+        return IntStream.range(0, accountId.length()).allMatch(chx -> isValidUserIdChar(accountId.charAt(chx)));
+    }
+
+    public static boolean isValidUserIdChar(
+        final char ch
+    ) {
+        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '.';
     }
 
     public void sendExecReadOnlyMessage(

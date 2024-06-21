@@ -23,6 +23,7 @@ import com.bearsnake.komodo.logger.LogManager;
 abstract class SymbiontInfo {
 
     protected static final String LOG_SOURCE = "SymbMgr";
+    protected static final String NO_ROUTE_FOR_IO_MSG = "No Route to Device";
 
     protected final NodeInfo _nodeInfo;
     protected final SymbiontDevice _node;
@@ -172,7 +173,7 @@ abstract class SymbiontInfo {
                     failed = true;
                 }
             } catch (NoRouteForIOException e) {
-                retry = notifyConsoleIOError("no route to device", true);
+                retry = notifyConsoleIOError(NO_ROUTE_FOR_IO_MSG, true);
                 failed = true;
             }
         }

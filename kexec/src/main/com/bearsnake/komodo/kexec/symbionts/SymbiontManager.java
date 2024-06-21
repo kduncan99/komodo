@@ -85,13 +85,13 @@ public class SymbiontManager implements Manager {
 
         out.printf("%s  Input Symbionts:\n", indent);
         for (var isInfo : _inputSymbiontInfos) {
-            out.printf("%s    %s Lock:%s Susp:%s State:%s Wait:%s Abort:%s\n", indent,
+            out.printf("%s    %s Lock:%s Susp:%s State:%s Wait:%s\n",
+                       indent,
                        isInfo._nodeInfo.getNode().getNodeName(),
                        isInfo._isLocked,
                        isInfo._isSuspended,
                        isInfo._state,
-                       isInfo._isWaiting,
-                       isInfo._abort);
+                       isInfo._isWaiting);
         }
 
         out.printf("%s  Output Symbionts:\n", indent);

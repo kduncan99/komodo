@@ -9,24 +9,32 @@ import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.tasks.Task;
 
 import java.io.PrintStream;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class Run {
 
     protected final String _accountId;
-    protected String _defaultQualifier;
-    protected String _impliedQualifier;
     protected final String _originalRunId;
     protected final String _projectId;
-    protected RunConditionWord _runConditionWord;
     protected final String _runId;
     protected final RunType _runType;
+    protected final Instant _submissionTime;
     protected final String _userId;
 
+    protected char _schedulingPriority;
+    protected char _processingPriority;
+    protected long _optionsWord;
     protected long _cardCount;
     protected long _cardLimit;
     protected long _pageCount;
     protected long _pageLimit;
+    protected long _timeCount;    // in seconds
+    protected long _maxTimeLimit; // in seconds
+
+    protected String _defaultQualifier;
+    protected String _impliedQualifier;
+    protected RunConditionWord _runConditionWord;
 
     // The following indicate how many waits are in play for mass storage (waiting on file assign or similar)
     // and for peripherals (waiting on unit assign).
@@ -55,6 +63,8 @@ public abstract class Run {
         _runConditionWord = new RunConditionWord();
         _defaultQualifier = projectId;
         _impliedQualifier = projectId;
+
+        _submissionTime = Instant.now();
     }
 
     public void decrementWaitingForMassStorage() { _waitingForMassStorageCounter.decrementAndGet(); }
@@ -68,6 +78,7 @@ public abstract class Run {
     public final RunConditionWord getRunConditionWord() { return _runConditionWord; }
     public final String getRunId() { return _runId; }
     public final RunType getRunType() { return _runType; }
+    public final Instant getSubmissionTime() { return _submissionTime; }
     public final String getUserId() { return _userId; }
     public final boolean hasTask() { return _activeTask != null; }
     public void incrementWaitingForMassStorage() { _waitingForMassStorageCounter.incrementAndGet(); }
@@ -133,6 +144,12 @@ public abstract class Run {
     public void postToPrint(
         final String text,
         final int lineSkip
+    ) {
+        // TODO
+    }
+
+    public void postToPunch(
+        final String text
     ) {
         // TODO
     }

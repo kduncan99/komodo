@@ -63,7 +63,7 @@ class DNKeyinHandler extends FacHandler implements Runnable {
     }
 
     @Override
-    void process() {
+    void process() throws ExecStoppedException {
         if (_options != null) {
             processAll();
         } else {

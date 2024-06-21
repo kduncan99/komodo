@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.logger.LogManager;
@@ -36,7 +37,7 @@ public abstract class KeyinHandler implements Runnable {
     abstract boolean isAllowed();
     boolean isDone() { return _timeFinished != null; }
 
-    abstract void process();
+    abstract void process() throws ExecStoppedException;
 
     @Override
     public synchronized String toString() {
