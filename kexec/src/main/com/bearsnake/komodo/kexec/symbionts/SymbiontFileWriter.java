@@ -5,9 +5,13 @@
 package com.bearsnake.komodo.kexec.symbionts;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.kexec.DateConverter;
 import com.bearsnake.komodo.kexec.SDFFileType;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+
+import java.time.Instant;
 
 /**
  * Assists the exec in handling PRINT$ or PUNCH$ IO specifically to an SDF file or element for a run.
@@ -60,17 +64,90 @@ public class SymbiontFileWriter implements SymbiontWriter {
         }
     }
 
-    /**
-     * Writes a punch image to the output buffer (but with a safeguard in case we are a print file)
-     * Splits the image on buffer boundaries.
-     * @param image image to be converted and written
-     * @throws ExecStoppedException If the exec stops in the middle of this process
-     */
     @Override
-    public void writeImage(
-        final String image
+    public void writeEndOfFileControlImage(
     ) throws ExecStoppedException {
-        writeImage(_fileType == SDFFileType.PRINT$ ? 1 : 0, image);
+        var controlWord = 0_770000_000000L;
+        writeWord(controlWord);
+    }
+
+    @Override
+    public void writeFileLabelControlImage(
+        final int characterSet
+    ) throws ExecStoppedException {
+        var controlWord = 0_500116_000000L | (characterSet & 077);
+        var dataWord = Word36.stringToWordFieldata("*SDFF*");
+        writeWord(controlWord);
+        writeWord(dataWord);
+    }
+
+    @Override
+    public void writeFTPLabelControlImage(
+    ) throws ExecStoppedException {
+        var controlWord = 0_500101_000001L;
+        var dataWord = Word36.stringToWordFieldata("*SDFF*");
+        writeWord(controlWord);
+        writeWord(dataWord);
+    }
+
+    @Override
+    public void writePRINT$LabelControlImage(
+        final int partNumber,
+        final int characterSet,
+        final String filename,
+        final String inputDevice,
+        final String runId,
+        final Instant timeStamp,
+        final String userId,
+        final long pageCount,
+        final String accountId,
+        final String projectId,
+        final long fileSizeTracks,
+        final String banner
+    ) throws ExecStoppedException {
+        // TODO
+    }
+
+    @Override
+    public void writePUNCH$LabelControlImage(
+        final int partNumber,
+        final int characterSet,
+        final String filename,
+        final String inputDevice,
+        final String runId,
+        final Instant timeStamp,
+        final String userId,
+        final long cardCount,
+        final String accountId,
+        final String projectId,
+        final long fileSizeTracks,
+        final String banner
+    ) throws ExecStoppedException {
+        // TODO
+    }
+
+    @Override
+    public void writeREAD$LabelControlImage(
+        final int characterSet,
+        final String filename,
+        final String inputDevice,
+        final String runId,
+        final Instant timeStamp
+    ) throws ExecStoppedException {
+        var controlWord = 0_501110_000000L | (characterSet & 077);
+        var dataWords = new long[011];
+        var padFileName = String.format("%-12s", filename);
+        dataWords[00] = Word36.stringToWordFieldata(padFileName.substring(0, 6));
+        dataWords[01] = Word36.stringToWordFieldata(padFileName.substring(6));
+        dataWords[02] = Word36.stringToWordFieldata(inputDevice);
+        dataWords[03] = Word36.stringToWordFieldata(runId);
+        dataWords[04] = 0;
+        dataWords[05] = DateConverter.getModifiedSingleWordTime(timeStamp);
+        dataWords[06] = 0_050505_050505L;
+        dataWords[07] = 0_050505_050505L;
+        dataWords[010] = 0_050505_050505L;
+        writeWord(controlWord);
+        writeWords(dataWords, 0, 011);
     }
 
     /**
@@ -80,7 +157,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
      * @throws ExecStoppedException If the exec stops in the middle of this process
      */
     @Override
-    public void writeControlImage(
+    public void writePrintControlImage(
         final String image
     ) throws ExecStoppedException {
         var dataBuffer = (_currentCharacterSet == 0)
@@ -116,6 +193,19 @@ public class SymbiontFileWriter implements SymbiontWriter {
     }
 
     /**
+     * Writes a punch image to the output buffer (but with a safeguard in case we are a print file)
+     * Splits the image on buffer boundaries.
+     * @param image image to be converted and written
+     * @throws ExecStoppedException If the exec stops in the middle of this process
+     */
+    @Override
+    public void writeDataImage(
+        final String image
+    ) throws ExecStoppedException {
+        writeDataImage(_fileType == SDFFileType.PRINT$ ? 1 : 0, image);
+    }
+
+    /**
      * Writes a print image to the output buffer, converting according to the current character set.
      * Splits the image on buffer boundaries if/as necessary.
      * @param spacing print spacing - leave 0 for punch files
@@ -123,7 +213,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
      * @throws ExecStoppedException If the exec stops in the middle of this process
      */
     @Override
-    public void writeImage(
+    public void writeDataImage(
         final int spacing,
         final String image
     ) throws ExecStoppedException {

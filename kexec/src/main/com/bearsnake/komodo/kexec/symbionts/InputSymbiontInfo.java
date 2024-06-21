@@ -7,12 +7,19 @@ package com.bearsnake.komodo.kexec.symbionts;
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.hardwarelib.ChannelProgram;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
+import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.kexec.Granularity;
+import com.bearsnake.komodo.kexec.SDFFileType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
+import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
+
+import java.time.Instant;
 
 /**
  * Handles input symbionts - essentially card readers, virtual or otherwise.
@@ -20,6 +27,8 @@ import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 class InputSymbiontInfo extends SymbiontInfo {
 
     private RunCardInfo _runCardInfo = null;
+    private FileSpecification _fileSpecification = null;
+    private SymbiontFileWriter _fileWriter = null;
 
     public InputSymbiontInfo(
         final NodeInfo nodeInfo
@@ -93,8 +102,55 @@ class InputSymbiontInfo extends SymbiontInfo {
         return result;
     }
 
+    /**
+     * Initiates an image read.
+     * Implemented so that state changes can kick this off, change state, and return
+     * while this executes (at least potentially) asynchronously.
+     */
+    private boolean initiateRead() throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        var fm = exec.getFacilitiesManager();
+
+        var failed = false;
+        var retry = true;
+        while (retry) {
+            try {
+                fm.routeIo(_channelProgram);
+                _state = SymbiontDeviceState.PreRun;
+                retry = false;
+            } catch (NoRouteForIOException ex) {
+                retry = notifyConsoleIOError(NO_ROUTE_FOR_IO_MSG, true);
+                failed = true;
+            }
+        }
+
+        if (failed) {
+            resetNode();
+            var msg = _node.getNodeName() + " INACTIVE";
+            exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
+            _state = SymbiontDeviceState.Quiesced;
+        }
+
+        return !failed;
+    }
+
+    /**
+     * We have a READ$ file set up for writing - all we need to do is read images from
+     * the input symbiont, and write them to the READ$ file.
+     */
     private boolean pollLoading() throws ExecStoppedException {
-        return false; // TODO
+        var ioStatus = _channelProgram.getIoStatus();
+        if (ioStatus == IoStatus.InProgress) {
+            return false;
+        } else if (ioStatus == IoStatus.EndOfFile) {
+            // TODO need to check for @FILE and do the appropriate stuffs
+            wrapREADFile();
+            return true;
+        } else {
+            var image = _buffer.toASCII();
+            _fileWriter.writeDataImage(image);
+            return initiateRead();
+        }
     }
 
     private boolean pollLoadingFile() throws ExecStoppedException {
@@ -160,43 +216,80 @@ class InputSymbiontInfo extends SymbiontInfo {
         var msg = _node.getNodeName() + " ACTIVE";
         exec.sendExecReadOnlyMessage(msg);
 
-        var failed = false;
-        var retry = true;
-        while (retry) {
-            try {
-                fm.routeIo(_channelProgram);
-                _state = SymbiontDeviceState.PreRun;
-                retry = false;
-            } catch (NoRouteForIOException ex) {
-                retry = notifyConsoleIOError(NO_ROUTE_FOR_IO_MSG, true);
-                failed = true;
-            }
-        }
-
-        if (failed) {
-            resetNode();
-            msg = _node.getNodeName() + " INACTIVE";
-            exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
-            _state = SymbiontDeviceState.Quiesced;
-        }
-
-        return !failed;
+        return initiateRead();
     }
 
     private boolean setupREADFile() throws ExecStoppedException {
         // Create BatchRun entity
         var exec = Exec.getInstance();
+        var cfg = exec.getConfiguration();
+        var fm = exec.getFacilitiesManager();
         var run = exec.createBatchRun(_runCardInfo);
 
-        // Create and assign READ$ file
-        //  TODO
+        // Create the READ$ file and assign it to the exec (for now).
+        var filename = "READ$X" + run.getActualRunId();
+        _fileSpecification = new FileSpecification("SYS$", filename, null, null, null);
+        var fsResult = new FacStatusResult();
+        fm.catalogDiskFile(_fileSpecification,
+                           cfg.getMassStorageDefaultMnemonic(),
+                           run.getProjectId(),
+                           run.getAccountId(),
+                           false,
+                           false,
+                           true,
+                           false,
+                           false,
+                           false,
+                           Granularity.Track,
+                           1,
+                           999,
+                           null,
+                           fsResult);
+        //  TODO check fac status
+
+        fsResult = new FacStatusResult();
+        fm.assignCatalogedDiskFileToExec(_fileSpecification, true, fsResult);
+        //  TODO check fac status
 
         // Set up SymbiontFileWriter for READ$ file.
-        // Yes, I know the the READ$ file needs a SymbiontFileReader, but that only happens when the run
+        // Yes, I know the READ$ file needs a SymbiontFileReader, but that only happens when the run
         // comes out of backlog.  First we have to write to the stupid thing.
-        //  TODO
-
+        _fileWriter = new SymbiontFileWriter(filename, SDFFileType.READ$, 01, cfg.getSymbiontBufferSize());
+        _fileWriter.writeREAD$LabelControlImage(01, filename, _node.getNodeName(), _runCardInfo.getRunId(), Instant.now());
+        _fileWriter.writeDataImage(_runCardInfo.getStatement()._originalStatement);
         _state = SymbiontDeviceState.Loading;
-        return true;
+
+        return initiateRead();
+    }
+
+    /**
+     * Write EOF to the READ$ file, release it, and queue up the job.
+     */
+    private void wrapREADFile() throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        var fm = exec.getFacilitiesManager();
+
+        _fileWriter.writeEndOfFileControlImage();
+        var fsResult = new FacStatusResult();
+
+        fm.releaseFile(exec,
+                       _fileSpecification,
+                       FacilitiesManager.ReleaseBehavior.Normal,
+                       false,
+                       false,
+                       false,
+                       false,
+                       fsResult);
+        // TODO check fac status
+
+        _fileWriter = null;
+        _fileSpecification = null;
+        resetNode();
+
+        // TODO queue the thing on backlog - this also requires updating genf$...
+        //   is this something the exec should do?
+        //   who owns backlog? who owns genf$
+
+        _state = SymbiontDeviceState.Quiesced;
     }
 }
