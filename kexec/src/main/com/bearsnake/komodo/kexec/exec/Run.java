@@ -11,7 +11,6 @@ import com.bearsnake.komodo.kexec.tasks.Task;
 
 import java.io.PrintStream;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class Run {
@@ -20,12 +19,12 @@ public abstract class Run {
     protected final String _actualRunId;
     protected final RunType _runType;
     protected final Instant _submissionTime;
-    protected final Instant _actualDeadlineTime;
-    protected final Instant _actualStartTime;
-
-    protected long _cardCount;
-    protected long _pageCount;
-    protected long _timeCount;    // in seconds
+    protected long _currentCardCount;
+    protected long _currentCardLimit; // may be larger than the max in runCardInfo
+    protected long _currentPageCount;
+    protected long _currentPageLimit; // may be larger than the max in runCardInfo
+    protected long _currentTimeCount; // in seconds
+    protected long _currentTimeLimit; // in seconds - may be larger than the max in runCardInfo
 
     protected String _defaultQualifier;
     protected String _impliedQualifier;
@@ -72,7 +71,11 @@ public abstract class Run {
             _runCardInfo.setProcessorPriority('A');
         }
 
-        if (!(this instanceof Exec)) {
+        if (this instanceof Exec) {
+            _currentCardLimit = 0;
+            _currentPageLimit = 0;
+            _currentTimeLimit = 0;
+        } else {
             var exec = Exec.getInstance();
             var cfg = exec.getConfiguration();
             if (_runCardInfo.getMaxCards() == null) {
@@ -89,32 +92,11 @@ public abstract class Run {
         _runConditionWord = new RunConditionWord();
         _defaultQualifier = _runCardInfo.getProjectId();
         _impliedQualifier = _runCardInfo.getProjectId();
+        _currentCardCount = 0;
+        _currentPageCount = 0;
+        _currentTimeCount = 0;
 
         _submissionTime = Instant.now();
-        _actualDeadlineTime = getActualTimeValue(_submissionTime, _runCardInfo.getDeadlineTime());
-        _actualStartTime = getActualTimeValue(_submissionTime, _runCardInfo.getStartTime());
-    }
-
-    private Instant getActualTimeValue(
-        final Instant baseTime,
-        final RunCardInfo.TimeSpecification timeSpecification
-    ) {
-        Instant result = null;
-        if (timeSpecification != null) {
-            if (timeSpecification._isClockTime) {
-                result = Instant.now()
-                                .atZone(ZoneOffset.UTC)
-                                .withHour(timeSpecification._hourSpec)
-                                .withMinute(timeSpecification._minuteSpec)
-                                .withSecond(0)
-                                .withNano(0)
-                                .toInstant();
-            } else {
-                long delta = (timeSpecification._hourSpec * 3600L) + (timeSpecification._minuteSpec * 60L);
-                result = baseTime.plusSeconds(delta);
-            }
-        }
-        return result;
     }
 
     public void decrementWaitingForMassStorage() { _waitingForMassStorageCounter.decrementAndGet(); }
@@ -157,7 +139,7 @@ public abstract class Run {
         if (verbose) {
             out.printf("%s  rcw:%s defQual:%s impQual:%s cards:%d/%d pages:%d/%d\n",
                        indent, _runConditionWord.toString(), _defaultQualifier, _impliedQualifier,
-                       _cardCount, getMaxCards(), _pageCount, getMaxPages());
+                       _currentCardCount, getMaxCards(), _currentPageCount, getMaxPages());
 
             // TODO privileges
 

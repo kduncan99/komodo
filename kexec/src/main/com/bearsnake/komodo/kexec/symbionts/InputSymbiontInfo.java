@@ -180,7 +180,7 @@ class InputSymbiontInfo extends SymbiontInfo {
             if (split[0].equalsIgnoreCase("@RUN")) {
                 try {
                     _runCardInfo = RunCardInfo.parse(exec, image);
-                    return setupREADFile();
+                    return setupREADFile(image);
                 } catch (Parser.SyntaxException ex) {
                     var msg = _node.getNodeName() + " Invalid @RUN card";
                     exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
@@ -219,7 +219,9 @@ class InputSymbiontInfo extends SymbiontInfo {
         return initiateRead();
     }
 
-    private boolean setupREADFile() throws ExecStoppedException {
+    private boolean setupREADFile(
+        final String runImage
+    ) throws ExecStoppedException {
         // Create BatchRun entity
         var exec = Exec.getInstance();
         var cfg = exec.getConfiguration();
@@ -256,7 +258,7 @@ class InputSymbiontInfo extends SymbiontInfo {
         // comes out of backlog.  First we have to write to the stupid thing.
         _fileWriter = new SymbiontFileWriter(filename, SDFFileType.READ$, 01, cfg.getSymbiontBufferSize());
         _fileWriter.writeREAD$LabelControlImage(01, filename, _node.getNodeName(), _runCardInfo.getRunId(), Instant.now());
-        _fileWriter.writeDataImage(_runCardInfo.getStatement()._originalStatement);
+        _fileWriter.writeDataImage(runImage);
         _state = SymbiontDeviceState.Loading;
 
         return initiateRead();

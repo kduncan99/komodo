@@ -60,7 +60,7 @@ public class Exec extends Run {
     private SymbiontManager _symbiontManager;
 
     private static final RunCardInfo RUN_CARD_INFO =
-        new RunCardInfo(null).setRunId("EXEC-8").setAccountId("SYSTEM").setProjectId("SYS$").setUserId("EXEC8");
+        new RunCardInfo().setRunId("EXEC-8").setAccountId("SYSTEM").setProjectId("SYS$").setUserId("EXEC8");
 
     public Exec(final boolean[] jumpKeyTable) {
         super(RunType.Exec, "EXEC-8", RUN_CARD_INFO);
@@ -209,6 +209,11 @@ public class Exec extends Run {
         final RunCardInfo runCardInfo
     ) throws ExecStoppedException {
         var actualRunId = createUniqueRunid(runCardInfo.getRunId());
+        if (!actualRunId.equals(runCardInfo.getRunId())) {
+            var msg = String.format("%s Duplicated; New ID is %s", runCardInfo.getRunId(), actualRunId);
+            sendExecReadOnlyMessage(msg, ConsoleType.System);
+        }
+
         var run = new BatchRun(actualRunId, runCardInfo);
         _runEntries.put(actualRunId, run);
         return run;

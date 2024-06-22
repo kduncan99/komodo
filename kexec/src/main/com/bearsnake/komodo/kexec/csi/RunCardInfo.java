@@ -8,32 +8,13 @@ import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.Run;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
 public class RunCardInfo {
-
-    public static class TimeSpecification {
-
-        public boolean _isClockTime;
-        public int _hourSpec;
-        public int _minuteSpec;
-
-        private TimeSpecification(
-            final boolean isClockTime,
-            final int hourSpec,
-            final int minuteSpec
-        ) {
-            _isClockTime = isClockTime;
-            _hourSpec = hourSpec;
-            _minuteSpec = minuteSpec;
-        }
-
-        public boolean isClockTime() { return _isClockTime; }
-        public boolean isRelativeTime() { return !_isClockTime; }
-        public int getHourSpec() { return _hourSpec; }
-        public int getMinuteSpec() { return _minuteSpec; }
-    }
 
     private static final SubfieldSpecifier SS_RUNID = new SubfieldSpecifier(0, 0);
     private static final SubfieldSpecifier SS_ACCOUNT_ID = new SubfieldSpecifier(1, 0);
@@ -58,7 +39,6 @@ public class RunCardInfo {
         VALID_SUBFIELDS.add(SS_START_TIME);
     }
 
-    private final ParsedStatement _statement;
     private String _runid ;
     private Character _schedulingPriority;
     private Long _optionWord;
@@ -67,19 +47,16 @@ public class RunCardInfo {
     private String _userId;
     private String _projectId;
     private Long _maxTime; // in seconds
-    private TimeSpecification _deadlineTime; // time to be finished by
+    private Instant _deadlineTime; // time to be finished by
     private Long _maxPages;
     private Long _maxCards;
-    private TimeSpecification _startTime; // time to be started
+    private Instant _startTime; // time before which we cannot be started
 
-    public RunCardInfo(
-        final ParsedStatement statement
-    ) {
-        _statement = statement;
+    public RunCardInfo() {
     }
 
     public String getAccountId() { return _accountId; }
-    public TimeSpecification getDeadlineTime() { return _deadlineTime; }
+    public Instant getDeadlineTime() { return _deadlineTime; }
     public Long getMaxCards() { return _maxCards; }
     public Long getMaxPages() { return _maxPages; }
     public Long getMaxTime() { return _maxTime; }
@@ -88,12 +65,11 @@ public class RunCardInfo {
     public String getProjectId() { return _projectId; }
     public String getRunId() { return _runid; }
     public Character getSchedulingPriority() { return _schedulingPriority; }
-    public TimeSpecification getStartTime() { return _startTime; }
-    public ParsedStatement getStatement() { return _statement; }
+    public Instant getStartTime() { return _startTime; }
     public String getUserId() { return _userId; }
 
     public RunCardInfo setAccountId(final String value) { _accountId = value; return this; }
-    public RunCardInfo setDeadlineTime(final TimeSpecification value) { _deadlineTime = value; return this; }
+    public RunCardInfo setDeadlineTime(final Instant value) { _deadlineTime = value; return this; }
     public RunCardInfo setMaxCards(final Long value) { _maxCards = value; return this; }
     public RunCardInfo setMaxPages(final Long value) { _maxPages = value; return this; }
     public RunCardInfo setMaxTime(final Long value) { _maxTime = value; return this; }
@@ -102,7 +78,7 @@ public class RunCardInfo {
     public RunCardInfo setProjectId(final String value) { _projectId = value; return this; }
     public RunCardInfo setRunId(final String value) { _runid = value; return this; }
     public RunCardInfo setSchedulingPriority(final Character value) { _schedulingPriority = value; return this; }
-    public RunCardInfo setStartTime(final TimeSpecification value) { _startTime = value; return this; }
+    public RunCardInfo setStartTime(final Instant value) { _startTime = value; return this; }
     public RunCardInfo setUserId(final String value) { _userId = value; return this; }
 
     /**
@@ -115,7 +91,7 @@ public class RunCardInfo {
         final String image
     ) throws Parser.SyntaxException {
         var statement = Interpreter.parseControlStatement(run, image);
-        return statement._mnemonic.equalsIgnoreCase("RUN") ? new RunCardInfo(statement).parse() : null;
+        return statement._mnemonic.equalsIgnoreCase("RUN") ? new RunCardInfo().parse(statement) : null;
     }
 
     /**
@@ -126,10 +102,9 @@ public class RunCardInfo {
      * @return this object
      * @throws Parser.SyntaxException with descriptive text
      */
-    public RunCardInfo parse() throws Parser.SyntaxException {
-        var opts = _statement._optionsFields;
-        var operands = _statement._operandFields;
-        var exec = Exec.getInstance();
+    public RunCardInfo parse(final ParsedStatement statement) throws Parser.SyntaxException {
+        var opts = statement._optionsFields;
+        var operands = statement._operandFields;
 
         if (opts.size() > 3) {
             throw new Parser.SyntaxException("Invalid field or subfield in @RUN card");
@@ -142,9 +117,9 @@ public class RunCardInfo {
 
         if (!opts.isEmpty()) {
             _schedulingPriority = parsePriorityCharacter(opts.get(0));
-            if (_statement._optionsFields.size() > 1) {
+            if (statement._optionsFields.size() > 1) {
                 _optionWord = parseOptionWord(opts.get(1));
-                if (_statement._optionsFields.size() > 2) {
+                if (statement._optionsFields.size() > 2) {
                     _processorPriority = parsePriorityCharacter(opts.get(2));
                 }
             }
@@ -241,7 +216,7 @@ public class RunCardInfo {
         return null;
     }
 
-    private TimeSpecification parseTimeSpecification(
+    private Instant parseTimeSpecification(
         final String source
     ) throws Parser.SyntaxException {
         if (source == null) {
@@ -271,7 +246,21 @@ public class RunCardInfo {
                 throw new Parser.SyntaxException("Invalid time specification in @RUN image");
             }
 
-            return new TimeSpecification(isClockTime, hour, minute);
+            var now = Instant.now();
+            if (isClockTime) {
+                var result = now.atZone(ZoneOffset.UTC)
+                                .withHour(hour)
+                                .withMinute(minute)
+                                .withSecond(0)
+                                .withNano(0)
+                                .toInstant();
+                if (result.isBefore(now)) {
+                    result = result.plus(1, ChronoUnit.DAYS);
+                }
+                return result;
+            } else {
+                return Instant.now().plus(hour, ChronoUnit.HOURS).plus(minute, ChronoUnit.MINUTES);
+            }
         }
     }
 }
