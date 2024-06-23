@@ -1513,6 +1513,12 @@ public class FacilitiesManager implements Manager {
 
     /**
      * Reads from a disk file for the exec - sector addressable only.
+     * TODO broaden this for the following:
+     *   non-exec IO (includes checks for write-only assignment)
+     *   file locks
+     *   word-addressable
+     *   provide ER-compatible status code
+     *   option for async IO ?
      * If the logical IO spans logical tracks, it will be broken up into multiple physical IOs on track boundaries.
      * If the first physical IO is not aligned on a physical block, we do double-buffering for that IO.
      * @param internalName internal filename, resolvable in the exec facilities table
@@ -1521,7 +1527,7 @@ public class FacilitiesManager implements Manager {
      * @param transferCount number of words to be read (should be a multiple of 28).
      * @throws ExecStoppedException If the exec stops during this process
      */
-    public void ioExecReadFromDiskFile(
+    public synchronized void ioExecReadFromDiskFile(
         final String internalName,
         final long address,
         final ArraySlice buffer,
@@ -1668,6 +1674,13 @@ public class FacilitiesManager implements Manager {
 
     /**
      * Writes to a disk file for the exec - sector addressable only.
+     * TODO broaden this for the following:
+     *   ensure write region is allocated
+     *   non-exec IO (includes checks for read-only assignment)
+     *   file locks
+     *   word-addressable
+     *   provide ER-compatible status code
+     *   option for async IO ?
      * If the logical IO spans logical tracks, it will be broken up into multiple physical IOs on track boundaries.
      * If the first physical IO is not aligned on a physical block, we do double-buffering for that IO.
      * @param internalName internal filename, resolvable in the exec facilities table
@@ -1676,7 +1689,7 @@ public class FacilitiesManager implements Manager {
      * @param transferCount number of words to be written (should be a multiple of 28).
      * @throws ExecStoppedException If the exec stops during this process
      */
-    public void ioExecWriteToDiskFile(
+    public synchronized void ioExecWriteToDiskFile(
         final String internalName,
         final long address,
         final ArraySlice buffer,
@@ -1705,8 +1718,6 @@ public class FacilitiesManager implements Manager {
         var dfi = (DiskFileFacilitiesItem) facItem;
         var aci = dfi.getAcceleratedCycleInfo();
         var fas = aci.getFileAllocationSet();
-
-        // TODO somewhere in here, we need to ensure that the destination is entirely allocated.
 
         int destOffset = 0;
         int wordsRemaining = transferCount;
