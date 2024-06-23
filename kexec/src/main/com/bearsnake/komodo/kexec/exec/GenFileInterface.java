@@ -10,6 +10,8 @@ import com.bearsnake.komodo.kexec.DateConverter;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.stream.IntStream;
 
 /**
@@ -44,6 +46,7 @@ import java.util.stream.IntStream;
  *   +017:033   reserved
  * ---
  * Output queue item format
+ * // TODO, see SMOQUE entry format (but we have to do it at least a *little* differently
  */
 
 public class GenFileInterface {
@@ -137,6 +140,12 @@ public class GenFileInterface {
             // TODO
         }
     }
+
+    // Input queue - keyed by scheduling priority, and each list there-in is in order by submission date/time
+    private final HashMap<Character, LinkedList<InputQueueItem>> _inputQueue = new HashMap<>();
+    // TODO need input queue management
+
+    // TODO need output queue
 
     public GenFileInterface() {
         // TODO

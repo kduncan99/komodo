@@ -1706,6 +1706,8 @@ public class FacilitiesManager implements Manager {
         var aci = dfi.getAcceleratedCycleInfo();
         var fas = aci.getFileAllocationSet();
 
+        // TODO somewhere in here, we need to ensure that the destination is entirely allocated.
+
         int destOffset = 0;
         int wordsRemaining = transferCount;
         long nextAddress = address;

@@ -288,9 +288,7 @@ class InputSymbiontInfo extends SymbiontInfo {
         _fileSpecification = null;
         resetNode();
 
-        // TODO queue the thing on backlog - this also requires updating genf$...
-        //   is this something the exec should do?
-        //   who owns backlog? who owns genf$
+        // TODO Invoke GenFileInterface to create an input queue item and put it in backlog.
 
         _state = SymbiontDeviceState.Quiesced;
     }

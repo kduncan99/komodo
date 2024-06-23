@@ -8,17 +8,26 @@ import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 
 public class BatchRun extends Run implements Runnable {
 
+    // Sector address in GENF$ of the input queue item for this job if it isn't open yet
+    // Will be set when the input queue item is created; will be set to zero once the input queue item is removed.
+    protected long _inputQueueAddress;
+
+    // Indicates whether this run is currently suspended
     protected boolean _isSuspended = false;
 
     public BatchRun(final String actualRunId,
                     final RunCardInfo runCardInfo) {
         super(RunType.Batch, actualRunId, runCardInfo);
-        var exec = Exec.getInstance();
+        _inputQueueAddress = 0;
     }
 
     @Override public final boolean isFinished() { return false; } // TODO
     @Override public final boolean isStarted() { return true; } // TODO
     @Override public final boolean isSuspended() { return _isSuspended; }
+
+    public long getInputQueueAddress() { return _inputQueueAddress; }
+    public void clearInputQueueAddress() { _inputQueueAddress = 0; }
+    public void setInputQueueAddress(final long address) { _inputQueueAddress = address; }
 
     /**
      * To be invoked when the run comes out of backlog.
