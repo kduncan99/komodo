@@ -252,7 +252,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
     private void writeBuffer() throws ExecStoppedException {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
-        fm.ioExecWriteToDiskFile(_internalFileName, _nextAddress, _buffer, _bufferIndex);
+        fm.ioWriteToDiskFile(exec, _internalFileName, _nextAddress, _buffer, _bufferIndex, false);
         _bufferIndex = 0;
         _bufferRemaining = _buffer.getSize();
     }

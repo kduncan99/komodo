@@ -11,9 +11,9 @@ public class FileAllocation {
     private final LogicalTrackExtent _logicalExtent;
     private final HardwareTrackId _hardwareTrackId;
 
-    public FileAllocation(final LogicalTrackExtent region,
+    public FileAllocation(final LogicalTrackExtent logicalRegion,
                           final HardwareTrackId hwTrackId) {
-        _logicalExtent = new LogicalTrackExtent(region.getTrackId(), region.getTrackCount());
+        _logicalExtent = new LogicalTrackExtent(logicalRegion.getTrackId(), logicalRegion.getTrackCount());
         _hardwareTrackId = new HardwareTrackId(hwTrackId.getLDATIndex(), hwTrackId.getTrackId());
     }
 

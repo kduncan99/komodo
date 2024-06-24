@@ -206,7 +206,7 @@ public class SymbiontFileReader implements SymbiontReader {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
         var transferCount = (int)Math.min(_buffer.getSize(), _sectorsRemaining * 28);
-        fm.ioExecReadFromDiskFile(_internalFileName, _nextAddress, _buffer, transferCount);
+        fm.ioReadFromDiskFile(exec, _internalFileName, _nextAddress, _buffer, transferCount, false);
 
         var sectorsTransferred = transferCount / 28;
         _sectorsRemaining -= sectorsTransferred;

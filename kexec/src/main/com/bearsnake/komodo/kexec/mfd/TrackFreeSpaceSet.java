@@ -12,14 +12,14 @@ import java.util.LinkedList;
  */
 public class TrackFreeSpaceSet {
 
-    private final LinkedList<TrackRegion> _freeSpace = new LinkedList<>();
+    private final LinkedList<PackTrackRegion> _freeSpace = new LinkedList<>();
     private final long _trackCount;
     private long _availableTrackCount;
 
     public TrackFreeSpaceSet(
         final long trackCount
     ) {
-        _freeSpace.add(new TrackRegion(0, trackCount));
+        _freeSpace.add(new PackTrackRegion(0, trackCount));
         _trackCount = trackCount;
         _availableTrackCount = trackCount;
     }
@@ -30,9 +30,13 @@ public class TrackFreeSpaceSet {
     /**
      * Allocates a single track. Attempts to find a free-space region of exactly one track.
      * If no such region exists, we carve the first track from the first free-space region.
-     * @return track id of allocated track
+     * @return track id of allocated track unless there is no free space, in which case we return null.
      */
-    public synchronized long allocateTrack() {
+    public synchronized Long allocateTrack() {
+        if (_freeSpace.isEmpty()) {
+            return null;
+        }
+
         for (var tr : _freeSpace) {
             if (tr.getTrackCount() == 1) {
                 _freeSpace.remove(tr);
@@ -126,7 +130,7 @@ public class TrackFreeSpaceSet {
 
                 // The requested region is a subset of this entry, but not aligned with either
                 // the front or the back - we need to create a new entry as well as updating this entry.
-                var newTr = new TrackRegion(trackId + trackCount, tr.getHighestTrackId() - highest);
+                var newTr = new PackTrackRegion(trackId + trackCount, tr.getHighestTrackId() - highest);
                 tr.setTrackCount(trackId - tr.getTrackId());
                 _freeSpace.add(fsx + 1, newTr);
                 _availableTrackCount -= trackCount;
@@ -145,7 +149,7 @@ public class TrackFreeSpaceSet {
      */
     public void reset() {
         _freeSpace.clear();
-        _freeSpace.add(new TrackRegion(0, _trackCount));
+        _freeSpace.add(new PackTrackRegion(0, _trackCount));
         _availableTrackCount = _trackCount;
     }
 }

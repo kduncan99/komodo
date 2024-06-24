@@ -36,6 +36,7 @@ import com.bearsnake.komodo.kexec.exceptions.FileSetAlreadyExistsException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
@@ -124,6 +125,36 @@ public class FacilitiesManager implements Manager {
         AbsoluteByDevice,
         LogicalByChannel,
         LogicalByDevice,
+    }
+
+    public static class IOResult {
+
+        public final ERIO$Status _status;
+        public int _wordsTransferred;
+
+        public IOResult(
+            final ERIO$Status status
+        ) {
+            _status = status;
+            _wordsTransferred = 0;
+        }
+
+        public IOResult(
+            final ERIO$Status status,
+            final int wordsTransferred
+        ) {
+            _status = status;
+            _wordsTransferred = wordsTransferred;
+        }
+
+        public void addWordsTransferred(
+            final int wordsTransferred
+        ) {
+            _wordsTransferred += wordsTransferred;
+        }
+
+        public ERIO$Status getStatus() { return _status; }
+        public int getWordsTransferred() { return _wordsTransferred; }
     }
 
     private static class PlacementInfo {
@@ -1511,31 +1542,17 @@ public class FacilitiesManager implements Manager {
         return sb.toString();
     }
 
-    /**
-     * Reads from a disk file for the exec - sector addressable only.
-     * TODO broaden this for the following:
-     *   non-exec IO (includes checks for write-only assignment)
-     *   file locks
-     *   word-addressable
-     *   provide ER-compatible status code
-     *   option for async IO ?
-     * If the logical IO spans logical tracks, it will be broken up into multiple physical IOs on track boundaries.
-     * If the first physical IO is not aligned on a physical block, we do double-buffering for that IO.
-     * @param internalName internal filename, resolvable in the exec facilities table
-     * @param address sector address for start of IO
-     * @param buffer buffer into which words are to be read (must be at least as many words as transferCount)
-     * @param transferCount number of words to be read (should be a multiple of 28).
-     * @throws ExecStoppedException If the exec stops during this process
-     */
-    public synchronized void ioExecReadFromDiskFile(
+    public synchronized IOResult ioReadFromDiskFile(
+        final Run run,
         final String internalName,
         final long address,
         final ArraySlice buffer,
-        final int transferCount
+        final int transferCount,
+        final boolean isWordAddressable
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
-                            "ioExecReadFromDiskFile('%s', addr=%d words=%d",
-                            internalName, address, transferCount);
+                            "ioReadFromDiskFile(%s, '%s', addr=%d words=%d",
+                            run.getActualRunId(), internalName, address, transferCount);
         var exec = Exec.getInstance();
         var mm = exec.getMFDManager();
 
@@ -1554,15 +1571,24 @@ public class FacilitiesManager implements Manager {
         }
 
         var dfi = (DiskFileFacilitiesItem) facItem;
+        if (!dfi.isWriteable()) {
+            return new IOResult(ERIO$Status.WriteInhibited);
+        }
+
         var aci = dfi.getAcceleratedCycleInfo();
         var fas = aci.getFileAllocationSet();
 
         int destOffset = 0;
         int wordsRemaining = transferCount;
         long nextAddress = address;
+        int totalWordsTransferred = 0;
         while (wordsRemaining > 0) {
             // Find the ldat and device-relative track address or the next relative address.
+            // Ensure it is allocated...
             var relativeTrack = nextAddress >> 6;
+            if (!mm.allocateDataExtent(fas, relativeTrack, 1)) {
+                return new IOResult(ERIO$Status.CannotExpandFile);
+            }
             var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
 
             // Find the block address corresponding to the hardware track address.
@@ -1570,25 +1596,24 @@ public class FacilitiesManager implements Manager {
             var ni = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
             var pi = (PackInfo)ni.getMediaInfo();
             int blocksPerTrack = 1792 / pi.getPrepFactor();
-            int sectorsPerBlock = pi.getPrepFactor() / 28;
             long baseBlock = hwTid.getTrackId() * blocksPerTrack;
 
             // Considering that the requested address may not be aligned to the containing block...
             // What is the sector offset requested, from the beginning of the containing track?
             // Use that, with the number of sectors per block, to calculate the sector offset
             // from the containing block, and the block offset from the containing track.
-            var sectorOffsetFromTrack = nextAddress & 077;
-            var sectorOffsetFromBlock = sectorOffsetFromTrack % sectorsPerBlock;
-            var blockOffsetFromTrack = sectorOffsetFromTrack / sectorsPerBlock;
+            var wordOffsetFromTrack = isWordAddressable ? (nextAddress % 1792) : (nextAddress & 077);
+            var wordOffsetFromBlock = wordOffsetFromTrack % pi.getPrepFactor();
+            var blockOffsetFromTrack = wordOffsetFromTrack / pi.getPrepFactor();
 
-            // Do we need to double-buffer (yes, if the sector is not aligned with the containing block)
-            if (sectorOffsetFromBlock > 0) {
+            // Do we need to double-buffer (yes, if this sub-IO is not aligned with the containing block)
+            if (wordOffsetFromBlock != 0) {
                 // How many words are we going to transfer from disk?
                 // This is not necessarily the same as the number of words we're going to put into the user buffer.
                 // Calculate the requested amount first. This is the amount (if any) in the block ahead of the
                 // desired sector (see sectorOffsetFromBlock), added to the remaining word count.
                 // Then calculate the limit based on the number of blocks from the starting block to the end of the track.
-                int preWords = (int) (sectorOffsetFromBlock * 28);
+                int preWords = (int) wordOffsetFromBlock;
                 int reqWords = preWords + wordsRemaining;
                 int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
                 int transferWordCount = Math.min(reqWords, limitWords);
@@ -1646,58 +1671,32 @@ public class FacilitiesManager implements Manager {
                                              .setNodeIdentifier(ni.getNode().getNodeIdentifier())
                                              .setBlockId(blockId)
                                              .addControlWord(cw);
-                try {
-                    routeIo(cp);
-                    while (cp.getIoStatus() == IoStatus.InProgress) {
-                        Exec.sleep(10);
-                    }
-                } catch (NoRouteForIOException ex) {
-                    LogManager.logCatching(LOG_SOURCE, ex);
-                    exec.stop(StopCode.InternalExecIOFailed);
-                    throw new ExecStoppedException();
-                }
-
-                if (cp.getIoStatus() != IoStatus.Complete) {
-                    LogManager.logFatal(LOG_SOURCE,
-                                        "IO Error file=%s status=%s",
-                                        internalName,
-                                        cp.getIoStatus().toString());
-                    exec.stop(StopCode.InternalExecIOFailed);
-                    throw new ExecStoppedException();
+                var ioResult = ioLoop(internalName, cp, false);
+                if (ioResult._status != ERIO$Status.Success) {
+                    totalWordsTransferred += ioResult._wordsTransferred;
+                    ioResult.addWordsTransferred(totalWordsTransferred);
+                    return ioResult;
                 }
 
                 wordsRemaining -= transferWordCount;
                 nextAddress += transferWordCount / 28;
             }
         }
+
+        return new IOResult(ERIO$Status.Success, totalWordsTransferred);
     }
 
-    /**
-     * Writes to a disk file for the exec - sector addressable only.
-     * TODO broaden this for the following:
-     *   ensure write region is allocated
-     *   non-exec IO (includes checks for read-only assignment)
-     *   file locks
-     *   word-addressable
-     *   provide ER-compatible status code
-     *   option for async IO ?
-     * If the logical IO spans logical tracks, it will be broken up into multiple physical IOs on track boundaries.
-     * If the first physical IO is not aligned on a physical block, we do double-buffering for that IO.
-     * @param internalName internal filename, resolvable in the exec facilities table
-     * @param address sector address for start of IO
-     * @param buffer buffer from which words are to be written (must be at least as many words as transferCount)
-     * @param transferCount number of words to be written (should be a multiple of 28).
-     * @throws ExecStoppedException If the exec stops during this process
-     */
-    public synchronized void ioExecWriteToDiskFile(
+    public synchronized IOResult ioWriteToDiskFile(
+        final Run run,
         final String internalName,
         final long address,
         final ArraySlice buffer,
-        final int transferCount
+        final int transferCount,
+        final boolean isWordAddressable
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
-                            "ioExecWriteToDiskFile('%s', addr=%d words=%d",
-                            internalName, address, transferCount);
+                            "ioWriteToDiskFile(%s, '%s', addr=%d words=%d",
+                            run.getActualRunId(), internalName, address, transferCount);
         var exec = Exec.getInstance();
         var mm = exec.getMFDManager();
 
@@ -1716,15 +1715,24 @@ public class FacilitiesManager implements Manager {
         }
 
         var dfi = (DiskFileFacilitiesItem) facItem;
+        if (!dfi.isWriteable()) {
+            return new IOResult(ERIO$Status.WriteInhibited);
+        }
+
         var aci = dfi.getAcceleratedCycleInfo();
         var fas = aci.getFileAllocationSet();
 
         int destOffset = 0;
         int wordsRemaining = transferCount;
         long nextAddress = address;
+        int totalWordsTransferred = 0;
         while (wordsRemaining > 0) {
             // Find the ldat and device-relative track address or the next relative address.
+            // Ensure it is allocated...
             var relativeTrack = nextAddress >> 6;
+            if (!mm.allocateDataExtent(fas, relativeTrack, 1)) {
+                return new IOResult(ERIO$Status.CannotExpandFile);
+            }
             var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
 
             // Find the block address corresponding to the hardware track address.
@@ -1732,25 +1740,24 @@ public class FacilitiesManager implements Manager {
             var ni = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
             var pi = (PackInfo)ni.getMediaInfo();
             int blocksPerTrack = 1792 / pi.getPrepFactor();
-            int sectorsPerBlock = pi.getPrepFactor() / 28;
             long baseBlock = hwTid.getTrackId() * blocksPerTrack;
 
             // Considering that the requested address may not be aligned to the containing block...
             // What is the sector offset requested, from the beginning of the containing track?
             // Use that, with the number of sectors per block, to calculate the sector offset
             // from the containing block, and the block offset from the containing track.
-            var sectorOffsetFromTrack = nextAddress & 077;
-            var sectorOffsetFromBlock = sectorOffsetFromTrack % sectorsPerBlock;
-            var blockOffsetFromTrack = sectorOffsetFromTrack / sectorsPerBlock;
+            var wordOffsetFromTrack = isWordAddressable ? (nextAddress % 1792) : (nextAddress & 077);
+            var wordOffsetFromBlock = wordOffsetFromTrack % pi.getPrepFactor();
+            var blockOffsetFromTrack = wordOffsetFromTrack / pi.getPrepFactor();
 
-            // Do we need to double-buffer (yes, if the sector is not aligned with the containing block)
-            if (sectorOffsetFromBlock > 0) {
+            // Do we need to double-buffer (yes, if this sub-IO is not aligned with the containing block)
+            if (wordOffsetFromBlock != 0) {
                 // How many words are we going to transfer from disk?
                 // This is not necessarily the same as the number of words we're going to put into the user buffer.
                 // Calculate the requested amount first. This is the amount (if any) in the block ahead of the
                 // desired sector (see sectorOffsetFromBlock), added to the remaining word count.
                 // Then calculate the limit based on the number of blocks from the starting block to the end of the track.
-                int preWords = (int) (sectorOffsetFromBlock * 28);
+                int preWords = (int) wordOffsetFromBlock;
                 int reqWords = preWords + wordsRemaining;
                 int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
                 int transferWordCount = Math.min(reqWords, limitWords);
@@ -1765,24 +1772,11 @@ public class FacilitiesManager implements Manager {
                                              .setNodeIdentifier(ni.getNode().getNodeIdentifier())
                                              .setBlockId(blockId)
                                              .addControlWord(cw);
-                try {
-                    routeIo(cp);
-                    while (cp.getIoStatus() == IoStatus.InProgress) {
-                        Exec.sleep(10);
-                    }
-                } catch (NoRouteForIOException ex) {
-                    LogManager.logCatching(LOG_SOURCE, ex);
-                    exec.stop(StopCode.InternalExecIOFailed);
-                    throw new ExecStoppedException();
-                }
-
-                if (cp.getIoStatus() != IoStatus.Complete) {
-                    LogManager.logFatal(LOG_SOURCE,
-                                        "IO Error file=%s status=%s",
-                                        internalName,
-                                        cp.getIoStatus().toString());
-                    exec.stop(StopCode.InternalExecIOFailed);
-                    throw new ExecStoppedException();
+                var ioResult = ioLoop(internalName, cp, false);
+                if (ioResult._status != ERIO$Status.Success) {
+                    totalWordsTransferred += ioResult._wordsTransferred;
+                    ioResult.addWordsTransferred(totalWordsTransferred);
+                    return ioResult;
                 }
 
                 // Now copy user data from the caller's buffer into the temporary buffer and write it back out.
@@ -1791,25 +1785,11 @@ public class FacilitiesManager implements Manager {
                     tempBuffer.set(dx, buffer.get(sx++));
                 }
                 cp.setFunction(ChannelProgram.Function.Write);
-
-                try {
-                    routeIo(cp);
-                    while (cp.getIoStatus() == IoStatus.InProgress) {
-                        Exec.sleep(10);
-                    }
-                } catch (NoRouteForIOException ex) {
-                    LogManager.logCatching(LOG_SOURCE, ex);
-                    exec.stop(StopCode.InternalExecIOFailed);
-                    throw new ExecStoppedException();
-                }
-
-                if (cp.getIoStatus() != IoStatus.Complete) {
-                    LogManager.logFatal(LOG_SOURCE,
-                                        "IO Error file=%s status=%s",
-                                        internalName,
-                                        cp.getIoStatus().toString());
-                    exec.stop(StopCode.InternalExecIOFailed);
-                    throw new ExecStoppedException();
+                ioResult = ioLoop(internalName, cp, false);
+                if (ioResult._status != ERIO$Status.Success) {
+                    totalWordsTransferred += ioResult._wordsTransferred;
+                    ioResult.addWordsTransferred(totalWordsTransferred);
+                    return ioResult;
                 }
 
                 int actualWords = transferWordCount - preWords;
@@ -1831,30 +1811,19 @@ public class FacilitiesManager implements Manager {
                                              .setNodeIdentifier(ni.getNode().getNodeIdentifier())
                                              .setBlockId(blockId)
                                              .addControlWord(cw);
-                try {
-                    routeIo(cp);
-                    while (cp.getIoStatus() == IoStatus.InProgress) {
-                        Exec.sleep(10);
-                    }
-                } catch (NoRouteForIOException ex) {
-                    LogManager.logCatching(LOG_SOURCE, ex);
-                    exec.stop(StopCode.InternalExecIOFailed);
-                    throw new ExecStoppedException();
-                }
-
-                if (cp.getIoStatus() != IoStatus.Complete) {
-                    LogManager.logFatal(LOG_SOURCE,
-                                        "IO Error file=%s status=%s",
-                                        internalName,
-                                        cp.getIoStatus().toString());
-                    exec.stop(StopCode.InternalExecIOFailed);
-                    throw new ExecStoppedException();
+                var ioResult = ioLoop(internalName, cp, false);
+                if (ioResult._status != ERIO$Status.Success) {
+                    totalWordsTransferred += ioResult._wordsTransferred;
+                    ioResult.addWordsTransferred(totalWordsTransferred);
+                    return ioResult;
                 }
 
                 wordsRemaining -= transferWordCount;
                 nextAddress += transferWordCount / 28;
             }
         }
+
+        return new IOResult(ERIO$Status.Success, totalWordsTransferred);
     }
 
     /**
@@ -2884,6 +2853,49 @@ public class FacilitiesManager implements Manager {
                              .filter(ni -> ni.getNode().getNodeName().equals(nodeName))
                              .findFirst()
                              .orElse(null);
+        }
+    }
+
+    /**
+     * Generic IO loop
+     * @param internalFileName internal file name, for emitting diagnostic information
+     * @param channelProgram channel program to be executed
+     * @param asynchronous true for asynchronous IO
+     * @return ERIO$Status value
+     * @throws ExecStoppedException if something goes badly
+     */
+    private IOResult ioLoop(
+        final String internalFileName,
+        final ChannelProgram channelProgram,
+        final boolean asynchronous
+    ) throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        while (true) {
+            try {
+                routeIo(channelProgram);
+            } catch (NoRouteForIOException ex) {
+                LogManager.logCatching(LOG_SOURCE, ex);
+                exec.stop(StopCode.InternalExecIOFailed);
+                throw new ExecStoppedException();
+            }
+
+            if (channelProgram.getIoStatus() == IoStatus.InProgress) {
+                if (asynchronous) {
+                    return new IOResult(ERIO$Status.InProgress);
+                }
+                while (channelProgram.getIoStatus() == IoStatus.InProgress) {
+                    if (exec.isStopped()) {
+                        throw new ExecStoppedException();
+                    }
+                    Exec.sleep(10);
+                }
+            }
+
+            switch (channelProgram.getIoStatus()) {
+            case IoStatus.Complete:
+                return new IOResult(ERIO$Status.Success, channelProgram.getWordsTransferred());
+            //TODO handle the other IO status cases
+            }
         }
     }
 

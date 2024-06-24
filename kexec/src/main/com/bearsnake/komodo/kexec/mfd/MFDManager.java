@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
@@ -303,6 +304,43 @@ public class MFDManager implements Manager {
         markDirectorySectorDirty(fcInfo._mainItem0Address);
 
         return acInfo;
+    }
+
+    /**
+     * Allocates space for a particular file allocation set to ensure that a particular
+     * fas-relative extend is entirely allocated. Updates the fas if/as necessary.
+     * @param fileAllocationSet file allocation set to which the allocation should be made
+     * @param firstTrackId first track id of interest
+     * @param trackCount number of tracks of interest
+     * @return true if successful, false if we could not allocate space because we are out.
+     */
+    public synchronized boolean allocateDataExtent(
+        final FileAllocationSet fileAllocationSet,
+        final long firstTrackId,
+        final long trackCount
+    ) {
+        // This algorithm is sub-optimal from the perspective of minimizing fragmentation.
+        // Some day later we should come back here and improve it.
+        // For now, just iterate over the tracks and do the simple thing.
+        var trackId = firstTrackId;
+        var remaining = trackCount;
+        while (remaining > 0) {
+            var hwTid = fileAllocationSet.resolveFileRelativeTrackId(trackId);
+            if (hwTid == null) {
+                hwTid = allocateHardwareTrackId(null, null);
+                if (hwTid == null) {
+                    return false;
+                }
+
+                var extent = new LogicalTrackExtent(trackId, 1);
+                var fileAllocation = new FileAllocation(extent, hwTid);
+                fileAllocationSet.mergeIntoFileAllocationSet(fileAllocation);
+            }
+            remaining--;
+            trackId++;
+        }
+
+        return true;
     }
 
     /**
@@ -902,6 +940,66 @@ public class MFDManager implements Manager {
         return result;
     }
 
+    /**
+     * Allocates fixed space from the requested LDAT and track id if it is unallocated;
+     * else from the preferred LDAT is available, else from anywhere else available.
+     * @param preferredLDATIndex requested LDAT; null if we don't care
+     * @param preferredTrackId requested device-relative track-id; null if we don't care
+     * @return LDAT index and device-relative track-id that was allocated, null if we are out of fixed space.
+     */
+    private HardwareTrackId allocateHardwareTrackId(
+        final Integer preferredLDATIndex,
+        final Long preferredTrackId
+    ) {
+        if (preferredLDATIndex != null) {
+            var nodeInfo = _logicalDATable.get(preferredLDATIndex);
+            if (nodeInfo != null) {
+                var packInfo = (PackInfo) nodeInfo.getMediaInfo();
+                if (packInfo.isFixed()) {
+                    var fs = packInfo.getFreeSpace();
+                    if (preferredTrackId != null) {
+                        if (fs.markAllocated(preferredTrackId, 1)) {
+                            return new HardwareTrackId(preferredLDATIndex, preferredTrackId);
+                        }
+                    }
+
+                    var trackId = fs.allocateTrack();
+                    if (trackId != null) {
+                        return new HardwareTrackId(preferredLDATIndex, trackId);
+                    }
+                }
+            }
+        }
+
+        for (var entry : _logicalDATable.entrySet()) {
+            var ldat = entry.getKey();
+            if ((preferredLDATIndex == null) || !Objects.equals(ldat, preferredLDATIndex)) {
+                var nodeInfo = entry.getValue();
+                var packInfo = (PackInfo) nodeInfo.getMediaInfo();
+                if (packInfo.isFixed()) {
+                    var fs = packInfo.getFreeSpace();
+                    if (preferredTrackId != null) {
+                        if (fs.markAllocated(preferredTrackId, 1)) {
+                            return new HardwareTrackId(ldat, preferredTrackId);
+                        }
+                    }
+
+                    var trackId = fs.allocateTrack();
+                    if (trackId != null) {
+                        return new HardwareTrackId(ldat, trackId);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Composes a lookup key from a given qualifier and filename.
+     * All code which creates or uses look-up keys must invoke this, so that we can change it
+     * if we think of a better algorithm.
+     */
     private static String composeLookupKey(
         final String qualifier,
         final String filename
@@ -1111,7 +1209,8 @@ public class MFDManager implements Manager {
             throw new ExecStoppedException();
         }
 
-        // Record-keeping stuff
+        // Record-keeping stuff - if we get this far, there is at least one track
+        // so we don't need to check devTrackId for null.
         var mfdTrackId = chosenPackInfo.getMFDTrackCount();
         var devTrackId = chosenPackInfo.getFreeSpace().allocateTrack();
         var fa = new FileAllocation(new LogicalTrackExtent(mfdTrackId, 1),
