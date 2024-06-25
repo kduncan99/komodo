@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.symbionts;
 
 import com.bearsnake.komodo.kexec.exceptions.EndOfFileException;
+import com.bearsnake.komodo.kexec.exceptions.ExecIOException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 
 /**
@@ -12,5 +13,5 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
  */
 public interface SymbiontReader {
 
-    public abstract String readImage() throws ExecStoppedException, EndOfFileException;
+    public abstract String readImage() throws ExecStoppedException, EndOfFileException, ExecIOException;
 }

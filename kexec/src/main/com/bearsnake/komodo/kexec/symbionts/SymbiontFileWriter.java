@@ -8,7 +8,10 @@ import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.DateConverter;
 import com.bearsnake.komodo.kexec.SDFFileType;
+import com.bearsnake.komodo.kexec.consoles.ConsoleType;
+import com.bearsnake.komodo.kexec.exceptions.ExecIOException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
 
 import java.time.Instant;
@@ -56,7 +59,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
     @Override
     public void setCurrentCharacterSet(
         final int characterSet
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ExecIOException {
         if (characterSet != _currentCharacterSet) {
             _currentCharacterSet = characterSet;
             var controlWord = ((long)042) << 30 | (characterSet & 077);
@@ -66,7 +69,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
 
     @Override
     public void writeEndOfFileControlImage(
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ExecIOException {
         var controlWord = 0_770000_000000L;
         writeWord(controlWord);
     }
@@ -74,7 +77,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
     @Override
     public void writeFileLabelControlImage(
         final int characterSet
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ExecIOException {
         var controlWord = 0_500116_000000L | (characterSet & 077);
         var dataWord = Word36.stringToWordFieldata("*SDFF*");
         writeWord(controlWord);
@@ -83,7 +86,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
 
     @Override
     public void writeFTPLabelControlImage(
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ExecIOException {
         var controlWord = 0_500101_000001L;
         var dataWord = Word36.stringToWordFieldata("*SDFF*");
         writeWord(controlWord);
@@ -133,7 +136,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
         final String inputDevice,
         final String runId,
         final Instant timeStamp
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ExecIOException {
         var controlWord = 0_501110_000000L | (characterSet & 077);
         var dataWords = new long[011];
         var padFileName = String.format("%-12s", filename);
@@ -159,7 +162,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
     @Override
     public void writePrintControlImage(
         final String image
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ExecIOException {
         var dataBuffer = (_currentCharacterSet == 0)
             ? ArraySlice.stringToWord36Fieldata(image.substring(0, 63 * 6))
             : ArraySlice.stringToWord36ASCII(image.substring(0, 63 * 4));
@@ -201,7 +204,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
     @Override
     public void writeDataImage(
         final String image
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ExecIOException {
         writeDataImage(_fileType == SDFFileType.PRINT$ ? 1 : 0, image);
     }
 
@@ -216,7 +219,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
     public void writeDataImage(
         final int spacing,
         final String image
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ExecIOException {
         var dataBuffer = (_currentCharacterSet == 0)
             ? ArraySlice.stringToWord36Fieldata(image.substring(0, 2047 * 6))
             : ArraySlice.stringToWord36ASCII(image.substring(0, 2047 * 4));
@@ -249,17 +252,27 @@ public class SymbiontFileWriter implements SymbiontWriter {
         }
     }
 
-    private void writeBuffer() throws ExecStoppedException {
+    private void writeBuffer() throws ExecStoppedException, ExecIOException {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
-        fm.ioWriteToDiskFile(exec, _internalFileName, _nextAddress, _buffer, _bufferIndex, false);
+        var ioResult = fm.ioWriteToDiskFile(exec,
+                                            _internalFileName,
+                                            _nextAddress,
+                                            _buffer,
+                                            _bufferIndex,
+                                            false);
+        if (ioResult.getStatus() != ERIO$Status.Success) {
+            exec.sendExecReadOnlyMessage("Image output canceled", ConsoleType.System);
+            throw new ExecIOException(ioResult.getStatus());
+        }
+
         _bufferIndex = 0;
         _bufferRemaining = _buffer.getSize();
     }
 
     private void writeWord(
         final long word
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ExecIOException {
         if (_bufferRemaining == 0) {
             writeBuffer();
         }
@@ -271,7 +284,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
         final long[] words,
         final int offset,
         final int count
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ExecIOException {
         var wx = offset;
         var remaining = count;
         while (remaining > 0) {

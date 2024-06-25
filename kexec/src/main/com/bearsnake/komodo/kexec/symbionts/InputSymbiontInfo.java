@@ -12,9 +12,11 @@ import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.SDFFileType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
+import com.bearsnake.komodo.kexec.exceptions.ExecIOException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
@@ -29,6 +31,7 @@ class InputSymbiontInfo extends SymbiontInfo {
     private RunCardInfo _runCardInfo = null;
     private FileSpecification _fileSpecification = null;
     private SymbiontFileWriter _fileWriter = null;
+    private Run _run = null;
 
     public InputSymbiontInfo(
         final NodeInfo nodeInfo
@@ -103,6 +106,34 @@ class InputSymbiontInfo extends SymbiontInfo {
     }
 
     /**
+     * Something went wrong, possibly anywhere in this process.
+     * We've already alerted the console, so just abandon the process.
+     */
+    private void cancelInput() throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        var fm = exec.getFacilitiesManager();
+
+        resetNode();
+        exec.unregisterRun(_run.getActualRunId());
+        _run = null;
+        _fileWriter = null;
+        _runCardInfo = null;
+
+        var fsResult = new FacStatusResult();
+        fm.releaseFile(exec,
+                       _fileSpecification,
+                       FacilitiesManager.ReleaseBehavior.Normal,
+                       true,
+                       true,
+                       false,
+                       false,
+                       fsResult);
+
+        _state = SymbiontDeviceState.Quiesced;
+        return;
+    }
+
+    /**
      * Initiates an image read.
      * Implemented so that state changes can kick this off, change state, and return
      * while this executes (at least potentially) asynchronously.
@@ -148,7 +179,12 @@ class InputSymbiontInfo extends SymbiontInfo {
             return true;
         } else {
             var image = _buffer.toASCII();
-            _fileWriter.writeDataImage(image);
+            try {
+                _fileWriter.writeDataImage(image);
+            } catch (ExecIOException ex) {
+                cancelInput();
+                return false;
+            }
             return initiateRead();
         }
     }
@@ -167,7 +203,8 @@ class InputSymbiontInfo extends SymbiontInfo {
         if (ioStatus == IoStatus.InProgress) {
             return false;
         } else if (ioStatus == IoStatus.EndOfFile) {
-            // TODO
+            // There was no run card - send missing run card message to console
+            //  TODO
             return false;
         } else if (ioStatus != IoStatus.Complete) {
             // IO error - abort the input, do NOT delete the deck, DN the device
@@ -212,7 +249,6 @@ class InputSymbiontInfo extends SymbiontInfo {
      */
     private boolean pollQuiesced() throws ExecStoppedException {
         var exec = Exec.getInstance();
-        var fm = exec.getFacilitiesManager();
         var msg = _node.getNodeName() + " ACTIVE";
         exec.sendExecReadOnlyMessage(msg);
 
@@ -226,16 +262,16 @@ class InputSymbiontInfo extends SymbiontInfo {
         var exec = Exec.getInstance();
         var cfg = exec.getConfiguration();
         var fm = exec.getFacilitiesManager();
-        var run = exec.createBatchRun(_runCardInfo);
+        _run = exec.createBatchRun(_runCardInfo);
 
         // Create the READ$ file and assign it to the exec (for now).
-        var filename = "READ$X" + run.getActualRunId();
+        var filename = "READ$X" + _run.getActualRunId();
         _fileSpecification = new FileSpecification("SYS$", filename, null, null, null);
         var fsResult = new FacStatusResult();
         fm.catalogDiskFile(_fileSpecification,
                            cfg.getMassStorageDefaultMnemonic(),
-                           run.getProjectId(),
-                           run.getAccountId(),
+                           _run.getProjectId(),
+                           _run.getAccountId(),
                            false,
                            false,
                            true,
@@ -247,20 +283,41 @@ class InputSymbiontInfo extends SymbiontInfo {
                            999,
                            null,
                            fsResult);
-        //  TODO check fac status
+        if (fsResult.hasErrorMessages()) {
+            var msg = "Cannot create READ$ file for run " + _run.getActualRunId();
+            exec.sendExecReadOnlyMessage(msg, ConsoleType.System);
+            cancelInput();
+            return false;
+        }
 
         fsResult = new FacStatusResult();
         fm.assignCatalogedDiskFileToExec(_fileSpecification, true, fsResult);
-        //  TODO check fac status
+        if (fsResult.hasErrorMessages()) {
+            var msg = "Cannot assign READ$ file for run " + _run.getActualRunId();
+            exec.sendExecReadOnlyMessage(msg, ConsoleType.System);
+            cancelInput();
+            return false;
+        }
 
         // Set up SymbiontFileWriter for READ$ file.
         // Yes, I know the READ$ file needs a SymbiontFileReader, but that only happens when the run
         // comes out of backlog.  First we have to write to the stupid thing.
-        _fileWriter = new SymbiontFileWriter(filename, SDFFileType.READ$, 01, cfg.getSymbiontBufferSize());
-        _fileWriter.writeREAD$LabelControlImage(01, filename, _node.getNodeName(), _runCardInfo.getRunId(), Instant.now());
-        _fileWriter.writeDataImage(runImage);
-        _state = SymbiontDeviceState.Loading;
-
+        try {
+            _fileWriter = new SymbiontFileWriter(filename,
+                                                 SDFFileType.READ$,
+                                                 01,
+                                                 cfg.getSymbiontBufferSize());
+            _fileWriter.writeREAD$LabelControlImage(01,
+                                                    filename,
+                                                    _node.getNodeName(),
+                                                    _runCardInfo.getRunId(),
+                                                    Instant.now());
+            _fileWriter.writeDataImage(runImage);
+            _state = SymbiontDeviceState.Loading;
+        } catch (ExecIOException ex) {
+            cancelInput();
+            return false;
+        }
         return initiateRead();
     }
 
@@ -271,9 +328,13 @@ class InputSymbiontInfo extends SymbiontInfo {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
 
-        _fileWriter.writeEndOfFileControlImage();
-        var fsResult = new FacStatusResult();
+        try {
+            _fileWriter.writeEndOfFileControlImage();
+        } catch (ExecIOException ex) {
+            cancelInput();
+        }
 
+        var fsResult = new FacStatusResult();
         fm.releaseFile(exec,
                        _fileSpecification,
                        FacilitiesManager.ReleaseBehavior.Normal,
@@ -282,7 +343,6 @@ class InputSymbiontInfo extends SymbiontInfo {
                        false,
                        false,
                        fsResult);
-        // TODO check fac status
 
         _fileWriter = null;
         _fileSpecification = null;

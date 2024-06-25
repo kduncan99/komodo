@@ -1,13 +1,82 @@
 -- TODO InProgress
 
-hwlib:
-    Rebuilding all the hwlib unit tests
-    InstructionProcessor SYSC console stuff is mostly broken due to code mistakes
-    SystemProcessor: loadBinary() Completely rework this
-    Test_SystemProcessor: absolute_load test - improve how this works
-    Test_Linker: need to fix unit tests
+SymbiontFileWriter
+    some unimplemented methods
+
+InputSymbiontInfoFile
+    lots to implement
+
+SymbiontManager
+
+Configuration
+    Hardware configuration
+    Symbiont group configuration
+
+CSI
+    Several statements to be done
+
+Batch Runs
+    Coarse Scheduler
+    BL keyin
+    CS keyin
+
+Hardware
+    Tape Device, Channel, Library
+    Image Punch
+    Printer
+
+GENF$
+    Output queue record
+    Record storage and lookup
+    Saving MS disk count, session number, (anything else?) to GENF$
+    Initialize on JK9, JK13
+    Recover on normal boot
+
+Facilities
+    Wait on resources
+    Lots of specific things
+    DN keyin not finished
+    UP keyin not finished
+    SU keyin not finished?
+    RV keyin not finished
+
+-- TODO BUGS
+
+-- TODO To be implemented
+
+Accounts
+
+User-ids
+
+Symbionts
+    Recover backlog from GENF$ on boot
+    Recover print/punch queues from GENF$ on boot
+    OutputSymbiontInfoFile
+
+Recovery Boot
+
+Demand Runs
+
+TIP Runs
+
+Removable Disk
+
+Tape Handling
+
+IP Engine
+
+Exec Requests
+
+Nexes
+    NURPUR
+    NLIST
+    NELT
+    NSSG
+
+Exes
 
 
+-- OLD STUFF - only here for reference, if needed --
 -- TODO BUGS
 * baselib
 See InstructionWord BTHandler interpreting B16..B31

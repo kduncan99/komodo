@@ -29,6 +29,7 @@ public enum ERIO$Status {
     ReadInhibited(020),
     WriteInhibited(020),
     FileNotFound(021),
+    WriteExtentOutOfRange(022),
     CannotExpandFile(022),
     ReadExtentOutOfRange(022),
     IOPacketNotWithinLimits(023),

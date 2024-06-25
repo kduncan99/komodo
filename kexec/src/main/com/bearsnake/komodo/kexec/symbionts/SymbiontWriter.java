@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.symbionts;
 
 import com.bearsnake.komodo.kexec.exceptions.EndOfFileException;
+import com.bearsnake.komodo.kexec.exceptions.ExecIOException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 
 import java.time.Instant;
@@ -16,17 +17,17 @@ public interface SymbiontWriter {
 
     public abstract void setCurrentCharacterSet(
         final int characterSet
-    ) throws ExecStoppedException;
+    ) throws ExecStoppedException, ExecIOException;
 
     public abstract void writeEndOfFileControlImage(
-    ) throws ExecStoppedException;
+    ) throws ExecStoppedException, ExecIOException;
 
     public abstract void writeFileLabelControlImage(
         final int characterSet
-    ) throws ExecStoppedException;
+    ) throws ExecStoppedException, ExecIOException;
 
     public abstract void writeFTPLabelControlImage(
-    ) throws ExecStoppedException;
+    ) throws ExecStoppedException, ExecIOException;
 
     public abstract void writePRINT$LabelControlImage(
         final int partNumber,
@@ -64,18 +65,18 @@ public interface SymbiontWriter {
         final String inputDevice,
         final String runId,
         final Instant timeStamp
-    ) throws ExecStoppedException, EndOfFileException;
+    ) throws ExecStoppedException, EndOfFileException, ExecIOException;
 
     public abstract void writeDataImage(
         final String image
-    ) throws ExecStoppedException, EndOfFileException;
+    ) throws ExecStoppedException, EndOfFileException, ExecIOException;
 
     public abstract void writeDataImage(
         final int spacing,
         final String image
-    ) throws ExecStoppedException, EndOfFileException;
+    ) throws ExecStoppedException, EndOfFileException, ExecIOException;
 
     public abstract void writePrintControlImage(
         final String image
-    ) throws ExecStoppedException, EndOfFileException;
+    ) throws ExecStoppedException, EndOfFileException, ExecIOException;
 }

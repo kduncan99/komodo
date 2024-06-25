@@ -1577,19 +1577,26 @@ public class FacilitiesManager implements Manager {
 
         var aci = dfi.getAcceleratedCycleInfo();
         var fas = aci.getFileAllocationSet();
+        var fci = (DiskFileCycleInfo)aci.getFileCycleInfo();
+        var maxTracks = fci.getMaxGranules();
+        if (fci.getPCHARFlags().getGranularity() == Granularity.Position) {
+            maxTracks <<= 6;
+        }
+        if (address >= maxTracks) {
+            return new IOResult(ERIO$Status.ReadExtentOutOfRange);
+        }
 
         int destOffset = 0;
         int wordsRemaining = transferCount;
         long nextAddress = address;
         int totalWordsTransferred = 0;
         while (wordsRemaining > 0) {
-            // Find the ldat and device-relative track address or the next relative address.
-            // Ensure it is allocated...
+            // Find the ldat and device-relative track address of the next relative address.
             var relativeTrack = nextAddress >> 6;
-            if (!mm.allocateDataExtent(fas, relativeTrack, 1)) {
-                return new IOResult(ERIO$Status.CannotExpandFile);
-            }
             var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
+            if (hwTid == null) {
+                return new IOResult(ERIO$Status.UnallocatedArea, totalWordsTransferred);
+            }
 
             // Find the block address corresponding to the hardware track address.
             // We need pack info to figure this out.
@@ -1721,17 +1728,25 @@ public class FacilitiesManager implements Manager {
 
         var aci = dfi.getAcceleratedCycleInfo();
         var fas = aci.getFileAllocationSet();
+        var fci = (DiskFileCycleInfo)aci.getFileCycleInfo();
+        var maxTracks = fci.getMaxGranules();
+        if (fci.getPCHARFlags().getGranularity() == Granularity.Position) {
+            maxTracks <<= 6;
+        }
 
         int destOffset = 0;
         int wordsRemaining = transferCount;
         long nextAddress = address;
         int totalWordsTransferred = 0;
         while (wordsRemaining > 0) {
-            // Find the ldat and device-relative track address or the next relative address.
+            // Find the ldat and device-relative track address of the next relative address.
             // Ensure it is allocated...
             var relativeTrack = nextAddress >> 6;
+            if (relativeTrack >= maxTracks) {
+                return new IOResult(ERIO$Status.WriteExtentOutOfRange, totalWordsTransferred);
+            }
             if (!mm.allocateDataExtent(fas, relativeTrack, 1)) {
-                return new IOResult(ERIO$Status.CannotExpandFile);
+                return new IOResult(ERIO$Status.CannotExpandFile, totalWordsTransferred);
             }
             var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
 

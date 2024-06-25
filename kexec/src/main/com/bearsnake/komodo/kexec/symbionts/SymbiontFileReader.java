@@ -8,8 +8,11 @@ import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.SDFFileType;
 import com.bearsnake.komodo.kexec.SDFRecord;
+import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.EndOfFileException;
+import com.bearsnake.komodo.kexec.exceptions.ExecIOException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
 
 import java.util.Arrays;
@@ -72,7 +75,7 @@ public class SymbiontFileReader implements SymbiontReader {
      * @throws EndOfFileException if there are no more data images to be read
      */
     @Override
-    public String readImage() throws ExecStoppedException, EndOfFileException {
+    public String readImage() throws ExecStoppedException, EndOfFileException, ExecIOException {
         String result = null;
         while (result == null) {
             if (Exec.getInstance().isStopped()) {
@@ -128,7 +131,7 @@ public class SymbiontFileReader implements SymbiontReader {
      * @throws ExecStoppedException in case of an IO error
      * @throws EndOfFileException if we have exhausted the sector count
      */
-    private SDFRecord getNextSDFRecord() throws ExecStoppedException, EndOfFileException {
+    private SDFRecord getNextSDFRecord() throws ExecStoppedException, EndOfFileException, ExecIOException {
         var controlWord = getNextWord();
         var dataLength = (int)(Word36.isNegative(controlWord) ? Word36.getS2(controlWord) : Word36.getT1(controlWord));
         var data = getNextWords(dataLength);
@@ -152,7 +155,7 @@ public class SymbiontFileReader implements SymbiontReader {
      * @throws ExecStoppedException in case of an IO error
      * @throws EndOfFileException if we have exhausted the sector count
      */
-    private long getNextWord() throws ExecStoppedException, EndOfFileException {
+    private long getNextWord() throws ExecStoppedException, EndOfFileException, ExecIOException {
         if (_bufferRemaining == 0) {
             loadBuffer();
         }
@@ -170,7 +173,7 @@ public class SymbiontFileReader implements SymbiontReader {
      */
     private long[] getNextWords(
         final int wordCount
-    ) throws ExecStoppedException, EndOfFileException {
+    ) throws ExecStoppedException, EndOfFileException, ExecIOException {
         var result = new long[wordCount];
         for (int wx = 0; wx < wordCount; wx++) {
             result[wx] = getNextWord();
@@ -187,7 +190,7 @@ public class SymbiontFileReader implements SymbiontReader {
         try {
             var controlWord = peekNextWord();
             return (Word36.getS1(controlWord) == 051);
-        } catch (EndOfFileException ex) {
+        } catch (EndOfFileException | ExecIOException ex) {
             return false;
         }
     }
@@ -197,7 +200,7 @@ public class SymbiontFileReader implements SymbiontReader {
      * @throws ExecStoppedException in case of an IO error
      * @throws EndOfFileException if we have exhausted the sector count
      */
-    private void loadBuffer() throws ExecStoppedException, EndOfFileException {
+    private void loadBuffer() throws ExecStoppedException, EndOfFileException, ExecIOException {
         // Read the next buffer
         if (_sectorsRemaining == 0) {
             throw new EndOfFileException();
@@ -206,7 +209,16 @@ public class SymbiontFileReader implements SymbiontReader {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
         var transferCount = (int)Math.min(_buffer.getSize(), _sectorsRemaining * 28);
-        fm.ioReadFromDiskFile(exec, _internalFileName, _nextAddress, _buffer, transferCount, false);
+        var ioResult = fm.ioReadFromDiskFile(exec,
+                                             _internalFileName,
+                                             _nextAddress,
+                                             _buffer,
+                                             transferCount,
+                                             false);
+        if (ioResult.getStatus() != ERIO$Status.Success) {
+            exec.sendExecReadOnlyMessage("Image input canceled", ConsoleType.System);
+            throw new ExecIOException(ioResult.getStatus());
+        }
 
         var sectorsTransferred = transferCount / 28;
         _sectorsRemaining -= sectorsTransferred;
@@ -221,7 +233,7 @@ public class SymbiontFileReader implements SymbiontReader {
      * @throws ExecStoppedException in case of an IO error
      * @throws EndOfFileException if we have exhausted the sector count
      */
-    private long peekNextWord() throws ExecStoppedException, EndOfFileException {
+    private long peekNextWord() throws ExecStoppedException, EndOfFileException, ExecIOException {
         if (_bufferRemaining == 0) {
             loadBuffer();
         }
