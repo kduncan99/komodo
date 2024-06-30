@@ -76,6 +76,29 @@ Nexes
 Exes
 
 
+-- TODO How to interact with print services
+      PrintService ps=PrintServiceLookup.lookupDefaultPrintService();
+      DocPrintJob job=ps.createPrintJob();
+      job.addPrintJobListener(new PrintJobAdapter() {
+      public void printDataTransferCompleted(PrintJobEvent event){
+         System.out.println("data transfer complete");
+      }
+      public void printJobNoMoreEvents(PrintJobEvent event){
+            System.out.println("received no more events");
+         }
+      });
+      FileInputStream fis=new FileInputStream("C:/test.jpg");
+      Doc doc=new SimpleDoc(fis, DocFlavor.INPUT_STREAM.AUTOSENSE, null);
+      // Doc doc=new SimpleDoc(fis, DocFlavor.INPUT_STREAM.JPEG, null);
+      PrintRequestAttributeSet attrib=new HashPrintRequestAttributeSet();
+      attrib.add(new Copies(1));
+      job.print(doc, attrib);
+   }
+
+
+
+
+
 -- OLD STUFF - only here for reference, if needed --
 -- TODO BUGS
 * baselib
