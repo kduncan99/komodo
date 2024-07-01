@@ -40,6 +40,7 @@ import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.kexec.exec.genf.GenFileInterface;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
@@ -2153,16 +2154,13 @@ public class FacilitiesManager implements Manager {
             exec.sendExecReadOnlyMessage("Creating privilege file...");
             exec.catalogDiskFileForExec("SYS$", "DLOC$", cfg.getDLOCAssignMnemonic(), 0, 1);
 
-            exec.sendExecReadOnlyMessage("Creating spool file...");
-            exec.catalogDiskFileForExec("SYS$", "GENF$", cfg.getGENFAssignMnemonic(), cfg.getGENFInitialReserve(), 9999);
-
             exec.sendExecReadOnlyMessage("Creating system library files...");
             exec.catalogDiskFileForExec("SYS$", "LIB$", cfg.getLibAssignMnemonic(), cfg.getLibInitialReserve(), cfg.getLibMaximumSize());
             exec.catalogDiskFileForExec("SYS$", "RUN$", cfg.getRunAssignMnemonic(), cfg.getRunInitialReserve(), cfg.getRunMaximumSize());
             exec.catalogDiskFileForExec("SYS$", "RLIB$", cfg.getMassStorageDefaultMnemonic(), 1, 128);
 
             // Assign the files to the exec (most of them)
-            var filenames = new String[]{ "ACCOUNT$R1", "SEC@ACCTINFO", "SEC@ACR$", "SEC@USERID$", "GENF$", "LIB$", "RUN$", "RLIB$" };
+            var filenames = new String[]{ "ACCOUNT$R1", "SEC@ACCTINFO", "SEC@ACR$", "SEC@USERID$", "LIB$", "RUN$", "RLIB$" };
             var fm = exec.getFacilitiesManager();
             var fsResult = new FacStatusResult();
             for (var filename : filenames) {

@@ -6,6 +6,10 @@ package com.bearsnake.komodo.kexec.exec.genf;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 
+/*
+ * Free item sector format
+ *   +000,S1    Type (00)
+ */
 public class FreeItem extends Item {
 
     public FreeItem(

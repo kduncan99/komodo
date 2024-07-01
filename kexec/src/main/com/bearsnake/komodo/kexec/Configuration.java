@@ -118,8 +118,9 @@ public class Configuration {
         // TODO FILE_SYSTEM_PRINTER
         FILE_SYSTEM_DISK("FS-DISK", FileSystemDiskDevice.class),
         FILE_SYSTEM_TAPE("FS-TAPE", FileSystemTapeDevice.class);
+        // TODO HOST_PRINTER (something configured on the host computer)
         // TODO NETWORK_CARD_READER
-        // TODO SYSTEM_PRINTER (something configured on the host computer - can we even do this in Java?)
+        // TODO NETWORK_PRINTER (traditional lpr interface)
 
         private final Class<?> _class;
         private final String _token;

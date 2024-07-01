@@ -7,6 +7,7 @@ package com.bearsnake.komodo.kexec.exec.genf;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
@@ -20,40 +21,17 @@ import java.util.TreeMap;
  * Manages the GENF$ file and manages the backlog and the output queues.
  * GENF$ is read at boot time, and all information is kept in memory, with GENF$ being rewritten as necessary.
  * ---
- * Information is stored on sector boundaries. Sector types identify the type of sector, and are stored
- * in Word+0, S1 of each sector. The values include:
- * Type Description
- *  00   unused items
- *  01   input queue items (backlog)
- *  02   output queue items (for SMOQUE)
- *  03   system information items (persist information across system boots)
- * ---
- * Input queue item format
- *   +000,S1    Type (01)
- *   +000,S2    Scheduling Priority fieldata 'A' through 'Z'
- *   +000,S3    Processing Priority fieldata 'A' through 'Z'
- *   +001       @RUN statement options
- *   +002       Actual Run-id FD LJSF
- *   +003       Original Run-id FD LJSF
- *   +004:005   Account-id FD LJSF
- *   +006:007   Project-id FD LJSF
- *   +010:011   User-id FD LJSF
- *   +012       Start-time ModSW
- *   +013       Deadline-time ModSW
- *   +014       Submission-time ModSW
- *   +015,H1    Max Pages
- *   +015,H2    Max Cards
- *   +016,H1    Max Time
- *   +017       Source Symbiont FD LJSF
- *   +017:033   reserved
- * ---
- * Output queue item format
- * // TODO, see SMOQUE entry format (but we have to do it at least a *little* differently
+ * Information is stored on sector boundaries.
+ * Sector types identify the type of sector, and are stored in Word+0, S1 of each sector.
+ * See the various Item subclasses for the serialized sector format for the various sector types.
  */
 
 public class GenFileInterface {
 
-    public static final String LOG_SOURCE = "GENF";
+    private static final String LOG_SOURCE = "GENF";
+    private static final String QUALIFIER = "SYS$";
+    private static final String FILE_NAME = "GENF$";
+    private static final FileSpecification FILE_SPECIFICATION = new FileSpecification(QUALIFIER, FILE_NAME);
 
     // Item inventory - keyed by sector id
     private final TreeMap<Long, Item> _inventory = new TreeMap<>();
@@ -63,13 +41,12 @@ public class GenFileInterface {
 
     // Input queue - keyed by scheduling priority, and each list there-in is in order by submission date/time
     private final HashMap<Character, LinkedList<InputQueueItem>> _inputQueue = new HashMap<>();
-    // TODO need input queue management
 
-    // TODO need output queue
+    // Print queue - keyed by queue name, values are sub-queues keyed by priority with queue items as values
+    private final TreeMap<String, TreeMap<Integer, LinkedList<OutputQueueItem>>> _printQueue = new TreeMap<>();
 
-    public GenFileInterface() {
-        // TODO
-    }
+    // Punch queue - keyed by queue name, values are sub-queues keyed by priority with queue items as values
+    private final TreeMap<String, TreeMap<Integer, LinkedList<OutputQueueItem>>> _punchQueue = new TreeMap<>();
 
     /**
      * Initializes the GENF$ file - used during JK13 and JK9 boots
@@ -79,32 +56,140 @@ public class GenFileInterface {
         var cfg = exec.getConfiguration();
         var fm = exec.getFacilitiesManager();
 
-        exec.sendExecReadOnlyMessage("Creating spool file...");
-        if (!exec.catalogDiskFileForExec("SYS$", "GENF$", cfg.getGENFAssignMnemonic(), cfg.getGENFInitialReserve(), 9999)) {
+        buildQueues();
+
+        exec.sendExecReadOnlyMessage("Creating GENF$ file...");
+        if (!exec.catalogDiskFileForExec(QUALIFIER,
+                                         FILE_NAME,
+                                         cfg.getGENFAssignMnemonic(),
+                                         cfg.getGENFInitialReserve(),
+                                         9999)) {
             LogManager.logFatal(LOG_SOURCE, "Cannot catalog GENF$");
             exec.stop(StopCode.FileAssignErrorOccurredDuringSystemInitialization);
             throw new ExecStoppedException();
         }
 
-        var fileSpec = new FileSpecification("SYS$", "GENF$");
         var facResult = new FacStatusResult();
-        if (!fm.assignCatalogedDiskFileToExec(fileSpec, false, facResult)
+        if (!fm.assignCatalogedDiskFileToExec(FILE_SPECIFICATION, false, facResult)
             || (facResult.hasErrorMessages())) {
             LogManager.logFatal(LOG_SOURCE, "Cannot assign GENF$");
             exec.stop(StopCode.FileAssignErrorOccurredDuringSystemInitialization);
             throw new ExecStoppedException();
         }
 
+        fm.establishUseItem(exec, FILE_NAME, FILE_SPECIFICATION, false);
+
         // Create one track worth of items - one system item and 63 free items
-        _systemItem = new SystemItem(0);
-        // TODO
+        _systemItem = new SystemItem(0, 0, 64);
+        _systemItem.setIsDirty(true);
+        _inventory.put(_systemItem.getSectorAddress(), _systemItem);
+        for (long addr = 01; addr <= 64; addr++) {
+            var fi = new FreeItem(addr);
+            fi.setIsDirty(true);
+            _inventory.put(fi.getSectorAddress(), fi);
+        }
+
+        writeDirtyItems();
+        exec.sendExecReadOnlyMessage("GENF$ initialized");
     }
 
     /**
      * Recovers the GENF$ file - used during regular recovery boots
      */
-    public void recover() {
+    public void recover() throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        var fm = exec.getFacilitiesManager();
+
+        _systemItem = null;
+        _inventory.clear();
+        _inputQueue.clear();
+        _printQueue.clear();
+        _punchQueue.clear();
+        buildQueues();
+
+        exec.sendExecReadOnlyMessage("Recovering GENF$ file...");
+        var facResult = new FacStatusResult();
+        if (!fm.assignCatalogedDiskFileToExec(FILE_SPECIFICATION, false, facResult)
+            || (facResult.hasErrorMessages())) {
+            LogManager.logFatal(LOG_SOURCE, "Cannot assign GENF$");
+            exec.stop(StopCode.FileAssignErrorOccurredDuringSystemInitialization);
+            throw new ExecStoppedException();
+        }
+
+        fm.establishUseItem(exec, FILE_NAME, FILE_SPECIFICATION, false);
+
+        var buffer = new ArraySlice(new long[28]);
+        var addr = 0;
+        var ioResult = fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, 28, false);
+        if (ioResult.getStatus() != ERIO$Status.Success) {
+            exec.stop(StopCode.InternalExecIOFailed);
+            throw new ExecStoppedException();
+        }
+
+        var item = deserializeItem(0, buffer);
+        if (!(item instanceof SystemItem si)) {
+            LogManager.logFatal(LOG_SOURCE, "GENF$ sector 0 is not a system item");
+            exec.stop(StopCode.UndefinedGENFType);
+            throw new ExecStoppedException();
+        }
+
+        _systemItem = si;
+        _inventory.put(_systemItem.getSectorAddress(), _systemItem);
+        var msg = String.format("GENF$ recovery cycle = %d", si.getRecoveryCycle());
+        exec.sendExecReadOnlyMessage(msg);
+
+        for (addr = 1; addr < si.getSectorCount(); addr++) {
+            ioResult = fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, 28, false);
+            if (ioResult.getStatus() != ERIO$Status.Success) {
+                exec.stop(StopCode.InternalExecIOFailed);
+                throw new ExecStoppedException();
+            }
+
+            item = deserializeItem(addr, buffer);
+            _inventory.put(_systemItem.getSectorAddress(), item);
+
+            if (item instanceof InputQueueItem iqi) {
+                var priority = iqi.getRunCardInfo().getSchedulingPriority();
+                var queue = _inputQueue.get(priority);
+                if (queue == null) {
+                    LogManager.logFatal(LOG_SOURCE, "GENF$ sector %d has invalid priority: %d", addr, priority);
+                    exec.stop(StopCode.BadGENFRecord);
+                    throw new ExecStoppedException();
+                }
+
+                queue.add(iqi);
+            } else if (item instanceof OutputQueueItem oqi) {
+                // TODO
+            } else if (item instanceof FreeItem fi) {
+                // nothing else to do here
+            } else {
+                LogManager.logFatal(LOG_SOURCE,
+                                    "GENF$ sector %d is not an expected item type: %d",
+                                    addr,
+                                    item.getItemType().getCode());
+                exec.stop(StopCode.UndefinedGENFType);
+                throw new ExecStoppedException();
+            }
+        }
         // TODO
+    }
+
+    private void buildQueues() {
+        var exec = Exec.getInstance();
+        var cfg = exec.getConfiguration();
+
+        for (char ch = 'A'; ch <= 'Z'; ch++) {
+            _inputQueue.put(ch, new LinkedList<>());
+        }
+
+        // Create an output queue for each of the print/punch devices
+        //  TODO
+
+        // Create output queues as specified for each of the symbiont groups
+        //  TODO
+
+        // Create unattached queues per configuration (replaces STATION LOCAL items from antiquity)
+        //  TODO
     }
 
     private static Item deserializeItem(
@@ -117,5 +202,28 @@ public class GenFileInterface {
             case OutputQueueItem -> OutputQueueItem.deserialize(sectorAddress, source);
             case SystemItem -> SystemItem.deserialize(sectorAddress, source);
         };
+    }
+
+    private synchronized void writeDirtyItems() throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        var fm = exec.getFacilitiesManager();
+        var buffer = new ArraySlice(new long[28]);
+
+        for (var item : _inventory.values()) {
+            if (item.isDirty()) {
+                item.serialize(buffer);
+                var ioResult = fm.ioWriteToDiskFile(exec,
+                                                    FILE_NAME,
+                                                    item.getSectorAddress(),
+                                                    buffer,
+                                                    28,
+                                                    false);
+                if (ioResult.getStatus() != ERIO$Status.Success) {
+                    exec.stop(StopCode.InternalExecIOFailed);
+                    throw new ExecStoppedException();
+                }
+                item.setIsDirty(false);
+            }
+        }
     }
 }

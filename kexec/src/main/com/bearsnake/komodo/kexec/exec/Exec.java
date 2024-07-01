@@ -17,6 +17,7 @@ import com.bearsnake.komodo.kexec.consoles.ReadReplyMessage;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
+import com.bearsnake.komodo.kexec.exec.genf.GenFileInterface;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
@@ -52,6 +53,8 @@ public class Exec extends Run {
     private int _session = 0;
     private StopCode _stopCode;
     private boolean _stopFlag = false;
+
+    private final GenFileInterface _genFileInterface = new GenFileInterface();
 
     private ConsoleManager _consoleManager;
     private FacilitiesManager _facilitiesManager;
@@ -148,11 +151,15 @@ public class Exec extends Run {
             }
         }
 
+        // TODO there's a sequencing problem here - if we are not JK13, we need to compare number of MS packs
+        //  against previous number, which is stored in GENF$, but we don't have GENF$ until much later... ?
         _facilitiesManager.startup();
 
-        if (!isJumpKeySet(9) && !isJumpKeySet(13)) {
-            // TODO populate rce's with entries from backlog and SMOQUE
-            //   well, at some point. probably not here.
+        if (isJumpKeySet(9) || isJumpKeySet(13)) {
+            _genFileInterface.initialize(); // TODO need exec session number and number of fixed packs
+        } else {
+            _genFileInterface.recover(); // TODO
+            // TODO repopulate backlog and SMOQUE (is that handled by .record()?)
         }
 
         _phase = Phase.Running;

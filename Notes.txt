@@ -1,5 +1,7 @@
 -- TODO InProgress
 
+We need to figure out how we're going to represent the hardware configuration pretty dang soon.
+
 SymbiontFileWriter
     some unimplemented methods
 

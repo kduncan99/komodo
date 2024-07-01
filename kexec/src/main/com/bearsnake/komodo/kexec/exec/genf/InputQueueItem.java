@@ -11,12 +11,32 @@ import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 
 import java.time.Instant;
 
+/*
+ * Input queue item sector format
+ *   +000,S1    Type (01)
+ *   +000,S2    Scheduling Priority fieldata 'A' through 'Z'
+ *   +000,S3    Processing Priority fieldata 'A' through 'Z'
+ *   +001       @RUN statement options
+ *   +002       Actual Run-id FD LJSF
+ *   +003       Original Run-id FD LJSF
+ *   +004:005   Account-id FD LJSF
+ *   +006:007   Project-id FD LJSF
+ *   +010:011   User-id FD LJSF
+ *   +012       Start-time ModSW
+ *   +013       Deadline-time ModSW
+ *   +014       Submission-time ModSW
+ *   +015,H1    Max Pages
+ *   +015,H2    Max Cards
+ *   +016,H1    Max Time
+ *   +017       Source Symbiont FD LJSF
+ *   +017:033   reserved
+ */
 class InputQueueItem extends Item {
 
-    public String _sourceSymbiontName;
-    public String _actualRunId;
-    public RunCardInfo _runCardInfo;
-    public Instant _submissionTime;
+    private String _sourceSymbiontName;
+    private String _actualRunId;
+    private RunCardInfo _runCardInfo;
+    private Instant _submissionTime;
 
     public InputQueueItem(
         final long sectorAddress,
@@ -31,6 +51,11 @@ class InputQueueItem extends Item {
         _runCardInfo = runCardInfo;
         _submissionTime = submissionTime;
     }
+
+    public String getActualRunId() { return _actualRunId; }
+    public RunCardInfo getRunCardInfo() { return _runCardInfo; }
+    public Instant getSubmissionTime() { return _submissionTime; }
+    public String getSourceSymbiontName() { return _sourceSymbiontName; }
 
     public static InputQueueItem deserialize(
         final long sectorAddress,

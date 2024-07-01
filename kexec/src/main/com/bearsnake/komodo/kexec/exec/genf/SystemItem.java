@@ -6,27 +6,46 @@ package com.bearsnake.komodo.kexec.exec.genf;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 
+/*
+ * System item sector format
+ *   +000,S1    Type (03)
+ *   +001,H1    Most recent GENF$ recovery cycle (number of times this GENF$ used since last JK9/13 boot
+ *   +001,H2    Number of sectors in the GENF$ file
+ *   +002:033   reserved
+ */
 class SystemItem extends Item {
 
+    private int _recoveryCycle; // number of boots since last JK9/13
+    private int _sectorCount;   // number of sectors in the GENF$ file
+
     public SystemItem(
-        final long sectorAddress
+        final long sectorAddress,
+        final int recoveryCycle,
+        final int sectorCount
     ) {
         super(ItemType.SystemItem, sectorAddress);
-        // TODO
+        _recoveryCycle = recoveryCycle;
+        _sectorCount = sectorCount;
     }
+
+    public final int getRecoveryCycle() { return _recoveryCycle; }
+    public final int getSectorCount() { return _sectorCount; }
+    public void setRecoveryCycle(final int recoveryCycle) { _recoveryCycle = recoveryCycle; }
+    public void setSectorCount(final int sectorCount) { _sectorCount = sectorCount; }
 
     public static SystemItem deserialize(
         final long sectorAddress,
         final ArraySlice source
     ) {
-        var item = new SystemItem(sectorAddress);
-        // TODO
-        return item;
+        return new SystemItem(sectorAddress,
+                              (int)source.getH1(01),
+                              (int)source.getH2(01));
     }
 
     @Override
     public void serialize(final ArraySlice destination) {
         super.serialize(destination);
-        // TODO
+        destination.setH1(01, _recoveryCycle);
+        destination.setH2(01, _sectorCount);
     }
 }

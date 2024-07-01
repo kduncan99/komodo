@@ -7,6 +7,8 @@ package com.bearsnake.komodo.kexec.exec;
 public enum StopCode {
     FacilitiesComplex(001),
     UseStatementToExecPCTFailed(031),
+    UndefinedGENFType(033),
+    BadGENFRecord(033),
     FileAssignErrorOccurredDuringSystemInitialization(034),
     InternalExecIOFailed(040),
     FullCycleReachedForRunIds(044),
