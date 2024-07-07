@@ -22,10 +22,10 @@ import com.bearsnake.komodo.hardwarelib.NodeCategory;
 import com.bearsnake.komodo.hardwarelib.SymbiontChannel;
 import com.bearsnake.komodo.hardwarelib.TapeChannel;
 import com.bearsnake.komodo.hardwarelib.TapeDevice;
-import com.bearsnake.komodo.kexec.Configuration;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.configuration.MnemonicType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleConflictException;
@@ -40,7 +40,6 @@ import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.exec.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
-import com.bearsnake.komodo.kexec.exec.genf.GenFileInterface;
 import com.bearsnake.komodo.kexec.facilities.facItems.AbsoluteDiskItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
@@ -2196,7 +2195,7 @@ public class FacilitiesManager implements Manager {
         final FileSetInfo fileSetInfo,
         final int absoluteCycle,
         final String type,
-        final Configuration.MnemonicType mnemonicType,
+        final MnemonicType mnemonicType,
         final String accountId,
         final boolean isGuarded,
         final boolean isPrivate,
@@ -2226,7 +2225,7 @@ public class FacilitiesManager implements Manager {
         }
 
         var pcf = new PCHARFlags().setGranularity(granularity)
-                                  .setIsWordAddressable(mnemonicType == Configuration.MnemonicType.WORD_ADDRESSABLE_DISK);
+                                  .setIsWordAddressable(mnemonicType == MnemonicType.WORD_ADDRESSABLE_DISK);
 
         var inh = new InhibitFlags().setIsGuarded(isGuarded)
                                     .setIsPrivate(isPrivate)
