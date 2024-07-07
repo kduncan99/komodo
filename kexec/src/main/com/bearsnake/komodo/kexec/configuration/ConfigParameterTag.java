@@ -17,7 +17,7 @@ public enum ConfigParameterTag {
     ATATPASSENA,
     ATOCL,
     BATCHXMODES,
-    BLOCKCK,
+    BLOKCK,
     BYFACHELDRUN,
     CATON,
     CATP2F,

@@ -5,6 +5,8 @@
 package com.bearsnake.komodo.kexec.exec;
 
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.kexec.configuration.ConfigParameterTag;
+import com.bearsnake.komodo.kexec.configuration.Configuration;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
@@ -83,7 +85,7 @@ public class Exec extends Run {
     // Run interface
     // -----------------------------------------------------------------------------------------------------------------
 
-    @Override public String getAccountId() { return _configuration.getMasterAccountId(); }
+    @Override public String getAccountId() { return _configuration.getStringValue(ConfigParameterTag.MSTRACC); }
     @Override public final boolean isFinished() { return false; }
     @Override public final boolean isPrivileged() { return true; }
     @Override public final boolean isStarted() { return true; }

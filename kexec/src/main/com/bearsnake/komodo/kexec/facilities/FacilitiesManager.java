@@ -25,6 +25,7 @@ import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.configuration.ConfigParameterTag;
 import com.bearsnake.komodo.kexec.configuration.MnemonicType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
@@ -201,9 +202,12 @@ public class FacilitiesManager implements Manager {
     public void boot(final boolean recoveryBoot) {
         LogManager.logTrace(LOG_SOURCE, "boot(%s)", recoveryBoot);
 
+        var exec = Exec.getInstance();
+        var cfg = exec.getConfiguration();
+
         // update verbosity of nodes
         for (var ni : _nodeGraph.values()) {
-            ni.getNode().setLogIos(Exec.getInstance().getConfiguration().getLogIos());
+            ni.getNode().setLogIos(cfg.getBooleanValue(ConfigParameterTag.IODBUG));
         }
 
         // clear cached disk labels
@@ -284,7 +288,7 @@ public class FacilitiesManager implements Manager {
         var result = assignCatalogedDiskFileToRun(exec,
                                                   fileSpecification,
                                                   optionsWord,
-                                                  cfg.getMassStorageDefaultMnemonic(),
+                                                  cfg.getStringValue(ConfigParameterTag.MDFALT),
                                                   null,
                                                   null,
                                                   null,
@@ -2141,22 +2145,54 @@ public class FacilitiesManager implements Manager {
 
             // Create all the system files
             exec.sendExecReadOnlyMessage("Creating Account files...");
-            exec.catalogDiskFileForExec("SYS$", "ACCOUNT$R1", cfg.getAccountAssignMnemonic(), cfg.getAccountInitialReserve(), 9999);
-            exec.catalogDiskFileForExec("SYS$", "SEC@ACCTINFO", cfg.getAccountAssignMnemonic(), cfg.getAccountInitialReserve(), 9999);
+            exec.catalogDiskFileForExec("SYS$",
+                                        "ACCOUNT$R1",
+                                        cfg.getStringValue(ConfigParameterTag.ACCTASGMNE),
+                                        cfg.getIntegerValue(ConfigParameterTag.ACCTINTRES),
+                                        9999);
+            exec.catalogDiskFileForExec("SYS$",
+                                        "SEC@ACCTINFO",
+                                        cfg.getStringValue(ConfigParameterTag.ACCTASGMNE),
+                                        cfg.getIntegerValue(ConfigParameterTag.ACCTINTRES),
+                                        9999);
 
             exec.sendExecReadOnlyMessage("Creating ACR file...");
-            exec.catalogDiskFileForExec("SYS$", "SEC@ACR$", cfg.getSACRDAssignMnemonic(), cfg.getSACRDInitialReserve(), 9999);
+            exec.catalogDiskFileForExec("SYS$",
+                                        "SEC@ACR$",
+                                        cfg.getStringValue(ConfigParameterTag.SACRDASGMNE),
+                                        cfg.getIntegerValue(ConfigParameterTag.SACRDINTRES),
+                                        9999);
 
             exec.sendExecReadOnlyMessage("Creating UserID file...");
-            exec.catalogDiskFileForExec("SYS$", "SEC@USERID$", cfg.getUserAssignMnemonic(), cfg.getUserInitialReserve(), 9999);
+            exec.catalogDiskFileForExec("SYS$",
+                                        "SEC@USERID$",
+                                        cfg.getStringValue(ConfigParameterTag.USERASGMNE),
+                                        cfg.getIntegerValue(ConfigParameterTag.USERINTRES),
+                                        9999);
 
             exec.sendExecReadOnlyMessage("Creating privilege file...");
-            exec.catalogDiskFileForExec("SYS$", "DLOC$", cfg.getDLOCAssignMnemonic(), 0, 1);
+            exec.catalogDiskFileForExec("SYS$",
+                                        "DLOC$",
+                                        cfg.getStringValue(ConfigParameterTag.DLOCASGMNE),
+                                        0,
+                                        1);
 
             exec.sendExecReadOnlyMessage("Creating system library files...");
-            exec.catalogDiskFileForExec("SYS$", "LIB$", cfg.getLibAssignMnemonic(), cfg.getLibInitialReserve(), cfg.getLibMaximumSize());
-            exec.catalogDiskFileForExec("SYS$", "RUN$", cfg.getRunAssignMnemonic(), cfg.getRunInitialReserve(), cfg.getRunMaximumSize());
-            exec.catalogDiskFileForExec("SYS$", "RLIB$", cfg.getMassStorageDefaultMnemonic(), 1, 128);
+            exec.catalogDiskFileForExec("SYS$",
+                                        "LIB$",
+                                        cfg.getStringValue(ConfigParameterTag.LIBASGMNE),
+                                        cfg.getIntegerValue(ConfigParameterTag.LIBINTRES),
+                                        cfg.getIntegerValue(ConfigParameterTag.LIBMAXSIZ));
+            exec.catalogDiskFileForExec("SYS$",
+                                        "RUN$",
+                                        cfg.getStringValue(ConfigParameterTag.RUNASGMNE),
+                                        cfg.getIntegerValue(ConfigParameterTag.RUNINTRES),
+                                        cfg.getIntegerValue(ConfigParameterTag.RUNMAXSIZ));
+            exec.catalogDiskFileForExec("SYS$",
+                                        "RLIB$",
+                                        cfg.getStringValue(ConfigParameterTag.MDFALT),
+                                        1,
+                                        cfg.getIntegerValue(ConfigParameterTag.MAXGRN));
 
             // Assign the files to the exec (most of them)
             var filenames = new String[]{ "ACCOUNT$R1", "SEC@ACCTINFO", "SEC@ACR$", "SEC@USERID$", "LIB$", "RUN$", "RLIB$" };
@@ -2646,13 +2682,16 @@ public class FacilitiesManager implements Manager {
         final Run rce,
         final FileCycleInfo fcInfo
     ) {
+        var exec = Exec.getInstance();
+        var cfg = exec.getConfiguration();
+
         // if file is not private, we're good
         if (!fcInfo.getInhibitFlags().isPrivate()) {
             return true;
         }
 
         // if account/project matches, we're good
-        if (Exec.getInstance().getConfiguration().getFilesPrivateByAccount()) {
+        if (cfg.getBooleanValue(ConfigParameterTag.PRIVAC)) {
             return rce.getAccountId().equals(fcInfo.getAccountId());
         } else {
             return rce.getProjectId().equals(fcInfo.getProjectId());
