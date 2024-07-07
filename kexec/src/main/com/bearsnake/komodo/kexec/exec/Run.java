@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.exec;
 
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesItemTable;
 import com.bearsnake.komodo.kexec.FileSpecification;
@@ -79,13 +80,13 @@ public abstract class Run {
             var exec = Exec.getInstance();
             var cfg = exec.getConfiguration();
             if (_runCardInfo.getMaxCards() == null) {
-                _runCardInfo.setMaxCards(cfg.getMaxCards());
+                _runCardInfo.setMaxCards(cfg.getLongValue(Tag.MAXCRD));
             }
             if (_runCardInfo.getMaxPages() == null) {
-                _runCardInfo.setMaxPages(cfg.getMaxPages());
+                _runCardInfo.setMaxPages(cfg.getLongValue(Tag.MAXPAG));
             }
             if (_runCardInfo.getMaxTime() == null) {
-                _runCardInfo.setMaxTime(cfg.getMaxTime());
+                _runCardInfo.setMaxTime(cfg.getLongValue(Tag.MAXTIM));
             }
         }
 

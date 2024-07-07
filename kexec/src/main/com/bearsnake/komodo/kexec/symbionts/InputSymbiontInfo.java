@@ -10,6 +10,7 @@ import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.SDFFileType;
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecIOException;
@@ -269,7 +270,7 @@ class InputSymbiontInfo extends SymbiontInfo {
         _fileSpecification = new FileSpecification("SYS$", filename, null, null, null);
         var fsResult = new FacStatusResult();
         fm.catalogDiskFile(_fileSpecification,
-                           cfg.getMassStorageDefaultMnemonic(),
+                           cfg.getStringValue(Tag.MDFALT),
                            _run.getProjectId(),
                            _run.getAccountId(),
                            false,
@@ -306,7 +307,7 @@ class InputSymbiontInfo extends SymbiontInfo {
             _fileWriter = new SymbiontFileWriter(filename,
                                                  SDFFileType.READ$,
                                                  01,
-                                                 cfg.getSymbiontBufferSize());
+                                                 cfg.getIntegerValue(Tag.SYMFBUF));
             _fileWriter.writeREAD$LabelControlImage(01,
                                                     filename,
                                                     _node.getNodeName(),

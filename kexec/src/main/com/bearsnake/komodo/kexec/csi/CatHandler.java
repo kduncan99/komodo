@@ -7,6 +7,7 @@ package com.bearsnake.komodo.kexec.csi;
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
@@ -326,6 +327,7 @@ class CatHandler extends Handler {
         // If not, then we assume sector-formatted mass storage.
         // This verification must be done with facilities locked.
         var e = Exec.getInstance();
+        var cfg = e.getConfiguration();
         var fm = e.getFacilitiesManager();
         var mm = e.getMFDManager();
         synchronized (fm) {
@@ -375,12 +377,11 @@ class CatHandler extends Handler {
                 e.stop(StopCode.FacilitiesComplex);
                 throw new ExecStoppedException();
             } catch (FileSetDoesNotExistException ex) {
-                var type = e.getConfiguration().getMassStorageDefaultMnemonic();
                 handleDisk(optionWord,
                            operands,
                            rce,
                            fileSpecification,
-                           type,
+                           cfg.getStringValue(Tag.MDFALT),
                            isGuarded,
                            isPrivate,
                            isReadOnly,

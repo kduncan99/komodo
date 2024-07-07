@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec;
 
+import com.bearsnake.komodo.kexec.configuration.Configuration;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.logger.Level;

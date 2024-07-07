@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.exec.genf;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
@@ -61,8 +62,8 @@ public class GenFileInterface {
         exec.sendExecReadOnlyMessage("Creating GENF$ file...");
         if (!exec.catalogDiskFileForExec(QUALIFIER,
                                          FILE_NAME,
-                                         cfg.getGENFAssignMnemonic(),
-                                         cfg.getGENFInitialReserve(),
+                                         cfg.getStringValue(Tag.GENFASGMNE),
+                                         cfg.getIntegerValue(Tag.GENFINTRES),
                                          9999)) {
             LogManager.logFatal(LOG_SOURCE, "Cannot catalog GENF$");
             exec.stop(StopCode.FileAssignErrorOccurredDuringSystemInitialization);

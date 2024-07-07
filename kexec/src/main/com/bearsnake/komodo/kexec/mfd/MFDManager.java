@@ -12,6 +12,7 @@ import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleConflictException;
 import com.bearsnake.komodo.kexec.exceptions.AbsoluteCycleOutOfRangeException;
@@ -1014,13 +1015,14 @@ public class MFDManager implements Manager {
     private void createMFDFile(
         final FileAllocationSet mfdAllocationSet
     ) throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        var cfg = exec.getConfiguration();
         try {
-            var exec = Exec.getInstance();
             var mfdQualifier = exec.getDefaultQualifier();
             var mfdFilename = "MFDF$$";
             var mfdProjectId = exec.getProjectId();
             var mfdAccountId = exec.getAccountId();
-            var mfdEquip = exec.getConfiguration().getMassStorageDefaultMnemonic();
+            var mfdEquip = cfg.getStringValue(Tag.MDFALT);
             var fFlags = new FileFlags().setIsLargeFile(true);
             var inhFlags = new InhibitFlags().setIsGuarded(true).setIsPrivate(true).setIsUnloadInhibited(true);
             var pchFlags = new PCHARFlags().setGranularity(Granularity.Track);

@@ -2,60 +2,61 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kexec.configuration;
+package com.bearsnake.komodo.kexec.configuration.parameters;
 
-public enum ConfigParameterTag {
-    ACCTINTRES,
-    ACCTASGMNE,
-    ACCTMSWTIME,
-    ACCTON,
+public enum Tag {
+    ACCTINTRES("account_file_initial_reserve"),
+    ACCTASGMNE("account_file_asg_mnemonic"),
+    ACCTMSWTIME("accounting_modified_swtime"),
+    ACCTON("quota_level"),
     AFICM,
-    ALATXR,
-    APLBDIGT4K,
+    ALATXR("exerr_054_for_alat"),
+    APLBDIGT4K("apl_bank_bdi_gt4k"),
     APLDYNBDS,
     ASGSCN,
-    ATATPASSENA,
+    ATATPASSENA("enable_passwd_control_statement"),
     ATOCL,
-    BATCHXMODES,
-    BLOKCK,
-    BYFACHELDRUN,
-    CATON,
-    CATP2F,
+    BATCHXMODES("batch_run_x_option_modes"),
+    BLOKCK("block_count_check"),
+    BYFACHELDRUN("bypass_facility_held_runs"),
+    CATON("quota_enforcement_for_cat_files"),
+    CATP2F("quota_cat_ms_factor"),
     CBUFCT,
     CHKSUM,
-    CMPAN1,
-    CMPAN2,
-    CMPAN3,
-    CMPDIS,
+    CKRSFILEVER("ckrs_file_verify"),
+    CMPAN1("compool_avail_per1"),
+    CMPAN2("compool_avail_per2"),
+    CMPAN3("compool_avail_per3"),
+    CMPDIS("compool_disabled"),
     CMPMAX,
     CONTIM,
     COREFILE,
-    CSHRCV,
-    CTLIMGSP,
+    CSHRCV("runs_held_on_recovery_boots"),
+    CTLIMGSP("control_image_spacing"),
     C32NBR,
     C82NBR,
     DAYBLKS,
-    DBLMFDSEARCH,
+    DBLMFDSEARCH("double_mfd_search"),
     DCLUTS,
-    DCMAXRERR,
-    DCSPLTDAD,
+    DCMAXRERR("dc_max_read_errors"),
+    DCSPLTDAD("dc_split_dads_on_error"),
     DEDLIN,
-    DELAYSOL,
-    DELRMPRT,
-    DEMTOP,
-    DEQIAD,
-    DESMIPS,
-    DIRSELECT,
-    DISPNOWAIT,
-    DIVINTERVAL,
-    DLOCASGMNE,
-    DLTDCOMP,
-    DMPAPLVAL,
-    DYNDNPACK,
-    ECHOREM,
-    ERTDATE$OFF,
+    DELAYSOL("delayed_sign_on_solicitation"),
+    DELRMPRT("delete_removed_run_printfile"),
+    DEMTOP("demand_batch_top_separator"),
+    DEQIAD("delayed_queue_item_audits"),
+    DESMIPS("desired_mips"),
+    DIRSELECT("directory_selection"),
+    DISPNOWAIT("dispatch_lower_if_busy"),
+    DIVINTERVAL("data_verification_interval"),
+    DLOCASGMNE("dloc_file_asg_mnemonic"),
+    DLTDCOMP("dlt_data_compression"),
+    DMPAPLVAL("dump_applications"),
+    DYNDNPACK("dynamic_dn_pack"),
+    ECHOREM("echo_remote_console"),
+    ERTDATE$OFF("er_tdate$_turned_off"),
     EXPTRACE,
-    EXTDDCSYNC,
+    EXTDDCSYNC("extended_dayclock_sync"),
     FCACEDEFAULT,
     FCDBSZ,
     FCMXLK,
@@ -314,5 +315,17 @@ public enum ConfigParameterTag {
     XPDSHARED,
     XPDSHRDINTV,
     XPDSHRDSTRT,
-    ZOPTBATCHREJ,
+    ZOPTBATCHREJ;
+
+    private final String _dynamicTag;
+
+    Tag() {
+        _dynamicTag = null;
+    }
+
+    Tag(String dynamicTag) {
+        _dynamicTag = dynamicTag;
+    }
+
+    final String getDynamicTag() { return _dynamicTag; }
 }

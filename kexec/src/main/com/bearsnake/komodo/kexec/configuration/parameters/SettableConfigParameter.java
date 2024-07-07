@@ -2,23 +2,22 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kexec.configuration;
+package com.bearsnake.komodo.kexec.configuration.parameters;
 
-public class SettableConfigParameter extends ConfigParameter {
+public class SettableConfigParameter extends Parameter {
 
     private final boolean _isProtected; // needs SSCONFIGMGR privilege to change setting dynamically
     private final boolean _isRebootRequired;
     private Object _specifiedValue = null;
 
     public SettableConfigParameter(
-        final ConfigParameterTag tag,
-        final String dynamicName,
+        final Tag tag,
         final Object defaultValue,
         final boolean isProtected,
         final boolean isRebootRequired,
         final String description
     ) {
-        super(tag, dynamicName, defaultValue, description);
+        super(tag, defaultValue, description);
         _isProtected = isProtected;
         _isRebootRequired = isRebootRequired;
     }

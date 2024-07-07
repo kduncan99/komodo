@@ -300,7 +300,7 @@ public class ConsoleManager implements Manager {
                     }
 
                     rrMsg.setResponse(solInput.getText());
-                    if (Exec.getInstance().getConfiguration().getLogConsoleMessages() && !rrMsg.doNotLogResponse()) {
+                    if (!rrMsg.doNotLogResponse()) {
                         LogManager.logInfo(LOG_SOURCE,
                                            "Msg:%s replyCons:%s %d-%s",
                                            rrMsg.getMessageId().toString(),

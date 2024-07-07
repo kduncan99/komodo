@@ -4,6 +4,15 @@
 
 package com.bearsnake.komodo.kexec.configuration;
 
+import com.bearsnake.komodo.kexec.configuration.parameters.Parameter;
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
+import com.bearsnake.komodo.kexec.configuration.parameters.FixedConfigParameter;
+import com.bearsnake.komodo.kexec.configuration.parameters.RestrictedConfigParameter;
+import com.bearsnake.komodo.kexec.configuration.parameters.SettableConfigParameter;
+import com.bearsnake.komodo.kexec.configuration.restrictions.IntegerRangeRestriction;
+import com.bearsnake.komodo.kexec.configuration.restrictions.MnemonicRestriction;
+import com.bearsnake.komodo.kexec.configuration.restrictions.PrimeNumberRestriction;
+import com.bearsnake.komodo.kexec.configuration.restrictions.Restriction;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 
 import java.util.HashMap;
@@ -11,11 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static com.bearsnake.komodo.kexec.configuration.ConfigParameterTag.*;
+import static com.bearsnake.komodo.kexec.configuration.parameters.Tag.*;
 
 public class Configuration {
 
-    private static final Map<String, ConfigParameter> CONFIG_PARAMETERS = new TreeMap<>();
+    private static final Map<String, Parameter> CONFIG_PARAMETERS = new TreeMap<>();
     private static final Map<String, MnemonicInfo> MNEMONIC_TABLE = new HashMap<>();
 
     // discrete configuration values ------------------------------------------------------------------------------------
@@ -23,39 +32,59 @@ public class Configuration {
     static {
         // AACOUNTER is n/a
         // AATIPSYSFILE is n/a
-        putRestrictedConfigParameter(ACCTINTRES, "account_file_initial_reserve", 0, true, true,
+        putRestrictedConfigParameter(ACCTINTRES, 0, true, true,
                                      "Initial reserve used when creating the SYS$*ACCOUNT$R1 and SEC@ACCTINFO files." +
                                          " The value must be between 0 and 4096 (tracks).",
                                      new IntegerRangeRestriction(0, 4096));
 
-        // TODO nearly all of the following should have some sort of restriction on the value.
-        putSettableConfigParameter(ACCTASGMNE, "account_file_asg_mnemonic", "F", true, true,
-                                   "Assign mnemonic to be used when cataloging SYS$*ACCOUNT$R1 and SEC@ACCTINFO files.");
-        putFixedConfigParameter(ACCTMSWTIME, "accounting_modified_swtime", true,
+        putRestrictedConfigParameter(ACCTASGMNE, "F", true, true,
+                                     "Assign mnemonic to be used when cataloging SYS$*ACCOUNT$R1 and SEC@ACCTINFO files.",
+                                     new MnemonicRestriction(MNEMONIC_TABLE));
+
+        putFixedConfigParameter(ACCTMSWTIME, true,
                                 "If true, entries in the account file are stored in MODSWTIME. Otherwise, they are stored in TDATE$ format.");
-        putSettableConfigParameter(ACCTON, "quote_level", 2, true, true,
-                                   """
-                               Controls the quota level:
-                               0: Account file turned off
-                               1: Account file on, and account verification is enabled
-                               2: Account file on, and account verification and accumulation are enabled
-                               3: Account file on, account verification, accumulation, and account-level quote are enforced
-                               4: Account file on, account verification, accumulation, account-level quote, and run-level quota are enforced.""");
-        putSettableConfigParameter(AFICM, null, true, false, true,
+
+        putRestrictedConfigParameter(ACCTON, 2, true, true,
+                                     """
+                                        Controls the quota level:
+                                        0: Account file turned off
+                                        1: Account file on, and account verification is enabled
+                                        2: Account file on, and account verification and accumulation are enabled
+                                        3: Account file on, account verification, accumulation, and account-level quote are enforced
+                                        4: Account file on, account verification, accumulation, account-level quote, and run-level quota are enforced.""",
+                                     new IntegerRangeRestriction(0, 4));
+
+        putSettableConfigParameter(AFICM, true, false, true,
                                    "Determines whether divide fault interrupts are enabled.");
+
         // ALATXR is n/a for now
-        putSettableConfigParameter(APLBDIGT4K, "apl_bank_bdi_gt4k", true, false, false,
+
+        putSettableConfigParameter(APLBDIGT4K, true, false, false,
                                    "If false, only the Linking System can create application-level banks with BDIs > 4095.\n"
                                        + "If true, user programs and applications are also allowed to create code and data banks with BDIs > 4095.");
-        putSettableConfigParameter(APLDYNBDS, null, 04000, false, true,
-                                   "Fixed number of bank descriptors to be dynamically allocated in the level 1 BDT."
-                                       + " Note that MAXBDI + APLDYNBDS must be < 32766.");
-        putFixedConfigParameter(ASGSCN, null, false,
+
+        putRestrictedConfigParameter(APLDYNBDS, 04000, false, true,
+                                     "Fixed number of bank descriptors to be dynamically allocated in the level 1 BDT."
+                                         + " Note that MAXBDI + APLDYNBDS must be < 32766.",
+                                     new IntegerRangeRestriction(0, 32766));
+
+        putFixedConfigParameter(ASGSCN, false,
                                 "If true, facility pre-scan code is enabled. If false, runs are opened without pre-scanning.");
-        putSettableConfigParameter(ATATPASSENA, "enable_passwd_control_statement", false, true, false,
+
+        putSettableConfigParameter(ATATPASSENA, false, true, false,
                                    "If true, @@PASSWD is allowed.");
-        putSettableConfigParameter(ATOCL, null, 01011, false, true,
-                                   "Account file look-up table length (must be a prime number).");
+
+        putRestrictedConfigParameter(ATOCL, 01011, false, true,
+                                     "Account file look-up table length (must be a prime number).",
+                                     new PrimeNumberRestriction());
+
+
+
+
+
+
+        /*
+
         putSettableConfigParameter(BATCHXMODES, "batch_run_x_options_modes", 0, true, false,
                                    """
                                0: SSRUNXOPT is required for @START and ST specifying X options, but not remote batch runs.
@@ -63,82 +92,101 @@ public class Configuration {
                                2: SSRUNXOPT not required for remote batch runs specifying X option; \
                                @START and ST rely on QUOTA capability of the deadline being given to the run
                                3: SSRUNXOPT not required for remote batch run, @START, or ST specifying X option.""");
+
         // BLOKCK not supported - we don't (currently) support open-reel tapes
-        putFixedConfigParameter(BYFACHELDRUN, "bypass_facility_held_runs", false,
+
+        putFixedConfigParameter(BYFACHELDRUN, false,
                                 "If true, lower priority runs may be opened when higher priority runs are held for facilities.");
-        putSettableConfigParameter(CATON, "quote_enforcement_for_cat_files", false, true, true,
+        putSettableConfigParameter(CATON, false, true, true,
                                    "Enables quota enforcement for cataloged ffiles.");
-        putSettableConfigParameter(CATP2F, "quote_cat_ms_factor", 0, true, true,
+        putSettableConfigParameter(CATP2F, 0, true, true,
                                    "Power-of-two factor for number of tracks defined as max limit allowed per quota group.");
-        putSettableConfigParameter(CBUFCT, null, 32, true, true,
+        putSettableConfigParameter(CBUFCT, 32, true, true,
                                    "Length in words of main storage COMPOOL blocks");
-        putSettableConfigParameter(CHKSUM, null, false, true, true,
+        putSettableConfigParameter(CHKSUM, false, true, true,
                                    "True to perform checksum on mass storage COMPOOL blocks.");
         // CKRSFILEVER not supported - we don't currently do checkpoint/restart
-        putSettableConfigParameter(CMPAN1, "compool_avail_per1", 50, true, false,
+        putSettableConfigParameter(CMPAN1, 50, true, false,
                                    "Percentage of COMPOOL available to trigger COMPOOL panic level 1");
-        putSettableConfigParameter(CMPAN2, "compool_avail_per2", 20, true, false,
+        putSettableConfigParameter(CMPAN2, 20, true, false,
                                    "Percentage of COMPOOL available to trigger COMPOOL panic level 2");
-        putSettableConfigParameter(CMPAN3, "compool_avail_per3", 10, true, false,
+        putSettableConfigParameter(CMPAN3, 10, true, false,
                                    "Percentage of COMPOOL available to trigger COMPOOL panic level 3");
-        putSettableConfigParameter(CMPDIS, "compool_disabled", false, true, false,
+        putSettableConfigParameter(CMPDIS, false, true, false,
                                    "If true, COMPOOL is disabled.");
-        putSettableConfigParameter(CMPMAX, null, 0, true, true,
+        putSettableConfigParameter(CMPMAX, 0, true, true,
                                    "Max number of COMPOOL blocks per output message - if 0, there is no limit.");
         // CONTIM - not supported (no SIP)
-        putSettableConfigParameter(COREFILE, null, false, true, true,
+        putSettableConfigParameter(COREFILE, false, true, true,
                                    "If true, KONS main storage file is available.");
-        putSettableConfigParameter(CSHRCV, "runs_held_on_recovery_boots", true, true, false,
+        putSettableConfigParameter(CSHRCV, true, true, false,
                                    "If true, runs are held on a recovery boot until CS A is entered.");
-        putSettableConfigParameter(CTLIMGSP, "control_image_spacing", 0, true, false,
+        putSettableConfigParameter(CTLIMGSP, 0, true, false,
                                    """
                                If zero and PAGEJECT is true, a page eject occurs before processor statements are printed.
                                If zero and PAGEJECT is false, line spacing is three lines for all control statements.
                                Values 1-63 indicate the number of lines printed before control statements.
                                """);
-        putSettableConfigParameter(C32NBR, null, 30, true, true,
+        putSettableConfigParameter(C32NBR, 30, true, true,
                                    "Number of primary mass storage COMPOOL blocks.");
-        putSettableConfigParameter(C82NBR, null, 30, true, true,
+        putSettableConfigParameter(C82NBR, 30, true, true,
                                    "Number of secondary mass storage COMPOOL blocks.");
-        putSettableConfigParameter(DAYBLKS, null, 56, true, true,
+        putSettableConfigParameter(DAYBLKS, 56, true, true,
                                    "Number of words in a day block on the TIMER system file.");
         // DBLMFDSEARCH not supported since we don't do directories
         // DCLUTS not supported since we don't do lookup table entries
         // DCMAXRERR not supported - we don't implement DC keyin
         // DCSPLTDAD not supported - we don't implement DC keyin
-        putSettableConfigParameter(DEDLIN, null, true, false, true,
+        putSettableConfigParameter(DEDLIN, true, false, true,
                                    "true to enable deadline runs and switching levels.");
         // DEDRUNn not supported
-        putSettableConfigParameter(DELAYSOL, "delayed_sign_on_solicitation", false, true, true,
+        putSettableConfigParameter(DELAYSOL, false, true, true,
                                    "If true, solicitation period is delayed between invalid sign-on attempts.");
-        putSettableConfigParameter(DELRMPRT, "delete_removed_run_printfile", false, false, false,
+        putSettableConfigParameter(DELRMPRT, false, false, false,
                                    "Indicates whether print files for removed (RM) runs should be printed.");
-        putSettableConfigParameter(DEMTOP, "demand_batch_top_separator", true, true, false,
+        putSettableConfigParameter(DEMTOP, true, true, false,
                                    "Indicates whether the top separator page is to be printed by RSI demand batch printers.");
-        putSettableConfigParameter(DEQIAD, "delayed_queue_item_audits", false, true, false,
+        putSettableConfigParameter(DEQIAD, false, true, false,
                                    "If true, recoverable COMPOOL transactions if all reads/writes to TIP files are done without after-looks.");
         // DESMIPS not supported
         // DIRSELECT not supported - we don't do directories
         // DISPNOWAIT not supported - I don't think we're going to implement a dispatcher
         // DIVINTERVAL n/a
-        putSettableConfigParameter(DLOCASGMNE, "dloc_file_asg_mnemonic", "F", true, false,
+        putSettableConfigParameter(DLOCASGMNE, "F", true, false,
                                    "Assign mnemonic used to create SYS$*DLOC$.");
         // DLTDCOMP not supported - we don't do DLT tapes
-        putSettableConfigParameter(DMPAPLVAL, "dump_applications", 1, true, false,
+        putSettableConfigParameter(DMPAPLVAL, 1, true, false,
                                    """
                                Indicates the application-level subsystem banks to be included in system dumps.
                                0: No banks included
                                1: Application level home subsystem which contains the common banks
                                2: All application level subsystems""");
-        putSettableConfigParameter(DYNDNPACK, "dynamic_dn_pack", false, false, true,
+        putSettableConfigParameter(DYNDNPACK, false, false, true,
                                    "If true, a DN PACK is automatically issued when MFD I/O to a removable disk fails.");
         // ECHOREM - not sure if we need to think about this; what constitutes a remote console?
-        putSettableConfigParameter(ERTDATE$OFF, "er_tdate$_turned_off", false, true, false,
+        putSettableConfigParameter(ERTDATE$OFF, false, true, false,
                                    "If true, ER TDATE$ fails with type 04 code 03 cgy type 012.");
+
         // EXPTRACE is n/a
         // EXTDDCSYNC is not supported
         // FCACHDEFAULT is not supported
         // FCDBSZ is not supported
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         putSettableConfigParameter(FCMXLK, null, 5, true, true,
                                    "Limits the number of TIP locks which a program can hold.");
         // FCNUSRDADBNK is n/a
@@ -175,8 +223,12 @@ public class Configuration {
                                    "Controls whether auto allocation can occur during TIP/Exec file writes.");
         putSettableConfigParameter(INHBTRANSM, "inhibit_transmission", false, true, false,
                                    "If true, a user is not allowed to use @@TM or @SYM, or to transmit unsolicited data to terminals.");
-        putSettableConfigParameter(IODBUG, null, false, false, true,
+                                   */
+
+        putSettableConfigParameter(IODBUG, false, false, true,
                                    "If true, all debug aids are enabled for I/O.");
+
+        /*
         putSettableConfigParameter(IOMAXRTIME, "io_maximum_recovery_time", 0, true, false,
                                    "Maximum number of seconds to allow I/O timeout recovery per retry (0-63)."); // TODO maybe not supported
         // IOTASGMNE is n/a
@@ -565,6 +617,7 @@ public class Configuration {
                                    """
                                              If true, a Z option on facility images for a batch run causes the image to be rejected.
                                              If false, a Z option is ignored for batch runs.""");
+         */
     }
 
     static {
@@ -693,7 +746,7 @@ public class Configuration {
 
     // -----------------------------------------------------------------------------------------------------------------
 
-    public Object getConfigValue(final ConfigParameterTag tag) {
+    public Object getConfigValue(final Tag tag) {
         var param = CONFIG_PARAMETERS.get(tag.name());
         if ((param != null) && param.hasEffectiveValue()) {
             return param.getEffectiveValue();
@@ -702,7 +755,7 @@ public class Configuration {
         }
     }
 
-    public Boolean getBooleanValue(final ConfigParameterTag tag) {
+    public Boolean getBooleanValue(final Tag tag) {
         var value = getConfigValue(tag);
         if (value instanceof Boolean bv) {
             return bv;
@@ -711,7 +764,7 @@ public class Configuration {
         }
     }
 
-    public Float getFloatValue(final ConfigParameterTag tag) {
+    public Float getFloatValue(final Tag tag) {
         var value = getConfigValue(tag);
         if (value instanceof Float fv) {
             return fv;
@@ -720,7 +773,7 @@ public class Configuration {
         }
     }
 
-    public Integer getIntegerValue(final ConfigParameterTag tag) {
+    public Integer getIntegerValue(final Tag tag) {
         var value = getConfigValue(tag);
         if (value instanceof Long lv) {
             return (Integer)(int)(lv & 0xFFFFFFFFL);
@@ -731,7 +784,7 @@ public class Configuration {
         }
     }
 
-    public Long getLongValue(final ConfigParameterTag tag) {
+    public Long getLongValue(final Tag tag) {
         var value = getConfigValue(tag);
         if (value instanceof Long lv) {
             return lv;
@@ -742,7 +795,7 @@ public class Configuration {
         }
     }
 
-    public String getStringValue(final ConfigParameterTag tag) {
+    public String getStringValue(final Tag tag) {
         var value = getConfigValue(tag);
         if (value instanceof String sv) {
             return sv;
@@ -752,37 +805,34 @@ public class Configuration {
     }
 
     private static void putFixedConfigParameter(
-        final ConfigParameterTag tag,
-        final String dynamicName,
+        final Tag tag,
         final Object defaultValue,
         final String description
     ) {
-        var cp = new FixedConfigParameter(tag, dynamicName, defaultValue, description);
+        var cp = new FixedConfigParameter(tag, defaultValue, description);
         CONFIG_PARAMETERS.put(tag.name(), cp);
     }
 
     private static void putRestrictedConfigParameter(
-        final ConfigParameterTag tag,
-        final String dynamicName,
+        final Tag tag,
         final Object defaultValue,
         final boolean isPrivileged,
         final boolean isRebootRequired,
         final String description,
-        final ParameterRestriction restriction
+        final Restriction restriction
     ) {
-        var cp = new RestrictedConfigParameter(tag, dynamicName, defaultValue, isPrivileged, isRebootRequired, description, restriction);
+        var cp = new RestrictedConfigParameter(tag, defaultValue, isPrivileged, isRebootRequired, description, restriction);
         CONFIG_PARAMETERS.put(tag.name(), cp);
     }
 
     private static void putSettableConfigParameter(
-        final ConfigParameterTag tag,
-        final String dynamicName,
+        final Tag tag,
         final Object defaultValue,
         final boolean isPrivileged,
         final boolean isRebootRequired,
         final String description
     ) {
-        var cp = new SettableConfigParameter(tag, dynamicName, defaultValue, isPrivileged, isRebootRequired, description);
+        var cp = new SettableConfigParameter(tag, defaultValue, isPrivileged, isRebootRequired, description);
         CONFIG_PARAMETERS.put(tag.name(), cp);
     }
 

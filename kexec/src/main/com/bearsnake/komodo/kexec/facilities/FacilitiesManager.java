@@ -25,7 +25,7 @@ import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
-import com.bearsnake.komodo.kexec.configuration.ConfigParameterTag;
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.configuration.MnemonicType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
@@ -207,7 +207,7 @@ public class FacilitiesManager implements Manager {
 
         // update verbosity of nodes
         for (var ni : _nodeGraph.values()) {
-            ni.getNode().setLogIos(cfg.getBooleanValue(ConfigParameterTag.IODBUG));
+            ni.getNode().setLogIos(cfg.getBooleanValue(Tag.IODBUG));
         }
 
         // clear cached disk labels
@@ -288,7 +288,7 @@ public class FacilitiesManager implements Manager {
         var result = assignCatalogedDiskFileToRun(exec,
                                                   fileSpecification,
                                                   optionsWord,
-                                                  cfg.getStringValue(ConfigParameterTag.MDFALT),
+                                                  cfg.getStringValue(Tag.MDFALT),
                                                   null,
                                                   null,
                                                   null,
@@ -2147,52 +2147,52 @@ public class FacilitiesManager implements Manager {
             exec.sendExecReadOnlyMessage("Creating Account files...");
             exec.catalogDiskFileForExec("SYS$",
                                         "ACCOUNT$R1",
-                                        cfg.getStringValue(ConfigParameterTag.ACCTASGMNE),
-                                        cfg.getIntegerValue(ConfigParameterTag.ACCTINTRES),
+                                        cfg.getStringValue(Tag.ACCTASGMNE),
+                                        cfg.getIntegerValue(Tag.ACCTINTRES),
                                         9999);
             exec.catalogDiskFileForExec("SYS$",
                                         "SEC@ACCTINFO",
-                                        cfg.getStringValue(ConfigParameterTag.ACCTASGMNE),
-                                        cfg.getIntegerValue(ConfigParameterTag.ACCTINTRES),
+                                        cfg.getStringValue(Tag.ACCTASGMNE),
+                                        cfg.getIntegerValue(Tag.ACCTINTRES),
                                         9999);
 
             exec.sendExecReadOnlyMessage("Creating ACR file...");
             exec.catalogDiskFileForExec("SYS$",
                                         "SEC@ACR$",
-                                        cfg.getStringValue(ConfigParameterTag.SACRDASGMNE),
-                                        cfg.getIntegerValue(ConfigParameterTag.SACRDINTRES),
+                                        cfg.getStringValue(Tag.SACRDASGMNE),
+                                        cfg.getIntegerValue(Tag.SACRDINTRES),
                                         9999);
 
             exec.sendExecReadOnlyMessage("Creating UserID file...");
             exec.catalogDiskFileForExec("SYS$",
                                         "SEC@USERID$",
-                                        cfg.getStringValue(ConfigParameterTag.USERASGMNE),
-                                        cfg.getIntegerValue(ConfigParameterTag.USERINTRES),
+                                        cfg.getStringValue(Tag.USERASGMNE),
+                                        cfg.getIntegerValue(Tag.USERINTRES),
                                         9999);
 
             exec.sendExecReadOnlyMessage("Creating privilege file...");
             exec.catalogDiskFileForExec("SYS$",
                                         "DLOC$",
-                                        cfg.getStringValue(ConfigParameterTag.DLOCASGMNE),
+                                        cfg.getStringValue(Tag.DLOCASGMNE),
                                         0,
                                         1);
 
             exec.sendExecReadOnlyMessage("Creating system library files...");
             exec.catalogDiskFileForExec("SYS$",
                                         "LIB$",
-                                        cfg.getStringValue(ConfigParameterTag.LIBASGMNE),
-                                        cfg.getIntegerValue(ConfigParameterTag.LIBINTRES),
-                                        cfg.getIntegerValue(ConfigParameterTag.LIBMAXSIZ));
+                                        cfg.getStringValue(Tag.LIBASGMNE),
+                                        cfg.getIntegerValue(Tag.LIBINTRES),
+                                        cfg.getIntegerValue(Tag.LIBMAXSIZ));
             exec.catalogDiskFileForExec("SYS$",
                                         "RUN$",
-                                        cfg.getStringValue(ConfigParameterTag.RUNASGMNE),
-                                        cfg.getIntegerValue(ConfigParameterTag.RUNINTRES),
-                                        cfg.getIntegerValue(ConfigParameterTag.RUNMAXSIZ));
+                                        cfg.getStringValue(Tag.RUNASGMNE),
+                                        cfg.getIntegerValue(Tag.RUNINTRES),
+                                        cfg.getIntegerValue(Tag.RUNMAXSIZ));
             exec.catalogDiskFileForExec("SYS$",
                                         "RLIB$",
-                                        cfg.getStringValue(ConfigParameterTag.MDFALT),
+                                        cfg.getStringValue(Tag.MDFALT),
                                         1,
-                                        cfg.getIntegerValue(ConfigParameterTag.MAXGRN));
+                                        cfg.getIntegerValue(Tag.MAXGRN));
 
             // Assign the files to the exec (most of them)
             var filenames = new String[]{ "ACCOUNT$R1", "SEC@ACCTINFO", "SEC@ACR$", "SEC@USERID$", "LIB$", "RUN$", "RLIB$" };
@@ -2691,7 +2691,7 @@ public class FacilitiesManager implements Manager {
         }
 
         // if account/project matches, we're good
-        if (cfg.getBooleanValue(ConfigParameterTag.PRIVAC)) {
+        if (cfg.getBooleanValue(Tag.PRIVAC)) {
             return rce.getAccountId().equals(fcInfo.getAccountId());
         } else {
             return rce.getProjectId().equals(fcInfo.getProjectId());
