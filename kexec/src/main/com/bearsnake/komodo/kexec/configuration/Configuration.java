@@ -5,7 +5,6 @@
 package com.bearsnake.komodo.kexec.configuration;
 
 import com.bearsnake.komodo.baselib.Parser;
-import com.bearsnake.komodo.kexec.configuration.exceptions.IntegerMultipleException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.SyntaxException;
 import com.bearsnake.komodo.kexec.configuration.parameters.*;
 import com.bearsnake.komodo.kexec.configuration.restrictions.*;
@@ -21,6 +20,9 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import static com.bearsnake.komodo.kexec.configuration.parameters.Tag.*;
+import static com.bearsnake.komodo.kexec.configuration.values.BooleanValue.FALSE;
+import static com.bearsnake.komodo.kexec.configuration.values.BooleanValue.TRUE;
+import static com.bearsnake.komodo.kexec.configuration.values.IntegerValue.ZERO;
 import static com.bearsnake.komodo.kexec.configuration.values.ValueType.BOOLEAN;
 import static com.bearsnake.komodo.kexec.configuration.values.ValueType.CHARACTER;
 import static com.bearsnake.komodo.kexec.configuration.values.ValueType.FLOAT;
@@ -35,9 +37,10 @@ public class Configuration {
     // discrete configuration values ------------------------------------------------------------------------------------
 
     static {
-        // AACOUNTER is n/a
-        // AATIPSYSFILE is n/a
-        putRestrictedConfigParameter(ACCTINTRES, INTEGER, IntegerValue.ZERO, true, true,
+        // AACOUNTER is n/a TODO TIP
+        // AATIPSYSFILE is n/a TODO TIP
+
+        putRestrictedConfigParameter(ACCTINTRES, INTEGER, ZERO, true, true,
                                      "Initial reserve used when creating the SYS$*ACCOUNT$R1 and SEC@ACCTINFO files." +
                                          " The value must be between 0 and 4096 (tracks).",
                                      new IntegerRangeRestriction(0, 4096));
@@ -46,7 +49,7 @@ public class Configuration {
                                      "Assign mnemonic to be used when cataloging SYS$*ACCOUNT$R1 and SEC@ACCTINFO files.",
                                      new MnemonicRestriction(MNEMONIC_TABLE));
 
-        putFixedConfigParameter(ACCTMSWTIME, BOOLEAN, BooleanValue.TRUE,
+        putFixedConfigParameter(ACCTMSWTIME, BOOLEAN, TRUE,
                                 "If true, entries in the account file are stored in MODSWTIME. Otherwise, they are stored in TDATE$ format.");
 
         putRestrictedConfigParameter(ACCTON, INTEGER, new IntegerValue(2), true, true,
@@ -59,12 +62,13 @@ public class Configuration {
                                         4: Account file on, account verification, accumulation, account-level quote, and run-level quota are enforced.""",
                                      new IntegerRangeRestriction(0, 4));
 
-        putSettableConfigParameter(AFICM, BOOLEAN,  BooleanValue.TRUE, false, true,
+        putSettableConfigParameter(AFICM, BOOLEAN,  TRUE, false, true,
                                    "Determines whether divide fault interrupts are enabled.");
 
-        // ALATXR is n/a for now
+        putSettableConfigParameter(ALATXR, BOOLEAN, FALSE, true, false,
+                                   "If true, exec takes a 054 stop if the ASCII log is unavailable.");
 
-        putSettableConfigParameter(APLBDIGT4K, BOOLEAN, BooleanValue.TRUE, false, false,
+        putSettableConfigParameter(APLBDIGT4K, BOOLEAN, TRUE, false, false,
                                    "If false, only the Linking System can create application-level banks with BDIs > 4095.\n"
                                        + "If true, user programs and applications are also allowed to create code and data banks with BDIs > 4095.");
 
@@ -73,17 +77,17 @@ public class Configuration {
                                          + " Note that MAXBDI + APLDYNBDS must be < 32766.",
                                      new IntegerRangeRestriction(0, 32766));
 
-        putFixedConfigParameter(ASGSCN, BOOLEAN, BooleanValue.FALSE,
+        putFixedConfigParameter(ASGSCN, BOOLEAN, FALSE,
                                 "If true, facility pre-scan code is enabled. If false, runs are opened without pre-scanning.");
 
-        putSettableConfigParameter(ATATPASSENA, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(ATATPASSENA, BOOLEAN, FALSE, true, false,
                                    "If true, @@PASSWD is allowed.");
 
         putRestrictedConfigParameter(ATOCL, INTEGER, new IntegerValue(01011, true), false, true,
                                      "Account file look-up table length (must be a prime number).",
                                      new PrimeNumberRestriction());
 
-        putRestrictedConfigParameter(BATCHXMODES, INTEGER, IntegerValue.ZERO, true, false,
+        putRestrictedConfigParameter(BATCHXMODES, INTEGER, ZERO, true, false,
                                    """
                                0: SSRUNXOPT is required for @START and ST specifying X options, but not remote batch runs.
                                1: SSRUNXOPT is required for all X option specifications.
@@ -92,43 +96,52 @@ public class Configuration {
                                3: SSRUNXOPT not required for remote batch run, @START, or ST specifying X option.""",
                                      new IntegerRangeRestriction(0, 3));
 
-        // BLOKCK not supported - we don't (currently) support open-reel tapes
+        putSettableConfigParameter(BLOKCK, BOOLEAN, FALSE, true, false,
+                                   "If true, block counts in tape labels are compared against actual block counts.");
 
-        /*
-        putFixedConfigParameter(BYFACHELDRUN, false,
-                                "If true, lower priority runs may be opened when higher priority runs are held for facilities.");
-        */
+        putSettableConfigParameter(BYFACHELDRUN, BOOLEAN, FALSE, true, false,
+                                   "If true, lower priority runs may be opened when higher priority runs are held for facilities.");
 
-        putSettableConfigParameter(CATON, BOOLEAN, BooleanValue.FALSE, true, true,
+        putSettableConfigParameter(CATON, BOOLEAN, FALSE, true, true,
                                    "Enables quota enforcement for cataloged files.");
 
+        putRestrictedConfigParameter(CATP2F, INTEGER, ZERO, true, true,
+                                     "Power-of-two factor for number of tracks defined as max limit allowed per quota group.",
+                                     new IntegerRangeRestriction(0, 17));
+
         /*
-        putSettableConfigParameter(CATP2F, 0, true, true,
-                                   "Power-of-two factor for number of tracks defined as max limit allowed per quota group.");
         putSettableConfigParameter(CBUFCT, 32, true, true,
-                                   "Length in words of main storage COMPOOL blocks");
+                                   "Length in words of main storage COMPOOL blocks"); // TODO TIP
         putSettableConfigParameter(CHKSUM, false, true, true,
-                                   "True to perform checksum on mass storage COMPOOL blocks.");
-        // CKRSFILEVER not supported - we don't currently do checkpoint/restart
+                                   "True to perform checksum on mass storage COMPOOL blocks."); // TODO TIP
+
+        // CKRSFILEVER not supported - we don't currently do checkpoint/restart // TODO CKRS
+
         putSettableConfigParameter(CMPAN1, 50, true, false,
-                                   "Percentage of COMPOOL available to trigger COMPOOL panic level 1");
+                                   "Percentage of COMPOOL available to trigger COMPOOL panic level 1"); // TODO TIP
         putSettableConfigParameter(CMPAN2, 20, true, false,
-                                   "Percentage of COMPOOL available to trigger COMPOOL panic level 2");
+                                   "Percentage of COMPOOL available to trigger COMPOOL panic level 2"); // TODO TIP
         putSettableConfigParameter(CMPAN3, 10, true, false,
-                                   "Percentage of COMPOOL available to trigger COMPOOL panic level 3");
-        putSettableConfigParameter(CMPDIS, false, true, false,
-                                   "If true, COMPOOL is disabled.");
-        putSettableConfigParameter(CMPMAX, 0, true, true,
-                                   "Max number of COMPOOL blocks per output message - if 0, there is no limit.");
-        // CONTIM - not supported (no SIP)
-        putSettableConfigParameter(COREFILE, false, true, true,
-                                   "If true, KONS main storage file is available.");
+                                   "Percentage of COMPOOL available to trigger COMPOOL panic level 3"); // TODO TIP
         */
 
-        putSettableConfigParameter(CSHRCV, BOOLEAN, BooleanValue.TRUE, true, false,
+        putSettableConfigParameter(CMPDIS, BOOLEAN, FALSE, true, false,
+                                   "If true, COMPOOL is disabled.");
+
+        /*
+        putSettableConfigParameter(CMPMAX, 0, true, true,
+                                   "Max number of COMPOOL blocks per output message - if 0, there is no limit."); // TODO TIP
+
+        // CONTIM - not supported (no SIP) // TODO SIP
+
+        putSettableConfigParameter(COREFILE, false, true, true,
+                                   "If true, KONS main storage file is available."); // TODO TIP
+        */
+
+        putSettableConfigParameter(CSHRCV, BOOLEAN, TRUE, true, false,
                                    "If true, runs are held on a recovery boot until CS A is entered.");
 
-        putRestrictedConfigParameter(CTLIMGSP, INTEGER, IntegerValue.ZERO, true, false,
+        putRestrictedConfigParameter(CTLIMGSP, INTEGER, ZERO, true, false,
                                    """
                                If zero and PAGEJECT is true, a page eject occurs before processor statements are printed.
                                If zero and PAGEJECT is false, line spacing is three lines for all control statements.
@@ -138,36 +151,37 @@ public class Configuration {
 
         /*
         putSettableConfigParameter(C32NBR, 30, true, true,
-                                   "Number of primary mass storage COMPOOL blocks.");
+                                   "Number of primary mass storage COMPOOL blocks."); // TODO TIP
         putSettableConfigParameter(C82NBR, 30, true, true,
-                                   "Number of secondary mass storage COMPOOL blocks.");
+                                   "Number of secondary mass storage COMPOOL blocks."); // TODO TIP
         putSettableConfigParameter(DAYBLKS, 56, true, true,
-                                   "Number of words in a day block on the TIMER system file.");
+                                   "Number of words in a day block on the TIMER system file."); // TODO TIP
         */
 
-        // DBLMFDSEARCH not supported since we don't do directories
+        // DBLMFDSEARCH not supported since we don't do directories // TODO SHARED
         // DCLUTS not supported since we don't do lookup table entries
-        // DCMAXRERR not supported - we don't implement DC keyin
-        // DCSPLTDAD not supported - we don't implement DC keyin
+        // DCMAXRERR not supported - we don't implement DC keyin // TODO DC KEYIN
+        // DCSPLTDAD not supported - we don't implement DC keyin // TODO DC KEYIN
 
-        putSettableConfigParameter(DEDLIN, BOOLEAN, BooleanValue.TRUE, false, true,
+        putSettableConfigParameter(DEDLIN, BOOLEAN, TRUE, false, true,
                                    "true to enable deadline runs and switching levels.");
 
         // DEDRUNn not supported
 
-        /*
-        putSettableConfigParameter(DELAYSOL, false, true, true,
+        putSettableConfigParameter(DELAYSOL, BOOLEAN, FALSE, true, true,
                                    "If true, solicitation period is delayed between invalid sign-on attempts.");
-        putSettableConfigParameter(DELRMPRT, false, false, false,
+
+        putSettableConfigParameter(DELRMPRT, BOOLEAN, FALSE, false, false,
                                    "Indicates whether print files for removed (RM) runs should be printed.");
-        putSettableConfigParameter(DEMTOP, true, true, false,
+
+        putSettableConfigParameter(DEMTOP, BOOLEAN, TRUE, true, false,
                                    "Indicates whether the top separator page is to be printed by RSI demand batch printers.");
-        putSettableConfigParameter(DEQIAD, false, true, false,
+
+        putSettableConfigParameter(DEQIAD, BOOLEAN, FALSE, true, false,
                                    "If true, recoverable COMPOOL transactions if all reads/writes to TIP files are done without after-looks.");
-        */
 
         // DESMIPS not supported
-        // DIRSELECT not supported - we don't do directories
+        // DIRSELECT not supported - we don't do directories // TODO SHARED
         // DISPNOWAIT not supported - I don't think we're going to implement a dispatcher
         // DIVINTERVAL n/a
 
@@ -177,19 +191,20 @@ public class Configuration {
 
         // DLTDCOMP not supported - we don't do DLT tapes
 
-        /*
-        putSettableConfigParameter(DMPAPLVAL, 1, true, false,
+        putRestrictedConfigParameter(DMPAPLVAL, INTEGER, new IntegerValue(1), true, false,
                                    """
                                Indicates the application-level subsystem banks to be included in system dumps.
                                0: No banks included
                                1: Application level home subsystem which contains the common banks
-                               2: All application level subsystems""");
-        putSettableConfigParameter(DYNDNPACK, false, false, true,
-                                   "If true, a DN PACK is automatically issued when MFD I/O to a removable disk fails.");
-        */
+                               2: All application level subsystems""",
+                                     new IntegerRangeRestriction(0, 2));
 
-        // ECHOREM - not sure if we need to think about this; what constitutes a remote console?
-        putSettableConfigParameter(ERTDATE$OFF, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(DYNDNPACK, BOOLEAN, FALSE, false, true,
+                                   "If true, a DN PACK is automatically issued when MFD I/O to a removable disk fails.");
+
+        // ECHOREM - not sure if we need to think about this; what constitutes a remote console? // TODO CONSOLE
+
+        putSettableConfigParameter(ERTDATE$OFF, BOOLEAN, FALSE, true, false,
                                    "If true, ER TDATE$ fails with type 04 code 03 cgy type 012.");
 
         // EXPTRACE is n/a
@@ -199,32 +214,36 @@ public class Configuration {
 
         /*
         putSettableConfigParameter(FCMXLK, null, 5, true, true,
-                                   "Limits the number of TIP locks which a program can hold.");
+                                   "Limits the number of TIP locks which a program can hold."); // TODO TIP
         */
 
         // FCNUSRDADBNK is n/a
 
-        putSettableConfigParameter(FILIMAGCTRL, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(FILIMAGCTRL, BOOLEAN, FALSE, true, false,
                                    "If true, any batch runstream from an input symbiont or @RUN,/B with an @FILE image is rejected."
                                        + " Otherwise, @FILE and @ENDF images are processed.");
 
         /*
         putSettableConfigParameter(FNSCR, null, 0, true, true,
-                                   "Maximum number of files reserved for scratch file assignment.");
+                                   "Maximum number of files reserved for TIP scratch file assignment."); // TODO TIP
         putSettableConfigParameter(FNTMP, null, 0, true, true,
-                                   "Maximum number of files reserved for temporary file assignment.");
+                                   "Maximum number of files reserved for TIP temporary file assignment."); // TODO TIP
         putSettableConfigParameter(FNTRN, null, 0, true, true,
-                                   "Maximum number of permanent fixed files that can be used as training files.");
+                                   "Maximum number of permanent fixed files that can be used as TIP training files."); // TODO TIP
         putSettableConfigParameter(FORCETIPINIT, "force_tip_initialization", false, true, false,
-                                   "Specifies one or more TIP parameters has changed, indicating a TIP initializaiton must be forced on next boot.");
+                                   "Specifies one or more TIP parameters has changed, indicating a TIP initialization must be forced on next boot."); // TODO TIP
         // FQ$MFP is n/a
-        putSettableConfigParameter(FREESPACE, null, false, true, true,
+        */
+
+        putSettableConfigParameter(FREESPACE, BOOLEAN, FALSE, true, true,
                                    "Indicates whether TIP freespace functions are available.");
-        // FSMSWTIME is always true
-        putSettableConfigParameter(GCCMIN, null, 0, false, true,
+
+        putFixedConfigParameter(FSMSWTIME, BOOLEAN, TRUE,
+                                "If true, freespace timestamps are formatted as MODSWTIME$ - otherwise, as TDATE$.");
+
+        putSettableConfigParameter(GCCMIN, INTEGER, ZERO, false, true,
                                    "Indicates the maximum number of terminals allowed concurrently active via RSI$."
                                        + " If GCCMIN > 0 then RSICNT must be > 0.");
-        */
 
         putRestrictedConfigParameter(GENFASGMNE, STRING, new StringValue("F"), true, false,
                                      "Assign mnemonic used to create SYS$*GENF$.",
@@ -240,53 +259,60 @@ public class Configuration {
 
         /*
         putSettableConfigParameter(HVTIP, "hvtip_library_max", 0, true, true,
-                                   "Max number of HVTIP libraries.");
+                                   "Max number of HVTIP libraries."); // TODO TIP
         putSettableConfigParameter(HVTIPMACT, "allow_hvtip_multi_activity", false, true, true,
-                                   "Controls whether HVTIP programs can have multiple activities during calls or transfers between HVTIP banks.");
+                                   "Controls whether HVTIP programs can have multiple activities during calls or transfers between HVTIP banks."); // TODO TIP
         putSettableConfigParameter(INHBAUTOALLC, "inhibit_tip_auto_allocation", false, true, true,
-                                   "Controls whether auto allocation can occur during TIP/Exec file writes.");
+                                   "Controls whether auto allocation can occur during TIP/Exec file writes."); // TODO TIP
+
         putSettableConfigParameter(INHBTRANSM, "inhibit_transmission", false, true, false,
                                    "If true, a user is not allowed to use @@TM or @SYM, or to transmit unsolicited data to terminals.");
-                                   */
+        */
 
-        putSettableConfigParameter(IODBUG, BOOLEAN, BooleanValue.FALSE, false, true,
+        putSettableConfigParameter(IODBUG, BOOLEAN, FALSE, false, true,
                                    "If true, all debug aids are enabled for I/O.");
 
         /*
         putSettableConfigParameter(IOMAXRTIME, "io_maximum_recovery_time", 0, true, false,
                                    "Maximum number of seconds to allow I/O timeout recovery per retry (0-63)."); // TODO maybe not supported
+        */
+
         // IOTASGMNE is n/a
         // IOTFLXTRAN is n/a
         // IOTINTRES is n/a
         // IOTMAXCYC is n/a
         // IOTMAXSIZ is n/a
         // IPIPRE not supported - I think
+
+        /*
         putSettableConfigParameter(KONSBL, "u3_block_length", 0, true, true,
-                                   "Length in words of a U3 KONS block.");
+                                   "Length in words of a U3 KONS block."); // TODO TIP
         putSettableConfigParameter(KONSEC, "u1_area_length", 4, true, true,
-                                   "Length in words of the write-protected U1 area of KONS.");
+                                   "Length in words of the write-protected U1 area of KONS."); // TODO TIP
         putSettableConfigParameter(KONSFL, "length_of_kons_areas", 0, true, true,
-                                   "Length in words of U1, U2, U3, and security directory areas of KONS.");
+                                   "Length in words of U1, U2, U3, and security directory areas of KONS."); // TODO TIP
         putSettableConfigParameter(KONSPW, "u3_password_required", false, true, true,
-                                   "If true, a password is required for access to a U3 block.");
+                                   "If true, a password is required for access to a U3 block."); // TODO TIP
         putSettableConfigParameter(KONU3L, "u3_user_area_length", 0, true, true,
-                                   "Length in words of KONS U3 area.");
+                                   "Length in words of KONS U3 area."); // TODO TIP
         putSettableConfigParameter(KSECNB, "u3_security_entries", 0, true, true,
-                                   "Number of entries in the security directory for U3.");
-        putSettableConfigParameter(LABOUT, "label_print_output", false, true, false,
-                                   "If true, security labels and sequence numbers are printed.");
-        putSettableConfigParameter(LABPAG, "label_every_page", false, true, false,
-                                   "If true, security labels appear on every page of printouts - otherwise, labels appear only on banner and trailer pages.");
+                                   "Number of entries in the security directory for U3."); // TODO TIP
         */
 
-        putFixedConfigParameter(LARGEFILES, BOOLEAN, BooleanValue.TRUE,
+        putSettableConfigParameter(LABOUT, BOOLEAN, FALSE, true, false,
+                                   "If true, security labels and sequence numbers are printed.");
+
+        putSettableConfigParameter(LABPAG, BOOLEAN, FALSE, true, false,
+                                   "If true, security labels appear on every page of printouts - otherwise, labels appear only on banner and trailer pages.");
+
+        putFixedConfigParameter(LARGEFILES, BOOLEAN, TRUE,
                                 "If true, large files can be allocated. This slightly alters the format of certain MFD entries.");
 
         putRestrictedConfigParameter(LIBASGMNE, STRING, new StringValue("F"), true, false,
                                      "Assign mnemonic used to create SYS$*LIB$.",
                                      new MnemonicRestriction(MNEMONIC_TABLE));
 
-        putRestrictedConfigParameter(LIBINTRES, INTEGER, IntegerValue.ZERO, true, false,
+        putRestrictedConfigParameter(LIBINTRES, INTEGER, ZERO, true, false,
                                      "Initial reserve used to create SYS$*LIB$. Must be between 0 and 262143.",
                                      new IntegerRangeRestriction(0, 262143));
 
@@ -296,17 +322,23 @@ public class Configuration {
 
         // LOG*** are all n/a
 
+        putRestrictedConfigParameter(LOOKAHDRND, INTEGER, new IntegerValue(1), true, false,
+                                     "Number of tracks to allocate (beyond initial reserve) when allocating space - 1 to 10000.",
+                                     new IntegerRangeRestriction(1, 10000));
+
+        putRestrictedConfigParameter(LOOKAHDSEQ, INTEGER, new IntegerValue(32), true, false,
+                                     "Number of tracks to allocate when allocating space at or beyond the end of a file.",
+                                     new IntegerRangeRestriction(1, 10000));
+
         /*
-        putSettableConfigParameter(LOOKAHDRND, "allocation_look_ahead_random", 1, true, false,
-                                   "Number of tracks to allocate (beyond initial reserve) when allocating space - 1 to 10000.");
-        putSettableConfigParameter(LOOKAHDSEQ, "allocation_look_ahead_sequential", 32, true, false,
-                                   "Number of tracks to allocate when allocating space at or beyond the end of a file.");
         putSettableConfigParameter(LNKBLKS, null, 28, true, true,
-                                   "Number of words in a link block on the TIMER system file.");
+                                   "Number of words in a link block on the TIMER system file."); // TODO TIP
+        */
+
         // LTODCOMP not supported - we don't do LTO
-        putSettableConfigParameter(MACHGENPASS, "machine_generated_passwords", false, true, false,
+
+        putSettableConfigParameter(MACHGENPASS, BOOLEAN, FALSE, true, false,
                                    "If true, machine-generated passwords are enabled.");
-                                   */
 
         putRestrictedConfigParameter(MAXATMP, INTEGER, new IntegerValue(5), true, false,
                                      "Max number of sign-on attempts a user is allowed to successfully sign on to a host.",
@@ -358,7 +390,7 @@ public class Configuration {
 
         /*
         putSettableConfigParameter(MBUFCT, null, 56, true, true,
-                                   "Length in words of primary and secondary mass storage COMPOOL blocks.");
+                                   "Length in words of primary and secondary mass storage COMPOOL blocks."); // TODO TIP
         */
 
         putRestrictedConfigParameter(MDFALT, STRING, new StringValue("F"), true, false,
@@ -367,45 +399,53 @@ public class Configuration {
 
         // MEMFLSZ not supported
 
-        putFixedConfigParameter(MFDMSWTIME, BOOLEAN, BooleanValue.TRUE,
+        putFixedConfigParameter(MFDMSWTIME, BOOLEAN, TRUE,
                                 "If true, MFD timestamps are stored in MODSWTIME format. If false, they are stored in TDATE$ format.");
 
-        // MFDONXPCSTD is n/a
-        // MFDONSPCSHR is n/a
-        // MFDSHMSWTIME is n/a
+        // MFDONXPCSTD is n/a // TODO SHARED
+        // MFDONSPCSHR is n/a // TODO SHARED
+        // MFDSHMSWTIME is n/a // TODO SHARED
 
         /*
         putSettableConfigParameter(MINBLKS, null, 28, true, true,
-                                   "Number of words in a minute block on the TIMER system file.");
-        // MINMPS is n/a
-        putSettableConfigParameter(MINPASSDAY, "default_min_days_password", 1, true, false,
-                                   "Minimum number of days before a password may be replaced.");
-        putSettableConfigParameter(MINPASSLEN, "min_password_length", 8, true, false,
-                                   "Minimum number of characters for a new password.");
+                                   "Number of words in a minute block on the TIMER system file."); // TODO TIP
         */
+
+        // MINMPS is n/a
+
+        putRestrictedConfigParameter(MINPASSDAY, INTEGER, new IntegerValue(1), true, false,
+                                     "Minimum number of days before a password may be replaced.",
+                                     new IntegerRangeRestriction(0, 262142));
+
+        putRestrictedConfigParameter(MINPASSLEN, INTEGER, new IntegerValue(8), true, false,
+                                     "Minimum number of characters for a new password.",
+                                     new IntegerRangeRestriction(1, 18));
 
         putRestrictedConfigParameter(MSTRACC, STRING, null, true, false,
                                      "Master account - if null, the operator will be prompted at boot time.",
                                      new AccountIdRestriction());
 
-        // MMGRMSWTIME if we do media mgr, we'll always use modified SWTIME
+        putFixedConfigParameter(MMGRMSWTIME, BOOLEAN, TRUE,
+                                "If true, media manager timestamps are MODSWTIME format - otherwise they are TDATE$.");
 
-        /*
-        putSettableConfigParameter(MXTMIPSUPS, "max_time_ip_only", 0, true, false,
+        putRestrictedConfigParameter(MXTMIPSUPS, INTEGER, ZERO, true, false,
                                    """
                                Indicates method of calculating max time check.
                                0: Total SUPs used for demand, batch, and TIP.
                                1: Only IP SUPs are used for demand, batch, and TIP.
                                2: Total SUPs used for demand and batch; IP SUPs used for TIP.
                                3: Total SUPs are used for demand and batch; TIP programs depend on VALTAB S indicator.
-                               4: Only IP SUPs are used for demand and batch; TIP programs depend on VALTAB S indicator.""");
-        // NOTXPCDESTAG is n/a
-        putSettableConfigParameter(NPECTRL, "npe_control", 1, true, false,
+                               4: Only IP SUPs are used for demand and batch; TIP programs depend on VALTAB S indicator.""",
+                                     new IntegerRangeRestriction(0, 4));
+
+        // NOTXPCDESTAG is n/a // TODO SHARED
+
+        putRestrictedConfigParameter(NPECTRL, INTEGER, new IntegerValue(1), true, false,
                                    """
                                Controls access to shared banks.
                                1: Prevents shared banks from being created with GAP of WRITE or EXECUTE.
-                               2: Allows shared banks to be created with GAP equal to WRITE or EXECUTE.""");
-        */
+                               2: Allows shared banks to be created with GAP equal to WRITE or EXECUTE.""",
+                                     new IntegerRangeRestriction(1, 2));
 
         // OPASTHRTBF is n/a
 
@@ -418,29 +458,37 @@ public class Configuration {
 
         /*
         putSettableConfigParameter(OWNEDRWKEYS, "owned_file_read_write_keys", false, true, true,
-                                   "Indicates whether both ownership and read/write keys are enforced on owned files.");
+                                   "Indicates whether both ownership and read/write keys are enforced on owned files."); // TODO SENTRY
         */
 
-        putSettableConfigParameter(PAGEJECT, BOOLEAN, BooleanValue.TRUE, true, false,
+        putSettableConfigParameter(PAGEJECT, BOOLEAN, TRUE, true, false,
                                    "If set, page eject occurs before processor calls unless overridden by @SETC.");
 
-        putSettableConfigParameter(PAKOVF, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(PAKOVF, BOOLEAN, FALSE, true, false,
                                    "If set, a console message is displayed if a removable disk allocation was rejected.");
 
         // PANICASGMNE is n/a
 
         /*
         putSettableConfigParameter(PASMAX, null, 0, true, false,
-                                   "Max number of output and pass-off messages for a transaction. If 0, there is no limit.");
-        // PBKDF2ITER is n/a... I think
-        putSettableConfigParameter(PCHHDG, null, false, false, true,
-                                   "If true, we do NOT punch a heading card.");
-        // PCTMAX is n/a
-        // PGMFLMSWTIME is always true
-        // PRDDSTBOOT is n/a
-        putSettableConfigParameter(PRIRTP, null, 0, true, true,
-                                   "Max number of transaction programs that can be initialized as resident.");
+                                   "Max number of output and pass-off messages for a transaction. If 0, there is no limit."); // TODO TIP
         */
+
+        // PBKDF2ITER is n/a... I think
+
+        putSettableConfigParameter(PCHHDG, BOOLEAN, FALSE, false, true,
+                                   "If true, we do NOT punch a heading card.");
+
+        // PCTMAX is n/a
+
+        putFixedConfigParameter(PGMFLMSWTIME, BOOLEAN, TRUE,
+                                "If true, program file timestamps are MODSWTIME format - otherwise they are TDATE$.");
+
+        // PRDDSTBOOT is n/a // TODO SHARED XPC
+
+        putRestrictedConfigParameter(PRIRTP, INTEGER, ZERO, true, true,
+                                     "Max number of transaction programs that can be initialized as resident.",
+                                     new IntegerRangeRestriction(0, 1000));
 
         putRestrictedConfigParameter(PRIVAC, STRING, new StringValue("123456"), true, false,
                                      "Tape labeling blocks are not automatically read for runs with this account number.",
@@ -452,18 +500,18 @@ public class Configuration {
                                      "Maximum line spacing permitted for each print request - max is 03777.",
                                      new IntegerRangeRestriction(1, 03777));
 
-        putFixedConfigParameter(R2MSWTIME, BOOLEAN, BooleanValue.TRUE,
+        putFixedConfigParameter(R2MSWTIME, BOOLEAN, TRUE,
                                 "If true, R2 is loaded with MODSWTIME format. If false, it is loaded with TDATE$ format.");
 
         putRestrictedConfigParameter(RECSIZ, INTEGER, new IntegerValue(4), true, true,
                                      "Sectors per record for account file.",
                                      new IntegerRangeRestriction(1, 8));
 
-        putSettableConfigParameter(REJCONFLTOPT, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(REJCONFLTOPT, BOOLEAN, FALSE, true, false,
                                    "If true, subsequent assign attempts which include options not specified on initial assign are rejected.\n"
                                        + "If false, no subsequent assign image is rejected (except for A, C, T, and U conflicts).");
 
-        putRestrictedConfigParameter(RELUNUSEDREM, INTEGER, IntegerValue.ZERO, true, false,
+        putRestrictedConfigParameter(RELUNUSEDREM, INTEGER, ZERO, true, false,
                                    """
                                Action taken for unused initial reserve on removable disk files:
                                0: Unused allocated space is not released when the file is released.
@@ -475,7 +523,7 @@ public class Configuration {
                                              new IntegerValue(1),
                                              new IntegerValue(2), }));
 
-        putRestrictedConfigParameter(RELUNUSEDRES, INTEGER, IntegerValue.ZERO, true, false,
+        putRestrictedConfigParameter(RELUNUSEDRES, INTEGER, ZERO, true, false,
                                    """
                                Action taken for unused allocations on fixed disk.
                                0: Unused initial reserve is not released.
@@ -487,43 +535,46 @@ public class Configuration {
                                              new IntegerValue(1),
                                              new IntegerValue(2), }));
 
-        /*
-        putSettableConfigParameter(REMBATCHLPI, "remote_batch_6_lpi", false, true, false,
+        putSettableConfigParameter(REMBATCHLPI, BOOLEAN, FALSE, true, false,
                                    """
                                Default number of lines-per-inch for remote batch printers when * is specified in LPI field.
                                false: Remote batch printers use 8 LPI.
                                true: Remote batch printers use 6 LPI.
                                """);
-        putSettableConfigParameter(REMTOP, "rsi_remote_top_separator", true, true, false,
+
+        putSettableConfigParameter(REMTOP, BOOLEAN, TRUE, true, false,
                                    "Indicates whether the top separator page is printed by RSI remote batch printers.");
-        */
 
         // REQNBRPST0 is n/a
         // REQNBRPST1 is n/a
 
-        putSettableConfigParameter(RESDUCLR, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(RESDUCLR, BOOLEAN, FALSE, true, false,
                                    "Purges information left in mass storage and GRS to prevent exposure between users or applications.");
 
-        putSettableConfigParameter(RESTRICT, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(RESTRICT, BOOLEAN, FALSE, true, false,
                                    "Restricts auto start of runs during SYS run.");
 
-        putSettableConfigParameter(REWDRV, BOOLEAN, BooleanValue.FALSE, false, true,
+        putSettableConfigParameter(REWDRV, BOOLEAN, FALSE, false, true,
                                    "If true, operator is asked whether reserve drives should have EOF written and be rewound at recovery boot.");
 
-        /*
-        putSettableConfigParameter(RLTIME, null, 12, false, true,
-                                   "Max lock time in minutes for RL$ lock to be held.");
-        putSettableConfigParameter(RPMU, "rem_pack_mfd_update", 0, true, false,
+        putRestrictedConfigParameter(RLTIME, INTEGER, new IntegerValue(12), false, true,
+                                     "Max lock time in minutes for RL$ lock to be held.",
+                                     new IntegerRangeRestriction(1, 60));
+
+        putRestrictedConfigParameter(RPMU, INTEGER, ZERO, true, false,
                                    """
                                Controls whether MFD on removable packs is automatically updated.
                                0: No automatic DAD table updates are done for removable pack files. Such information is updated only when the file is @FREE'd.
                                1: Auto updates are done for files registered with TIP.
-                               2: Auto updates are done for all files on removable packs.""");
-        putSettableConfigParameter(RSIBTM, "rsi_bottom_separator", true, true, false,
+                               2: Auto updates are done for all files on removable packs.""",
+                                     new IntegerRangeRestriction(0, 2));
+
+        putSettableConfigParameter(RSIBTM, BOOLEAN, TRUE, true, false,
                                    "Indicates whether the bottom separator page is printed by RSI remote batch printers.");
-        putSettableConfigParameter(RSICNT, null, 8, false, true,
-                                   "Maximum number of terminals for RSI including RSI$ remote, batch, and demand.");
-        */
+
+        putRestrictedConfigParameter(RSICNT, INTEGER, new IntegerValue(8), false, true,
+                                   "Maximum number of terminals for RSI including RSI$ remote, batch, and demand.",
+                                     new IntegerRangeRestriction(1, 256));
 
         putRestrictedConfigParameter(RUNASGMNE, STRING, new StringValue("F2"), true, false,
                                      "Assign mnemonic for SYS$*RUN$.",
@@ -547,47 +598,48 @@ public class Configuration {
                                      "Initial reserve used for creating SEC@ACR$ file.",
                                      new IntegerRangeRestriction(0, 262143));
 
-        /*
-        putSettableConfigParameter(SAFHDG, null, 1, false, true,
+        putSettableConfigParameter(SAFHDG, INTEGER, new IntegerValue(1), false, true,
                                    "Number of blank lines between heading and first line of print.");
-        */
 
-        // SB**** is n/a - we do not do SIP
+        // SB**** is n/a  TODO SIP
         // SCHKEYLVL - not supported for now
         // SCHKEYOPTS - not supported for now
         // SCPIPSUPS is n/a
-        // SDYNDNPACK not supported - we don't do shared directories
+        // SDYNDNPACK not supported // TODO SHARED
 
         putRestrictedConfigParameter(SECOFFDEF, STRING, null, true, false,
                                      "Specifies a new security officer user-id at boot time.",
                                      new UserIdRestriction());
 
-        // SENTRY is currently not supported
+        putSettableConfigParameter(SENTRY, BOOLEAN, FALSE, true, true,
+                                   "Enables security levels beyond fundamental security as well as SENTRY control.");
 
-        /*
-        putSettableConfigParameter(SEPPAGE, null, false, false, true,
+        putSettableConfigParameter(SEPPAGE, BOOLEAN, FALSE, false, true,
                                    "Indicates whether the sequence number is printed on top and bottom six lines of separator pages.");
-         */
 
-        // SFTIMESTAMP is not supported
+        putSettableConfigParameter(SFTIMESTAMP, BOOLEAN, FALSE, true, false,
+                                   "Causes timestamps to appear on the console for START and FIN messages.");
 
-        /*
-        putSettableConfigParameter(SHDGSP, null, 5, false, true,
-                                   "Number of lines at top of standard page (including heading).");
-        // SHRDFCDFLT not supported - not doing shared directories
-        // SHRDMSAVL not supported - not doing shared directories
-        // SHRDMSTRT not supported - not doing shared directories
-        putSettableConfigParameter(SIMLUATECONS, "simulate_console_output", true, true, false,
+        putRestrictedConfigParameter(SHDGSP, INTEGER, new IntegerValue(5), false, true,
+                                     "Number of lines at top of standard page (including heading).",
+                                     new IntegerRangeRestriction(0, 10));
+
+        // SHRDFCDFLT not supported // TODO SHARED
+        // SHRDMSAVL not supported // TODO SHARED
+        // SHRDMSTRT not supported // TODO SHARED
+
+        putSettableConfigParameter(SIMLUATECONS, BOOLEAN, TRUE, true, false,
                                    "If true, two leading spaces are inserted on all @@CONS read-only messages.");
-        */
 
-        // SIPIO is n/a
-        // SITEFMTAIL - i think this is n/a
+        // SIPIO is n/a // TODO SIP
 
-        putSettableConfigParameter(SKDATA, BOOLEAN, BooleanValue.TRUE, false, true,
+        putSettableConfigParameter(SITEFMTAIL, BOOLEAN, FALSE, true, true,
+                                   "If true, a site-specific termination task produces the tail sheet.");
+
+        putSettableConfigParameter(SKDATA, BOOLEAN, TRUE, false, true,
                                    "If true, skip-data is supported on I/O.");
 
-        putSettableConfigParameter(SMALIN, BOOLEAN, BooleanValue.TRUE, false, true,
+        putSettableConfigParameter(SMALIN, BOOLEAN, TRUE, false, true,
                                    "Any printers with formatter changes which might produce position errors will cause a "
                                        + "console message to be printed at the end of the file.");
 
@@ -616,21 +668,23 @@ public class Configuration {
                                      "System standard assign mnemonic for tape assignments for exec and other processors.",
                                      new MnemonicRestriction(MNEMONIC_TABLE));
 
-        putSettableConfigParameter(SSPBP, BOOLEAN, BooleanValue.TRUE, true, true,
+        putSettableConfigParameter(SSPBP, BOOLEAN, TRUE, true, true,
                                    "Files are private by account instead of by project-id.");
 
-        /*
-        putSettableConfigParameter(SSPROTECT, "subsystem_entry_protection", false, true, true,
+        putSettableConfigParameter(SSPROTECT, BOOLEAN, FALSE, true, true,
                                    "Enables enforcement of subsystem entry point protection.");
-        putSettableConfigParameter(STDBOT, null, 3, false, true,
-                                   "Number of blank lines at the bottom of a standard page.");
-        */
 
-        putSettableConfigParameter(STDMSAVL, FLOAT, new FloatValue(3.00), true, false,
-                                   "Percent of mass storage which should be available when ROLOUT completes.");
+        putRestrictedConfigParameter(STDBOT, INTEGER, new IntegerValue(3), false, true,
+                                     "Number of blank lines at the bottom of a standard page.",
+                                     new IntegerRangeRestriction(0, 10));
 
-        putSettableConfigParameter(STDMSTRT, FLOAT, new FloatValue(1.50), true, false,
-                                   "ROLOUT starts when the percentage of accessible mass storage reaches or goes below this value.");
+        putRestrictedConfigParameter(STDMSAVL, FLOAT, new FloatValue(3.00), true, false,
+                                     "Percent of mass storage which should be available when ROLOUT completes.",
+                                     new FloatRangeRestriction(1.0, 33.0));
+
+        putRestrictedConfigParameter(STDMSTRT, FLOAT, new FloatValue(1.50), true, false,
+                                     "ROLOUT starts when the percentage of accessible mass storage reaches or goes below this value.",
+                                     new FloatRangeRestriction(0.05, 10.0));
 
         putSettableConfigParameter(STDPAG, INTEGER, new IntegerValue(66), false, true,
                                    "Total number of lines on a standard page");
@@ -649,13 +703,13 @@ public class Configuration {
                                      "Size of symbiont buffers. Value must be a multiple of 224, and vary from 224 to 7168.",
                                      new IntegerRangeRestriction(224, 7168),
                                      new IntegerMultipleRestriction(224));
-        putSettableConfigParameter(SYMJK, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(SYMJK, BOOLEAN, FALSE, true, false,
                                    "Indicates whether users may use the J and K options on @SYM");
 
         // SYSBASGMNE is n/a
         // SYSBINTRES is n/a
 
-        putSettableConfigParameter(SYSTRMTSK, BOOLEAN, BooleanValue.TRUE, true, false,
+        putSettableConfigParameter(SYSTRMTSK, BOOLEAN, TRUE, true, false,
                                    "If true, the configured run termination task is scheduled for SYS at SYS FIN.");
 
         // TAPBUF is not supported - we do not do reel tapes
@@ -674,79 +728,110 @@ public class Configuration {
                                          " just before termination of the runs.",
                                      new ElementNameRestriction());
 
-        /*
-        putSettableConfigParameter(TFCMSG, null, false, true, false,
+        putSettableConfigParameter(TFCMSG, BOOLEAN, FALSE, true, false,
                                    "Controls whether file control warning messages are issued.");
-        putSettableConfigParameter(TFEXP, "default_tape_expiration", 60, true, true,
-                                   "Number of days which a file written on tape is read- or write-protected.");
-        putSettableConfigParameter(TFMAX, "max_tape_expiration", 360, true, true,
-                                   "Maximum number of days that can be specified in the expiration field of a tape @ASG image.");
+
+        putRestrictedConfigParameter(TFEXP, INTEGER, new IntegerValue(60), true, true,
+                                     "Number of days which a file written on tape is read- or write-protected.",
+                                     new IntegerRangeRestriction(0, 4095));
+
+        putRestrictedConfigParameter(TFMAX, INTEGER, new IntegerValue(360), true, true,
+                                     "Maximum number of days that can be specified in the expiration field of a tape @ASG image.",
+                                     new IntegerRangeRestriction(0, 4095));
+
+        /*
         putSettableConfigParameter(TFPMAX, null, 100, true, true,
-                                   "Max number of permanent TIP files.");
+                                   "Max number of permanent TIP files."); // TODO TIP
         putSettableConfigParameter(TFSEC, "tip_file_security", false, true, true,
-                                   "Enables TIP file security.");
+                                   "Enables TIP file security."); // TODO TIP
         putSettableConfigParameter(TIMCTRL, null, false, true, true,
-                                   "Enables TIMER control functions.");
+                                   "Enables TIMER control functions."); // TODO TIP
         putSettableConfigParameter(TIMDAYS, null, 0, true, true,
-                                   "Number of future days which TIMER scheduling requests are kept. Max value is 127.");
+                                   "Number of future days which TIMER scheduling requests are kept. Max value is 127."); // TODO TIP
         putSettableConfigParameter(TIMINT, null, false, true, true,
                                    "Controls TIMER cleanup. If true, the TIMER file is cleared on all boots."
-                                       + " Otherwise, the TIMER file is cleared only on initial boots.");
+                                       + " Otherwise, the TIMER file is cleared only on initial boots."); // TODO TIP
         putSettableConfigParameter(TIMLNKBLKS, null, 0, true, true,
-                                   "Number of link blocks contained in the TIMER system file for use when a day or minute block overflows.");
-        putSettableConfigParameter(TIP, null, true, true, true,
+                                   "Number of link blocks contained in the TIMER system file for use when a day or minute block overflows."); // TODO TIP
+        */
+
+        putSettableConfigParameter(TIP, BOOLEAN, TRUE, true, true,
                                    "Controls whether TIP is enabled.");
+
+        /*
         putSettableConfigParameter(TIPABSCALLSS, "tip_abs_call_ss", true, true, true,
-                                   "Indicates whether basic mode transactions are loaded with extended mode stack banks.");
+                                   "Indicates whether basic mode transactions are loaded with extended mode stack banks."); // TODO TIP
         putSettableConfigParameter(TIPAGFILES, "tip_application_group_files", 0, true, true,
                                    "If true, we support the system max of 262,000 TIP file numbers and 262,000 TIP/Exec files."
-                                       + " Otherwise, the maximum number of either value is 4095.");
+                                       + " Otherwise, the maximum number of either value is 4095."); // TODO TIP
+        */
+
         // TIPDUPRSL is not supported
-        putSettableConfigParameter(TIPFDR, null, "", true, true,
+
+        putRestrictedConfigParameter(TIPFDR, CHARACTER, CharacterValue.NUL, true, true,
                                    """
                                Controls TIP file directory recovery on system boots.
                                blank: The operator is given the choice of initializing or recovering the TIP file directory
                                "R": The TIP file directory is recovered
-                               "I": The TIP file directory is initialized""");
+                               "I": The TIP file directory is initialized""",
+                                     new EnumeratedRestriction(
+                                         new Value[]{
+                                             CharacterValue.NUL,
+                                             new CharacterValue('I'),
+                                             new CharacterValue('R'),
+                                         }
+                                     ));
+
+        /*
         putSettableConfigParameter(TIPFSMSGLMT, "tip_fs_message_limit", 8, true, false,
-                                   "Max number of Freespace messages displayed on the system console over a 6-second interval. Max is 500.");
-        putSettableConfigParameter(TIPINIT, null, false, true, true,
+                                   "Max number of Freespace messages displayed on the system console over a 6-second interval. Max is 500."); // TODO TIP
+        */
+
+        putSettableConfigParameter(TIPINIT, BOOLEAN, FALSE, true, true,
                                    "If true, TIP is initialized automatically. Otherwise, the operator is given the option of initializing TIP.");
+
+        /*
         putSettableConfigParameter(TIPMEF, null, 100, true, true,
-                                   "Max number of Exec files which can be registered with TIP file control.");
+                                   "Max number of Exec files which can be registered with TIP file control."); // TODO TIP
+        */
+
         // TODO TIPPK1, TIPPK2, TIPPK3, TIPPK4, TIPPK5, TIPPK6, TIPPK7, TIPPK8
         // TODO TIPRTPSDEACT
         // TODO TIPSECUSR
         // TODO TIPTPS
         // TODO TIPVIEWPRINT
         // TODO TIPWRD
-        putSettableConfigParameter(TLAUTO, "automatic_tape_labeling", false, true, false,
+
+        putSettableConfigParameter(TLAUTO, BOOLEAN, FALSE, true, false,
                                    "If true, all tapes assigned without J option are labeled when written.");
-                                   */
 
         // TLAVREBREC is not supported
         // TLEBCDIC is not supported
 
-        /*
-        putFixedConfigParameter(TLPRE4, "create_pre_version4_tape", false,
+        putFixedConfigParameter(TLPRE4, BOOLEAN, FALSE,
                                 "If true, tape labels are written in pre-version 4 format. If false, they are written in version 4 format.");
-        putSettableConfigParameter(TLSIMP, "prelabeled_tapes_required", true, true, true,
+
+        putSettableConfigParameter(TLSIMP, BOOLEAN, TRUE, true, true,
                                    "If true, all tapes assigned without J option must be labeled.");
-        putSettableConfigParameter(TLSUB, "reel_nbr_substitution_allowed", false, true, true,
+
+        putSettableConfigParameter(TLSUB, BOOLEAN, FALSE, true, true,
                                    "If true, reel number substitution is allowed on WRONG REEL, BAD LABEL, and IS TAPE messages.");
-        putSettableConfigParameter(TMPFILETOMEM, "temporary_files_to_memory", false, true, false,
+
+        putSettableConfigParameter(TMPFILETOMEM, BOOLEAN, FALSE, true, false,
                                    "When set, all temporary fixed file assignments are FMEM or DMEM, making the files memory files.");
+
         // TODO TMSEC (TIP)
-        putSettableConfigParameter(TPBLKNBR, "tape_block_numbering", false, true, true,
+
+        putSettableConfigParameter(TPBLKNBR, BOOLEAN, FALSE, true, true,
                                    "If true, all tapes not specified as BLKOFF have block numbering turned on.");
-        putSettableConfigParameter(TPDCOMP, "tape_data_compression", false, true, true,
+
+        putSettableConfigParameter(TPDCOMP, BOOLEAN, FALSE, true, true,
                                    "If true, all tapes not specified as CMPOFF have data compression turned on.");
-        */
 
         // TODO TPDEV1 : TPDEV8 (TIP)
         // TPDIRI is n/a
 
-        putRestrictedConfigParameter(TPFMAXSIZ, INTEGER, IntegerValue.ZERO, true, false,
+        putRestrictedConfigParameter(TPFMAXSIZ, INTEGER, ZERO, true, false,
                                      "Initial max size of TPF$ files.",
                                      new IntegerRangeRestriction(0, 252143));
 
@@ -766,10 +851,8 @@ public class Configuration {
         // TODO TPMUSRMSK (TIP)
         // TODO TPNRTN (TIP)
 
-        /*
-        putSettableConfigParameter(TPOWN, "tape_access_restrict_by_account", false, true, true,
+        putSettableConfigParameter(TPOWN, BOOLEAN, FALSE, true, true,
                                    "If true, access to a tape is restricted by the account number.");
-         */
 
         // TODO TPQUAL (TIP)
         // TODO TPRKEY (TIP)
@@ -782,27 +865,23 @@ public class Configuration {
         // TODO TPS3L1, TPS3L2 (TIP)
         // TODO TPWKEY (TIP)
 
-        putSettableConfigParameter(TRMXCO, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(TRMXCO, BOOLEAN, FALSE, true, false,
                                    "If true, a run is terminated when the maximum number of cards are punched.");
-        putSettableConfigParameter(TRMXPO, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(TRMXPO, BOOLEAN, FALSE, true, false,
                                    "If true, a run is terminated when the maximum number of pages are printed.");
-        putSettableConfigParameter(TRMXT, BOOLEAN, BooleanValue.FALSE, true, false,
+        putSettableConfigParameter(TRMXT, BOOLEAN, FALSE, true, false,
                                    "If true, a run is terminated when the maximum amount of time elapses, as specified on the @RUN statement.");
 
         // TODO TRMXVT (TIP)
 
-        /*
-        putSettableConfigParameter(TSS, "tss_control", true, true, true,
+        putSettableConfigParameter(TSS, BOOLEAN, TRUE, true, true,
                                    "Enables terminal security capabilities.");
-                                   */
 
         // TVSL is n/a (for now)
         // UNIVAC is n/a
 
-        /*
-        putSettableConfigParameter(UNLRELVERIFY, "unlabeled_reel_verification", false, true, false,
+        putSettableConfigParameter(UNLRELVERIFY, BOOLEAN, FALSE, true, false,
                                    "If set, the reel-id of an unlabeled tape is verified before the first I/O is processed.");
-                                   */
 
         putRestrictedConfigParameter(USERASGMNE, STRING, new StringValue("F"), true, false,
                                      "Assign mnemonic used to create SYS$*SEC@USERID$ file.",
@@ -812,10 +891,8 @@ public class Configuration {
                                      "Initial reserve used to create SYS$*SEC@USERID$ file.",
                                      new IntegerRangeRestriction(0, 262143));
 
-        /*
-        putSettableConfigParameter(USERON, "quota_enforcement_by_userid", false, true, true,
+        putSettableConfigParameter(USERON, BOOLEAN, FALSE, true, true,
                                    "Controls quota enforcement by user-ids.");
-                                   */
 
         // VRTQLVL is n/a
         // VTHRDISK is n/a
@@ -828,16 +905,16 @@ public class Configuration {
                                      "Default mnemonic for word-addressable files.",
                                      new MnemonicRestriction(MNEMONIC_TABLE));
 
-        // XCACHESECFIL is n/a
-        // XPDLCLINTV is n/a
-        // XPDLCLSTRT is n/a
-        // XPDLOCAL is n/a
-        // XPDMAXIO is n/a
-        // XPDSHARED is n/a
-        // XPDSHRDINTV is n/a
-        // XPDSHRDSTRT is n/a
+        // XCACHESECFIL is n/a // TODO SHARED
+        // XPDLCLINTV is n/a // TODO SHARED
+        // XPDLCLSTRT is n/a // TODO SHARED
+        // XPDLOCAL is n/a // TODO SHARED
+        // XPDMAXIO is n/a // TODO SHARED
+        // XPDSHARED is n/a // TODO SHARED
+        // XPDSHRDINTV is n/a // TODO SHARED
+        // XPDSHRDSTRT is n/a // TODO SHARED
 
-        putSettableConfigParameter(ZOPTBATCHREJ, BOOLEAN, BooleanValue.TRUE, true, false,
+        putSettableConfigParameter(ZOPTBATCHREJ, BOOLEAN, TRUE, true, false,
                                    """
                                              If true, a Z option on facility images for a batch run causes the image to be rejected.
                                              If false, a Z option is ignored for batch runs.""");

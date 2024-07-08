@@ -154,7 +154,9 @@ public class Main {
         var cfg = new Configuration();
         if (context._configFileName != null) {
             try {
-                cfg.updateFromFile(context._configFileName);
+                if (!cfg.updateFromFile(context._configFileName)) {
+                    // TODO fail
+                }
             } catch (IOException ex) {
                 System.err.println(ex.getMessage());
                 return;
