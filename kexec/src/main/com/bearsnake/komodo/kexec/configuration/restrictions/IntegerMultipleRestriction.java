@@ -5,23 +5,20 @@
 package com.bearsnake.komodo.kexec.configuration.restrictions;
 
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
-import com.bearsnake.komodo.kexec.configuration.exceptions.IntegerRangeException;
+import com.bearsnake.komodo.kexec.configuration.exceptions.IntegerMultipleException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ValueTypeException;
 import com.bearsnake.komodo.kexec.configuration.values.IntegerValue;
 import com.bearsnake.komodo.kexec.configuration.values.Value;
 import com.bearsnake.komodo.kexec.configuration.values.ValueType;
 
-public class IntegerRangeRestriction implements Restriction {
+public class IntegerMultipleRestriction implements Restriction {
 
-    private final int _min;
-    private final int _max;
+    private final int _factor;
 
-    public IntegerRangeRestriction(
-        final int min,
-        final int max
+    public IntegerMultipleRestriction(
+        final int factor
     ) {
-        _min = min;
-        _max = max;
+        _factor = factor;
     }
 
     @Override
@@ -29,8 +26,8 @@ public class IntegerRangeRestriction implements Restriction {
         final Value value
     ) throws ConfigurationException {
         if (value instanceof IntegerValue iv) {
-            if ((iv.getValue() < _min) || (iv.getValue() > _max)) {
-                throw new IntegerRangeException(iv.getValue(), this);
+            if (iv.getValue() % _factor != 0) {
+                throw new IntegerMultipleException(value, this);
             }
         } else {
             throw new ValueTypeException(value, ValueType.INTEGER);
@@ -39,6 +36,6 @@ public class IntegerRangeRestriction implements Restriction {
 
     @Override
     public String toString() {
-        return String.format("[%d:%d]", _min, _max);
+        return String.valueOf(_factor);
     }
 }

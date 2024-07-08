@@ -307,7 +307,7 @@ class InputSymbiontInfo extends SymbiontInfo {
             _fileWriter = new SymbiontFileWriter(filename,
                                                  SDFFileType.READ$,
                                                  01,
-                                                 cfg.getIntegerValue(Tag.SYMFBUF));
+                                                 (int)(long)cfg.getIntegerValue(Tag.SYMFBUF));
             _fileWriter.writeREAD$LabelControlImage(01,
                                                     filename,
                                                     _node.getNodeName(),

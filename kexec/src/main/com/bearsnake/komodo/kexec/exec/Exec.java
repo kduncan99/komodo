@@ -327,6 +327,21 @@ public class Exec extends Run {
         return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '.';
     }
 
+    public static boolean isValidElementName(
+        final String elementName
+    ) {
+        if ((elementName.isEmpty()) || (elementName.length() > 12)) {
+            return false;
+        }
+        return IntStream.range(0, elementName.length()).allMatch(chx -> isValidElementNameChar(elementName.charAt(chx)));
+    }
+
+    public static boolean isValidElementNameChar(
+        final char ch
+    ) {
+        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '$';
+    }
+
     public static boolean isValidFilename(
         final String filename
     ) {

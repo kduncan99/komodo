@@ -6,7 +6,10 @@ package com.bearsnake.komodo.kexec.configuration.restrictions;
 
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.PrimeNumberException;
-import com.bearsnake.komodo.kexec.configuration.exceptions.TypeException;
+import com.bearsnake.komodo.kexec.configuration.exceptions.ValueTypeException;
+import com.bearsnake.komodo.kexec.configuration.values.IntegerValue;
+import com.bearsnake.komodo.kexec.configuration.values.Value;
+import com.bearsnake.komodo.kexec.configuration.values.ValueType;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -61,14 +64,14 @@ public class PrimeNumberRestriction implements Restriction {
 
     @Override
     public void checkValue(
-        final Object value
+        final Value value
     ) throws ConfigurationException {
-        if (value instanceof Integer iv) {
-            if (!isPrimeNumber(iv)) {
+        if (value instanceof IntegerValue iv) {
+            if (!isPrimeNumber((int)iv.getValue())) {
                 throw new PrimeNumberException(value);
             }
         } else {
-            throw new TypeException(value, Integer.class);
+            throw new ValueTypeException(value, ValueType.INTEGER);
         }
     }
 }

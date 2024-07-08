@@ -896,7 +896,7 @@ public class MFDManager implements Manager {
 
         // TODO recover mass storage
 
-        var elapsed = Duration.between(start, Instant.now()).get(ChronoUnit.MILLIS);
+        var elapsed = Duration.between(start, Instant.now()).getNano() / 1000 / 1000;
         var msg = String.format("Mass Storage Recovered %d MS.", elapsed);
         e.sendExecReadOnlyMessage(msg);
         LogManager.logTrace(LOG_SOURCE, "recoverMassStorage exiting");

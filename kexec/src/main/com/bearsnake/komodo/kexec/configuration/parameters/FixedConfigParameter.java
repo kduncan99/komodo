@@ -4,13 +4,27 @@
 
 package com.bearsnake.komodo.kexec.configuration.parameters;
 
+import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
+import com.bearsnake.komodo.kexec.configuration.exceptions.FixedParameterException;
+import com.bearsnake.komodo.kexec.configuration.values.Value;
+import com.bearsnake.komodo.kexec.configuration.values.ValueType;
+
 public class FixedConfigParameter extends Parameter {
 
     public FixedConfigParameter(
         final Tag tag,
-        final Object defaultValue,
+        final ValueType valueType,
+        final Value defaultValue,
         final String description
     ) {
-        super(tag, defaultValue, description);
+        super(tag, valueType, defaultValue, description);
+        assert(defaultValue != null);
+    }
+
+    @Override
+    public void setValue(
+        final Value value
+    ) throws FixedParameterException {
+        throw new FixedParameterException();
     }
 }

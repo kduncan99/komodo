@@ -5,8 +5,9 @@
 package com.bearsnake.komodo.kexec.configuration.restrictions;
 
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
+import com.bearsnake.komodo.kexec.configuration.values.Value;
 
 public interface Restriction {
 
-    void checkValue(final Object value) throws ConfigurationException;
+    void checkValue(final Value value) throws ConfigurationException;
 }

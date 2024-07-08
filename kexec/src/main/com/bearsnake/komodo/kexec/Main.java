@@ -11,6 +11,7 @@ import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
 import com.bearsnake.komodo.logger.TimestampedFileLogger;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class Main {
 
@@ -154,7 +155,7 @@ public class Main {
         if (context._configFileName != null) {
             try {
                 cfg.updateFromFile(context._configFileName);
-            } catch (KExecException ex) {
+            } catch (IOException ex) {
                 System.err.println(ex.getMessage());
                 return;
             }

@@ -4,33 +4,25 @@
 
 package com.bearsnake.komodo.kexec.configuration.restrictions;
 
-import com.bearsnake.komodo.kexec.configuration.MnemonicInfo;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
-import com.bearsnake.komodo.kexec.configuration.exceptions.MnemonicException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ValueTypeException;
+import com.bearsnake.komodo.kexec.configuration.exceptions.UserIdException;
 import com.bearsnake.komodo.kexec.configuration.values.StringValue;
 import com.bearsnake.komodo.kexec.configuration.values.Value;
 import com.bearsnake.komodo.kexec.configuration.values.ValueType;
+import com.bearsnake.komodo.kexec.exec.Exec;
 
-import java.util.Map;
+public class UserIdRestriction implements Restriction {
 
-public class MnemonicRestriction implements Restriction {
-
-    private final Map<String, MnemonicInfo> _mnemonicTable;
-
-    public MnemonicRestriction(
-        final Map<String, MnemonicInfo> mnemonicTable
-    ) {
-        _mnemonicTable = mnemonicTable;
-    }
+    public UserIdRestriction() {}
 
     @Override
     public void checkValue(
         final Value value
     ) throws ConfigurationException {
         if (value instanceof StringValue sv) {
-            if (!_mnemonicTable.containsKey(sv.getValue())) {
-                throw new MnemonicException(value);
+            if (!Exec.isValidUserId(sv.getValue())) {
+                throw new UserIdException(value);
             }
         } else {
             throw new ValueTypeException(value, ValueType.STRING);

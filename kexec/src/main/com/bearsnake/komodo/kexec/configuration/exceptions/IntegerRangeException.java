@@ -6,9 +6,9 @@ package com.bearsnake.komodo.kexec.configuration.exceptions;
 
 import com.bearsnake.komodo.kexec.configuration.restrictions.IntegerRangeRestriction;
 
-public class RangeException extends ConfigurationException {
+public class IntegerRangeException extends ConfigurationException {
 
-    public RangeException(
+    public IntegerRangeException(
         final Object value,
         final IntegerRangeRestriction restriction
     ) {

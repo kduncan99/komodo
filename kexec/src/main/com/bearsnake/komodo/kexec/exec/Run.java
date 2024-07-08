@@ -80,13 +80,13 @@ public abstract class Run {
             var exec = Exec.getInstance();
             var cfg = exec.getConfiguration();
             if (_runCardInfo.getMaxCards() == null) {
-                _runCardInfo.setMaxCards(cfg.getLongValue(Tag.MAXCRD));
+                _runCardInfo.setMaxCards(cfg.getIntegerValue(Tag.MAXCRD));
             }
             if (_runCardInfo.getMaxPages() == null) {
-                _runCardInfo.setMaxPages(cfg.getLongValue(Tag.MAXPAG));
+                _runCardInfo.setMaxPages(cfg.getIntegerValue(Tag.MAXPAG));
             }
             if (_runCardInfo.getMaxTime() == null) {
-                _runCardInfo.setMaxTime(cfg.getLongValue(Tag.MAXTIM));
+                _runCardInfo.setMaxTime(cfg.getIntegerValue(Tag.MAXTIM));
             }
         }
 

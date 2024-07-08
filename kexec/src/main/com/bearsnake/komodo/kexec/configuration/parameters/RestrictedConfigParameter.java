@@ -6,28 +6,53 @@ package com.bearsnake.komodo.kexec.configuration.parameters;
 
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
 import com.bearsnake.komodo.kexec.configuration.restrictions.Restriction;
+import com.bearsnake.komodo.kexec.configuration.values.Value;
+import com.bearsnake.komodo.kexec.configuration.values.ValueType;
 
 public class RestrictedConfigParameter extends SettableConfigParameter {
 
-    private final Restriction _restriction;
+    private final Restriction[] _restrictions;
 
     public RestrictedConfigParameter(
         final Tag tag,
-        final Object defaultValue,
+        final ValueType valueType,
         final boolean isProtected,
         final boolean isRebootRequired,
         final String description,
-        final Restriction restriction
+        final Restriction ... restriction
     ) {
-        super(tag, defaultValue, isProtected, isRebootRequired, description);
-        _restriction = restriction;
+        super(tag, valueType, isProtected, isRebootRequired, description);
+        _restrictions = restriction;
     }
 
-    public Restriction getRestriction() { return _restriction; }
+    public RestrictedConfigParameter(
+        final Tag tag,
+        final ValueType valueType,
+        final Value defaultValue,
+        final boolean isProtected,
+        final boolean isRebootRequired,
+        final String description,
+        final Restriction ... restriction
+    ) {
+        super(tag, valueType, defaultValue, isProtected, isRebootRequired, description);
+        _restrictions = restriction;
+    }
+
+    public Restriction[] getRestrictions() { return _restrictions; }
 
     public void checkValue(
-        final Object value
+        final Value value
     ) throws ConfigurationException {
-        _restriction.checkValue(value);
+        for (var r : _restrictions) {
+            r.checkValue(value);
+        }
+    }
+
+    @Override
+    public void setValue(
+        final Value value
+    ) throws ConfigurationException {
+        super.setValue(value);
+        checkValue(value);
     }
 }
