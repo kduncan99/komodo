@@ -80,8 +80,10 @@ public class Parser {
         }
     }
 
-    public String parseIdentifier(final int maxChars,
-                                  final String cutSet) throws NotFoundException, SyntaxException {
+    public String parseIdentifier(
+        final int maxChars,
+        final String cutSet
+    ) throws NotFoundException, SyntaxException {
         if (!Character.isAlphabetic(peekNext())) {
             throw new NotFoundException();
         }

@@ -40,19 +40,12 @@ public class RestrictedConfigParameter extends SettableConfigParameter {
 
     public Restriction[] getRestrictions() { return _restrictions; }
 
-    public void checkValue(
-        final Value value
-    ) throws ConfigurationException {
-        for (var r : _restrictions) {
-            r.checkValue(value);
-        }
-    }
-
     @Override
-    public void setValue(
-        final Value value
-    ) throws ConfigurationException {
-        super.setValue(value);
-        checkValue(value);
+    public void checkValue() throws ConfigurationException {
+        super.checkValue();
+        var effectiveValue = getEffectiveValue();
+        for (var r : _restrictions) {
+            r.checkValue(effectiveValue);
+        }
     }
 }

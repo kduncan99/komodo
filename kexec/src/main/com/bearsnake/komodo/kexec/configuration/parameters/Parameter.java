@@ -5,6 +5,8 @@
 package com.bearsnake.komodo.kexec.configuration.parameters;
 
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
+import com.bearsnake.komodo.kexec.configuration.exceptions.ValueMissingException;
+import com.bearsnake.komodo.kexec.configuration.exceptions.ValueTypeException;
 import com.bearsnake.komodo.kexec.configuration.values.Value;
 import com.bearsnake.komodo.kexec.configuration.values.ValueType;
 
@@ -46,4 +48,15 @@ public abstract class Parameter {
     public boolean hasDefaultValue() { return _defaultValue != null; }
     public boolean hasEffectiveValue() { return _defaultValue != null; }
     public abstract void setValue(Value value) throws ConfigurationException;
+
+    public void checkValue() throws ConfigurationException {
+        if (!hasEffectiveValue()) {
+            throw new ValueMissingException(getTag());
+        }
+
+        var effectiveValue = getEffectiveValue();
+        if (effectiveValue.getValueType() != _valueType) {
+            throw new ValueTypeException(effectiveValue, _valueType);
+        }
+    }
 }

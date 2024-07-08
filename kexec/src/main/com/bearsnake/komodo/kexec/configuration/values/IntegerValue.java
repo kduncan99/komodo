@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kexec.configuration.values;
 
 import com.bearsnake.komodo.baselib.Parser;
 
-public class IntegerValue implements Value {
+public class IntegerValue extends Value {
 
     public static final IntegerValue ZERO = new IntegerValue(0);
 
@@ -25,6 +25,16 @@ public class IntegerValue implements Value {
         final long value
     ) {
         this(value, false);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof IntegerValue val) && (_value == val._value);
+    }
+
+    @Override
+    public int hashCode() {
+        return (int)_value;
     }
 
     public long getValue() { return _value; }

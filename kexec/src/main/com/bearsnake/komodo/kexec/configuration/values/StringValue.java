@@ -7,7 +7,9 @@ package com.bearsnake.komodo.kexec.configuration.values;
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.configuration.exceptions.SyntaxException;
 
-public class StringValue implements Value {
+import java.util.Objects;
+
+public class StringValue extends Value {
 
     private final String _value;
     
@@ -15,6 +17,16 @@ public class StringValue implements Value {
         final String value
     ) {
         _value = value;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof StringValue val) && Objects.equals(_value, val._value);
+    }
+
+    @Override
+    public int hashCode() {
+        return _value.hashCode();
     }
 
     public String getValue() { return _value; }

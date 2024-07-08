@@ -14,13 +14,23 @@ import com.bearsnake.komodo.kexec.exec.Exec;
 
 public class ElementNameRestriction implements Restriction {
 
-    public ElementNameRestriction() {}
+    private boolean _allowBlank;
+
+    public ElementNameRestriction(
+        final boolean allowBlank
+    ) {
+        _allowBlank = allowBlank;
+    }
 
     @Override
     public void checkValue(
         final Value value
     ) throws ConfigurationException {
         if (value instanceof StringValue sv) {
+            var str = sv.getValue();
+            if (_allowBlank && str.isEmpty()) {
+                return;
+            }
             if (!Exec.isValidElementName(sv.getValue())) {
                 throw new ElementNameException(value);
             }

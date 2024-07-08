@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.configuration;
 
 import com.bearsnake.komodo.baselib.Parser;
+import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.SyntaxException;
 import com.bearsnake.komodo.kexec.configuration.parameters.*;
 import com.bearsnake.komodo.kexec.configuration.restrictions.*;
@@ -14,7 +15,9 @@ import com.sun.jdi.LongValue;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,7 +35,8 @@ import static com.bearsnake.komodo.kexec.configuration.values.ValueType.STRING;
 public class Configuration {
 
     private static final Map<String, Parameter> CONFIG_PARAMETERS = new TreeMap<>();
-    private static final Map<String, MnemonicInfo> MNEMONIC_TABLE = new HashMap<>();
+    private static final Map<String, MnemonicInfo> MNEMONIC_TABLE = new TreeMap<>();
+    private static final Map<String, Node> NODES = new LinkedHashMap<>();
 
     // discrete configuration values ------------------------------------------------------------------------------------
 
@@ -723,10 +727,10 @@ public class Configuration {
                                    "Power-of-two factor for number of tracks defined as max limit allowed per quote group for temporary files.");
         */
 
-        putRestrictedConfigParameter(TERMTASK, STRING, null, true, false,
+        putRestrictedConfigParameter(TERMTASK, STRING, new StringValue(""), true, false,
                                      "Element name of a program in SYS$LIB$*RUN$ or SYS$*RUN$ which executes in all batch and demand runs" +
                                          " just before termination of the runs.",
-                                     new ElementNameRestriction());
+                                     new ElementNameRestriction(true));
 
         putSettableConfigParameter(TFCMSG, BOOLEAN, FALSE, true, false,
                                    "Controls whether file control warning messages are issued.");
@@ -1148,6 +1152,29 @@ public class Configuration {
 
     // configuration file handling -------------------------------------------------------------------------------------
 
+    public String[] parseArgument(
+        final Parser parser
+    ) throws SyntaxException {
+        String key;
+        String value = null;
+
+        key = parser.parseUntil("= ");
+        if (key.isEmpty()) {
+            return null;
+        }
+
+        if (parser.peekNext() == '=') {
+            parser.skipNext();
+            value = parser.parseUntil(" ");
+        }
+
+        if (value == null || value.isEmpty()) {
+            return new String[]{ key };
+        } else {
+            return new String[]{ key, value };
+        }
+    }
+
     public Value parseLiteral(
         final Parser parser
     ) throws SyntaxException {
@@ -1165,46 +1192,159 @@ public class Configuration {
         return obj;
     }
 
+    public Collection<StringValue> parseIdentifierList(
+        final Parser parser
+    ) throws Parser.SyntaxException {
+        var list = new LinkedList<StringValue>();
+        while (!parser.atEnd()) {
+            try {
+                var ident = parser.parseIdentifier(12, " ,");
+                list.add(new StringValue(ident));
+                if (parser.peekNext() == ' ') {
+                    break;
+                }
+                parser.skipNext();
+            } catch (Parser.NotFoundException pex) {
+                return list.isEmpty() ? null : list;
+            }
+        }
+
+        return list;
+    }
+
+    public String parseNodeType(
+        final Parser parser
+    ) throws SyntaxException {
+        if (!Character.isAlphabetic(parser.peekNext())) {
+            return null;
+        }
+
+        var sb = new StringBuilder();
+        sb.append(parser.next());
+        while (!parser.atEnd()) {
+            var ch = parser.peekNext();
+            if (ch == ' ') {
+                break;
+            } else if (!Character.isAlphabetic(ch) && !Character.isDigit(ch) && (ch != '-')) {
+                throw new SyntaxException("Invalid character in identifier");
+            }
+            sb.append(parser.next());
+        }
+
+        if (sb.isEmpty()) {
+            return null;
+        } else if (sb.length() > 12) {
+            throw new SyntaxException("Invalid identifier");
+        }
+
+        return sb.toString();
+    }
+
     public void processNode(
         final Parser parser
-    ) throws Exception {
-        throw new Exception("NODE not yet implemented"); // TODO
+    ) throws SyntaxException {
+        // NODE name [ IS ] type [ [ AND ] CONNECTS [ TO ] name_list ] [ argument ... ]
+        // name_list:
+        //   name [ , name ]*
+        // argument_list:
+        //   argument [ space argument]*
+        // argument:
+        //   key[=value]
+        parser.skipSpaces();
+        try {
+            var nodeName = parser.parseIdentifier(6, " ");
+            parser.skipSpaces();
+            if (parser.parseToken("IS")) {
+                parser.skipSpaces();
+            }
+
+            var nodeType = parseNodeType(parser);
+            parser.skipSpaces();
+
+            if (parser.parseToken("AND")) {
+                parser.skipSpaces();
+            }
+
+            // child nodes
+            Collection<Node> childNodes = new LinkedList<>();
+            if (parser.parseToken("CONNECTS")) {
+                parser.skipSpaces();
+                if (parser.parseToken("TO")) {
+                    parser.skipSpaces();
+                }
+
+                var childNames = parseIdentifierList(parser);
+                for (var name : childNames) {
+                    var child = NODES.get(name.getValue());
+                    if (child == null) {
+                        throw new SyntaxException("Unknown node: " + name);
+                    }
+                    childNodes.add(child);
+                }
+                parser.skipSpaces();
+            }
+
+            var node = Node.createNode(nodeName, nodeType);
+            if (node == null) {
+                throw new SyntaxException("Unrecognized node type " + nodeType);
+            }
+
+            childNodes.forEach(node::addSubordinate);
+
+            // arguments
+            var keyVal = parseArgument(parser);
+            while (keyVal != null) {
+                if (keyVal.length == 1) {
+                    node.addArgument(keyVal[0], null);
+                } else {
+                    node.addArgument(keyVal[0], keyVal[1]);
+                }
+                parser.skipSpaces();
+                keyVal = parseArgument(parser);
+            }
+
+            if (!parser.atEnd()) {
+                throw new SyntaxException("Syntax error at end of NODE statement");
+            }
+
+            NODES.put(node.getName(), node);
+        } catch (Parser.NotFoundException pex) {
+            throw new SyntaxException("Missing node name");
+        } catch (Parser.SyntaxException pex) {
+            throw new SyntaxException(pex.getMessage());
+        }
     }
 
     public void processSymGroup(
         final Parser parser
-    ) throws Exception {
-        throw new Exception("SYMGROUP not yet implemented"); // TODO
+    ) throws SyntaxException {
+        throw new SyntaxException("SYMGROUP not yet implemented"); // TODO
     }
 
     public void processSymQueue(
         final Parser parser
-    ) throws Exception {
-        throw new Exception("SYMQUEUE not yet implemented"); // TODO
+    ) throws SyntaxException {
+        throw new SyntaxException("SYMQUEUE not yet implemented"); // TODO
     }
 
     public void processParameter(
         final Parser parser
-    ) throws Exception {
+    ) throws ConfigurationException {
         parser.skipSpaces();
         var tagString = parser.parseUntil(" =");
         if (tagString == null) {
-            throw new Exception("Missing TAG specification");
+            throw new SyntaxException("Missing TAG specification");
         }
 
         var param = CONFIG_PARAMETERS.get(tagString.toUpperCase());
         if (param == null) {
-            throw new Exception("Unknown TAG specification: " + tagString);
+            throw new SyntaxException("Unknown TAG specification: " + tagString);
         }
 
         parser.skipSpaces();
-        if (parser.parseToken("=") || parser.parseToken("IS")) {
-            parser.skipSpaces();
-        }
-
         var value = parseLiteral(parser);
         if (value == null) {
-            throw new Exception(tagString + " TAG missing value");
+            throw new SyntaxException(tagString + " TAG missing value");
         }
 
         System.out.printf("Setting %s to %s\n", tagString, value);
@@ -1212,6 +1352,7 @@ public class Configuration {
     }
 
     public boolean updateFromFile(final String filename) throws IOException {
+        System.out.println("Processing config file " + filename);
         boolean err = false;
         try(var reader = new BufferedReader(new FileReader(filename))) {
             String line;
@@ -1233,10 +1374,10 @@ public class Configuration {
                             case "SYMQUEUE" -> processSymQueue(p);
                             case "PARAMETER" -> processParameter(p);
                             default ->
-                                throw new Exception("Unrecognized token " + token);
+                                throw new SyntaxException("Unrecognized token " + token);
                         }
-                    } catch (Exception ex) {
-                        System.err.printf("ERROR in config file line %d:%s\n", lineNumber, ex.getMessage());
+                    } catch (ConfigurationException ex) {
+                        System.err.printf("ERROR[%d]:%s\n", lineNumber, ex.getMessage());
                         err = true;
                     }
                 }
@@ -1244,8 +1385,15 @@ public class Configuration {
             }
         }
 
-        // TODO check for any values which were not specified and which must be...
-        //  this is indicated by having a null effective value on any parameter.
+        // Ensure all effective values are present and legal
+        for (var param : CONFIG_PARAMETERS.values()) {
+            try {
+                param.checkValue();
+            } catch (ConfigurationException ex) {
+                System.err.printf("ERROR:Parameter %s:%s\n", param.getTag(), ex.getMessage());
+            }
+        }
+
         return !err;
     }
 }

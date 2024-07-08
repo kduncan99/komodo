@@ -7,7 +7,7 @@ package com.bearsnake.komodo.kexec.configuration.values;
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.configuration.exceptions.SyntaxException;
 
-public class CharacterValue implements Value {
+public class CharacterValue extends Value {
 
     public static CharacterValue NUL = new CharacterValue('\0');
 
@@ -17,6 +17,16 @@ public class CharacterValue implements Value {
         final char value
     ) {
         _value = value;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof CharacterValue val) && (_value == val._value);
+    }
+
+    @Override
+    public int hashCode() {
+        return _value;
     }
 
     public char getValue() { return _value; }

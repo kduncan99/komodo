@@ -56,10 +56,7 @@ public class SettableConfigParameter extends Parameter {
     public void setValue(
         final Value value
     ) throws ConfigurationException {
-        if (value.getValueType() == super.getValueType()) {
-            _specifiedValue = value;
-        } else {
-            throw new ValueTypeException(value, super.getValueType());
-        }
+        _specifiedValue = value;
+        checkValue();
     }
 }

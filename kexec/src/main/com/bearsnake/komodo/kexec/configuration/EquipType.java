@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.configuration;
 
 import com.bearsnake.komodo.hardwarelib.DiskChannel;
 import com.bearsnake.komodo.hardwarelib.FileSystemDiskDevice;
+import com.bearsnake.komodo.hardwarelib.FileSystemImagePrinterDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemImageReaderDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemImageWriterDevice;
 import com.bearsnake.komodo.hardwarelib.FileSystemTapeDevice;
@@ -15,12 +16,13 @@ import com.bearsnake.komodo.hardwarelib.TapeChannel;
 import java.util.Arrays;
 
 public enum EquipType {
+
     CHANNEL_MODULE_DISK("CM-DISK", DiskChannel.class),
     CHANNEL_MODULE_SYMBIONT("CM-SYM", SymbiontChannel.class),
     CHANNEL_MODULE_TAPE("CM-TAPE", TapeChannel.class),
     FILE_SYSTEM_CARD_PUNCH("FS-PUNCH", FileSystemImageWriterDevice.class),
     FILE_SYSTEM_CARD_READER("FS-READER", FileSystemImageReaderDevice.class),
-    // TODO FILE_SYSTEM_PRINTER
+    FILE_SYSTEM_PRINTER("FS-PRINTER", FileSystemImagePrinterDevice.class),
     FILE_SYSTEM_DISK("FS-DISK", FileSystemDiskDevice.class),
     FILE_SYSTEM_TAPE("FS-TAPE", FileSystemTapeDevice.class);
     // TODO HOST_PRINTER (something configured on the host computer)

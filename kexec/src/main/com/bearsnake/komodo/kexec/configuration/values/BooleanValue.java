@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kexec.configuration.values;
 
 import com.bearsnake.komodo.baselib.Parser;
 
-public class BooleanValue implements Value {
+public class BooleanValue extends Value {
 
     public static final BooleanValue TRUE = new BooleanValue(true);
     public static final BooleanValue FALSE = new BooleanValue(false);
@@ -17,6 +17,16 @@ public class BooleanValue implements Value {
         final boolean value
     ) {
         _value = value;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof BooleanValue val) && (_value == val._value);
+    }
+
+    @Override
+    public int hashCode() {
+        return (_value ? 1 : 0);
     }
 
     public boolean getValue() { return _value; }

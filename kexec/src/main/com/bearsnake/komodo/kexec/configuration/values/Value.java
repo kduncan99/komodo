@@ -4,8 +4,10 @@
 
 package com.bearsnake.komodo.kexec.configuration.values;
 
-public interface Value {
+public abstract class Value {
 
-    ValueType getValueType();
-    String toString();
+    public abstract boolean equals(Object obj);
+    public abstract int hashCode();
+    public abstract ValueType getValueType();
+    public abstract String toString();
 }

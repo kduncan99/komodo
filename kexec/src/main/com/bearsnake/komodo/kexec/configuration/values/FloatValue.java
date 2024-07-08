@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kexec.configuration.values;
 
 import com.bearsnake.komodo.baselib.Parser;
 
-public class FloatValue implements Value {
+public class FloatValue extends Value {
 
     public static final FloatValue ZERO = new FloatValue(0.0f);
 
@@ -16,6 +16,16 @@ public class FloatValue implements Value {
         final double value
     ) {
         _value = value;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof FloatValue val) && (_value == val._value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Double.hashCode(_value);
     }
 
     public double getValue() { return _value; }
