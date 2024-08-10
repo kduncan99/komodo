@@ -62,4 +62,8 @@ public abstract class Channel extends Node {
                              getNodeCategory(),
                              getChannelType());
     }
+
+    // Default action
+    @Override
+    public void close() {}
 }

@@ -31,6 +31,11 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice implements
     }
 
     @Override
+    public final void close() {
+        _terminate = true;
+    }
+
+    @Override
     public final DeviceModel getDeviceModel() {
         return DeviceModel.FileSystemImageReader;
     }

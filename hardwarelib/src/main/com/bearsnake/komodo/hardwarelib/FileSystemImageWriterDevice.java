@@ -142,7 +142,8 @@ public class FileSystemImageWriterDevice extends SymbiontWriterDevice {
         packet.setStatus(IoStatus.Complete);
     }
 
-    private void close() {
+    @Override
+    public void close() {
         if (_writer != null) {
             try {
                 _writer.close();

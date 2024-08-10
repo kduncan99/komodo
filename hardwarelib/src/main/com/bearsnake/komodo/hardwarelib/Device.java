@@ -22,4 +22,8 @@ public abstract class Device extends Node {
     // The following may be overridden by subclasses if/as necessary.
     public boolean isReady() { return _isReady; }
     public void setIsReady(final boolean flag) { _isReady = flag; }
+
+    // Default action
+    @Override
+    public void close() {}
 }

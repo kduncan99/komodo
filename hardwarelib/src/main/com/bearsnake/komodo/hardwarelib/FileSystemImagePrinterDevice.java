@@ -152,7 +152,7 @@ public class FileSystemImagePrinterDevice extends SymbiontPrinterDevice {
         }
     }
 
-    private void close() {
+    public void close() {
         if (_printer != null) {
             _printer.close();
             _printer = null;

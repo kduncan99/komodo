@@ -20,8 +20,9 @@ public abstract class Node {
         _nodeName = nodeName;
     }
 
-    public abstract String toString();
+    public abstract void close();
     public abstract NodeCategory getNodeCategory();
+    public abstract String toString();
 
     public final int getNodeIdentifier() { return _nodeIdentifier; }
     public final String getNodeName() { return _nodeName; }

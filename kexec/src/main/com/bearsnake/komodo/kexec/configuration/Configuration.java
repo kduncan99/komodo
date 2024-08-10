@@ -10,7 +10,6 @@ import com.bearsnake.komodo.kexec.configuration.exceptions.SyntaxException;
 import com.bearsnake.komodo.kexec.configuration.parameters.*;
 import com.bearsnake.komodo.kexec.configuration.restrictions.*;
 import com.bearsnake.komodo.kexec.configuration.values.*;
-import com.sun.jdi.LongValue;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -1079,8 +1078,8 @@ public class Configuration {
 
     public Long getIntegerValue(final Tag tag) {
         var value = getConfigValue(tag);
-        if (value instanceof LongValue lv) {
-            return lv.value();
+        if (value instanceof IntegerValue iv) {
+            return iv.getValue();
         } else {
             return null;
         }

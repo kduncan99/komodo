@@ -221,6 +221,9 @@ public class FacilitiesManager implements Manager {
     @Override
     public void close() {
         LogManager.logTrace(LOG_SOURCE, "close()");
+        for (var ni : _nodeGraph.values()) {
+            ni.getNode().close();
+        }
     }
 
     @Override
@@ -1711,138 +1714,145 @@ public class FacilitiesManager implements Manager {
         var exec = Exec.getInstance();
         var mm = exec.getMFDManager();
 
-        if (buffer.getSize() < transferCount) {
-            LogManager.logFatal(LOG_SOURCE, "Conflict between buffer size and transfer count");
-            exec.stop(StopCode.InternalExecIOFailed);
+        try {
+            if (buffer.getSize() < transferCount) {
+                LogManager.logFatal(LOG_SOURCE, "Conflict between buffer size and transfer count");
+                exec.stop(StopCode.InternalExecIOFailed);
+                throw new ExecStoppedException();
+            }
+
+            var fit = exec.getFacilitiesItemTable();
+            var facItem = fit.getFacilitiesItemByInternalName(internalName);
+            if (facItem == null) {
+                LogManager.logFatal(LOG_SOURCE, "Cannot find facItem for file %s", internalName);
+                exec.stop(StopCode.InternalExecIOFailed);
+                throw new ExecStoppedException();
+            }
+
+            // TODO ERROR THE FOLLOWING facItem could be a NameItem which is NOT a DiskFileFacilitiesItem
+            var dfi = (DiskFileFacilitiesItem) facItem;
+            if (!dfi.isWriteable()) {
+                return new IOResult(ERIO$Status.WriteInhibited);
+            }
+
+            var aci = dfi.getAcceleratedCycleInfo();
+            var fas = aci.getFileAllocationSet();
+            var fci = (DiskFileCycleInfo) aci.getFileCycleInfo();
+            var maxTracks = fci.getMaxGranules();
+            if (fci.getPCHARFlags().getGranularity() == Granularity.Position) {
+                maxTracks <<= 6;
+            }
+
+            int destOffset = 0;
+            int wordsRemaining = transferCount;
+            long nextAddress = address;
+            int totalWordsTransferred = 0;
+            while (wordsRemaining > 0) {
+                // Find the ldat and device-relative track address of the next relative address.
+                // Ensure it is allocated...
+                var relativeTrack = nextAddress >> 6;
+                if (relativeTrack >= maxTracks) {
+                    return new IOResult(ERIO$Status.WriteExtentOutOfRange, totalWordsTransferred);
+                }
+                if (!mm.allocateDataExtent(fas, relativeTrack, 1)) {
+                    return new IOResult(ERIO$Status.CannotExpandFile, totalWordsTransferred);
+                }
+                var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
+
+                // Find the block address corresponding to the hardware track address.
+                // We need pack info to figure this out.
+                var ni = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
+                var pi = (PackInfo) ni.getMediaInfo();
+                int blocksPerTrack = 1792 / pi.getPrepFactor();
+                long baseBlock = hwTid.getTrackId() * blocksPerTrack;
+
+                // Considering that the requested address may not be aligned to the containing block...
+                // What is the sector offset requested, from the beginning of the containing track?
+                // Use that, with the number of sectors per block, to calculate the sector offset
+                // from the containing block, and the block offset from the containing track.
+                var wordOffsetFromTrack = isWordAddressable ? (nextAddress % 1792) : (nextAddress & 077);
+                var wordOffsetFromBlock = wordOffsetFromTrack % pi.getPrepFactor();
+                var blockOffsetFromTrack = wordOffsetFromTrack / pi.getPrepFactor();
+
+                // Do we need to double-buffer (yes, if this sub-IO is not aligned with the containing block)
+                if (wordOffsetFromBlock != 0) {
+                    // How many words are we going to transfer from disk?
+                    // This is not necessarily the same as the number of words we're going to put into the user buffer.
+                    // Calculate the requested amount first. This is the amount (if any) in the block ahead of the
+                    // desired sector (see sectorOffsetFromBlock), added to the remaining word count.
+                    // Then calculate the limit based on the number of blocks from the starting block to the end of the track.
+                    int preWords = (int) wordOffsetFromBlock;
+                    int reqWords = preWords + wordsRemaining;
+                    int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
+                    int transferWordCount = Math.min(reqWords, limitWords);
+
+                    // We need to do a read-before-write. Do so...
+                    var tempBuffer = new ArraySlice(new long[transferWordCount]);
+                    var blockId = baseBlock + blockOffsetFromTrack;
+                    var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
+                                                             .setBuffer(tempBuffer)
+                                                             .setDirection(ChannelProgram.Direction.Increment);
+                    var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
+                                                 .setNodeIdentifier(ni.getNode().getNodeIdentifier())
+                                                 .setBlockId(blockId)
+                                                 .addControlWord(cw);
+                    var ioResult = ioLoop(internalName, cp, false);
+                    if (ioResult._status != ERIO$Status.Success) {
+                        totalWordsTransferred += ioResult._wordsTransferred;
+                        ioResult.addWordsTransferred(totalWordsTransferred);
+                        return ioResult;
+                    }
+
+                    // Now copy user data from the caller's buffer into the temporary buffer and write it back out.
+                    var sx = 0;
+                    for (int dx = preWords; dx < transferWordCount; dx++) {
+                        tempBuffer.set(dx, buffer.get(sx++));
+                    }
+                    cp.setFunction(ChannelProgram.Function.Write);
+                    ioResult = ioLoop(internalName, cp, false);
+                    if (ioResult._status != ERIO$Status.Success) {
+                        totalWordsTransferred += ioResult._wordsTransferred;
+                        ioResult.addWordsTransferred(totalWordsTransferred);
+                        return ioResult;
+                    }
+
+                    int actualWords = transferWordCount - preWords;
+                    wordsRemaining -= actualWords;
+                    nextAddress += actualWords / 28;
+                } else {
+                    // we can do IO directly from the caller's buffer
+                    // The following algorithm is a simpler version of the above, given preWords is zero.
+                    int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
+                    int transferWordCount = Math.min(wordsRemaining, limitWords);
+
+                    // Set up a channel program and route the IO
+                    var blockId = baseBlock + blockOffsetFromTrack;
+                    var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
+                                                             .setBuffer(buffer)
+                                                             .setBufferOffset(destOffset)
+                                                             .setDirection(ChannelProgram.Direction.Increment);
+                    var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
+                                                 .setNodeIdentifier(ni.getNode().getNodeIdentifier())
+                                                 .setBlockId(blockId)
+                                                 .addControlWord(cw);
+                    var ioResult = ioLoop(internalName, cp, false);
+                    if (ioResult._status != ERIO$Status.Success) {
+                        totalWordsTransferred += ioResult._wordsTransferred;
+                        ioResult.addWordsTransferred(totalWordsTransferred);
+                        return ioResult;
+                    }
+
+                    wordsRemaining -= transferWordCount;
+                    nextAddress += transferWordCount / 28;
+                }
+            }
+
+            return new IOResult(ERIO$Status.Success, totalWordsTransferred);
+        } catch (Throwable t) {
+            LogManager.logCatching(LOG_SOURCE, t);
+            exec.stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
-
-        var fit = exec.getFacilitiesItemTable();
-        var facItem = fit.getFacilitiesItemByInternalName(internalName);
-        if (facItem == null) {
-            LogManager.logFatal(LOG_SOURCE, "Cannot find facItem for file %s", internalName);
-            exec.stop(StopCode.InternalExecIOFailed);
-            throw new ExecStoppedException();
-        }
-
-        var dfi = (DiskFileFacilitiesItem) facItem;
-        if (!dfi.isWriteable()) {
-            return new IOResult(ERIO$Status.WriteInhibited);
-        }
-
-        var aci = dfi.getAcceleratedCycleInfo();
-        var fas = aci.getFileAllocationSet();
-        var fci = (DiskFileCycleInfo)aci.getFileCycleInfo();
-        var maxTracks = fci.getMaxGranules();
-        if (fci.getPCHARFlags().getGranularity() == Granularity.Position) {
-            maxTracks <<= 6;
-        }
-
-        int destOffset = 0;
-        int wordsRemaining = transferCount;
-        long nextAddress = address;
-        int totalWordsTransferred = 0;
-        while (wordsRemaining > 0) {
-            // Find the ldat and device-relative track address of the next relative address.
-            // Ensure it is allocated...
-            var relativeTrack = nextAddress >> 6;
-            if (relativeTrack >= maxTracks) {
-                return new IOResult(ERIO$Status.WriteExtentOutOfRange, totalWordsTransferred);
-            }
-            if (!mm.allocateDataExtent(fas, relativeTrack, 1)) {
-                return new IOResult(ERIO$Status.CannotExpandFile, totalWordsTransferred);
-            }
-            var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
-
-            // Find the block address corresponding to the hardware track address.
-            // We need pack info to figure this out.
-            var ni = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
-            var pi = (PackInfo)ni.getMediaInfo();
-            int blocksPerTrack = 1792 / pi.getPrepFactor();
-            long baseBlock = hwTid.getTrackId() * blocksPerTrack;
-
-            // Considering that the requested address may not be aligned to the containing block...
-            // What is the sector offset requested, from the beginning of the containing track?
-            // Use that, with the number of sectors per block, to calculate the sector offset
-            // from the containing block, and the block offset from the containing track.
-            var wordOffsetFromTrack = isWordAddressable ? (nextAddress % 1792) : (nextAddress & 077);
-            var wordOffsetFromBlock = wordOffsetFromTrack % pi.getPrepFactor();
-            var blockOffsetFromTrack = wordOffsetFromTrack / pi.getPrepFactor();
-
-            // Do we need to double-buffer (yes, if this sub-IO is not aligned with the containing block)
-            if (wordOffsetFromBlock != 0) {
-                // How many words are we going to transfer from disk?
-                // This is not necessarily the same as the number of words we're going to put into the user buffer.
-                // Calculate the requested amount first. This is the amount (if any) in the block ahead of the
-                // desired sector (see sectorOffsetFromBlock), added to the remaining word count.
-                // Then calculate the limit based on the number of blocks from the starting block to the end of the track.
-                int preWords = (int) wordOffsetFromBlock;
-                int reqWords = preWords + wordsRemaining;
-                int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
-                int transferWordCount = Math.min(reqWords, limitWords);
-
-                // We need to do a read-before-write. Do so...
-                var tempBuffer = new ArraySlice(new long[transferWordCount]);
-                var blockId = baseBlock + blockOffsetFromTrack;
-                var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
-                                                         .setBuffer(tempBuffer)
-                                                         .setDirection(ChannelProgram.Direction.Increment);
-                var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
-                                             .setNodeIdentifier(ni.getNode().getNodeIdentifier())
-                                             .setBlockId(blockId)
-                                             .addControlWord(cw);
-                var ioResult = ioLoop(internalName, cp, false);
-                if (ioResult._status != ERIO$Status.Success) {
-                    totalWordsTransferred += ioResult._wordsTransferred;
-                    ioResult.addWordsTransferred(totalWordsTransferred);
-                    return ioResult;
-                }
-
-                // Now copy user data from the caller's buffer into the temporary buffer and write it back out.
-                var sx = 0;
-                for (int dx = preWords; dx < transferWordCount; dx++) {
-                    tempBuffer.set(dx, buffer.get(sx++));
-                }
-                cp.setFunction(ChannelProgram.Function.Write);
-                ioResult = ioLoop(internalName, cp, false);
-                if (ioResult._status != ERIO$Status.Success) {
-                    totalWordsTransferred += ioResult._wordsTransferred;
-                    ioResult.addWordsTransferred(totalWordsTransferred);
-                    return ioResult;
-                }
-
-                int actualWords = transferWordCount - preWords;
-                wordsRemaining -= actualWords;
-                nextAddress += actualWords / 28;
-            } else {
-                // we can do IO directly from the caller's buffer
-                // The following algorithm is a simpler version of the above, given preWords is zero.
-                int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
-                int transferWordCount = Math.min(wordsRemaining, limitWords);
-
-                // Set up a channel program and route the IO
-                var blockId = baseBlock + blockOffsetFromTrack;
-                var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
-                                                         .setBuffer(buffer)
-                                                         .setBufferOffset(destOffset)
-                                                         .setDirection(ChannelProgram.Direction.Increment);
-                var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
-                                             .setNodeIdentifier(ni.getNode().getNodeIdentifier())
-                                             .setBlockId(blockId)
-                                             .addControlWord(cw);
-                var ioResult = ioLoop(internalName, cp, false);
-                if (ioResult._status != ERIO$Status.Success) {
-                    totalWordsTransferred += ioResult._wordsTransferred;
-                    ioResult.addWordsTransferred(totalWordsTransferred);
-                    return ioResult;
-                }
-
-                wordsRemaining -= transferWordCount;
-                nextAddress += transferWordCount / 28;
-            }
-        }
-
-        return new IOResult(ERIO$Status.Success, totalWordsTransferred);
     }
 
     /**
@@ -2387,63 +2397,69 @@ public class FacilitiesManager implements Manager {
         final FileSetInfo fsInfo,
         final FileSpecification fileSpec,
         final FacStatusResult fsResult
-    ) {
-        var err = false;
-        var existingReadKey = fsInfo.getReadKey();
-        var hasReadKey = !existingReadKey.isEmpty();
-        var givenReadKey = fileSpec.getReadKey();
-        var gaveReadKey = givenReadKey != null;
-        if (hasReadKey) {
-            if (!gaveReadKey && (!rce.isPrivileged() || fsInfo.isGuarded())) {
-                fsResult.postMessage(FacStatusCode.ReadKeyExists);
-                fsResult.mergeStatusBits(0_000100_000000L);
-            } else if (!existingReadKey.equalsIgnoreCase(givenReadKey)) {
-                fsResult.postMessage(FacStatusCode.IncorrectReadKey);
-                fsResult.mergeStatusBits(0_401000_000000L);
-                if (rce.hasTask()) {
-                    rce.postContingency(017, 0, 0, 015);
+    ) throws ExecStoppedException {
+        try {
+            var err = false;
+            var existingReadKey = fsInfo.getReadKey();
+            var hasReadKey = (existingReadKey != null) && (!existingReadKey.isEmpty());
+            var givenReadKey = fileSpec.getReadKey();
+            var gaveReadKey = givenReadKey != null;
+            if (hasReadKey) {
+                if (!gaveReadKey && (!rce.isPrivileged() || fsInfo.isGuarded())) {
+                    fsResult.postMessage(FacStatusCode.ReadKeyExists);
+                    fsResult.mergeStatusBits(0_000100_000000L);
+                } else if (!existingReadKey.equalsIgnoreCase(givenReadKey)) {
+                    fsResult.postMessage(FacStatusCode.IncorrectReadKey);
+                    fsResult.mergeStatusBits(0_401000_000000L);
+                    if (rce.hasTask()) {
+                        rce.postContingency(017, 0, 0, 015);
+                    }
+                    err = true;
                 }
-                err = true;
-            }
-        } else {
-            if (gaveReadKey) {
-                fsResult.postMessage(FacStatusCode.FileNotCatalogedWithReadKey);
-                fsResult.mergeStatusBits(0_400040_000000L);
-                if (rce.hasTask()) {
-                    rce.postContingency(017, 0, 0, 015);
+            } else {
+                if (gaveReadKey) {
+                    fsResult.postMessage(FacStatusCode.FileNotCatalogedWithReadKey);
+                    fsResult.mergeStatusBits(0_400040_000000L);
+                    if (rce.hasTask()) {
+                        rce.postContingency(017, 0, 0, 015);
+                    }
+                    err = true;
                 }
-                err = true;
             }
-        }
 
-        var existingWriteKey = fsInfo.getWriteKey();
-        var hasWriteKey = !existingWriteKey.isEmpty();
-        var givenWriteKey = fileSpec.getWriteKey();
-        var gaveWriteKey = givenWriteKey != null;
-        if (hasWriteKey) {
-            if (!gaveWriteKey && (!rce.isPrivileged() || fsInfo.isGuarded())) {
-                fsResult.postMessage(FacStatusCode.WriteKeyExists);
-                fsResult.mergeStatusBits(0_000200_000000L);
-            } else if (!existingWriteKey.equalsIgnoreCase(givenWriteKey)) {
-                fsResult.postMessage(FacStatusCode.IncorrectWriteKey);
-                fsResult.mergeStatusBits(0_400400_000000L);
-                if (rce.hasTask()) {
-                    rce.postContingency(017, 0, 0, 015);
+            var existingWriteKey = fsInfo.getWriteKey();
+            var hasWriteKey = (existingWriteKey != null) && (!existingWriteKey.isEmpty());
+            var givenWriteKey = fileSpec.getWriteKey();
+            var gaveWriteKey = givenWriteKey != null;
+            if (hasWriteKey) {
+                if (!gaveWriteKey && (!rce.isPrivileged() || fsInfo.isGuarded())) {
+                    fsResult.postMessage(FacStatusCode.WriteKeyExists);
+                    fsResult.mergeStatusBits(0_000200_000000L);
+                } else if (!existingWriteKey.equalsIgnoreCase(givenWriteKey)) {
+                    fsResult.postMessage(FacStatusCode.IncorrectWriteKey);
+                    fsResult.mergeStatusBits(0_400400_000000L);
+                    if (rce.hasTask()) {
+                        rce.postContingency(017, 0, 0, 015);
+                    }
+                    err = true;
                 }
-                err = true;
-            }
-        } else {
-            if (gaveWriteKey) {
-                fsResult.postMessage(FacStatusCode.FileNotCatalogedWithWriteKey);
-                fsResult.mergeStatusBits(0_400020_000000L);
-                if (rce.hasTask()) {
-                    rce.postContingency(017, 0, 0, 015);
+            } else {
+                if (gaveWriteKey) {
+                    fsResult.postMessage(FacStatusCode.FileNotCatalogedWithWriteKey);
+                    fsResult.mergeStatusBits(0_400020_000000L);
+                    if (rce.hasTask()) {
+                        rce.postContingency(017, 0, 0, 015);
+                    }
+                    err = true;
                 }
-                err = true;
             }
-        }
 
-        return !err;
+            return !err;
+        } catch (Throwable t) {
+            LogManager.logCatching(LOG_SOURCE, t);
+            Exec.getInstance().stop(StopCode.FacilitiesComplex);
+            throw new ExecStoppedException();
+        }
     }
 
     /**
@@ -2691,7 +2707,7 @@ public class FacilitiesManager implements Manager {
         }
 
         // if account/project matches, we're good
-        if (cfg.getBooleanValue(Tag.PRIVAC)) {
+        if (cfg.getBooleanValue(Tag.SSPBP)) {
             return rce.getAccountId().equals(fcInfo.getAccountId());
         } else {
             return rce.getProjectId().equals(fcInfo.getProjectId());
