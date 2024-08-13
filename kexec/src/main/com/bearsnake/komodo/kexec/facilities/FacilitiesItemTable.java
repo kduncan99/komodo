@@ -113,6 +113,18 @@ public class FacilitiesItemTable {
     }
 
     /**
+     * If filename is an internal name for a facilities item return that item.
+     * @param name internal filename
+     * @return fac item if found, else null
+     */
+    public synchronized FacilitiesItem getFacilitiesItemByInternalName(
+        final String name
+    ) {
+        var upper = name.toUpperCase();
+        return _content.stream().filter(fi -> fi.hasInternalName(upper)).findFirst().orElse(null);
+    }
+
+    /**
      * Retrieves the facilities item which matches the given qualifier, filename, and relative file cycle
      * @return facilities item if found, else null
      */
@@ -130,18 +142,6 @@ public class FacilitiesItemTable {
             }
         }
         return null;
-    }
-
-    /**
-     * If filename is an internal name for a facilities item return that item.
-     * @param name internal filename
-     * @return fac item if found, else null
-     */
-    public synchronized FacilitiesItem getFacilitiesItemByInternalName(
-        final String name
-    ) {
-        var upper = name.toUpperCase();
-        return _content.stream().filter(fi -> fi.hasInternalName(upper)).findFirst().orElse(null);
     }
 
     /**
@@ -178,5 +178,4 @@ public class FacilitiesItemTable {
     ) {
         _content.remove(facItem);
     }
-
 }

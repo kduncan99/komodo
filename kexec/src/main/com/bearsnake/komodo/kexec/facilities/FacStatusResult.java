@@ -59,9 +59,9 @@ public class FacStatusResult {
         final Level level,
         final String source
     ) {
-        _infos.forEach(s -> LogManager.log(level, source, "%s", s.toString()));
-        _warnings.forEach(s -> LogManager.log(level, source, "%s", s.toString()));
-        _errors.forEach(s -> LogManager.log(level, source, "%s", s.toString()));
+        _infos.forEach(s -> LogManager.log(level, source, "FacStatus Code=%s", s.toString()));
+        _warnings.forEach(s -> LogManager.log(level, source, "FacStatus Code=%s", s.toString()));
+        _errors.forEach(s -> LogManager.log(level, source, "FacStatus Code=%s", s.toString()));
         LogManager.log(level, source, "%012o", _statusWord);
     }
 

@@ -1034,14 +1034,14 @@ public class FacilitiesManager implements Manager {
 
         var nodeInfo = _nodeGraph.get(nodeIdentifier);
         if (nodeInfo == null) {
-            LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Cannot find node %012o", nodeIdentifier);
+            LogManager.logFatal(LOG_SOURCE, "assignFixedDiskUnitToRun() Cannot find node %012o", nodeIdentifier);
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
 
         var node = nodeInfo.getNode();
         if ((node.getNodeCategory() != NodeCategory.Device) || ((Device) node).getDeviceType() != DeviceType.DiskDevice) {
-            LogManager.logFatal(LOG_SOURCE, "assignDiskUnitToRun() Node %012o is not a disk device", nodeIdentifier);
+            LogManager.logFatal(LOG_SOURCE, "assignFixedDiskUnitToRun() Node %012o is not a disk device", nodeIdentifier);
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
@@ -1549,6 +1549,35 @@ public class FacilitiesManager implements Manager {
         return sb.toString();
     }
 
+    public synchronized DiskFileFacilitiesItem ioGetDiskFileFacilitiesItem(
+        final String internalName
+    ) throws ExecStoppedException {
+        var exec = Exec.getInstance();
+
+        var fit = exec.getFacilitiesItemTable();
+        var facItem = fit.getFacilitiesItemByInternalName(internalName);
+        switch (facItem) {
+            case null -> {
+                LogManager.logFatal(LOG_SOURCE, "Cannot find facItem for file %s", internalName);
+                exec.stop(StopCode.InternalExecIOFailed);
+                throw new ExecStoppedException();
+            }
+            case NameItem nameItem -> {
+                LogManager.logFatal(LOG_SOURCE, "File %s is not assigned", internalName);
+                exec.stop(StopCode.InternalExecIOFailed);
+                throw new ExecStoppedException();
+            }
+            case DiskFileFacilitiesItem dfi -> {
+                return dfi;
+            }
+            default -> {
+                LogManager.logFatal(LOG_SOURCE, "File %s is not a disk file", internalName);
+                exec.stop(StopCode.InternalExecIOFailed);
+                throw new ExecStoppedException();
+            }
+        }
+    }
+
     public synchronized IOResult ioReadFromDiskFile(
         final Run run,
         final String internalName,
@@ -1569,19 +1598,7 @@ public class FacilitiesManager implements Manager {
             throw new ExecStoppedException();
         }
 
-        var fit = exec.getFacilitiesItemTable();
-        var facItem = fit.getFacilitiesItemByInternalName(internalName);
-        if (facItem == null) {
-            LogManager.logFatal(LOG_SOURCE, "Cannot find facItem for file %s", internalName);
-            exec.stop(StopCode.InternalExecIOFailed);
-            throw new ExecStoppedException();
-        }
-
-        var dfi = (DiskFileFacilitiesItem) facItem;
-        if (!dfi.isWriteable()) {
-            return new IOResult(ERIO$Status.WriteInhibited);
-        }
-
+        var dfi = ioGetDiskFileFacilitiesItem(internalName);
         var aci = dfi.getAcceleratedCycleInfo();
         var fas = aci.getFileAllocationSet();
         var fci = (DiskFileCycleInfo)aci.getFileCycleInfo();
@@ -1721,16 +1738,7 @@ public class FacilitiesManager implements Manager {
                 throw new ExecStoppedException();
             }
 
-            var fit = exec.getFacilitiesItemTable();
-            var facItem = fit.getFacilitiesItemByInternalName(internalName);
-            if (facItem == null) {
-                LogManager.logFatal(LOG_SOURCE, "Cannot find facItem for file %s", internalName);
-                exec.stop(StopCode.InternalExecIOFailed);
-                throw new ExecStoppedException();
-            }
-
-            // TODO ERROR THE FOLLOWING facItem could be a NameItem which is NOT a DiskFileFacilitiesItem
-            var dfi = (DiskFileFacilitiesItem) facItem;
+            var dfi = ioGetDiskFileFacilitiesItem(internalName);
             if (!dfi.isWriteable()) {
                 return new IOResult(ERIO$Status.WriteInhibited);
             }
