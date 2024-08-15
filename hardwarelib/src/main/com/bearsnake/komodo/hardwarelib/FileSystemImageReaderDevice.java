@@ -97,7 +97,7 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice implements
             }
         } catch (IOException ex) {
             dropAndClose();
-            packet.setStatus(IoStatus.SystemError);
+            packet.setStatus(IoStatus.SystemError).setSystemMessage(ex.getMessage());
         }
     }
 

@@ -134,7 +134,7 @@ public class FileSystemDiskDevice extends DiskDevice {
             }
         } catch (IOException ex) {
             LogManager.logError(_nodeName, "Error opening file:%s", ex);
-            packet.setStatus(IoStatus.SystemError);
+            packet.setStatus(IoStatus.SystemError).setSystemMessage(ex.getMessage());
             return;
         }
 
@@ -168,12 +168,12 @@ public class FileSystemDiskDevice extends DiskDevice {
             var bytes = _channel.read(buffer, packet.getBlockId() * BLOCK_SIZE);
             if (bytes != transferSize) {
                 LogManager.logError(_nodeName, "Error - wanted %d bytes, got %d", transferSize, bytes);
-                packet.setStatus(IoStatus.SystemError);
+                packet.setStatus(IoStatus.SystemError).setSystemMessage("Data underrun");
                 return;
             }
         } catch (IOException ex) {
             LogManager.logError(_nodeName, "Error read from file:%s", ex);
-            packet.setStatus(IoStatus.SystemError);
+            packet.setStatus(IoStatus.SystemError).setSystemMessage(ex.getMessage());
             return;
         }
 
@@ -247,12 +247,12 @@ public class FileSystemDiskDevice extends DiskDevice {
         try {
             var bytes = _channel.write(buffer, packet.getBlockId() * BLOCK_SIZE);
             if (bytes != transferSize) {
-                packet.setStatus(IoStatus.SystemError);
+                packet.setStatus(IoStatus.SystemError).setSystemMessage("Transfer length not as expected");
                 return;
             }
         } catch (IOException ex) {
             LogManager.logError(_nodeName, "Error read from file:%s", ex);
-            packet.setStatus(IoStatus.SystemError);
+            packet.setStatus(IoStatus.SystemError).setSystemMessage(ex.getMessage());
             return;
         }
 
