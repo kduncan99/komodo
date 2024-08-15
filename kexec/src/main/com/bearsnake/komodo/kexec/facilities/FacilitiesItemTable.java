@@ -6,7 +6,11 @@ package com.bearsnake.komodo.kexec.facilities;
 
 import com.bearsnake.komodo.kexec.FileCycleSpecification;
 import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
+import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
+import com.bearsnake.komodo.kexec.facilities.facItems.NameItem;
 
 import java.io.PrintStream;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -34,6 +38,56 @@ public class FacilitiesItemTable {
     }
 
     /**
+     * Searches for the facilities item which best fits the given file specification.
+     * Currently used for handling @USE statements, but might be useful elsewhere.
+     * @param fileSpecification file specification which is driving this search
+     * @return Corresponding FacilitiesItem if found, else null
+     */
+    synchronized FacilitiesItem findFacilitiesItem(
+        final Run run,
+        final FileSpecification fileSpecification
+    ) {
+        // If fileSpecification is (or could be) an internal name, search internal names first.
+        if (fileSpecification.couldBeInternalName()) {
+            return _content.stream()
+                           .filter(fi -> fi.hasInternalName(fileSpecification.getFilename()))
+                           .findFirst()
+                           .orElse(null);
+        }
+
+        // Otherwise resolve the qualifier (if/as necessary) then search for a fac item using external names.
+        var cycleSpec = fileSpecification.getFileCycleSpecification();
+        var effectiveSpec = run.resolveQualifier(fileSpecification);
+        for (var fi : _content) {
+            if (!(fi instanceof NameItem)
+                && fi.getQualifier().equals(effectiveSpec.getQualifier())
+                && fi.getFilename().equals(effectiveSpec.getFilename())) {
+                if (cycleSpec == null) {
+                    // caller did not put a file cycle on the file specification.
+                    // we have to match a relative cycle of zero on the fac item.
+                    if (!fi.hasRelativeCycle() || (fi.getRelativeCycle() == 0)) {
+                        return fi;
+                    }
+                } else if (cycleSpec.isAbsolute()) {
+                    // caller specified an absolute file cycle. we have to match the fac item.
+                    if (fi.getAbsoluteCycle() == cycleSpec.getCycle()) {
+                        return fi;
+                    }
+                } else {
+                    // caller specified a relative file cycle (including 0).
+                    // search on relative cycle.
+                    if (fi.hasRelativeCycle() && fi.getRelativeCycle() != cycleSpec.getCycle()) {
+                        return fi;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * TODO this might be obsolete...?
      * Searches for facilities item which is an exact match on the given file specification.
      * There must be an exact match on qualifier and filename.
      * If there is no file cycle spec in the file specification, the facilities item must have:

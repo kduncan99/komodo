@@ -25,6 +25,7 @@ import com.bearsnake.komodo.hardwarelib.TapeDevice;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.configuration.Configuration;
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.configuration.MnemonicType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
@@ -486,6 +487,9 @@ public class FacilitiesManager implements Manager {
 
         var isRemovable = fsInfo.getFileType() == FileType.Removable;
         // TODO what should we do about NameItem fac items?
+        //   i.e., @USE FOO.,SYS$LIB$*NUMPY.
+        //         @ASG,A FOO.
+
         var wasAlreadyAssigned = (facItem != null);
         if (wasAlreadyAssigned) {
             // We need to filter out the effects of D,E,K,R, and M since we are already assigned.
@@ -1375,8 +1379,7 @@ public class FacilitiesManager implements Manager {
                             "catalogTapeFileCycle %s",
                             fileSpecification.toString());
 
-        var exec = Exec.getInstance();
-        var mType = exec.getConfiguration().getMnemonicType(type);
+        var mType = Configuration.getMnemonicType(type);
         if (mType == null) {
             fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
             fsResult.mergeStatusBits(0_600000_000000L);
@@ -1409,7 +1412,7 @@ public class FacilitiesManager implements Manager {
 
         var fiTable = run.getFacilitiesItemTable();
         synchronized (fiTable) {
-            var facItem = fiTable.getExactFacilitiesItem(fileSpecification);
+            var facItem = fiTable.findFacilitiesItem(run, fileSpecification);
             if (facItem == null) {
                 // create a name item
                 facItem = new NameItem().setQualifier(fileSpecification.getQualifier())
