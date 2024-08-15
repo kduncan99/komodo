@@ -24,6 +24,7 @@ import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
 import com.bearsnake.komodo.kexec.mfd.MFDManager;
 import com.bearsnake.komodo.kexec.symbionts.SymbiontManager;
+import com.bearsnake.komodo.kexec.tasks.ExecTask;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -73,6 +74,8 @@ public class Exec extends Run {
         _allowRecoveryBoot = false;
         _phase = Phase.NotStarted;
         _instance = this;
+
+        _activeTask = new ExecTask();
 
         _consoleManager = new ConsoleManager();
         _facilitiesManager = new FacilitiesManager();

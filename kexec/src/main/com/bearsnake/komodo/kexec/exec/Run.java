@@ -103,6 +103,7 @@ public abstract class Run {
     public void decrementWaitingForMassStorage() { _waitingForMassStorageCounter.decrementAndGet(); }
     public void decrementWaitingForPeripheral() { _waitingForPeripheralCounter.decrementAndGet(); }
     public String getAccountId() { return _runCardInfo.getAccountId(); }
+    public final Task getActiveTask() { return _activeTask; }
     public final String getActualRunId() { return _actualRunId; }
     public final String getDefaultQualifier() { return _defaultQualifier; }
     public final FacilitiesItemTable getFacilitiesItemTable() { return _facilitiesItemTable; }

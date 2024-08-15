@@ -129,36 +129,6 @@ public class FacilitiesManager implements Manager {
         LogicalByDevice,
     }
 
-    public static class IOResult {
-
-        public final ERIO$Status _status;
-        public int _wordsTransferred;
-
-        public IOResult(
-            final ERIO$Status status
-        ) {
-            _status = status;
-            _wordsTransferred = 0;
-        }
-
-        public IOResult(
-            final ERIO$Status status,
-            final int wordsTransferred
-        ) {
-            _status = status;
-            _wordsTransferred = wordsTransferred;
-        }
-
-        public void addWordsTransferred(
-            final int wordsTransferred
-        ) {
-            _wordsTransferred += wordsTransferred;
-        }
-
-        public ERIO$Status getStatus() { return _status; }
-        public int getWordsTransferred() { return _wordsTransferred; }
-    }
-
     private static class PlacementInfo {
 
         public final PlacementType _placementType;
@@ -174,6 +144,57 @@ public class FacilitiesManager implements Manager {
     }
 
     static final String LOG_SOURCE = "FacMgr";
+
+    private final static String[] ABGM_RESPONSES = new String[]{ "A", "B", "G", "M" };
+    private final static String ABGM_RESPONSE_STR = "ABGM";
+    private final static String[] AGM_RESPONSES = new String[]{ "A", "G", "M" };
+    private final static String AGM_RESPONSE_STR = "AGM";
+
+    static final HashMap<IoStatus, ERIO$Status> _ioStatusTranslateTable = new HashMap<>();
+    static {
+        /* NotStarted does not have a corresponding ERIO status */
+        _ioStatusTranslateTable.put(IoStatus.Complete, ERIO$Status.Success);
+        _ioStatusTranslateTable.put(IoStatus.InProgress, ERIO$Status.InProgress);
+        _ioStatusTranslateTable.put(IoStatus.Canceled, ERIO$Status.SystemError);
+        _ioStatusTranslateTable.put(IoStatus.AtLoadPoint, ERIO$Status.EndOfTape);
+        /*
+        TODO
+            InvalidChannelProgram,
+            DataException, // something in the device meta-data is bad
+            DeviceDoesNotExist,
+        */
+        _ioStatusTranslateTable.put(IoStatus.DeviceIsDown, ERIO$Status.DeviceDownOrNotAvailable);
+        _ioStatusTranslateTable.put(IoStatus.DeviceIsNotAccessible, ERIO$Status.DeviceDownOrNotAvailable);
+        _ioStatusTranslateTable.put(IoStatus.DeviceIsNotAttached, ERIO$Status.DeviceDownOrNotAvailable);
+        /* TODO DeviceIsNotReady should cause a retry at the console, culminating with ... what? */
+        _ioStatusTranslateTable.put(IoStatus.EndOfFile, ERIO$Status.EndOfFile);
+        _ioStatusTranslateTable.put(IoStatus.EndOfTape, ERIO$Status.EndOfTape);
+        /*
+        TODO
+            InternalError,
+            InvalidBlockCount,
+            InvalidBlockId,
+            InvalidBufferSize,
+            InvalidFunction,
+            InvalidNodeType,
+            InvalidPacket,
+            InvalidPackName,
+            InvalidPrepFactor,
+            InvalidTapeBlock,
+            InvalidTrackCount,
+        */
+        _ioStatusTranslateTable.put(IoStatus.LostPosition, ERIO$Status.LostPosition);
+        /*
+            MediaAlreadyMounted,
+            MediaNotMounted,
+            NonIntegralRead,
+            PackNotPrepped,
+            ReadNotAllowed,
+            ReadOverrun,
+        */
+        _ioStatusTranslateTable.put(IoStatus.SystemError, ERIO$Status.SystemError);
+        _ioStatusTranslateTable.put(IoStatus.WriteProtected, ERIO$Status.WriteInhibited);
+    }
 
     // Inventory of all the hardware nodes, keyed by node identifier.
     // It is loaded at initialization(), and will remain unchanged during the application existence.
@@ -1581,13 +1602,25 @@ public class FacilitiesManager implements Manager {
         }
     }
 
-    public synchronized IOResult ioReadFromDiskFile(
+    /**
+     * Handles mass-storage read
+     * @param run the run which is requesting the IO
+     * @param internalName the internal name of the file to be read from
+     * @param address sector or word address of the read operation
+     * @param buffer buffer into which data is to be read
+     * @param transferCount number of words to be read
+     * @param isWordAddressable true if file is word-addressable
+     * @param ioResult where we return IO status
+     * @throws ExecStoppedException if we stop the exec, or determine that it has been stopped during processing
+     */
+    public synchronized void ioReadFromDiskFile(
         final Run run,
         final String internalName,
         final long address,
         final ArraySlice buffer,
         final int transferCount,
-        final boolean isWordAddressable
+        final boolean isWordAddressable,
+        final IOResult ioResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
                             "ioReadFromDiskFile(%s, '%s', addr=%d words=%d",
@@ -1610,7 +1643,8 @@ public class FacilitiesManager implements Manager {
             maxTracks <<= 6;
         }
         if (address >= maxTracks) {
-            return new IOResult(ERIO$Status.ReadExtentOutOfRange);
+            ioResult.setStatus(ERIO$Status.ReadExtentOutOfRange).setWordsTransferred(0);
+            return;
         }
 
         int destOffset = 0;
@@ -1622,7 +1656,8 @@ public class FacilitiesManager implements Manager {
             var relativeTrack = nextAddress >> 6;
             var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
             if (hwTid == null) {
-                return new IOResult(ERIO$Status.UnallocatedArea, totalWordsTransferred);
+                ioResult.setStatus(ERIO$Status.UnallocatedArea).setWordsTransferred(totalWordsTransferred);
+                return;
             }
 
             // Find the block address corresponding to the hardware track address.
@@ -1705,11 +1740,12 @@ public class FacilitiesManager implements Manager {
                                              .setNodeIdentifier(ni.getNode().getNodeIdentifier())
                                              .setBlockId(blockId)
                                              .addControlWord(cw);
-                var ioResult = ioLoop(internalName, cp, false);
-                if (ioResult._status != ERIO$Status.Success) {
-                    totalWordsTransferred += ioResult._wordsTransferred;
-                    ioResult.addWordsTransferred(totalWordsTransferred);
-                    return ioResult;
+                ioLoop(run, dfi, cp, false);
+                totalWordsTransferred += cp.getWordsTransferred();
+                if (cp.getIoStatus() != IoStatus.Complete) {
+                    var erioStatus = _ioStatusTranslateTable.get(cp.getIoStatus());
+                    ioResult.setStatus(erioStatus).setWordsTransferred(totalWordsTransferred);
+                    return;
                 }
 
                 wordsRemaining -= transferWordCount;
@@ -1717,16 +1753,28 @@ public class FacilitiesManager implements Manager {
             }
         }
 
-        return new IOResult(ERIO$Status.Success, totalWordsTransferred);
+        ioResult.setStatus(ERIO$Status.Success).setWordsTransferred(totalWordsTransferred);
     }
 
-    public synchronized IOResult ioWriteToDiskFile(
+    /**
+     * Handles mass-storage write
+     * @param run the run which is requesting the IO
+     * @param internalName the internal name of the file to be written to
+     * @param address sector or word address of the write operation
+     * @param buffer buffer containing the data to be written
+     * @param transferCount number of words to be written
+     * @param isWordAddressable true if file is word-addressable
+     * @param ioResult where we return IO status
+     * @throws ExecStoppedException if we stop the exec, or determine that it has been stopped during processing
+     */
+    public synchronized void ioWriteToDiskFile(
         final Run run,
         final String internalName,
         final long address,
         final ArraySlice buffer,
         final int transferCount,
-        final boolean isWordAddressable
+        final boolean isWordAddressable,
+        final IOResult ioResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
                             "ioWriteToDiskFile(%s, '%s', addr=%d words=%d",
@@ -1743,7 +1791,8 @@ public class FacilitiesManager implements Manager {
 
             var dfi = ioGetDiskFileFacilitiesItem(internalName);
             if (!dfi.isWriteable()) {
-                return new IOResult(ERIO$Status.WriteInhibited);
+                ioResult.setStatus(ERIO$Status.WriteInhibited).setWordsTransferred(0);
+                return;
             }
 
             var aci = dfi.getAcceleratedCycleInfo();
@@ -1763,10 +1812,12 @@ public class FacilitiesManager implements Manager {
                 // Ensure it is allocated...
                 var relativeTrack = nextAddress >> 6;
                 if (relativeTrack >= maxTracks) {
-                    return new IOResult(ERIO$Status.WriteExtentOutOfRange, totalWordsTransferred);
+                    ioResult.setStatus(ERIO$Status.WriteExtentOutOfRange).setWordsTransferred(totalWordsTransferred);
+                    return;
                 }
                 if (!mm.allocateDataExtent(fas, relativeTrack, 1)) {
-                    return new IOResult(ERIO$Status.CannotExpandFile, totalWordsTransferred);
+                    ioResult.setStatus(ERIO$Status.CannotExpandFile).setWordsTransferred(totalWordsTransferred);
+                    return;
                 }
                 var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
 
@@ -1807,11 +1858,11 @@ public class FacilitiesManager implements Manager {
                                                  .setNodeIdentifier(ni.getNode().getNodeIdentifier())
                                                  .setBlockId(blockId)
                                                  .addControlWord(cw);
-                    var ioResult = ioLoop(internalName, cp, false);
-                    if (ioResult._status != ERIO$Status.Success) {
-                        totalWordsTransferred += ioResult._wordsTransferred;
-                        ioResult.addWordsTransferred(totalWordsTransferred);
-                        return ioResult;
+                    ioLoop(run, dfi, cp, false);
+                    if (cp.getIoStatus() != IoStatus.Complete) {
+                        var erioStatus = _ioStatusTranslateTable.get(cp.getIoStatus());
+                        ioResult.setStatus(erioStatus).setWordsTransferred(totalWordsTransferred);
+                        return;
                     }
 
                     // Now copy user data from the caller's buffer into the temporary buffer and write it back out.
@@ -1820,11 +1871,12 @@ public class FacilitiesManager implements Manager {
                         tempBuffer.set(dx, buffer.get(sx++));
                     }
                     cp.setFunction(ChannelProgram.Function.Write);
-                    ioResult = ioLoop(internalName, cp, false);
-                    if (ioResult._status != ERIO$Status.Success) {
-                        totalWordsTransferred += ioResult._wordsTransferred;
-                        ioResult.addWordsTransferred(totalWordsTransferred);
-                        return ioResult;
+                    ioLoop(run, dfi, cp, false);
+                    if (cp.getIoStatus() != IoStatus.Complete) {
+                        totalWordsTransferred += ioResult.getWordsTransferred();
+                        var erioStatus = _ioStatusTranslateTable.get(cp.getIoStatus());
+                        ioResult.setStatus(erioStatus).setWordsTransferred(totalWordsTransferred);
+                        return;
                     }
 
                     int actualWords = transferWordCount - preWords;
@@ -1846,11 +1898,12 @@ public class FacilitiesManager implements Manager {
                                                  .setNodeIdentifier(ni.getNode().getNodeIdentifier())
                                                  .setBlockId(blockId)
                                                  .addControlWord(cw);
-                    var ioResult = ioLoop(internalName, cp, false);
-                    if (ioResult._status != ERIO$Status.Success) {
-                        totalWordsTransferred += ioResult._wordsTransferred;
-                        ioResult.addWordsTransferred(totalWordsTransferred);
-                        return ioResult;
+                    ioLoop(run, dfi, cp, false);
+                    if (cp.getIoStatus() != IoStatus.Complete) {
+                        totalWordsTransferred += ioResult.getWordsTransferred();
+                        var erioStatus = _ioStatusTranslateTable.get(cp.getIoStatus());
+                        ioResult.setStatus(erioStatus).setWordsTransferred(totalWordsTransferred);
+                        return;
                     }
 
                     wordsRemaining -= transferWordCount;
@@ -1858,7 +1911,7 @@ public class FacilitiesManager implements Manager {
                 }
             }
 
-            return new IOResult(ERIO$Status.Success, totalWordsTransferred);
+            ioResult.setStatus(ERIO$Status.Success).setWordsTransferred(totalWordsTransferred);
         } catch (Throwable t) {
             LogManager.logCatching(LOG_SOURCE, t);
             exec.stop(StopCode.FacilitiesComplex);
@@ -2079,10 +2132,11 @@ public class FacilitiesManager implements Manager {
      * Routes an IO described by a channel program.
      * For the case where some portion of the Exec needs to do device-specific IO.
      * @param channelProgram IO description
+     * @return selected Channel
      * @throws ExecStoppedException if the exec stops during this function
      * @throws NoRouteForIOException if the destination device has no available path
      */
-    public void routeIo(
+    public Channel routeIo(
         final ChannelProgram channelProgram
     ) throws ExecStoppedException, NoRouteForIOException {
         var nodeInfo = _nodeGraph.get(channelProgram.getNodeIdentifier());
@@ -2103,7 +2157,9 @@ public class FacilitiesManager implements Manager {
             throw new ExecStoppedException();
         }
 
-        selectRoute((Device) node).routeIo(channelProgram);
+        var channel = selectRoute((Device) node);
+        channel.routeIo(channelProgram);
+        return channel;
     }
 
     /**
@@ -2726,6 +2782,165 @@ public class FacilitiesManager implements Manager {
     }
 
     /**
+     * Generic IO loop for all device IO
+     * @param run requesting run
+     * @param facilitiesItem the facilities item describing the file for which we are doing IO
+     * @param channelProgram channel program to be executed - status information is updated in this packet.
+     * @param asynchronous true for asynchronous IO
+     * @throws ExecStoppedException if something goes badly
+     */
+    private void ioLoop(
+        final Run run,
+        final FacilitiesItem facilitiesItem,
+        final ChannelProgram channelProgram,
+        final boolean asynchronous
+    ) throws ExecStoppedException {
+        var exec = Exec.getInstance();
+
+        // Loop over trying and maybe retrying the IO.
+        // (This is a hardware level IO).
+        while (true) {
+            Channel channel;
+            try {
+                channel = routeIo(channelProgram);
+            } catch (NoRouteForIOException ex) {
+                LogManager.logCatching(LOG_SOURCE, ex);
+                exec.stop(StopCode.InternalExecIOFailed);
+                throw new ExecStoppedException();
+            }
+
+            // If the IO is in progress, return immediately if async, otherwise wait for it to complete.
+            if (channelProgram.getIoStatus() == IoStatus.InProgress) {
+                if (asynchronous) {
+                    return;
+                }
+
+                while (channelProgram.getIoStatus() == IoStatus.InProgress) {
+                    if (exec.isStopped()) {
+                        throw new ExecStoppedException();
+                    }
+                    Exec.sleep(10);
+                }
+            }
+
+            String errorStr = "";
+            String[] responses = null;
+            String responseStr = "";
+            switch (channelProgram.getIoStatus()) {
+                case NotStarted, InProgress -> { /* cannot be here */ }
+                case Complete, AtLoadPoint, InvalidChannelProgram, DeviceDoesNotExist, EndOfFile, EndOfTape, InvalidBlockCount,
+                     InvalidBlockId, InvalidBufferSize, InvalidFunction, InvalidNodeType, InvalidPacket, InvalidPackName,
+                     InvalidPrepFactor, InvalidTapeBlock, InvalidTrackCount, LostPosition, MediaAlreadyMounted, NonIntegralRead,
+                     PackNotPrepped, ReadNotAllowed, ReadOverrun -> { return; }
+                case Canceled -> throw new ExecStoppedException();
+                // TODO - finish these cases
+                case DataException -> {throw new RuntimeException("Unimplemented");}
+                case DeviceIsDown -> {throw new RuntimeException("Unimplemented");}
+                case DeviceIsNotAccessible -> {throw new RuntimeException("Unimplemented");}
+                case DeviceIsNotAttached -> {throw new RuntimeException("Unimplemented");}
+                case DeviceIsNotReady -> {throw new RuntimeException("Unimplemented");}
+                case InternalError -> {throw new RuntimeException("Unimplemented");}
+                case MediaNotMounted -> {throw new RuntimeException("Unimplemented");}
+                case SystemError -> {
+                    errorStr = "DEVERR";
+                    responses = ABGM_RESPONSES;
+                    responseStr = ABGM_RESPONSE_STR;
+                }
+                case WriteProtected -> {
+                    errorStr = "R-ONLY";
+                    responses = AGM_RESPONSES;
+                    responseStr = AGM_RESPONSE_STR;
+                }
+            }
+
+            boolean redisplay = true;
+            while (redisplay) {
+                redisplay = false;
+                var deviceName = _nodeGraph.get(channelProgram.getNodeIdentifier()).getNode().getNodeName();
+                var msg = String.format("%s %s %s %s %s %s", deviceName, channel.getNodeName(), errorStr, channelProgram.getFunction().toString(), run.getActualRunId(), responseStr);
+                var response = exec.sendExecRestrictedReadReplyMessage(msg, responses, ConsoleType.InputOutput);
+                switch (response) {
+                    case "A":
+                        // retry the operation
+                        break;
+                    case "B":
+                        // unrecoverable error - pass error back to caller
+                        // normally for disk we would bad-track the pack, but we don't do bad-tracking here, so...
+                        return;
+                    case "G":
+                        // unrecoverable error - pass error back to caller
+                        return;
+                    case "M":
+                        // display more information (if available) and ask again
+
+                        // subfunction function line (We don't have one of these at the moment)
+                        // The subfunction line for the M response is an optional line that is not dependent on the device type.
+                        // This line appears for DIR$ functions only, such as READ VOL1, READ SECTOR1, and WRITE SECTOR1.
+                        // Format:
+                        //      targ-dev DEVICE = device SUBFUNCTION = subfunction where:
+                        // targ-dev:    is the name of the target device that had the error.
+                        // device:      is the name of the device that was used to issue the I/O that resulted in the error.
+                        // subfunction: is one of the list DIR$ subfunctions: RDVOL1, RDSEC1, DEVCAP, WRVOL1, or WRSEC1.
+
+                        // hardware function line for UTIL functions only
+                        // Format:
+                        //      device DEVICE = ctrl-unit H/W CMD = h/w-func where:
+                        // device:      is the name of the device in error.
+                        // ctrl-unit:   is the name of the control device in error.
+                        //  h/w-func:   is the hardware command that found the error.
+                        //      -- word interface hardware function mnemonics UTIL only --
+                        //      -- looks like most of these are for cache disk controllers --
+                        //      CLRICD  Clear internal cache down indicator
+                        //      CLRTME  Clear segment timestamp
+                        //      DELSEG  Delete segment
+                        //      DRAIN   Drain
+                        //      INIT    Initialize
+                        //      PARAM   Parameterize
+                        //      PRPTRK  Prep Track
+                        //      RDFSI   Read file status indicator
+                        //      RDHID   Read hardware ID attempt
+                        //      RDICD   Read ICD data
+                        //      RDICDX  Read ICD dta and microcode trace
+                        //      RDMLEV  Read microcode revision level
+                        //      RDPAGE  Read mode page ettempt
+                        //      RDTABL  Read tables
+                        //      -- HIC cartridge tape mnemonics --
+                        //      ASSIGN  Assign
+                        //      CLRPG   LOG-SENSE / LOG-SELECT could not be sent to the device
+                        //      CONACC  Control access
+                        //      INQRY   Inquiry
+                        //      LOADCR  Load cartridge
+                        //      LOADSP  Load display
+                        //      MODSNS  MODE-SENSE could not be sent to the device
+                        //      PROCLN
+                        //      REPDEN
+                        //      SPGID   Set path group-id
+                        //      UNASGN  Unassign
+
+                        // Run/File line
+                        // Format:
+                        //      device RUNID = program Q*F = qual*file(cycle)
+                        var programName = run.hasTask() ? run.getActiveTask().getProgramName() : "";
+                        msg = String.format("%s %s = %s Q*F = %s*%s(%d)",
+                                            deviceName, run.getActualRunId(), programName,
+                                            facilitiesItem.getQualifier(),
+                                            facilitiesItem.getFilename(),
+                                            facilitiesItem.getAbsoluteCycle());
+                        exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
+
+                        String additionalStatus = channelProgram.getAdditionalStatus();
+                        if (additionalStatus != null) {
+                            msg = String.format("%s %s", deviceName, additionalStatus);
+                            exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
+                        }
+
+                        redisplay = true;
+                }
+            }
+        }
+    }
+
+    /**
      * Unloads all the ready tape devices - used during boot.
      * @throws ExecStoppedException if something goes wrong while we're doing this.
      */
@@ -2931,49 +3146,6 @@ public class FacilitiesManager implements Manager {
                              .filter(ni -> ni.getNode().getNodeName().equals(nodeName))
                              .findFirst()
                              .orElse(null);
-        }
-    }
-
-    /**
-     * Generic IO loop
-     * @param internalFileName internal file name, for emitting diagnostic information
-     * @param channelProgram channel program to be executed
-     * @param asynchronous true for asynchronous IO
-     * @return ERIO$Status value
-     * @throws ExecStoppedException if something goes badly
-     */
-    private IOResult ioLoop(
-        final String internalFileName,
-        final ChannelProgram channelProgram,
-        final boolean asynchronous
-    ) throws ExecStoppedException {
-        var exec = Exec.getInstance();
-        while (true) {
-            try {
-                routeIo(channelProgram);
-            } catch (NoRouteForIOException ex) {
-                LogManager.logCatching(LOG_SOURCE, ex);
-                exec.stop(StopCode.InternalExecIOFailed);
-                throw new ExecStoppedException();
-            }
-
-            if (channelProgram.getIoStatus() == IoStatus.InProgress) {
-                if (asynchronous) {
-                    return new IOResult(ERIO$Status.InProgress);
-                }
-                while (channelProgram.getIoStatus() == IoStatus.InProgress) {
-                    if (exec.isStopped()) {
-                        throw new ExecStoppedException();
-                    }
-                    Exec.sleep(10);
-                }
-            }
-
-            switch (channelProgram.getIoStatus()) {
-            case IoStatus.Complete:
-                return new IOResult(ERIO$Status.Success, channelProgram.getWordsTransferred());
-            //TODO handle the other IO status cases
-            }
         }
     }
 

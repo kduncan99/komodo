@@ -13,6 +13,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecIOException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.IOResult;
 
 import java.time.Instant;
 
@@ -255,12 +256,14 @@ public class SymbiontFileWriter implements SymbiontWriter {
     private void writeBuffer() throws ExecStoppedException, ExecIOException {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
-        var ioResult = fm.ioWriteToDiskFile(exec,
-                                            _internalFileName,
-                                            _nextAddress,
-                                            _buffer,
-                                            _bufferIndex,
-                                            false);
+        var ioResult = new IOResult();
+        fm.ioWriteToDiskFile(exec,
+                             _internalFileName,
+                             _nextAddress,
+                             _buffer,
+                             _bufferIndex,
+                             false,
+                             ioResult);
         if (ioResult.getStatus() != ERIO$Status.Success) {
             exec.sendExecReadOnlyMessage("Image output canceled", ConsoleType.System);
             throw new ExecIOException(ioResult.getStatus());

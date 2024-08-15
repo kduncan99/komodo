@@ -80,7 +80,7 @@ public class DiskChannel extends Channel {
              .setFunction(IoFunction.Read);
         device.startIo(ioPkt);
         if (ioPkt.getStatus() != IoStatus.Complete) {
-            channelProgram.setIoStatus(ioPkt.getStatus());
+            channelProgram.setIoStatus(ioPkt.getStatus(), ioPkt.getAdditionalStatus());
             return;
         }
 
@@ -120,7 +120,7 @@ public class DiskChannel extends Channel {
             }
         }
 
-        channelProgram.setIoStatus(ioPkt.getStatus());
+        channelProgram.setIoStatus(ioPkt.getStatus(), ioPkt.getAdditionalStatus());
     }
 
     @Override
@@ -188,7 +188,7 @@ public class DiskChannel extends Channel {
             ioPkt.setBlockCount(totalBlockCount).setFunction(IoFunction.Read);
             device.startIo(ioPkt);
             if (ioPkt.getStatus() != IoStatus.Complete) {
-                channelProgram.setIoStatus(ioPkt.getStatus());
+                channelProgram.setIoStatus(ioPkt.getStatus(), ioPkt.getAdditionalStatus());
                 return;
             }
         }
@@ -233,7 +233,7 @@ public class DiskChannel extends Channel {
         // Finally we can do the write
         ioPkt.setFunction(IoFunction.Write);
         device.startIo(ioPkt);
-        channelProgram.setIoStatus(ioPkt.getStatus());
+        channelProgram.setIoStatus(ioPkt.getStatus(), ioPkt.getAdditionalStatus());
     }
 
     @Override

@@ -10,6 +10,7 @@ package com.bearsnake.komodo.kexec.exec;
 public enum ERIO$Status {
 
     Success(0),
+    EndOfFile(01),
     EndOfBlock(01),
     EndOfTape(02),
     NotFound(03),

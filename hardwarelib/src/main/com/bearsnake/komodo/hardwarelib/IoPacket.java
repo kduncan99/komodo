@@ -25,14 +25,14 @@ public abstract class IoPacket {
 
     private IoFunction _function;
     private IoStatus _status;
-    private String _systemMessage; // only valid if _status is SystemError
+    private String _additionalStatus; // only valid if _status is SystemError
 
+    public String getAdditionalStatus() { return _additionalStatus; }
     public IoFunction getFunction() { return _function; }
     public IoStatus getStatus() { return _status; }
-    public String getSystemMessage() { return _systemMessage; }
+    public IoPacket setAdditionalStatus(final String systemMessage) { _additionalStatus = systemMessage; return this; }
     public IoPacket setFunction(final IoFunction function) { _function = function; return this; }
     public IoPacket setStatus(final IoStatus status) { _status = status; return this; }
-    public IoPacket setSystemMessage(final String systemMessage) { _systemMessage = systemMessage; return this; }
 
     @Override
     public String toString() {

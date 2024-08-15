@@ -110,7 +110,7 @@ public class FileSystemImagePrinterDevice extends SymbiontPrinterDevice {
             _topOfPage = true;
         } catch (IOException ex) {
             _printer = null;
-            packet.setStatus(IoStatus.SystemError).setSystemMessage(ex.getMessage());
+            packet.setStatus(IoStatus.SystemError).setAdditionalStatus(ex.getMessage());
             return;
         }
 

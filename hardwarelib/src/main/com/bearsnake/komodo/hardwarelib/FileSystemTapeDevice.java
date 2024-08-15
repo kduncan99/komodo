@@ -127,7 +127,7 @@ public class FileSystemTapeDevice extends TapeDevice {
             }
         } catch (IOException ex) {
             LogManager.logError(_nodeName, "Error opening file:%s", ex);
-            packet.setStatus(IoStatus.SystemError).setSystemMessage(ex.getMessage());
+            packet.setStatus(IoStatus.SystemError).setAdditionalStatus(ex.getMessage());
             return;
         }
 

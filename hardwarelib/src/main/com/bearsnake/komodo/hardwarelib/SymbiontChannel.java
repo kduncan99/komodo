@@ -66,7 +66,7 @@ public class SymbiontChannel extends Channel {
         ioPkt.setFunction(IoFunction.Read);
         device.startIo(ioPkt);
         if (ioPkt.getStatus() != IoStatus.Complete) {
-            channelProgram.setIoStatus(ioPkt.getStatus());
+            channelProgram.setIoStatus(ioPkt.getStatus(), ioPkt.getAdditionalStatus());
             return;
         }
 
@@ -74,7 +74,7 @@ public class SymbiontChannel extends Channel {
         cw.getBuffer().unpack(arr, false);
 
         channelProgram.setWordsTransferred(arr.length / 4);
-        channelProgram.setIoStatus(ioPkt.getStatus());
+        channelProgram.setIoStatus(ioPkt.getStatus(), ioPkt.getAdditionalStatus());
     }
 
     @Override
@@ -124,12 +124,12 @@ public class SymbiontChannel extends Channel {
              .setFunction(IoFunction.Write);
         device.startIo(ioPkt);
         if (ioPkt.getStatus() != IoStatus.Complete) {
-            channelProgram.setIoStatus(ioPkt.getStatus());
+            channelProgram.setIoStatus(ioPkt.getStatus(), ioPkt.getAdditionalStatus());
             return;
         }
 
         channelProgram.setWordsTransferred(totalWordCount);
-        channelProgram.setIoStatus(ioPkt.getStatus());
+        channelProgram.setIoStatus(ioPkt.getStatus(), ioPkt.getAdditionalStatus());
     }
 
     @Override

@@ -12,6 +12,7 @@ import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
+import com.bearsnake.komodo.kexec.facilities.IOResult;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.util.HashMap;
@@ -121,7 +122,8 @@ public class GenFileInterface {
 
         var buffer = new ArraySlice(new long[28]);
         var addr = 0;
-        var ioResult = fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, 28, false);
+        var ioResult = new IOResult();
+        fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, 28, false, ioResult);
         if (ioResult.getStatus() != ERIO$Status.Success) {
             exec.stop(StopCode.InternalExecIOFailed);
             throw new ExecStoppedException();
@@ -140,7 +142,8 @@ public class GenFileInterface {
         exec.sendExecReadOnlyMessage(msg);
 
         for (addr = 1; addr < si.getSectorCount(); addr++) {
-            ioResult = fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, 28, false);
+            ioResult.clear();
+            fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, 28, false, ioResult);
             if (ioResult.getStatus() != ERIO$Status.Success) {
                 exec.stop(StopCode.InternalExecIOFailed);
                 throw new ExecStoppedException();
@@ -209,16 +212,12 @@ public class GenFileInterface {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
         var buffer = new ArraySlice(new long[28]);
+        var ioResult = new IOResult();
 
         for (var item : _inventory.values()) {
             if (item.isDirty()) {
                 item.serialize(buffer);
-                var ioResult = fm.ioWriteToDiskFile(exec,
-                                                    FILE_NAME,
-                                                    item.getSectorAddress(),
-                                                    buffer,
-                                                    28,
-                                                    false);
+                fm.ioWriteToDiskFile(exec, FILE_NAME, item.getSectorAddress(), buffer, 28, false, ioResult);
                 if (ioResult.getStatus() != ERIO$Status.Success) {
                     exec.stop(StopCode.InternalExecIOFailed);
                     throw new ExecStoppedException();

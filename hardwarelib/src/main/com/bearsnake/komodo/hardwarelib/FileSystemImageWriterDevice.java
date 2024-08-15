@@ -109,7 +109,7 @@ public class FileSystemImageWriterDevice extends SymbiontWriterDevice {
             _writer = new BufferedWriter(new FileWriter(filename));
         } catch (IOException ex) {
             _writer = null;
-            packet.setStatus(IoStatus.SystemError).setSystemMessage(ex.getMessage());
+            packet.setStatus(IoStatus.SystemError).setAdditionalStatus(ex.getMessage());
             return;
         }
 
@@ -128,7 +128,7 @@ public class FileSystemImageWriterDevice extends SymbiontWriterDevice {
             packet.setStatus(IoStatus.Complete);
         } catch (IOException ex) {
             close();
-            packet.setStatus(IoStatus.SystemError).setSystemMessage(ex.getMessage());
+            packet.setStatus(IoStatus.SystemError).setAdditionalStatus(ex.getMessage());
         }
     }
 

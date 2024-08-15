@@ -14,6 +14,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecIOException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.IOResult;
 
 import java.util.Arrays;
 
@@ -209,12 +210,8 @@ public class SymbiontFileReader implements SymbiontReader {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
         var transferCount = (int)Math.min(_buffer.getSize(), _sectorsRemaining * 28);
-        var ioResult = fm.ioReadFromDiskFile(exec,
-                                             _internalFileName,
-                                             _nextAddress,
-                                             _buffer,
-                                             transferCount,
-                                             false);
+        var ioResult = new IOResult();
+        fm.ioReadFromDiskFile(exec, _internalFileName, _nextAddress, _buffer, transferCount, false, ioResult);
         if (ioResult.getStatus() != ERIO$Status.Success) {
             exec.sendExecReadOnlyMessage("Image input canceled", ConsoleType.System);
             throw new ExecIOException(ioResult.getStatus());

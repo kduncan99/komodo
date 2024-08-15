@@ -9,4 +9,12 @@ package com.bearsnake.komodo.kexec.tasks;
  */
 public abstract class Task {
     // TODO
+
+    private final String _programName;
+
+    public Task(String programName) {
+        _programName = programName;
+    }
+
+    public String getProgramName() { return _programName; }
 }

@@ -64,9 +64,11 @@ public class ChannelProgram {
     Function _function;
     SubFunction _subFunction;
     IoStatus _ioStatus;
+    String _additionalStatus;
     int _nodeIdentifier;
     int _wordsTransferred;
 
+    public String getAdditionalStatus() { return _additionalStatus; }
     public long getBlockId() { return _blockId; }
     public Function getFunction() { return _function; }
     public IoStatus getIoStatus() { return _ioStatus; }
@@ -77,7 +79,8 @@ public class ChannelProgram {
     public ChannelProgram addControlWord(ControlWord value) { _controlWords.add(value); return this; }
     public ChannelProgram setBlockId(long value) { _blockId = value; return this; }
     public ChannelProgram setFunction(Function value) { _function = value; return this; }
-    public ChannelProgram setIoStatus(IoStatus value) { _ioStatus = value; return this; }
+    public ChannelProgram setIoStatus(IoStatus value) { _ioStatus = value; _additionalStatus = null; return this; }
+    public ChannelProgram setIoStatus(IoStatus value, String additional) { _ioStatus = value; _additionalStatus = additional; return this; }
     public ChannelProgram setNodeIdentifier(int value)  { _nodeIdentifier = value; return this; }
     public ChannelProgram setSubFunction(SubFunction value) { _subFunction = value; return this; }
     public ChannelProgram setWordsTransferred(int value) { _wordsTransferred = value; return this; }

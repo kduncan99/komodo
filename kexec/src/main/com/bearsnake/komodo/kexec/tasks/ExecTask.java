@@ -11,4 +11,8 @@ package com.bearsnake.komodo.kexec.tasks;
  */
 public class ExecTask extends NexeTask {
     // TODO
+
+    public ExecTask() {
+        super("EXEC8");
+    }
 }
