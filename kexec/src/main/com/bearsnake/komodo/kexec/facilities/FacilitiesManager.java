@@ -1649,11 +1649,16 @@ public class FacilitiesManager implements Manager {
 
         int destOffset = 0;
         int wordsRemaining = transferCount;
-        long nextAddress = address;
         int totalWordsTransferred = 0;
+
+        long nextWordAddress = address;
+        if (!isWordAddressable) {
+            nextWordAddress *= 28;
+        }
+
         while (wordsRemaining > 0) {
             // Find the ldat and device-relative track address of the next relative address.
-            var relativeTrack = nextAddress >> 6;
+            var relativeTrack = nextWordAddress / 1792;
             var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
             if (hwTid == null) {
                 ioResult.setStatus(ERIO$Status.UnallocatedArea).setWordsTransferred(totalWordsTransferred);
@@ -1671,7 +1676,7 @@ public class FacilitiesManager implements Manager {
             // What is the sector offset requested, from the beginning of the containing track?
             // Use that, with the number of sectors per block, to calculate the sector offset
             // from the containing block, and the block offset from the containing track.
-            var wordOffsetFromTrack = isWordAddressable ? (nextAddress % 1792) : (nextAddress & 077);
+            var wordOffsetFromTrack = nextWordAddress % 1792;
             var wordOffsetFromBlock = wordOffsetFromTrack % pi.getPrepFactor();
             var blockOffsetFromTrack = wordOffsetFromTrack / pi.getPrepFactor();
 
@@ -1723,7 +1728,7 @@ public class FacilitiesManager implements Manager {
                 }
                 int actualWords = transferWordCount - preWords;
                 wordsRemaining -= actualWords;
-                nextAddress += actualWords / 28;
+                nextWordAddress += actualWords;
             } else {
                 // we can do IO directly into the caller's buffer
                 // The following algorithm is a simpler version of the above, given preWords is zero.
@@ -1749,7 +1754,7 @@ public class FacilitiesManager implements Manager {
                 }
 
                 wordsRemaining -= transferWordCount;
-                nextAddress += transferWordCount / 28;
+                nextWordAddress += transferWordCount;
             }
         }
 
@@ -1805,12 +1810,18 @@ public class FacilitiesManager implements Manager {
 
             int destOffset = 0;
             int wordsRemaining = transferCount;
-            long nextAddress = address;
             int totalWordsTransferred = 0;
+
+            // All our calculations are done with word addresses from here on out.
+            long nextWordAddress = address;
+            if (!isWordAddressable) {
+                nextWordAddress *= 28;
+            }
+
             while (wordsRemaining > 0) {
                 // Find the ldat and device-relative track address of the next relative address.
                 // Ensure it is allocated...
-                var relativeTrack = nextAddress >> 6;
+                var relativeTrack = nextWordAddress / 1792;
                 if (relativeTrack >= maxTracks) {
                     ioResult.setStatus(ERIO$Status.WriteExtentOutOfRange).setWordsTransferred(totalWordsTransferred);
                     return;
@@ -1832,7 +1843,7 @@ public class FacilitiesManager implements Manager {
                 // What is the sector offset requested, from the beginning of the containing track?
                 // Use that, with the number of sectors per block, to calculate the sector offset
                 // from the containing block, and the block offset from the containing track.
-                var wordOffsetFromTrack = isWordAddressable ? (nextAddress % 1792) : (nextAddress & 077);
+                var wordOffsetFromTrack = nextWordAddress % 1792;
                 var wordOffsetFromBlock = wordOffsetFromTrack % pi.getPrepFactor();
                 var blockOffsetFromTrack = wordOffsetFromTrack / pi.getPrepFactor();
 
@@ -1881,7 +1892,7 @@ public class FacilitiesManager implements Manager {
 
                     int actualWords = transferWordCount - preWords;
                     wordsRemaining -= actualWords;
-                    nextAddress += actualWords / 28;
+                    nextWordAddress += actualWords;
                 } else {
                     // we can do IO directly from the caller's buffer
                     // The following algorithm is a simpler version of the above, given preWords is zero.
@@ -1907,7 +1918,7 @@ public class FacilitiesManager implements Manager {
                     }
 
                     wordsRemaining -= transferWordCount;
-                    nextAddress += transferWordCount / 28;
+                    nextWordAddress += transferWordCount;
                 }
             }
 

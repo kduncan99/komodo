@@ -37,6 +37,10 @@ public class DiskChannel extends Channel {
             return;
         }
 
+        // So. The caller will ask for an operation which *is* block-aligned at the beginning, simply because
+        // the interface specifies the block id for the start of the IO. However, the interface allows for
+        // the io length to be specified in words, so while the IO is block-aligned at the top, it may not
+        // be block-aligned at the back.
         int totalWordCount = 0;
         for (var cw : channelProgram._controlWords) {
             if (cw.getBuffer() == null) {
@@ -70,7 +74,7 @@ public class DiskChannel extends Channel {
         var diskInfo = ((DiskDevice)device).getInfo();
         var wordsPerBlock = (diskInfo.getBlockSize() / 128) * 28;
         var totalBlockCount = totalWordCount / wordsPerBlock;
-        if (totalWordCount % wordsPerBlock > 0) {
+        if (totalWordCount % wordsPerBlock != 0) {
             totalBlockCount++;
         }
 
@@ -84,6 +88,9 @@ public class DiskChannel extends Channel {
             return;
         }
 
+        // Now use the control words to transfer bits of the buffer we've read back into the caller's buffers.
+        // If we read more than asked for due to the asker not specifying a word count which was a multiple
+        // of the block size, no worries. We just ignore the slop at the end.
         var iter = channelProgram._controlWords.iterator();
         var bx = 0;
         while (iter.hasNext()) {
@@ -141,6 +148,11 @@ public class DiskChannel extends Channel {
             return;
         }
 
+        // So. The caller will ask for an operation which *is* block-aligned at the beginning, simply because
+        // the interface specifies the block id for the start of the IO. However, the interface allows for
+        // the io length to be specified in words, so while the IO is block-aligned at the top, it may not
+        // be block-aligned at the back.
+        // This is just like doRead() above, except that it has different consequences for us on a write.
         int totalWordCount = 0;
         for (var cw : channelProgram._controlWords) {
             if (cw.getBuffer() == null) {
@@ -174,17 +186,20 @@ public class DiskChannel extends Channel {
         var diskInfo = ((DiskDevice)device).getInfo();
         var wordsPerBlock = (diskInfo.getBlockSize() / 128) * 28;
         var totalBlockCount = totalWordCount / wordsPerBlock;
+        var readBeforeWrite = (totalWordCount % wordsPerBlock > 0);
+        if (readBeforeWrite) {
+            totalBlockCount++;
+        }
 
         int totalByteCount = totalBlockCount * diskInfo.getBlockSize();
         var buffer = ByteBuffer.allocate(totalByteCount);
-
         var ioPkt = new DiskIoPacket().setBuffer(buffer)
                                       .setBlockId(channelProgram._blockId)
                                       .setBlockCount(totalBlockCount);
 
-        if (totalWordCount % wordsPerBlock > 0) {
-            // IO is not a multiple of the block size - we need to do a read-before-write
-            totalBlockCount++;
+        if (readBeforeWrite) {
+            // IO is not a multiple of the block size - we need to do a read-before-write.
+            // This is NOT the read-before-write which the exec also does which accounts for a lot of unaligned IO.
             ioPkt.setBlockCount(totalBlockCount).setFunction(IoFunction.Read);
             device.startIo(ioPkt);
             if (ioPkt.getStatus() != IoStatus.Complete) {
@@ -193,7 +208,7 @@ public class DiskChannel extends Channel {
             }
         }
 
-        // Now populate the buffer
+        // Now populate the buffer, overwriting any data which may have been read-before-write just above.
         var iter = channelProgram._controlWords.iterator();
         var bx = 0;
         while (iter.hasNext()) {

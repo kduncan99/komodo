@@ -60,13 +60,13 @@ public class FileSystemDiskDevice extends DiskDevice {
         if (packet instanceof DiskIoPacket diskPacket) {
             packet.setStatus(IoStatus.InProgress);
             switch (packet.getFunction()) {
-            case GetInfo -> doGetInfo(diskPacket);
-            case Mount -> doMount(diskPacket);
-            case Read -> doRead(diskPacket);
-            case Reset -> doReset(diskPacket);
-            case Unmount -> doUnmount(diskPacket);
-            case Write -> doWrite(diskPacket);
-            default -> packet.setStatus(IoStatus.InvalidFunction);
+                case GetInfo -> doGetInfo(diskPacket);
+                case Mount -> doMount(diskPacket);
+                case Read -> doRead(diskPacket);
+                case Reset -> doReset(diskPacket);
+                case Unmount -> doUnmount(diskPacket);
+                case Write -> doWrite(diskPacket);
+                default -> packet.setStatus(IoStatus.InvalidFunction);
             }
         } else {
             packet.setStatus(IoStatus.InvalidPacket);
@@ -165,9 +165,20 @@ public class FileSystemDiskDevice extends DiskDevice {
         var buffer = ByteBuffer.allocate(transferSize);
 
         try {
-            var bytes = _channel.read(buffer, packet.getBlockId() * BLOCK_SIZE);
+            // Is any part of the request in low-level unallocated space?
+            // Normal disk devices don't have unallocated space, just unwritten space.
+            // However, we only grow the underlying file as necessary, so we have to content with this.
+            long bytes;
+            long currentSize = _channel.size();
+            long requiredSize = (packet.getBlockId() * BLOCK_SIZE) + transferSize;
+            if (requiredSize > currentSize) {
+                var bb = ByteBuffer.allocate(BLOCK_SIZE);
+                bytes = _channel.write(bb, requiredSize - BLOCK_SIZE);
+            }
+
+            bytes = _channel.read(buffer, packet.getBlockId() * BLOCK_SIZE);
             if (bytes != transferSize) {
-                LogManager.logError(_nodeName, "Error - wanted %d bytes, got %d", transferSize, bytes);
+                LogManager.logInfo(_nodeName, "Note - we wanted %d bytes, but we got %d", transferSize, bytes);
                 packet.setStatus(IoStatus.SystemError).setAdditionalStatus("Data underrun");
                 return;
             }
