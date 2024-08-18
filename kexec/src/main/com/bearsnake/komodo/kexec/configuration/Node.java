@@ -28,7 +28,7 @@ public class Node {
     public void addArgument(final String key, final String value) { _arguments.put(key, value); }
     public void addSubordinate(final Node node) { _subordinates.add(node); }
     public String getArgument(final String key) { return _arguments.get(key); }
-    public String getEquipType() { return _equipType.toString(); }
+    public EquipType getEquipType() { return _equipType; }
     public String getName() { return _name; }
     public Collection<Node> getSubordinates() { return _subordinates; }
 

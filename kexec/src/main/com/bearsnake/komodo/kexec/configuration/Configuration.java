@@ -1044,8 +1044,15 @@ public class Configuration {
     }
 
     // hardware configuration ------------------------------------------------------------------------------------------
+
+    public Collection<Node> getNodes() {
+        return NODES.values();
+    }
+
     // this is the default - if there is any hardware configuration in the loaded configuration file
     // (see updateFromFile()) then this configuration is completely overridden.
+
+    // TODO (default hardware configuration)
 
     // -----------------------------------------------------------------------------------------------------------------
 

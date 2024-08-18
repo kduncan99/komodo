@@ -87,8 +87,8 @@ public class Main {
                            final Configuration config) {
         Exec e = new Exec(context._jumpKeys);
         try {
-            e.initialize();
             e.setConfiguration(config);
+            e.initialize();
         } catch (KExecException ex) {
             LogManager.logFatal("Exec", "Initialization error %v", ex.toString());
             return;

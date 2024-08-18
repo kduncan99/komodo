@@ -26,6 +26,7 @@ import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.configuration.Configuration;
+import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.configuration.MnemonicType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
@@ -36,6 +37,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetAlreadyExistsException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
+import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
@@ -75,15 +77,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.bearsnake.komodo.baselib.Word36.A_OPTION;
-import static com.bearsnake.komodo.baselib.Word36.D_OPTION;
-import static com.bearsnake.komodo.baselib.Word36.E_OPTION;
-import static com.bearsnake.komodo.baselib.Word36.K_OPTION;
-import static com.bearsnake.komodo.baselib.Word36.M_OPTION;
-import static com.bearsnake.komodo.baselib.Word36.R_OPTION;
-import static com.bearsnake.komodo.baselib.Word36.T_OPTION;
-import static com.bearsnake.komodo.baselib.Word36.X_OPTION;
-import static com.bearsnake.komodo.baselib.Word36.Y_OPTION;
+import static com.bearsnake.komodo.baselib.Word36.*;
 import static com.bearsnake.komodo.logger.Level.Trace;
 
 public class FacilitiesManager implements Manager {
@@ -266,12 +260,11 @@ public class FacilitiesManager implements Manager {
     }
 
     @Override
-    public void initialize() {
+    public void initialize() throws KExecException {
         LogManager.logTrace(LOG_SOURCE, "initialize()");
 
+        // load node graph and set up routes
         loadNodeGraph();
-
-        // set up routes
         for (var ni : _nodeGraph.values()) {
             if (ni instanceof ChannelNodeInfo) {
                 var chNode = (Channel) ni.getNode();
@@ -3233,57 +3226,139 @@ public class FacilitiesManager implements Manager {
         return pi;
     }
 
-    void loadNodeGraph() {
-        // Load node graph based on the configuration TODO
-        // The following is temporary
-        var reader0 = new FileSystemImageReaderDevice("CR0", "media/reader/");
-        var punch0 = new FileSystemImageWriterDevice("CP0", "media/reader/");
-        var printer0 = new FileSystemImagePrinterDevice("PR0", "media/printer/");
+    /**
+     * Loads the node graph from the configuration.
+     * You *did* load the configuration already, right?
+     * Right?
+     */
+    private void loadNodeGraph() throws KExecException {
+        boolean error = false;
+        var nodes = Exec.getInstance().getConfiguration().getNodes();
+        for (var configNode : nodes) {
+            var nodeName = configNode.getName();
+            switch (configNode.getEquipType()) {
+                case CHANNEL_MODULE_DISK -> {
+                    var node = new DiskChannel(nodeName);
+                    _nodeGraph.put(node.getNodeIdentifier(), new ChannelNodeInfo(node));
+                }
+                case CHANNEL_MODULE_SYMBIONT -> {
+                    var node = new SymbiontChannel(nodeName);
+                    _nodeGraph.put(node.getNodeIdentifier(), new ChannelNodeInfo(node));
+                }
+                case CHANNEL_MODULE_TAPE -> {
+                    var node = new TapeChannel(nodeName);
+                    _nodeGraph.put(node.getNodeIdentifier(), new ChannelNodeInfo(node));
+                }
+                case FILE_SYSTEM_PRINTER -> {
+                    var path = configNode.getArgument("PATH");
+                    if (path == null) {
+                        LogManager.logFatal(LOG_SOURCE, "Node %s has no configured PATH argument", nodeName);
+                        error = true;
+                        break;
+                    }
+                    var node = new FileSystemImagePrinterDevice(nodeName, path);
+                    _nodeGraph.put(node.getNodeIdentifier(), new DeviceNodeInfo(node));
+                }
+                case FILE_SYSTEM_CARD_PUNCH -> {
+                    var path = configNode.getArgument("PATH");
+                    if (path == null) {
+                        LogManager.logFatal(LOG_SOURCE, "Node %s has no configured PATH argument", nodeName);
+                        error = true;
+                        break;
+                    }
+                    var node = new FileSystemImageWriterDevice(nodeName, path);
+                    _nodeGraph.put(node.getNodeIdentifier(), new DeviceNodeInfo(node));
+                }
+                case FILE_SYSTEM_CARD_READER -> {
+                    var path = configNode.getArgument("PATH");
+                    if (path == null) {
+                        LogManager.logFatal(LOG_SOURCE, "Node %s has no configured PATH argument", nodeName);
+                        error = true;
+                        break;
+                    }
+                    var node = new FileSystemImageReaderDevice(nodeName, path);
+                    _nodeGraph.put(node.getNodeIdentifier(), new DeviceNodeInfo(node));
+                }
+                case FILE_SYSTEM_DISK -> {
+                    var path = configNode.getArgument("PATH");
+                    if (path == null) {
+                        LogManager.logFatal(LOG_SOURCE, "Node %s has no configured PATH argument", nodeName);
+                        error = true;
+                        break;
+                    }
+                    var node = new FileSystemDiskDevice(nodeName, path, false);
+                    _nodeGraph.put(node.getNodeIdentifier(), new DeviceNodeInfo(node));
+                }
+                case FILE_SYSTEM_TAPE -> {
+                    var node = new FileSystemTapeDevice(nodeName);
+                    _nodeGraph.put(node.getNodeIdentifier(), new DeviceNodeInfo(node));
+                }
+            }
+        }
 
-        var sch0 = new SymbiontChannel("CHSYM0");
-        sch0.attach(reader0);
-        sch0.attach(punch0);
-        sch0.attach(printer0);
+        for (var cfgNode : nodes) {
+            var cfgName = cfgNode.getName();
+            var nodeInfo = getNodeInfo(cfgName);
+            if (nodeInfo == null) {
+                LogManager.logFatal(LOG_SOURCE, "Node %s was not placed in the node graph", cfgName);
+                error = true;
+                continue;
+            }
 
-        var disk0 = new FileSystemDiskDevice("DISK0", "media/disk0.pack", false);
-        var disk1 = new FileSystemDiskDevice("DISK1", "media/disk1.pack", false);
-        var disk2 = new FileSystemDiskDevice("DISK2", "media/disk2.pack", false);
-        var disk3 = new FileSystemDiskDevice("DISK3", "media/disk3.pack", false);
+            var node = nodeInfo.getNode();
+            if (!(node instanceof Channel channel)) {
+                if (!cfgNode.getSubordinates().isEmpty()) {
+                    LogManager.logFatal(LOG_SOURCE, "Node %s is not a channel but it has children", cfgName);
+                    error = true;
+                }
 
-        var dch0 = new DiskChannel("CHDSK0");
-        dch0.attach(disk0);
-        dch0.attach(disk1);
-        dch0.attach(disk2);
-        dch0.attach(disk3);
+                continue;
+            }
 
-        var dch1 = new DiskChannel("CHDSK1");
-        dch1.attach(disk0);
-        dch1.attach(disk1);
-        dch1.attach(disk2);
-        dch1.attach(disk3);
+            for (var childCfgNode : cfgNode.getSubordinates()) {
+                var childName = childCfgNode.getName();
+                var childNodeInfo = getNodeInfo(childName);
+                if (childNodeInfo == null) {
+                    LogManager.logFatal(LOG_SOURCE, "Node %s (child of %s) not found in node graph", childName, cfgName);
+                    error = true;
+                    continue;
+                }
 
-        var tape0 = new FileSystemTapeDevice("TAPE0");
-        var tape1 = new FileSystemTapeDevice("TAPE1");
+                var childNode = childNodeInfo.getNode();
+                if (!(childNode instanceof Device device)) {
+                    LogManager.logFatal(LOG_SOURCE, "Node %s (child of %s) is not a device", childName, cfgName);
+                    error = true;
+                    continue;
+                }
 
-        var tch = new TapeChannel("CHTAPE");
-        tch.attach(tape0);
-        tch.attach(tape1);
+                if (!channel.canAttach(device)) {
+                    LogManager.logFatal(LOG_SOURCE, "Device %s cannot be attached to Channel %s", childName, cfgName);
+                    error = true;
+                    continue;
+                }
 
-        _nodeGraph.put(sch0.getNodeIdentifier(), new ChannelNodeInfo(sch0));
-        _nodeGraph.put(dch0.getNodeIdentifier(), new ChannelNodeInfo(dch0));
-        _nodeGraph.put(dch1.getNodeIdentifier(), new ChannelNodeInfo(dch1));
-        _nodeGraph.put(tch.getNodeIdentifier(), new ChannelNodeInfo(tch));
+                channel.attach(device);
+            }
+        }
 
-        _nodeGraph.put(reader0.getNodeIdentifier(), new DeviceNodeInfo(reader0));
-        _nodeGraph.put(punch0.getNodeIdentifier(), new DeviceNodeInfo(punch0));
-        _nodeGraph.put(printer0.getNodeIdentifier(), new DeviceNodeInfo(printer0));
-        _nodeGraph.put(disk0.getNodeIdentifier(), new DeviceNodeInfo(disk0));
-        _nodeGraph.put(disk1.getNodeIdentifier(), new DeviceNodeInfo(disk1));
-        _nodeGraph.put(disk2.getNodeIdentifier(), new DeviceNodeInfo(disk2));
-        _nodeGraph.put(disk3.getNodeIdentifier(), new DeviceNodeInfo(disk3));
-        _nodeGraph.put(tape0.getNodeIdentifier(), new DeviceNodeInfo(tape0));
-        _nodeGraph.put(tape1.getNodeIdentifier(), new DeviceNodeInfo(tape1));
-        // end temporary code
+        if (error) {
+            System.out.println("Configuration has errors");
+            throw new ExecStoppedException();
+        }
+
+        for (var nodeInfo : _nodeGraph.values()) {
+            if (nodeInfo.getNode() instanceof Channel channel) {
+                System.out.printf("Channel %s", channel.getNodeName());
+                var devices = channel.getDevices();
+                if (!devices.isEmpty()) {
+                    System.out.print(" connects to");
+                    for (var device : devices) {
+                        System.out.printf(" %s", device.getNodeName());
+                    }
+                }
+                System.out.println();
+            }
+        }
     }
 
     /**
