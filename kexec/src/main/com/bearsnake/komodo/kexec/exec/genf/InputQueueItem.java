@@ -31,7 +31,7 @@ import java.time.Instant;
  *   +017       Source Symbiont FD LJSF
  *   +017:033   reserved
  */
-class InputQueueItem extends Item {
+public class InputQueueItem extends Item {
 
     private String _sourceSymbiontName;
     private String _actualRunId;

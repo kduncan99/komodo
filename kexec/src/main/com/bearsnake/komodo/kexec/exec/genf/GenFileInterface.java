@@ -11,12 +11,14 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.kexec.exec.genf.queues.PrintQueue;
+import com.bearsnake.komodo.kexec.exec.genf.queues.PunchQueue;
+import com.bearsnake.komodo.kexec.exec.genf.queues.ReaderQueue;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.IOResult;
 import com.bearsnake.komodo.logger.LogManager;
 
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.Collection;
 import java.util.TreeMap;
 
 /**
@@ -41,14 +43,14 @@ public class GenFileInterface {
     // System item - always in core, for convenience
     private SystemItem _systemItem;
 
-    // Input queue - keyed by scheduling priority, and each list there-in is in order by submission date/time
-    private final HashMap<Character, LinkedList<InputQueueItem>> _inputQueue = new HashMap<>();
+    // Reader, Print, and Punch queues - each is keyed by queue name
+    private final TreeMap<String, ReaderQueue> _readerQueues = new TreeMap<>();
+    private final TreeMap<String, PrintQueue> _printQueues = new TreeMap<>();
+    private final TreeMap<String, PunchQueue> _punchQueues = new TreeMap<>();
 
-    // Print queue - keyed by queue name, values are sub-queues keyed by priority with queue items as values
-    private final TreeMap<String, TreeMap<Integer, LinkedList<OutputQueueItem>>> _printQueue = new TreeMap<>();
-
-    // Punch queue - keyed by queue name, values are sub-queues keyed by priority with queue items as values
-    private final TreeMap<String, TreeMap<Integer, LinkedList<OutputQueueItem>>> _punchQueue = new TreeMap<>();
+    public Collection<PrintQueue> getPrintQueues() { return _printQueues.values(); }
+    public Collection<PunchQueue> getPunchQueues() { return _punchQueues.values(); }
+    public Collection<ReaderQueue> getReaderQueues() { return _readerQueues.values(); }
 
     /**
      * Initializes the GENF$ file - used during JK13 and JK9 boots
@@ -104,9 +106,9 @@ public class GenFileInterface {
 
         _systemItem = null;
         _inventory.clear();
-        _inputQueue.clear();
-        _printQueue.clear();
-        _punchQueue.clear();
+        _readerQueues.clear();
+        _printQueues.clear();
+        _punchQueues.clear();
         buildQueues();
 
         exec.sendExecReadOnlyMessage("Recovering GENF$ file...");
@@ -154,17 +156,17 @@ public class GenFileInterface {
 
             if (item instanceof InputQueueItem iqi) {
                 var priority = iqi.getRunCardInfo().getSchedulingPriority();
-                var queue = _inputQueue.get(priority);
+                var queue = _readerQueues.get(priority);
                 if (queue == null) {
                     LogManager.logFatal(LOG_SOURCE, "GENF$ sector %d has invalid priority: %d", addr, priority);
                     exec.stop(StopCode.BadGENFRecord);
                     throw new ExecStoppedException();
                 }
 
-                queue.add(iqi);
+                // TODO add iqi to the appropriate reader queue
             } else if (item instanceof OutputQueueItem oqi) {
                 // TODO
-            } else if (item instanceof FreeItem fi) {
+            } else if (item instanceof FreeItem) {
                 // nothing else to do here
             } else {
                 LogManager.logFatal(LOG_SOURCE,
@@ -182,17 +184,25 @@ public class GenFileInterface {
         var exec = Exec.getInstance();
         var cfg = exec.getConfiguration();
 
-        for (char ch = 'A'; ch <= 'Z'; ch++) {
-            _inputQueue.put(ch, new LinkedList<>());
+        // Create device-associated queues
+        for (var node : cfg.getNodes()) {
+            switch (node.getEquipType()) {
+                case FILE_SYSTEM_CARD_READER -> _readerQueues.put(node.getName(), new ReaderQueue(node.getName(), node));
+                case FILE_SYSTEM_CARD_PUNCH -> _punchQueues.put(node.getName(), new PunchQueue(node.getName(), node));
+                case FILE_SYSTEM_PRINTER -> _printQueues.put(node.getName(), new PrintQueue(node.getName(), node));
+            }
         }
 
-        // Create an output queue for each of the print/punch devices
-        //  TODO
+        // Create non-associated queues as defined by SYMQUEUE configuration statements
+        for (var queueName : cfg.getSymbiontPrintQueues()) {
+            _printQueues.put(queueName, new PrintQueue(queueName));
+        }
 
-        // Create output queues as specified for each of the symbiont groups
-        //  TODO
+        for (var queueName : cfg.getSymbiontPunchQueues()) {
+            _punchQueues.put(queueName, new PunchQueue(queueName));
+        }
 
-        // Create unattached queues per configuration (replaces STATION LOCAL items from antiquity)
+        // Create queues per configuration (replaces STATION LOCAL items from antiquity)
         //  TODO
     }
 

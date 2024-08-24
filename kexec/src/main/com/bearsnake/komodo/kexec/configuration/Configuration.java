@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kexec.configuration;
 
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
+import com.bearsnake.komodo.kexec.configuration.exceptions.DuplicateIdentifierException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.SyntaxException;
 import com.bearsnake.komodo.kexec.configuration.parameters.*;
 import com.bearsnake.komodo.kexec.configuration.restrictions.*;
@@ -36,6 +37,8 @@ public class Configuration {
     private static final Map<String, Parameter> CONFIG_PARAMETERS = new TreeMap<>();
     private static final Map<String, MnemonicInfo> MNEMONIC_TABLE = new TreeMap<>();
     private static final Map<String, Node> NODES = new LinkedHashMap<>();
+    private static final List<String> SYMBIONT_PRINTER_QUEUES = new LinkedList<>();
+    private static final List<String> SYMBIONT_PUNCH_QUEUES = new LinkedList<>();
 
     // discrete configuration values ------------------------------------------------------------------------------------
 
@@ -1051,8 +1054,15 @@ public class Configuration {
 
     // this is the default - if there is any hardware configuration in the loaded configuration file
     // (see updateFromFile()) then this configuration is completely overridden.
-
     // TODO (default hardware configuration)
+
+    public Collection<String> getSymbiontPrintQueues() {
+        return new LinkedList<>(SYMBIONT_PRINTER_QUEUES);
+    }
+
+    public Collection<String> getSymbiontPunchQueues() {
+        return new LinkedList<>(SYMBIONT_PUNCH_QUEUES);
+    }
 
     // -----------------------------------------------------------------------------------------------------------------
 
@@ -1329,8 +1339,49 @@ public class Configuration {
 
     public void processSymQueue(
         final Parser parser
-    ) throws SyntaxException {
-        throw new SyntaxException("SYMQUEUE not yet implemented"); // TODO
+    ) throws ConfigurationException {
+        parser.skipSpaces();
+        if (parser.parseToken("PRINTER")) {
+            parser.skipSpaces();
+            boolean done = false;
+            while (!done) {
+                try {
+                    var name = parser.parseIdentifier(6, ", ");
+                    if (SYMBIONT_PRINTER_QUEUES.contains(name) || SYMBIONT_PUNCH_QUEUES.contains(name)) {
+                        throw new DuplicateIdentifierException(name);
+                    }
+                    SYMBIONT_PRINTER_QUEUES.add(name);
+                    if (parser.peekNext() == ' ') {
+                        done = true;
+                    }
+                } catch (Parser.NotFoundException ex) {
+                    done = true;
+                } catch (Parser.SyntaxException ex) {
+                    throw new SyntaxException("Invalid queue name in SYMQUEUE entry");
+                }
+            }
+        } else if (parser.parseToken("PUNCH")) {
+            parser.skipSpaces();
+            boolean done = false;
+            while (!done) {
+                try {
+                    var name = parser.parseIdentifier(6, ", ");
+                    if (SYMBIONT_PRINTER_QUEUES.contains(name) || SYMBIONT_PUNCH_QUEUES.contains(name)) {
+                        throw new DuplicateIdentifierException(name);
+                    }
+                    SYMBIONT_PUNCH_QUEUES.add(name);
+                    if (parser.peekNext() == ' ') {
+                        done = true;
+                    }
+                } catch (Parser.NotFoundException ex) {
+                    done = true;
+                } catch (Parser.SyntaxException ex) {
+                    throw new SyntaxException("Invalid queue name in SYMQUEUE entry");
+                }
+            }
+        } else {
+            throw new SyntaxException("SYMQUEUE must be PRINTER or PUNCH");
+        }
     }
 
     public void processParameter(
@@ -1397,6 +1448,15 @@ public class Configuration {
                 param.checkValue();
             } catch (ConfigurationException ex) {
                 System.err.printf("ERROR:Parameter %s:%s\n", param.getTag(), ex.getMessage());
+                err = true;
+            }
+        }
+
+        // Check SYMQUEUE entries for collision with node names
+        for (var node : NODES.values()) {
+            if (SYMBIONT_PRINTER_QUEUES.contains(node.getName()) || (SYMBIONT_PUNCH_QUEUES.contains(node.getName()))) {
+                System.err.printf("ERROR:SYMQUEUE name '%s' collides with NODE", node.getName());
+                err = true;
             }
         }
 

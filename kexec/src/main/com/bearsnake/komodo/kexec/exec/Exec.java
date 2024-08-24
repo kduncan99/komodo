@@ -107,6 +107,7 @@ public class Exec extends Run {
     public MFDManager getMFDManager() { return _mfdManager; }
     public KeyinManager getKeyinManager() { return _keyinManager; }
 
+    public GenFileInterface getGenFileInterface() { return _genFileInterface; }
     public Phase getPhase() { return _phase; }
     public StopCode getStopCode() { return _stopCode; }
     public boolean isJumpKeySet(final int jumpKey) { return _jumpKeys[jumpKey - 1]; }

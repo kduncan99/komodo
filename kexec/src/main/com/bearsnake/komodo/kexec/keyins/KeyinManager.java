@@ -81,7 +81,7 @@ public class KeyinManager implements Manager {
         _handlerClasses.put(SJKeyinHandler.COMMAND.toUpperCase(), SJKeyinHandler.class);
         // SM
         // SP
-        // SQ
+        _handlerClasses.put(SQKeyinHandler.COMMAND.toUpperCase(), SQKeyinHandler.class);
         // SR
         // SS
         // ST

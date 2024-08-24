@@ -7,6 +7,8 @@ package com.bearsnake.komodo.kexec.exec.genf;
 import com.bearsnake.komodo.baselib.ArraySlice;
 
 /*
+ * Describes one output queue item - corresponding to a print or punch entity.
+ *
  * Output queue item sector format
  *   +000,S1    Type (02)
  *   +000,S2    Priority Index
