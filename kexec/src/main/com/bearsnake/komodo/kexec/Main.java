@@ -155,7 +155,7 @@ public class Main {
         if (context._configFileName != null) {
             try {
                 if (!cfg.updateFromFile(context._configFileName)) {
-                    // TODO fail
+                    return;
                 }
             } catch (IOException ex) {
                 System.err.println(ex.getMessage());

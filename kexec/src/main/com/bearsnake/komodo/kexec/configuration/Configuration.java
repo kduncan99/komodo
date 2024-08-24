@@ -6,7 +6,6 @@ package com.bearsnake.komodo.kexec.configuration;
 
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
-import com.bearsnake.komodo.kexec.configuration.exceptions.DuplicateIdentifierException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.SyntaxException;
 import com.bearsnake.komodo.kexec.configuration.parameters.*;
 import com.bearsnake.komodo.kexec.configuration.restrictions.*;
@@ -37,8 +36,8 @@ public class Configuration {
     private static final Map<String, Parameter> CONFIG_PARAMETERS = new TreeMap<>();
     private static final Map<String, MnemonicInfo> MNEMONIC_TABLE = new TreeMap<>();
     private static final Map<String, Node> NODES = new LinkedHashMap<>();
-    private static final List<String> SYMBIONT_PRINTER_QUEUES = new LinkedList<>();
-    private static final List<String> SYMBIONT_PUNCH_QUEUES = new LinkedList<>();
+    private static final List<String> SYMBIONT_PRINTER_QUEUE_NAMES = new LinkedList<>();
+    private static final List<String> SYMBIONT_PUNCH_QUEUE_NAMES = new LinkedList<>();
 
     // discrete configuration values ------------------------------------------------------------------------------------
 
@@ -1057,11 +1056,11 @@ public class Configuration {
     // TODO (default hardware configuration)
 
     public Collection<String> getSymbiontPrintQueues() {
-        return new LinkedList<>(SYMBIONT_PRINTER_QUEUES);
+        return new LinkedList<>(SYMBIONT_PRINTER_QUEUE_NAMES);
     }
 
     public Collection<String> getSymbiontPunchQueues() {
-        return new LinkedList<>(SYMBIONT_PUNCH_QUEUES);
+        return new LinkedList<>(SYMBIONT_PUNCH_QUEUE_NAMES);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -1343,21 +1342,19 @@ public class Configuration {
         parser.skipSpaces();
         if (parser.parseToken("PRINTER")) {
             parser.skipSpaces();
-            boolean done = false;
-            while (!done) {
+            while (!parser.atEnd()) {
                 try {
                     var name = parser.parseIdentifier(6, ", ");
-                    if (SYMBIONT_PRINTER_QUEUES.contains(name) || SYMBIONT_PUNCH_QUEUES.contains(name)) {
-                        throw new DuplicateIdentifierException(name);
-                    }
-                    SYMBIONT_PRINTER_QUEUES.add(name);
-                    if (parser.peekNext() == ' ') {
-                        done = true;
+                    SYMBIONT_PRINTER_QUEUE_NAMES.add(name);
+                    if (parser.peekNext() == ',') {
+                        parser.skipNext();
+                    } else {
+                        break;
                     }
                 } catch (Parser.NotFoundException ex) {
-                    done = true;
+                    throw new SyntaxException("Syntax error at end of SYMQUEUE statement");
                 } catch (Parser.SyntaxException ex) {
-                    throw new SyntaxException("Invalid queue name in SYMQUEUE entry");
+                    throw new SyntaxException("Invalid queue name in SYMQUEUE PRINTER entry");
                 }
             }
         } else if (parser.parseToken("PUNCH")) {
@@ -1366,17 +1363,16 @@ public class Configuration {
             while (!done) {
                 try {
                     var name = parser.parseIdentifier(6, ", ");
-                    if (SYMBIONT_PRINTER_QUEUES.contains(name) || SYMBIONT_PUNCH_QUEUES.contains(name)) {
-                        throw new DuplicateIdentifierException(name);
-                    }
-                    SYMBIONT_PUNCH_QUEUES.add(name);
-                    if (parser.peekNext() == ' ') {
-                        done = true;
+                    SYMBIONT_PUNCH_QUEUE_NAMES.add(name);
+                    if (parser.peekNext() == ',') {
+                        parser.skipNext();
+                    } else {
+                        break;
                     }
                 } catch (Parser.NotFoundException ex) {
-                    done = true;
+                    throw new SyntaxException("Syntax error at end of SYMQUEUE statement");
                 } catch (Parser.SyntaxException ex) {
-                    throw new SyntaxException("Invalid queue name in SYMQUEUE entry");
+                    throw new SyntaxException("Invalid queue name in SYMQUEUE PUNCH entry");
                 }
             }
         } else {
@@ -1452,13 +1448,29 @@ public class Configuration {
             }
         }
 
-        // Check SYMQUEUE entries for collision with node names
+        // Check SYMQUEUE entries for collision with node names or other SYMQUEUE entries
         for (var node : NODES.values()) {
-            if (SYMBIONT_PRINTER_QUEUES.contains(node.getName()) || (SYMBIONT_PUNCH_QUEUES.contains(node.getName()))) {
+            if (SYMBIONT_PRINTER_QUEUE_NAMES.contains(node.getName()) || (SYMBIONT_PUNCH_QUEUE_NAMES.contains(node.getName()))) {
                 System.err.printf("ERROR:SYMQUEUE name '%s' collides with NODE", node.getName());
                 err = true;
             }
         }
+
+        var queueNames = new LinkedList<String>();
+        SYMBIONT_PRINTER_QUEUE_NAMES.forEach(queueName -> {
+            if (queueNames.contains(queueName)) {
+                System.err.printf("ERROR:Duplicated queue name '%s'", queueName);
+            } else {
+                queueNames.add(queueName);
+            }
+        });
+        SYMBIONT_PUNCH_QUEUE_NAMES.forEach(queueName -> {
+            if (queueNames.contains(queueName)) {
+                System.err.printf("ERROR:Duplicated queue name '%s'", queueName);
+            } else {
+                queueNames.add(queueName);
+            }
+        });
 
         return !err;
     }
