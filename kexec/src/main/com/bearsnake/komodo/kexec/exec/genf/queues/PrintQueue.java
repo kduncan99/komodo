@@ -6,6 +6,8 @@ package com.bearsnake.komodo.kexec.exec.genf.queues;
 
 import com.bearsnake.komodo.kexec.configuration.Node;
 
+import java.io.PrintStream;
+
 /**
  * An in-memory struct describing the content of a printer queue
  */
@@ -22,5 +24,11 @@ public class PrintQueue extends OutputQueue {
         final Node associatedDevice
     ) {
         super(queueName, associatedDevice);
+    }
+
+    @Override
+    public void dump(final PrintStream out, final String indent, final boolean verbose) {
+        out.printf("%sPrint Queue %s:\n", indent, getQueueName());
+        // TODO
     }
 }

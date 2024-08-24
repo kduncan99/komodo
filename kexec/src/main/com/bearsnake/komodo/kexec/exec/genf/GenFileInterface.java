@@ -18,6 +18,7 @@ import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.IOResult;
 import com.bearsnake.komodo.logger.LogManager;
 
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.TreeMap;
 
@@ -51,6 +52,19 @@ public class GenFileInterface {
     public Collection<PrintQueue> getPrintQueues() { return _printQueues.values(); }
     public Collection<PunchQueue> getPunchQueues() { return _punchQueues.values(); }
     public Collection<ReaderQueue> getReaderQueues() { return _readerQueues.values(); }
+
+    public void dump(final PrintStream out, final String indent, final boolean verbose) {
+        out.printf("%sGeneral File Interface ********************************\n", indent);
+
+        var subIndent = indent + "  ";
+        _readerQueues.values().forEach(q -> q.dump(out, subIndent, verbose));
+        _punchQueues.values().forEach(q -> q.dump(out, subIndent, verbose));
+        _printQueues.values().forEach(q -> q.dump(out, subIndent, verbose));
+
+        if (verbose) {
+            // TODO dump inventory of queue item entries
+        }
+    }
 
     /**
      * Initializes the GENF$ file - used during JK13 and JK9 boots

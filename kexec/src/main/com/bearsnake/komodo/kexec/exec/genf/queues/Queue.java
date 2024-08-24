@@ -6,6 +6,8 @@ package com.bearsnake.komodo.kexec.exec.genf.queues;
 
 import com.bearsnake.komodo.kexec.configuration.Node;
 
+import java.io.PrintStream;
+
 public abstract class Queue {
 
     private final String _queueName;
@@ -20,6 +22,8 @@ public abstract class Queue {
         _queueName = queueName;
         _associatedDevice = associatedDevice;
     }
+
+    public abstract void dump(final PrintStream out, final String indent, final boolean verbose);
 
     public final Node getAssociatedDevice() { return _associatedDevice; }
     public final boolean hasAssociatedDevice() { return _associatedDevice != null; }
