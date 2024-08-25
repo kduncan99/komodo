@@ -5,7 +5,10 @@
 package com.bearsnake.komodo.kexec.exec.genf;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exec.Exec;
 
+import java.io.PrintStream;
 import java.util.stream.IntStream;
 
 public abstract class Item {
@@ -23,13 +26,19 @@ public abstract class Item {
         _dirty = false;
     }
 
+    public abstract void dump(final PrintStream out, final String indent);
     public final ItemType getItemType() { return _itemType; }
     public final long getSectorAddress() { return _sectorAddress;}
     public final boolean isDirty() { return _dirty; }
 
     public final void setIsDirty(final boolean flag) { _dirty = flag; }
 
-    protected void serialize(final ArraySlice destination) {
+    protected void serialize(final ArraySlice destination) throws ExecStoppedException {
+        if (destination.getSize() != 28) {
+            Exec.getInstance().stop(what);
+            throw new ExecStoppedException();
+        }
+
         IntStream.range(0, 033).forEach(wx -> destination.set(wx, 0));
         destination.setS1(0, _itemType.getCode());
     }

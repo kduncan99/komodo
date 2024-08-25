@@ -61,6 +61,10 @@ public class TrackFreeSpaceSet {
         }
     }
 
+    // TODO
+    //   markUnallocated()
+    //      StopCode.TrackToBeReleasedWasNotAllocated
+
     /**
      * Marks a particular region of the free space set as allocated
      * (by removing the region from the free space list)

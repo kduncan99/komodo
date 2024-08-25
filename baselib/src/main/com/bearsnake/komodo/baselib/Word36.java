@@ -5,6 +5,8 @@
 package com.bearsnake.komodo.baselib;
 
 import java.math.BigInteger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Library for doing architecturally-correct 36-bit operations on integers
@@ -974,7 +976,7 @@ public class Word36 implements Comparable<Word36> {
     //  Conversion from String to long -------------------------------------------------------------------------------------------
 
     /**
-     * Populates this object with quarter-words derived from the ASCII characters in the source string.
+     * Creates a long value with quarter-words derived from the ASCII characters in the source string, of up to 4 characters.
      * If the string does not contain at least 4 characters, we pad the resulting output with blanks as necessary.
      * Any characters in the string beyond the fourth are ignored.
      * @param source string to be converted
@@ -997,9 +999,60 @@ public class Word36 implements Comparable<Word36> {
     }
 
     /**
-     * Populates this object with sixth-words representing the fieldata characters derived from the ASCII characters
-     * in the source string. If the string does not contain at least 6 characters, we pad the resulting output with
-     * blanks as necessary. Any characters in the string beyond the sixth are ignored.
+     * Creates an array of long values of sufficient length to contain the converted characters in the source string,
+     * according to stringToWordASCII() above
+     * @param source string to be converted
+     * @return converted data
+     */
+    public static long[] stringToWordsASCII(
+        final String source
+    ) {
+        int words = source.length() / 4;
+        if (source.length() % 4 != 0) {
+            words++;
+        }
+
+        var result = new long[words];
+        for (int wx = 0; wx < result.length; ++wx) {
+            int sx = wx * 4;
+            result[wx] = stringToWordASCII(source.substring(sx, sx + 4));
+        }
+
+        return result;
+    }
+
+    /**
+     * As above, but the given buffer is used for output, and the string is truncated if the output buffer is too small
+     * to contain all the converted words.
+     * @param source string to be converted
+     * @param buffer where we store converted characters
+     * @param offset location in the buffer of the first word to be written
+     * @param length maximum number of words to be written
+     * @return converted data
+     */
+    public static void stringToWordsASCII(
+        final String source,
+        final ArraySlice buffer,
+        final int offset,
+        final int length
+    ) {
+        int wx = 0;
+        int cx = 0;
+        while (cx < source.length()) {
+            buffer.set(wx, stringToWordASCII(source.substring(cx, cx + 4)));
+            wx++;
+            cx += 4;
+        }
+        while (wx < length) {
+            buffer.set(wx, 040040040040L);
+            wx++;
+        }
+    }
+
+    /**
+     * Creates a long value with sixth-words representing the fieldata characters derived from the ASCII characters
+     * in the source string, of up to 6 characters. If the string does not contain at least 6 characters, we pad the resulting
+     * output with blanks as necessary. Any characters in the string beyond the sixth are ignored.
      * @param source string to be converted
      * @return converted data
      */
@@ -1017,6 +1070,57 @@ public class Word36 implements Comparable<Word36> {
         }
 
         return value;
+    }
+
+    /**
+     * Creates an array of long values of sufficient length to contain the converted characters in the source string,
+     * according to stringToWordFieldata() above
+     * @param source string to be converted
+     * @return converted data
+     */
+    public static long[] stringToWordsFieldata(
+        final String source
+    ) {
+        int words = source.length() / 6;
+        if (source.length() % 6 != 0) {
+            words++;
+        }
+
+        var result = new long[words];
+        for (int wx = 0; wx < result.length; ++wx) {
+            int sx = wx * 6;
+            result[wx] = stringToWordFieldata(source.substring(sx, sx + 6));
+        }
+
+        return result;
+    }
+
+    /**
+     * As above, but the given buffer is used for output, and the string is truncated if the output buffer is too small
+     * to contain all the converted words.
+     * @param source string to be converted
+     * @param buffer where we store converted characters
+     * @param offset location in the buffer of the first word to be written
+     * @param length maximum number of words to be written
+     * @return converted data
+     */
+    public static void stringToWordsFieldata(
+        final String source,
+        final ArraySlice buffer,
+        final int offset,
+        final int length
+    ) {
+        int wx = 0;
+        int cx = 0;
+        while (cx < source.length()) {
+            buffer.set(wx, stringToWordFieldata(source.substring(cx, cx + 6)));
+            wx++;
+            cx += 6;
+        }
+        while (wx < length) {
+            buffer.set(wx, 050505050505L);
+            wx++;
+        }
     }
 
 
@@ -1066,6 +1170,20 @@ public class Word36 implements Comparable<Word36> {
     }
 
     /**
+     * Interprets the given array slice as an LJSF ASCII string
+     */
+    public static String toStringFromASCII(
+        final ArraySlice slice,
+        final int offset,
+        final int length
+    ) {
+        String sb = IntStream.range(offset, offset + length)
+                             .mapToObj(wx -> toStringFromASCII(slice.get(wx)))
+                             .collect(Collectors.joining());
+        return sb.toString().trim();
+    }
+
+    /**
      * Interprets the given 36-bit value as a sequence of 6 Fieldata characters, and produces those characters as a result
      * @param value 36-bit value
      * @return displayable result
@@ -1080,6 +1198,20 @@ public class Word36 implements Comparable<Word36> {
                              ASCII_FROM_FIELDATA[(int) getS4(value)],
                              ASCII_FROM_FIELDATA[(int) getS5(value)],
                              ASCII_FROM_FIELDATA[(int) getS6(value)]);
+    }
+
+    /**
+     * Interprets the given array slice as an LJSF fieldata string
+     */
+    public static String toStringFromFieldata(
+        final ArraySlice slice,
+        final int offset,
+        final int length
+    ) {
+        String sb = IntStream.range(offset, offset + length)
+                             .mapToObj(wx -> toStringFromFieldata(slice.get(wx)))
+                             .collect(Collectors.joining());
+        return sb.toString().trim();
     }
 
     @Override

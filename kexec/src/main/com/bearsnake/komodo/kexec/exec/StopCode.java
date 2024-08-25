@@ -6,13 +6,14 @@ package com.bearsnake.komodo.kexec.exec;
 
 public enum StopCode {
     FacilitiesComplex(001),
+    SymbiontNameNotFound(024),
     UseStatementToExecPCTFailed(031),
     UndefinedGENFType(033),
-    BadGENFRecord(033),
     FileAssignErrorOccurredDuringSystemInitialization(034),
     InternalExecIOFailed(040),
     FullCycleReachedForRunIds(044),
     ExecRequestForMassStorageFailed(052),
+    IllegalNumberOfEntriesOnQueue(054),
     ErrorAccessingFacilitiesDataStructure(055),
     ConsoleResponseRequiresReboot(055),
     TrackToBeReleasedWasNotAllocated(057),

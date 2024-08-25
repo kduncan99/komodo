@@ -16,8 +16,8 @@ import java.util.Map;
  */
 public abstract class OutputQueue extends Queue {
 
-    // keyed by priority, then each list is in order of submission
-    private static final Map<Character, LinkedList<OutputQueueItem>> _content = new HashMap<>();
+    // keyed by priority index, then each list is in order of submission
+    private static final Map<Integer, LinkedList<OutputQueueItem>> _content = new HashMap<>();
 
     public OutputQueue(
         final String queueName
@@ -30,5 +30,12 @@ public abstract class OutputQueue extends Queue {
         final Node associatedDevice
     ) {
         super(queueName, associatedDevice);
+    }
+
+    public void enqueue(final OutputQueueItem item) {
+        if (!_content.containsKey(item.getPriorityIndex())) {
+            _content.put(item.getPriorityIndex(), new LinkedList<>());
+        }
+        _content.get(item.getPriorityIndex()).add(item);
     }
 }

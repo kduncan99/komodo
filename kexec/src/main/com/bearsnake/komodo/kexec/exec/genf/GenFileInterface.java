@@ -8,14 +8,19 @@ import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
+import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.kexec.exec.genf.queues.OutputQueue;
 import com.bearsnake.komodo.kexec.exec.genf.queues.PrintQueue;
 import com.bearsnake.komodo.kexec.exec.genf.queues.PunchQueue;
 import com.bearsnake.komodo.kexec.exec.genf.queues.ReaderQueue;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.IOResult;
+import com.bearsnake.komodo.kexec.mfd.DiskFileCycleInfo;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
@@ -37,6 +42,8 @@ public class GenFileInterface {
     private static final String QUALIFIER = "SYS$";
     private static final String FILE_NAME = "GENF$";
     private static final FileSpecification FILE_SPECIFICATION = new FileSpecification(QUALIFIER, FILE_NAME);
+
+    private int _recoveryCycle;
 
     // Item inventory - keyed by sector id
     private final TreeMap<Long, Item> _inventory = new TreeMap<>();
@@ -62,8 +69,84 @@ public class GenFileInterface {
         _printQueues.values().forEach(q -> q.dump(out, subIndent, verbose));
 
         if (verbose) {
-            // TODO dump inventory of queue item entries
+            _inventory.values().forEach(item -> item.dump(out, subIndent));
         }
+    }
+
+    /**
+     * Enqueues an SDF file to a print or punch queue.
+     * Caller must ensure the file is in SDF format.
+     * @param queue queue to which the file should be added
+     * @param run Run object describing the run which is asking for this
+     * @param priorityIndex indicates the priority for this print file
+     * @param fileSpecification describes the file to be enqueued
+     * @param breakpointPartNumber for PRINT$ files, the breakpoint part number (else zero)
+     * @param banner banner page string
+     * @param estimatedPages estimated number of pages in the print file
+     * @param flags queue item flags
+     * @param partNames only for tape files, this is an (optional) list of part-names to be printed from the tape file
+     * @throws ExecStoppedException If the exec died in the process
+     */
+    public synchronized void enqueue(
+        final OutputQueue queue,
+        final Run run,
+        final int priorityIndex,
+        final FileSpecification fileSpecification,
+        final int breakpointPartNumber,
+        final String banner,
+        final long estimatedPages,
+        final long flags,
+        final String[] partNames
+    ) throws ExecStoppedException {
+        // Is there already an entry for this qual*file(cycle) ?
+        OutputQueueItem existingInitialItem = null;
+        for (var qi : _inventory.values()) {
+            if (qi instanceof OutputQueueItem oqi) {
+                if (oqi.getQualifier().equals(fileSpecification.getQualifier())
+                    && oqi.getFilename().equals(fileSpecification.getFilename())
+                    && (oqi.getAbsoluteCycle() == fileSpecification.getFileCycleSpecification().getCycle())) {
+                    existingInitialItem = oqi;
+                    break;
+                }
+            }
+        }
+
+        // Create a new output queue item
+        var newItem = new OutputQueueItem(allocateFreeQueueItem().getSectorAddress(), _recoveryCycle);
+        newItem.setFileSpecificationInfo(fileSpecification, breakpointPartNumber)
+          .setRunInfo(run)
+          .setBanner(banner)
+          .setEstimatedCards(estimatedPages)
+          .setFlags(flags)
+          .setPriorityIndex(priorityIndex)
+          .setQueueId(queue.getQueueName());
+
+        if (existingInitialItem != null) {
+            newItem.setInitialEntrySectorAddress(existingInitialItem.getInitialEntrySectorAddress());
+        } else {
+            newItem.setInitialEntrySectorAddress((int) newItem.getSectorAddress());
+            var mfd = Exec.getInstance().getMFDManager();
+            try {
+                var fcInfo = mfd.getFileCycleInfo(fileSpecification.getQualifier(),
+                                                  fileSpecification.getFilename(),
+                                                  fileSpecification.getFileCycleSpecification().getCycle());
+                if (fcInfo instanceof DiskFileCycleInfo dfci) {
+                    dfci.setInitialSMOQUELink(newItem.getSectorAddress());
+                    // TODO tell MFD to update the file cycle info
+                }
+            } catch (FileSetDoesNotExistException | FileCycleDoesNotExistException ex) {
+                // TODO this is fatal
+            }
+        }
+
+        // Create GENF entry(ies) for tape file part-names
+        //  TODO - this means we need to create a part-name queue item type, probably containing a forward link to the next
+        //    such item (if any), and up to 13 FD LJSF partname entries.
+
+        queue.enqueue(newItem);
+        newItem.setIsDirty(true);
+        _inventory.put(newItem.getSectorAddress(), newItem);
+        writeDirtyItems();
     }
 
     /**
@@ -74,6 +157,7 @@ public class GenFileInterface {
         var cfg = exec.getConfiguration();
         var fm = exec.getFacilitiesManager();
 
+        _recoveryCycle = 1;
         buildQueues();
 
         exec.sendExecReadOnlyMessage("Creating GENF$ file...");
@@ -101,7 +185,7 @@ public class GenFileInterface {
         _systemItem = new SystemItem(0, 0, 64);
         _systemItem.setIsDirty(true);
         _inventory.put(_systemItem.getSectorAddress(), _systemItem);
-        for (long addr = 01; addr <= 64; addr++) {
+        for (long addr = 1; addr < 64; addr++) {
             var fi = new FreeItem(addr);
             fi.setIsDirty(true);
             _inventory.put(fi.getSectorAddress(), fi);
@@ -115,6 +199,10 @@ public class GenFileInterface {
      * Recovers the GENF$ file - used during regular recovery boots
      */
     public void recover() throws ExecStoppedException {
+        // TODO
+        //  SymbiontNameNotFound(024),
+        //  IllegalNumberOfEntriesOnQueue(054),
+
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
 
@@ -153,6 +241,10 @@ public class GenFileInterface {
         }
 
         _systemItem = si;
+        _recoveryCycle = _systemItem.getRecoveryCycle() + 1;
+        _systemItem.setRecoveryCycle(_recoveryCycle);
+        _systemItem.setIsDirty(true);
+
         _inventory.put(_systemItem.getSectorAddress(), _systemItem);
         var msg = String.format("GENF$ recovery cycle = %d", si.getRecoveryCycle());
         exec.sendExecReadOnlyMessage(msg);
@@ -173,7 +265,7 @@ public class GenFileInterface {
                 var queue = _readerQueues.get(priority);
                 if (queue == null) {
                     LogManager.logFatal(LOG_SOURCE, "GENF$ sector %d has invalid priority: %d", addr, priority);
-                    exec.stop(StopCode.BadGENFRecord);
+                    exec.stop(StopCode.UndefinedGENFType);
                     throw new ExecStoppedException();
                 }
 
@@ -194,6 +286,32 @@ public class GenFileInterface {
         // TODO
     }
 
+    /**
+     * Finds the first available free queue item to be eventually replaced by an input or output queue item.
+     * If there isn't one, a new track of items is created, and the first of these is then selected.
+     */
+    private synchronized Item allocateFreeQueueItem() throws ExecStoppedException {
+        for (var item : _inventory.values()) {
+            if (item.getItemType() == ItemType.FreeItem) {
+                return item;
+            }
+        }
+
+        long newSectorAddress = _inventory.size();
+        for (long addr = newSectorAddress; addr < newSectorAddress + 64; addr++) {
+            var fi = new FreeItem(addr);
+            fi.setIsDirty(true);
+            _inventory.put(fi.getSectorAddress(), fi);
+        }
+        writeDirtyItems();
+
+        return _inventory.get(newSectorAddress);
+    }
+
+    /**
+     * Builds the various queues according to the given configuration.
+     * This happens *before* initialization or recovery.
+     */
     private void buildQueues() {
         var exec = Exec.getInstance();
         var cfg = exec.getConfiguration();
@@ -215,11 +333,14 @@ public class GenFileInterface {
         for (var queueName : cfg.getSymbiontPunchQueues()) {
             _punchQueues.put(queueName, new PunchQueue(queueName));
         }
-
-        // Create queues per configuration (replaces STATION LOCAL items from antiquity)
-        //  TODO
     }
 
+    /**
+     * Deserializes the on-disk sector representation of a queue item into an actual Item of the appropriate type.
+     * @param sectorAddress Sector address of the queue item on disk (as GENF$)
+     * @param source Slice of an IO buffer containing exactly the sector containing the serialized queue item
+     * @return allocated subclass of Item, representing the queue item.
+     */
     private static Item deserializeItem(
         final long sectorAddress,
         final ArraySlice source
@@ -232,6 +353,9 @@ public class GenFileInterface {
         };
     }
 
+    /**
+     * Iterates over the inventory, serializing the various updated (and not yet persisted) objects to disk
+     */
     private synchronized void writeDirtyItems() throws ExecStoppedException {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
