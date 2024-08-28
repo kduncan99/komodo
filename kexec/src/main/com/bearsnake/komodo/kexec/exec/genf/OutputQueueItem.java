@@ -98,7 +98,7 @@ public class OutputQueueItem extends Item {
     private int _numberOfTimesQueued;             // Only for first entry in chain, contains number of entries in chain
 
     public OutputQueueItem(
-        final long sectorAddress,
+        final int sectorAddress,
         final int genfRecoveryCycle
     ) {
         super(ItemType.OutputQueueItem, sectorAddress);
@@ -108,7 +108,7 @@ public class OutputQueueItem extends Item {
     }
 
     public static OutputQueueItem deserialize(
-        final long sectorAddress,
+        final int sectorAddress,
         final ArraySlice source
     ) {
         var genfRecCycle = (int) source.getT2(0);

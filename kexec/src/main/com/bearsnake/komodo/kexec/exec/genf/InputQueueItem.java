@@ -43,7 +43,7 @@ public class InputQueueItem extends Item {
     private final Instant _submissionTime;
 
     public InputQueueItem(
-        final long sectorAddress,
+        final int sectorAddress,
         final String sourceSymbiontName,
         final String actualRunId,
         final RunCardInfo runCardInfo,
@@ -67,7 +67,7 @@ public class InputQueueItem extends Item {
     public InputQueueItem setSchedulingPriority(final Character schedulingPriority) { _schedulingPriority = schedulingPriority; return this; }
 
     public static InputQueueItem deserialize(
-        final long sectorAddress,
+        final int sectorAddress,
         final ArraySlice source
     ) {
         var runCardInfo = new RunCardInfo();

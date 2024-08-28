@@ -48,7 +48,7 @@ public class GenFileInterface {
     private int _recoveryCycle;
 
     // Item inventory - keyed by sector id
-    private final TreeMap<Long, Item> _inventory = new TreeMap<>();
+    private final TreeMap<Integer, Item> _inventory = new TreeMap<>();
 
     // Reader, Print, and Punch queues - each is keyed by queue name
     private final TreeMap<String, ReaderQueue> _readerQueues = new TreeMap<>();
@@ -97,6 +97,9 @@ public class GenFileInterface {
         final long flags,
         final String[] partNames
     ) throws ExecStoppedException {
+        LogManager.logTrace(LOG_SOURCE, "%s enqueueing %s on %s",
+                            run.getActualRunId(), fileSpecification, queue.getQueueName());
+
         // Is there already an entry for this qual*file(cycle) ?
         OutputQueueItem existingInitialItem = null;
         for (var qi : _inventory.values()) {
@@ -123,24 +126,49 @@ public class GenFileInterface {
         if (existingInitialItem != null) {
             newItem.setInitialEntrySectorAddress(existingInitialItem.getInitialEntrySectorAddress());
         } else {
-            newItem.setInitialEntrySectorAddress((int) newItem.getSectorAddress());
-            var mfd = Exec.getInstance().getMFDManager();
+            newItem.setInitialEntrySectorAddress(newItem.getSectorAddress());
+            var exec = Exec.getInstance();
+            var mfd = exec.getMFDManager();
             try {
                 var fcInfo = mfd.getFileCycleInfo(fileSpecification.getQualifier(),
                                                   fileSpecification.getFilename(),
                                                   fileSpecification.getFileCycleSpecification().getCycle());
                 if (fcInfo instanceof DiskFileCycleInfo dfci) {
                     dfci.setInitialSMOQUELink(newItem.getSectorAddress());
-                    // TODO tell MFD to update the file cycle info
+                    mfd.persistFileCycleInfo(dfci);
                 }
             } catch (FileSetDoesNotExistException | FileCycleDoesNotExistException ex) {
-                // TODO this is fatal
+                exec.stop(StopCode.DirectoryErrors);
+                throw new ExecStoppedException();
             }
         }
 
         // Create GENF entry(ies) for tape file part-names
-        //  TODO - this means we need to create a part-name queue item type, probably containing a forward link to the next
-        //    such item (if any), and up to 13 FD LJSF partname entries.
+        var prevAddr = newItem.getSectorAddress();
+        Item prevItem = newItem;
+        var prevIsQueueItem = true;
+        var pnx = 0;
+
+        while (pnx < partNames.length) {
+            var partNameItem = new PartNameItem(allocateFreeQueueItem().getSectorAddress());
+            partNameItem.setPreviousSectorAddress(prevAddr);
+            var pny = 0;
+            while (pnx < partNames.length && pny < 13) {
+                partNameItem.addPartName(partNames[pnx]);
+                pnx++;
+                pny++;
+            }
+
+            if (prevIsQueueItem) {
+                newItem.setPartNameSectorAddress(partNameItem.getSectorAddress());
+            } else {
+                ((PartNameItem) prevItem).setNextSectorAddress(partNameItem.getSectorAddress());
+            }
+
+            prevIsQueueItem = false;
+            prevItem = partNameItem;
+            prevAddr = partNameItem.getSectorAddress();
+        }
 
         queue.enqueue(newItem);
         newItem.setIsDirty(true);
@@ -198,7 +226,7 @@ public class GenFileInterface {
         var systemItem = new SystemItem(0, 0, 64);
         systemItem.setIsDirty(true);
         _inventory.put(systemItem.getSectorAddress(), systemItem);
-        for (long addr = 1; addr < 64; addr++) {
+        for (int addr = 1; addr < 64; addr++) {
             var fi = new FreeItem(addr);
             fi.setIsDirty(true);
             _inventory.put(fi.getSectorAddress(), fi);
@@ -215,10 +243,6 @@ public class GenFileInterface {
      * Recovers the GENF$ file - used during regular recovery boots
      */
     public void recover() throws ExecStoppedException {
-        // TODO
-        //  SymbiontNameNotFound(024),
-        //  IllegalNumberOfEntriesOnQueue(054),
-
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
 
@@ -290,8 +314,23 @@ public class GenFileInterface {
                     throw new ExecStoppedException();
                 }
                 queue.enqueue(oqi);
-            } else if (item instanceof FreeItem) {
-                // nothing else to do here
+
+                // chase part name sectors (if any) ... we can't do part names until the queue item is done,
+                // which is what we're doing here.
+                var partNameAddr = oqi.getPartNameSectorAddress();
+                while (partNameAddr != 0) {
+                    ioResult.clear();
+                    fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, 28, false, ioResult);
+                    if (ioResult.getStatus() != ERIO$Status.Success) {
+                        exec.stop(StopCode.InternalExecIOFailed);
+                        throw new ExecStoppedException();
+                    }
+
+                    var pnItem = (PartNameItem) deserializeItem(addr, buffer);
+                    partNameAddr = pnItem.getNextSectorAddress();
+                }
+            } else if (item instanceof FreeItem || item instanceof PartNameItem) {
+                // nothing to do for FreeItems, and we have to do PartNameItems as part of OutputQueueItems.
             } else {
                 LogManager.logFatal(LOG_SOURCE,
                                     "GENF$ sector %d is not an expected item type: %d",
@@ -301,7 +340,8 @@ public class GenFileInterface {
                 throw new ExecStoppedException();
             }
         }
-        // TODO
+
+        // TODO what else to do here?
 
         _isReady = true;
     }
@@ -317,8 +357,8 @@ public class GenFileInterface {
             }
         }
 
-        long newSectorAddress = _inventory.size();
-        for (long addr = newSectorAddress; addr < newSectorAddress + 64; addr++) {
+        var newSectorAddress = _inventory.size();
+        for (int addr = newSectorAddress; addr < newSectorAddress + 64; addr++) {
             var fi = new FreeItem(addr);
             fi.setIsDirty(true);
             _inventory.put(fi.getSectorAddress(), fi);
@@ -362,13 +402,14 @@ public class GenFileInterface {
      * @return allocated subclass of Item, representing the queue item.
      */
     private static Item deserializeItem(
-        final long sectorAddress,
+        final int sectorAddress,
         final ArraySlice source
     ) {
         return switch (ItemType.getItemType((int)source.getS1(0))) {
             case FreeItem -> FreeItem.deserialize(sectorAddress);
             case InputQueueItem -> InputQueueItem.deserialize(sectorAddress, source);
             case OutputQueueItem -> OutputQueueItem.deserialize(sectorAddress, source);
+            case PartNameItem -> PartNameItem.deserialize(sectorAddress, source);
             case SystemItem -> SystemItem.deserialize(sectorAddress, source);
         };
     }
@@ -377,7 +418,7 @@ public class GenFileInterface {
      * Purely for convenience - system item is always at sector address 0
      */
     private SystemItem getSystemItem() {
-        return (SystemItem) _inventory.get(0L);
+        return (SystemItem) _inventory.get(0);
     }
 
     /**

@@ -11,7 +11,8 @@ public enum ItemType {
     FreeItem(0),
     InputQueueItem(1),
     OutputQueueItem(2),
-    SystemItem(3);
+    PartNameItem(3),
+    SystemItem(077);
 
     private final int _code;
 

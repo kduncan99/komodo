@@ -10,7 +10,7 @@ import java.io.PrintStream;
 
 /*
  * System item sector format
- *   +000,S1    Type (03)
+ *   +000,S1    Type (077)
  *   +001,H1    Most recent GENF$ recovery cycle (number of times this GENF$ used since last JK9/13 boot
  *   +001,H2    Number of sectors in the GENF$ file
  *   +002:033   reserved
@@ -21,7 +21,7 @@ class SystemItem extends Item {
     private int _sectorCount;   // number of sectors in the GENF$ file
 
     public SystemItem(
-        final long sectorAddress,
+        final int sectorAddress,
         final int recoveryCycle,
         final int sectorCount
     ) {
@@ -36,7 +36,7 @@ class SystemItem extends Item {
     public void setSectorCount(final int sectorCount) { _sectorCount = sectorCount; }
 
     public static SystemItem deserialize(
-        final long sectorAddress,
+        final int sectorAddress,
         final ArraySlice source
     ) {
         return new SystemItem(sectorAddress,

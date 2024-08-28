@@ -15,13 +15,13 @@ import java.io.PrintStream;
 public class FreeItem extends Item {
 
     public FreeItem(
-        final long sectorAddress
+        final int sectorAddress
     ) {
         super(ItemType.FreeItem, sectorAddress);
     }
 
     public static FreeItem deserialize(
-        final long sectorAddress
+        final int sectorAddress
     ) {
         return new FreeItem(sectorAddress);
     }
