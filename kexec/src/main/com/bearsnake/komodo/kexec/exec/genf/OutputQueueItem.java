@@ -11,6 +11,7 @@ import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Run;
 
+import java.io.PrintStream;
 import java.time.Instant;
 
 /*
@@ -208,6 +209,12 @@ public class OutputQueueItem extends Item {
     }
 
     public OutputQueueItem setUseName(final String useName) { _useName = useName; return this; }
+
+    @Override
+    public void dump(PrintStream out, String indent) {
+        super.dump(out, indent);
+        // TODO
+    }
 
     @Override
     public void serialize(final ArraySlice destination) throws ExecStoppedException {

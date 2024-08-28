@@ -26,7 +26,10 @@ public abstract class Item {
         _dirty = false;
     }
 
-    public abstract void dump(final PrintStream out, final String indent);
+    public void dump(final PrintStream out, final String indent) {
+        out.printf("%s%06o:%s%s\n", indent, getSectorAddress(), getItemType(), isDirty() ? " (dirty)" : "");
+    }
+
     public final ItemType getItemType() { return _itemType; }
     public final long getSectorAddress() { return _sectorAddress;}
     public final boolean isDirty() { return _dirty; }
@@ -34,11 +37,6 @@ public abstract class Item {
     public final void setIsDirty(final boolean flag) { _dirty = flag; }
 
     protected void serialize(final ArraySlice destination) throws ExecStoppedException {
-        if (destination.getSize() != 28) {
-            Exec.getInstance().stop(what);
-            throw new ExecStoppedException();
-        }
-
         IntStream.range(0, 033).forEach(wx -> destination.set(wx, 0));
         destination.setS1(0, _itemType.getCode());
     }

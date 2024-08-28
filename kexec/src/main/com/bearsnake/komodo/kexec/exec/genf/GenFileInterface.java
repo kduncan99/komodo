@@ -17,6 +17,7 @@ import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.exec.genf.queues.OutputQueue;
 import com.bearsnake.komodo.kexec.exec.genf.queues.PrintQueue;
 import com.bearsnake.komodo.kexec.exec.genf.queues.PunchQueue;
+import com.bearsnake.komodo.kexec.exec.genf.queues.Queue;
 import com.bearsnake.komodo.kexec.exec.genf.queues.ReaderQueue;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.IOResult;
@@ -43,13 +44,11 @@ public class GenFileInterface {
     private static final String FILE_NAME = "GENF$";
     private static final FileSpecification FILE_SPECIFICATION = new FileSpecification(QUALIFIER, FILE_NAME);
 
+    private boolean _isReady = false;
     private int _recoveryCycle;
 
     // Item inventory - keyed by sector id
     private final TreeMap<Long, Item> _inventory = new TreeMap<>();
-
-    // System item - always in core, for convenience
-    private SystemItem _systemItem;
 
     // Reader, Print, and Punch queues - each is keyed by queue name
     private final TreeMap<String, ReaderQueue> _readerQueues = new TreeMap<>();
@@ -150,6 +149,20 @@ public class GenFileInterface {
     }
 
     /**
+     * Retrieves a queue by name
+     */
+    public Queue getQueue(final String name) {
+        Queue queue = _printQueues.get(name);
+        if (queue == null) {
+            queue = _punchQueues.get(name);
+        }
+        if (queue == null) {
+            queue = _readerQueues.get(name);
+        }
+        return queue;
+    }
+
+    /**
      * Initializes the GENF$ file - used during JK13 and JK9 boots
      */
     public void initialize() throws ExecStoppedException {
@@ -182,9 +195,9 @@ public class GenFileInterface {
         fm.establishUseItem(exec, FILE_NAME, FILE_SPECIFICATION, false);
 
         // Create one track worth of items - one system item and 63 free items
-        _systemItem = new SystemItem(0, 0, 64);
-        _systemItem.setIsDirty(true);
-        _inventory.put(_systemItem.getSectorAddress(), _systemItem);
+        var systemItem = new SystemItem(0, 0, 64);
+        systemItem.setIsDirty(true);
+        _inventory.put(systemItem.getSectorAddress(), systemItem);
         for (long addr = 1; addr < 64; addr++) {
             var fi = new FreeItem(addr);
             fi.setIsDirty(true);
@@ -193,7 +206,10 @@ public class GenFileInterface {
 
         writeDirtyItems();
         exec.sendExecReadOnlyMessage("GENF$ initialized");
+        _isReady = true;
     }
+
+    public boolean isReady() { return _isReady; }
 
     /**
      * Recovers the GENF$ file - used during regular recovery boots
@@ -206,7 +222,6 @@ public class GenFileInterface {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
 
-        _systemItem = null;
         _inventory.clear();
         _readerQueues.clear();
         _printQueues.clear();
@@ -240,12 +255,11 @@ public class GenFileInterface {
             throw new ExecStoppedException();
         }
 
-        _systemItem = si;
-        _recoveryCycle = _systemItem.getRecoveryCycle() + 1;
-        _systemItem.setRecoveryCycle(_recoveryCycle);
-        _systemItem.setIsDirty(true);
+        var systemItem = getSystemItem();
+        _recoveryCycle = systemItem.getRecoveryCycle() + 1;
+        systemItem.setRecoveryCycle(_recoveryCycle);
+        systemItem.setIsDirty(true);
 
-        _inventory.put(_systemItem.getSectorAddress(), _systemItem);
         var msg = String.format("GENF$ recovery cycle = %d", si.getRecoveryCycle());
         exec.sendExecReadOnlyMessage(msg);
 
@@ -258,20 +272,24 @@ public class GenFileInterface {
             }
 
             item = deserializeItem(addr, buffer);
-            _inventory.put(_systemItem.getSectorAddress(), item);
-
+            _inventory.put(item.getSectorAddress(), item);
             if (item instanceof InputQueueItem iqi) {
-                var priority = iqi.getRunCardInfo().getSchedulingPriority();
-                var queue = _readerQueues.get(priority);
+                var queue = _readerQueues.get(iqi.getSourceSymbiontName());
                 if (queue == null) {
-                    LogManager.logFatal(LOG_SOURCE, "GENF$ sector %d has invalid priority: %d", addr, priority);
-                    exec.stop(StopCode.UndefinedGENFType);
+                    exec.stop(StopCode.SymbiontNameNotFound);
                     throw new ExecStoppedException();
                 }
-
-                // TODO add iqi to the appropriate reader queue
+                queue.enqueue(iqi);
             } else if (item instanceof OutputQueueItem oqi) {
-                // TODO
+                OutputQueue queue = _printQueues.get(oqi.getQueueId());
+                if (queue == null) {
+                    queue = _punchQueues.get(oqi.getQueueId());
+                }
+                if (queue == null) {
+                    exec.stop(StopCode.SymbiontNameNotFound);
+                    throw new ExecStoppedException();
+                }
+                queue.enqueue(oqi);
             } else if (item instanceof FreeItem) {
                 // nothing else to do here
             } else {
@@ -284,6 +302,8 @@ public class GenFileInterface {
             }
         }
         // TODO
+
+        _isReady = true;
     }
 
     /**
@@ -351,6 +371,13 @@ public class GenFileInterface {
             case OutputQueueItem -> OutputQueueItem.deserialize(sectorAddress, source);
             case SystemItem -> SystemItem.deserialize(sectorAddress, source);
         };
+    }
+
+    /**
+     * Purely for convenience - system item is always at sector address 0
+     */
+    private SystemItem getSystemItem() {
+        return (SystemItem) _inventory.get(0L);
     }
 
     /**

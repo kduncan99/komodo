@@ -5,6 +5,8 @@
 package com.bearsnake.komodo.kexec.exec.genf;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import java.io.PrintStream;
 
 /*
  * System item sector format
@@ -43,7 +45,13 @@ class SystemItem extends Item {
     }
 
     @Override
-    public void serialize(final ArraySlice destination) {
+    public void dump(PrintStream out, String indent) {
+        super.dump(out, indent);
+        out.printf("%s  cycle=%d sectors=%d\n", indent, _recoveryCycle, _sectorCount);
+    }
+
+    @Override
+    public void serialize(final ArraySlice destination) throws ExecStoppedException {
         super.serialize(destination);
         destination.setH1(01, _recoveryCycle);
         destination.setH2(01, _sectorCount);

@@ -79,7 +79,7 @@ public class KeyinManager implements Manager {
         _handlerClasses.put(RVKeyinHandler.COMMAND.toUpperCase(), RVKeyinHandler.class);
         // SEC
         _handlerClasses.put(SJKeyinHandler.COMMAND.toUpperCase(), SJKeyinHandler.class);
-        // SM
+        _handlerClasses.put(SMKeyinHandler.COMMAND.toUpperCase(), SMKeyinHandler.class);
         // SP
         _handlerClasses.put(SQKeyinHandler.COMMAND.toUpperCase(), SQKeyinHandler.class);
         // SR
@@ -146,7 +146,6 @@ public class KeyinManager implements Manager {
                          InvocationTargetException |
                          InstantiationException |
                          NoSuchMethodException ex) {
-                    ex.printStackTrace();//TODO remove
                     LogManager.logCatching(LOG_SOURCE, ex);
                     Exec.getInstance().stop(StopCode.ExecContingencyHandler);
                     return;

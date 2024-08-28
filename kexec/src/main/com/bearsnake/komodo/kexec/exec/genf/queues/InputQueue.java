@@ -25,4 +25,12 @@ public abstract class InputQueue extends Queue {
     ) {
         super(queueName, associatedDevice);
     }
+
+    public void enqueue(final InputQueueItem item) {
+        var priority = item.getSchedulingPriority();
+        if (!_content.containsKey(priority)) {
+            _content.put(priority, new LinkedList<>());
+        }
+        _content.get(priority).add(item);
+    }
 }

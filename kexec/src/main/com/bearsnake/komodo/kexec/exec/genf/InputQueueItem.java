@@ -9,6 +9,8 @@ import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.DateConverter;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import java.io.PrintStream;
 import java.time.Instant;
 
 /*
@@ -29,14 +31,16 @@ import java.time.Instant;
  *   +015,H2    Max Cards
  *   +016,H1    Max Time
  *   +017       Source Symbiont FD LJSF
- *   +017:033   reserved
+ *   +020:033   reserved
  */
 public class InputQueueItem extends Item {
 
-    private String _sourceSymbiontName;
-    private String _actualRunId;
-    private RunCardInfo _runCardInfo;
-    private Instant _submissionTime;
+    private final String _actualRunId;
+    private Character _processingPriority;
+    private final RunCardInfo _runCardInfo;
+    private Character _schedulingPriority;
+    private final String _sourceSymbiontName;
+    private final Instant _submissionTime;
 
     public InputQueueItem(
         final long sectorAddress,
@@ -53,9 +57,14 @@ public class InputQueueItem extends Item {
     }
 
     public String getActualRunId() { return _actualRunId; }
+    public Character getProcessingPriority() { return _processingPriority; }
     public RunCardInfo getRunCardInfo() { return _runCardInfo; }
+    public char getSchedulingPriority() { return _schedulingPriority; }
     public Instant getSubmissionTime() { return _submissionTime; }
     public String getSourceSymbiontName() { return _sourceSymbiontName; }
+
+    public InputQueueItem setProcessingPriority(final Character processingPriority) { _processingPriority = processingPriority; return this; }
+    public InputQueueItem setSchedulingPriority(final Character schedulingPriority) { _schedulingPriority = schedulingPriority; return this; }
 
     public static InputQueueItem deserialize(
         final long sectorAddress,
@@ -83,7 +92,13 @@ public class InputQueueItem extends Item {
     }
 
     @Override
-    public void serialize(final ArraySlice destination) {
+    public void dump(PrintStream out, String indent) {
+        super.dump(out, indent);
+        // TODO
+    }
+
+    @Override
+    public void serialize(final ArraySlice destination) throws ExecStoppedException {
         super.serialize(destination);
         destination.setS2(0, _runCardInfo.getSchedulingPriority());
         destination.setS3(0, _runCardInfo.getProcessorPriority());

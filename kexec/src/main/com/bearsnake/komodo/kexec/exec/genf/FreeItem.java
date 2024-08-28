@@ -5,6 +5,8 @@
 package com.bearsnake.komodo.kexec.exec.genf;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import java.io.PrintStream;
 
 /*
  * Free item sector format
@@ -25,7 +27,12 @@ public class FreeItem extends Item {
     }
 
     @Override
-    public void serialize(final ArraySlice destination) {
+    public void dump(PrintStream out, String indent) {
+        super.dump(out, indent);
+    }
+
+    @Override
+    public void serialize(final ArraySlice destination) throws ExecStoppedException {
         super.serialize(destination);
     }
 }

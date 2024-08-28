@@ -46,7 +46,8 @@ public class Main {
     private static Context processArgs(String[] args) {
         var context = new Context();
 
-        for (var ax = 0; ax < args.length; ax++) {
+        int ax = 0;
+        while (ax < args.length) {
             var sw = args[ax++];
             switch (sw.toLowerCase()) {
             case "-c":
@@ -61,9 +62,9 @@ public class Main {
                 context._helpFlagSet = true;
                 break;
 
-            case "-j":
+            case "-jk":
                 if (ax == args.length) {
-                    System.err.println("no argument specified for -j switch");
+                    System.err.println("no argument specified for -jk switch");
                     return null;
                 }
                 var split = args[ax++].split(",");
@@ -71,6 +72,7 @@ public class Main {
                     try {
                         var jk = Integer.parseInt(key);
                         context._jumpKeys[jk - 1] = true;
+                        System.out.printf("Setting jk %d\n", jk);
                     } catch (NumberFormatException ex) {
                         System.err.printf("invalid jump key %s\n", key);
                         return null;
