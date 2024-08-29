@@ -243,6 +243,11 @@ public class GenFileInterface {
      * Recovers the GENF$ file - used during regular recovery boots
      */
     public void recover() throws ExecStoppedException {
+        // TODO
+        //   LOST RUN - run-id/site-id RECOVERED nn SYMBIONT FILES
+        //(Exec) A previously opened run was lost during a recovery boot. This message
+        //specifies the number of symbiont files recovered.
+
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
 

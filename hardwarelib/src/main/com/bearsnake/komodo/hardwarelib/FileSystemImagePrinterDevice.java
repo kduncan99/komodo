@@ -37,6 +37,9 @@ public class FileSystemImagePrinterDevice extends SymbiontPrinterDevice {
     }
 
     @Override
+    public final void probe() {}
+
+    @Override
     public final void setIsReady(final boolean flag) {
         _isReady = flag;
     }

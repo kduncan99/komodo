@@ -4,33 +4,26 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
+import com.bearsnake.komodo.hardwarelib.SymbiontDevice;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
+import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.symbionts.SymbiontInfo;
 
 class SMKeyinHandler extends KeyinHandler {
 
-    /*
-SM sname
-Displays the status of symbiont device sname.
-SM sname operation
-Controls the symbiont devices. where:
-sname
-is the symbiont device name.
-operation
-is the operation to be performed. If you do not specify an operation, the system displays the device status: suspended, locked, active, or inactive. You can use one of the following values:
-11–192
-7831 0281–035
-B Displays the current print band cartridge-ID or allows dynamic changes of the default cartridge-ID for the specified device.
-C Displays the current page format for a printer or changes the current page format for a printer.
-E Creates an end-of-file (EOF), terminating the active symbiont file.
-I Initiates an inactive onsite device; resumes onsite device operation;
-simulates an attention interrupt. L Locks out an onsite device.
-Q Requeues the current file and locks out the device.
-R Creates an EOF, removing the runstream that the input device is currently reading.
-Raaa Reprints or repunches aaa pages or cards, where aaa is a decimal number. R+aaa Advances aaa pages or cards and then begins printing or punching, where
-aaa is a decimal number.
-RALL Reprints or repunches the entire file.
-S Suspends device operation.
-T Terminates the device with an EOF, losing the remainder of the file. The device is locked out.     */
+    private enum Command {
+        Change,
+        Display,
+        EndOfFile,
+        Initialize,
+        Lock,       // locks a device - if printing, the file is finished first
+        Queue,      // requeues the file, locking the device
+        Remove,
+        Reprint,
+        Suspend,    // immediately stops, locking the device - SM I resumes printing/punching
+        Terminate,
+    }
+
     private static final String[] HELP_TEXT = {
         "SM symbiont_name",
         "  Displays the status of the symbiont device.",
@@ -51,7 +44,37 @@ T Terminates the device with an EOF, losing the remainder of the file. The devic
         "   Locks out the device."
     };
 
+    /*
+SM xx Illegal PROBE INTERRUPT
+(Exec) An error was encountered while probing a card reader.
+SM KEY ERROR : INCORRECT BOTTOM MARGIN
+(Exec) The SM CHANGE keyin contained an error. Correct the keyin and try again.
+SM KEY ERROR : INCORRECT DIGIT
+(Exec) The SM CHANGE keyin contained an error. Correct the keyin and try again.
+SM KEY ERROR : INCORRECT LPI NOT 6, 8, OR 12
+(Exec) The SM CHANGE keyin contained an error in the lines-per-inch field. Correct the keyin and try again.
+SM KEY ERROR : INCORRECT SIZE
+(Exec) The SM CHANGE keyin contained an error in the first numeric field (number of lines per page). Correct the keyin and try again.
+SM KEY ERROR : INCORRECT SYNTAX
+(Exec) The SM CHANGE keyin contained an error. Correct the keyin and try again.
+SM KEY ERROR : INCORRECT TOP MARGIN
+(Exec) The SM CHANGE keyin contained an error in the second numeric field. Correct the keyin and try again.
+SM KEY ERROR : INVALID CARTRIDGE ID
+(Exec) The SM BAND keyin contained an error. Correct the keyin and try again.
+SM KEY ERROR : symbiont NOT VALID DEVICE
+(Exec) The SM CHANGE keyin contained an error. Correct the keyin and try again.
+SM KEY ERROR : TOP AND BOTTOM MARGIN GE SIZE
+(Exec) The SM CHANGE keyin contained an inconsistency; the top and bottom margins require more than a full page. Correct the keyin and try again.
+SM KEY ERROR : UPDATE FAILED
+(Exec) Your attempt to change the print format with the SM CHANGE keyin has failed. Correct the keyin and try again. If the error persists, the site administrator must contact the Unisys Support Center.
+     */
+
     public static final String COMMAND = "SM";
+
+    private Command _command;
+    private String _symbiontName;
+    private boolean _reprintAll;
+    private int _reprintCount;
 
     public SMKeyinHandler(final ConsoleId source,
                           final String options,
@@ -61,7 +84,73 @@ T Terminates the device with an EOF, losing the remainder of the file. The devic
 
     @Override
     boolean checkSyntax() {
-        return true;//TODO
+        if (_arguments == null || _options != null) {
+            return false;
+        }
+
+        var split = _arguments.split(" ");
+        if (split.length > 2) {
+            return false;
+        }
+
+        _symbiontName = split[0].toUpperCase();
+        if (!Exec.isValidNodeName(_symbiontName)) {
+            return false;
+        }
+
+        if (split.length == 1) {
+            _command = Command.Display;
+            return true;
+        } else {
+            switch (split[1].toUpperCase()) {
+                case "C", "CHANGE" -> {
+                    _command = Command.Change;
+                    return true;
+                }
+                case "E" -> {
+                    _command = Command.EndOfFile;
+                    return true;
+                }
+                case "I" -> {
+                    _command = Command.Initialize;
+                    return true;
+                }
+                case "L" -> {
+                    _command = Command.Lock;
+                    return true;
+                }
+                case "Q" -> {
+                    _command = Command.Queue;
+                    return true;
+                }
+                case "R" -> {
+                    _command = Command.Remove;
+                    return true;
+                }
+                case "RALL" -> {
+                    _command = Command.Reprint;
+                    _reprintAll = true;
+                    return true;
+                }
+                case "S" -> {
+                    _command = Command.Suspend;
+                    return true;
+                }
+                case "T" -> {
+                    _command = Command.Terminate;
+                    return true;
+                }
+                default -> {
+                    if (split[1].charAt(0) == 'R') {
+                        // TODO
+                        _command = Command.Reprint;
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -77,6 +166,66 @@ T Terminates the device with an EOF, losing the remainder of the file. The devic
 
     @Override
     void process() {
+        var exec = Exec.getInstance();
+        var sym = exec.getSymbiontManager();
+        var symInfo = sym.getSymbiontInfo(_symbiontName);
+        if (symInfo == null) {
+            var msg = String.format("SM KEY ERROR : %s NOT VALID DEVICE", _symbiontName);
+            exec.sendExecReadOnlyMessage(msg, _source);
+            return;
+        }
+
+        switch (_command) {
+            case Change -> processChange(symInfo);
+            case Display -> processDisplay(symInfo);
+            case EndOfFile -> processEndOfFile(symInfo);
+            case Initialize -> processInitialize(symInfo);
+            case Lock -> processLock(symInfo);
+            case Queue -> processQueue(symInfo);
+            case Remove -> processRemove(symInfo);
+            case Reprint -> processReprint(symInfo);
+            case Suspend -> processSuspend(symInfo);
+            case Terminate -> processTerminate(symInfo);
+        }
+    }
+
+    private void processChange(final SymbiontInfo symInfo) {
+        // TODO
+    }
+
+    private void processDisplay(final SymbiontInfo symInfo) {
+        Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
+    }
+
+    private void processEndOfFile(final SymbiontInfo symInfo) {
+        // TODO
+    }
+
+    private void processInitialize(final SymbiontInfo symInfo) {
+        // TODO
+    }
+
+    private void processLock(final SymbiontInfo symInfo) {
+        // TODO
+    }
+
+    private void processQueue(final SymbiontInfo symInfo) {
+        // TODO
+    }
+
+    private void processRemove(final SymbiontInfo symInfo) {
+        // TODO
+    }
+
+    private void processReprint(final SymbiontInfo symInfo) {
+        // TODO
+    }
+
+    private void processSuspend(final SymbiontInfo symInfo) {
+        // TODO
+    }
+
+    private void processTerminate(final SymbiontInfo symInfo) {
         // TODO
     }
 }

@@ -14,10 +14,9 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.stream.Stream;
 
-public class FileSystemImageReaderDevice extends SymbiontReaderDevice implements Runnable {
+public class FileSystemImageReaderDevice extends SymbiontReaderDevice {
 
     private final String _fileSystemPath;
-    private boolean _terminate = false;
     private String _fileName = null;
     private BufferedReader _reader = null;
 
@@ -27,13 +26,10 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice implements
     ) {
         super(nodeName);
         _fileSystemPath = fileSystemPath.endsWith("/") ? fileSystemPath : fileSystemPath + '/';
-        new Thread(this).start();
     }
 
     @Override
-    public final void close() {
-        _terminate = true;
-    }
+    public final void close() {}
 
     @Override
     public final DeviceModel getDeviceModel() {
@@ -46,7 +42,31 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice implements
     }
 
     @Override
-    public final void setIsReady(final boolean flag) {} // cannot do this externally
+    public void setIsReady(boolean flag) {
+        if (isReady() && !flag) {
+            dropAndClose();
+        }
+        super.setIsReady(flag);
+    }
+
+    /*
+     * Auto control of ready flag.
+     * If we *are* ready and there is not a file being processed,
+     *  we search for an input and if it exists, it is opened, and we set ready to true.
+     *  Otherwise, we set ready to false.
+     * If we are *not* ready, there cannot be a file in process.
+     * We search for an input file in the source path, and if such a file exists, it is opened, and we set ready to true.
+     */
+    @Override
+    public void probe() {
+        if (isReady() && (_reader == null)) {
+            setIsReady(openInputFile());
+        } else if (!isReady()) {
+            if (openInputFile()) {
+                setIsReady(true);
+            }
+        }
+    }
 
     @Override
     public synchronized void startIo(final IoPacket packet) {
@@ -54,11 +74,11 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice implements
             LogManager.logTrace(_nodeName, "startIo(%s)", packet.toString());
         }
 
-        if (packet instanceof DiskIoPacket diskPacket) {
+        if (packet instanceof SymbiontIoPacket symPacket) {
             packet.setStatus(IoStatus.InProgress);
             switch (packet.getFunction()) {
-                case Read -> doRead(diskPacket);
-                case Reset -> doReset(diskPacket);
+                case Read -> doRead(symPacket);
+                case Reset -> doReset(symPacket);
                 default -> packet.setStatus(IoStatus.InvalidFunction);
             }
         } else {
@@ -80,7 +100,7 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice implements
                              isReady());
     }
 
-    private void doRead(final DiskIoPacket packet) {
+    private void doRead(final SymbiontIoPacket packet) {
         if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
@@ -101,7 +121,7 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice implements
         }
     }
 
-    private void doReset(final DiskIoPacket packet) {
+    private void doReset(final SymbiontIoPacket packet) {
         if (!isReady()) {
             packet.setStatus(IoStatus.DeviceIsNotReady);
             return;
@@ -111,58 +131,59 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice implements
         packet.setStatus(IoStatus.Complete);
     }
 
+    /**
+     * If there is a file open, close and delete it.
+     */
     private void dropAndClose() {
-        if (_fileName != null) {
+        if (_reader != null) {
             var f = new File(_fileName);
             try {
-                System.out.printf("Deleting %s...\n", f.toPath());// TODO remove
+                LogManager.logInfo(_nodeName, "Deleting %s...\n", f.toPath());
                 Files.deleteIfExists(f.toPath());
             } catch (IOException ex) {
-                // nothing to be done
+                // Cannot delete the file, we have to set machine check flag
+                LogManager.logCatching(_nodeName, ex);
+                // TODO implement machine check flag in Node, which prevents all IO, sets not-ready,
+                //   and can only be cleared by .... what? DN and UP?
+                //   This is necessary to prevent looping on the same input file, since we cannot seem to delete it.
             }
             _fileName = null;
-        }
 
-        if (_reader != null) {
             try {
                 _reader.close();
             } catch (IOException ex) {
                 // nothing can be done
             }
+            _reader = null;
         }
-        _reader = null;
     }
 
-    public void terminate() {
-        _terminate = true;
-    }
+    /**
+     * Invoked when we are able to process input, and have none in progress.
+     */
+    private boolean openInputFile() {
+        var f = new File(_fileSystemPath).listFiles();
 
-    public void run() {
-        while (!_terminate) {
-            if (!isReady()) {
-                var f = new File(_fileSystemPath).listFiles();
-                if (f != null) {
-                    var fileList = Stream.of(f)
-                                         .filter(file -> !file.isDirectory())
-                                         .map(File::getName)
-                                         .toList();
-                    if (!fileList.isEmpty()) {
-                        _fileName = _fileSystemPath + fileList.getFirst();
-                        try {
-                            _reader = new BufferedReader(new FileReader(_fileName));
-                        } catch (IOException ex) {
-                            _reader = null;
-                            _fileName = null;
-                        }
-                    }
-                }
-            } else {
+        if (f != null) {
+            var fileList = Stream.of(f)
+                                 .filter(file -> !file.isDirectory())
+                                 .map(File::getName)
+                                 .toList();
+            if (!fileList.isEmpty()) {
+                // Any time a file appears in the directory, it automatically triggers ready.
+                // Even if the exec thinks the device is DN or SM L'd, it can still be ready.
+                _fileName = _fileSystemPath + fileList.getFirst();
+                LogManager.logDebug(getNodeName(), "Found file %s", _fileName);
                 try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    // nothing
+                    _reader = new BufferedReader(new FileReader(_fileName));
+                    return true;
+                } catch (IOException ex) {
+                    _reader = null;
+                    _fileName = null;
                 }
             }
         }
+
+        return false;
     }
 }

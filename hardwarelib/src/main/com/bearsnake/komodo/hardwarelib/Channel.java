@@ -8,13 +8,16 @@ import com.bearsnake.komodo.logger.LogManager;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public abstract class Channel extends Node {
+public abstract class Channel extends Node implements Runnable {
 
     // key is node identifier
     private final HashMap<Integer, Device> _devices = new HashMap<>();
 
     public Channel(final String nodeName) {
         super(nodeName);
+        var t = new Thread(this);
+        t.setDaemon(true);
+        t.start();
     }
 
     public final void attach(final Device device) {
@@ -66,4 +69,16 @@ public abstract class Channel extends Node {
     // Default action
     @Override
     public void close() {}
+
+    @Override
+    public void run() {
+        while (true) {
+            getDevices().forEach(Device::probe);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                LogManager.logCatching(getNodeName(), e);
+            }
+        }
+    }
 }

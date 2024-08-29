@@ -52,6 +52,9 @@ public class FileSystemDiskDevice extends DiskDevice {
     }
 
     @Override
+    public final void probe() {}
+
+    @Override
     public synchronized void startIo(final IoPacket packet) {
         if (_logIos) {
             LogManager.logTrace(_nodeName, "startIo(%s)", packet.toString());

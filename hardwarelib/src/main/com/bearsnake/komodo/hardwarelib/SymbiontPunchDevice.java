@@ -4,9 +4,9 @@
 
 package com.bearsnake.komodo.hardwarelib;
 
-public abstract class SymbiontWriterDevice extends SymbiontDevice {
+public abstract class SymbiontPunchDevice extends SymbiontDevice {
 
-    public SymbiontWriterDevice(final String nodeName) {
+    public SymbiontPunchDevice(final String nodeName) {
         super(nodeName);
     }
 }

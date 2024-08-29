@@ -7,38 +7,20 @@ package com.bearsnake.komodo.kexec.symbionts;
 import com.bearsnake.komodo.hardwarelib.DeviceType;
 import com.bearsnake.komodo.hardwarelib.SymbiontPrinterDevice;
 import com.bearsnake.komodo.hardwarelib.SymbiontReaderDevice;
-import com.bearsnake.komodo.hardwarelib.SymbiontWriterDevice;
+import com.bearsnake.komodo.hardwarelib.SymbiontPunchDevice;
 import com.bearsnake.komodo.kexec.Manager;
-import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.StopCode;
-import com.bearsnake.komodo.kexec.facilities.NodeStatus;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SymbiontManager implements Manager {
 
     private static final int POLL_DELAY = 100;
     static final String LOG_SOURCE = "SymbMgr";
-
-    private Poller _poller = null;
-
-    // TODO
-    //   We need print and punch queues
-    //   We need an input queue (affectionately known as backlog)
-    //   We need some way to tie input devices and output devices into groups
-    //   We need to track state for all print, punch, and read devices
-
-    // TODO locked out symbionts (for SM symbiont L keyin)
-
-    // TODO
-    //   LOST RUN - run-id/site-id RECOVERED nn SYMBIONT FILES
-    //(Exec) A previously opened run was lost during a recovery boot. This message
-    //specifies the number of symbiont files recovered.
 
     // TODO
     //   symbiont NOT ACTIVE
@@ -50,7 +32,7 @@ public class SymbiontManager implements Manager {
     //(Exec) This message is displayed in response to a UR symbiont or a SM symbiont S keyin.
     // The specified remote device has been suspended.
 
-    private final List<InputSymbiontInfo> _inputSymbiontInfos = new LinkedList<>();
+    private final Map<String, SymbiontInfo> _symbiontInfos = new HashMap<>();
 
     public SymbiontManager() {
         Exec.getInstance().managerRegister(this);
@@ -62,9 +44,7 @@ public class SymbiontManager implements Manager {
     @Override
     public void boot(boolean recoveryBoot) throws KExecException {
         LogManager.logTrace(LOG_SOURCE, "boot(%s)", recoveryBoot);
-        _poller = new Poller();
-        new Thread(_poller).start();
-
+        _symbiontInfos.values().forEach(SymbiontInfo::start);
         LogManager.logTrace(LOG_SOURCE, "boot complete", recoveryBoot);
     }
 
@@ -84,21 +64,11 @@ public class SymbiontManager implements Manager {
         out.printf("%sSymbiontManager ********************************\n", indent);
 
         out.printf("%s  Input Symbionts:\n", indent);
-        for (var isInfo : _inputSymbiontInfos) {
-            out.printf("%s    %s Lock:%s Susp:%s State:%s Wait:%s\n",
-                       indent,
-                       isInfo._nodeInfo.getNode().getNodeName(),
-                       isInfo._isLocked,
-                       isInfo._isSuspended,
-                       isInfo._state,
-                       isInfo._isWaiting);
-        }
+        _symbiontInfos.values().forEach(symInfo -> out.printf("%s    %s\n", indent, symInfo.getStateString()));
+    }
 
-        out.printf("%s  Output Symbionts:\n", indent);
-        // TODO
-
-        out.printf("%s  Print Symbionts:\n", indent);
-        // TODO
+    public SymbiontInfo getSymbiontInfo(final String symbiontName) {
+        return _symbiontInfos.get(symbiontName);
     }
 
     /**
@@ -113,12 +83,12 @@ public class SymbiontManager implements Manager {
         var fm = exec.getFacilitiesManager();
         var nodeInfos = fm.getNodeInfos(DeviceType.SymbiontDevice);
         for (var nodeInfo : nodeInfos) {
-            if (nodeInfo.getNode() instanceof SymbiontReaderDevice srd) {
-                _inputSymbiontInfos.add(new InputSymbiontInfo(nodeInfo));
-            } else if (nodeInfo.getNode() instanceof SymbiontWriterDevice) {
-                // TODO
+            if (nodeInfo.getNode() instanceof SymbiontReaderDevice) {
+                _symbiontInfos.put(nodeInfo.getNode().getNodeName(), new ReaderSymbiontInfo(nodeInfo));
+            } else if (nodeInfo.getNode() instanceof SymbiontPunchDevice) {
+                _symbiontInfos.put(nodeInfo.getNode().getNodeName(), new PunchSymbiontInfo(nodeInfo));
             } else if (nodeInfo.getNode() instanceof SymbiontPrinterDevice) {
-                // TODO
+                _symbiontInfos.put(nodeInfo.getNode().getNodeName(), new PrinterSymbiontInfo(nodeInfo));
             }
         }
 
@@ -132,69 +102,6 @@ public class SymbiontManager implements Manager {
     @Override
     public void stop() {
         LogManager.logTrace(LOG_SOURCE, "stop()");
-        _poller._terminate = true;
-        _poller = null;
-    }
-
-    /**
-     * Handle the image printer state machine for each output device.
-     * Do NOT do any blocking IO - symbiont IO is conventionally slow (although most of the virtual devices are not).
-     * @return true if any of the output devices are busy
-     */
-    private boolean pollPrinters() {
-        return false;// TODO
-    }
-
-    /**
-     * Handle the image writer state machine for each output device.
-     * Do NOT do any blocking IO - symbiont IO is conventionally slow (although most of the virtual devices are not).
-     * @return true if any of the output devices are busy
-     */
-    private boolean pollPunchers() {
-        return false;// TODO
-    }
-
-    /**
-     * Handle state machines for all input symbionts which are UP and accessible, and neither locked nor suspended.
-     * Do NOT do any blocking IO - symbiont IO is conventionally slow (although most of the virtual devices are not).
-     * @return true if any of the input devices are busy
-     */
-    private boolean pollReaders() throws ExecStoppedException {
-        boolean didSomething = false;
-        synchronized (_inputSymbiontInfos) {
-            var exec = Exec.getInstance();
-            var fm = exec.getFacilitiesManager();
-
-            for (var isInfo : _inputSymbiontInfos) {
-                if ((isInfo._nodeInfo.getNodeStatus() == NodeStatus.Up)
-                    && fm.isDeviceAccessible(isInfo._nodeIdentifier)
-                    && !isInfo._isLocked
-                    && !isInfo._isSuspended) {
-                    didSomething |= isInfo.poll();
-                }
-            }
-        }
-
-        return didSomething;
-    }
-
-    private class Poller implements Runnable {
-
-        public boolean _terminate = false;
-
-        @Override
-        public void run() {
-            var exec = Exec.getInstance();
-            while (!_terminate && !exec.isStopped()) {
-                // TODO slow wait if the exec is not ready for symbionts
-                try {
-                    int delay = (pollPrinters() | pollPunchers() | pollReaders()) ? 0 : POLL_DELAY;
-                    Exec.sleep(delay);
-                } catch (Throwable t) {
-                    LogManager.logCatching(LOG_SOURCE, t);
-                    Exec.getInstance().stop(StopCode.ExecActivityTakenToEMode);
-                }
-            }
-        }
+        _symbiontInfos.values().forEach(SymbiontInfo::terminate);
     }
 }

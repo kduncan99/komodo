@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class FileSystemImageWriterDevice extends SymbiontWriterDevice {
+public class FileSystemImageWriterDevice extends SymbiontPunchDevice {
 
     private final String _fileSystemPath;
     private boolean _isReady = false;
@@ -35,6 +35,9 @@ public class FileSystemImageWriterDevice extends SymbiontWriterDevice {
     public final boolean isReady() {
         return _isReady;
     }
+
+    @Override
+    public final void probe() {}
 
     @Override
     public final void setIsReady(final boolean flag) {

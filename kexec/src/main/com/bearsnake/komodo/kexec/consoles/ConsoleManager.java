@@ -159,6 +159,8 @@ public class ConsoleManager implements Manager {
             message.getSource().postToTailSheet(message.getText());
         }
 
+        message.setResponse(null);
+        message.setResponseConsoleId(null);
         _queuedReadReplyMessages.put(message.getMessageId(), message);
         while (!message.hasResponse() && !message.isCanceled()) {
             try {

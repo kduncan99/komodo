@@ -16,5 +16,4 @@ public abstract class SymbiontDevice extends Device {
     }
 
     public abstract boolean isReady();
-    public abstract void setIsReady(boolean flag);
 }

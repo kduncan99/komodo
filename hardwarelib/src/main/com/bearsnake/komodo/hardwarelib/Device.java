@@ -17,6 +17,11 @@ public abstract class Device extends Node {
 
     public abstract DeviceModel getDeviceModel();
     public abstract DeviceType getDeviceType();
+
+    // probe() is for devices which need to respond to external conditions (such as virtual card readers)
+    // this is a nice alternative to having to establish an entire thread just for this silliness.
+    public abstract void probe();
+
     public abstract void startIo(final IoPacket packet);
 
     // The following may be overridden by subclasses if/as necessary.

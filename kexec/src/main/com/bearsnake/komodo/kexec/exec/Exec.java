@@ -709,6 +709,10 @@ public class Exec extends Run {
                                          maxReplyLen);
         var done = false;
         while (!done) {
+            if (isStopped()) {
+                throw new ExecStoppedException();
+            }
+
             _consoleManager.sendReadReplyMessage(rrmsg);
             if (rrmsg.isCanceled()) {
                 LogManager.logError(LOG_SOURCE, "Console message is canceled");

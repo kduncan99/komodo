@@ -35,6 +35,9 @@ public class FileSystemTapeDevice extends TapeDevice {
     }
 
     @Override
+    public final void probe() {}
+
+    @Override
     public void startIo(final IoPacket packet) {
         if (_logIos) {
             LogManager.logTrace(_nodeName, "startIo(%s)", packet.toString());
