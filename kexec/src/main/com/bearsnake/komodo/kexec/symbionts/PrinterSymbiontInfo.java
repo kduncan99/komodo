@@ -32,16 +32,22 @@ class PrinterSymbiontInfo extends SymbiontInfo {
         return String.format("%s %s,%s,PAGES PRINTED = %d", _node.getNodeName(), _status, _state, _pageCount);
     }
 
-//    @Override
-//    void initiate() throws ExecStoppedException {
-//        // TODO
-//    }
-//
-//    @Override
-//    void lock() throws ExecStoppedException {
-//        // TODO
-//    }
-//
+    /**
+     * SM symbiont I keyin
+     */
+    @Override
+    public void initialize() throws ExecStoppedException {
+        // TODO
+    }
+
+    /**
+     * SM symbiont L keyin
+     */
+    @Override
+    public void lock() throws ExecStoppedException {
+        // TODO
+    }
+
 //    @Override
 //    void reposition(int count) throws ExecStoppedException {
 //        // count must be zero, but we do not enforce that - we just ignore it.

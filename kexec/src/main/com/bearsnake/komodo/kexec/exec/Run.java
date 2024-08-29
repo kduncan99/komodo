@@ -31,6 +31,9 @@ public abstract class Run {
     protected String _impliedQualifier;
     protected RunConditionWord _runConditionWord;
 
+    private String _invalidRunReason; // if not null, this run will be removed from BL with this error message
+    private boolean _isReady;         // false while the run is still being built (not ready to come out of backlog)
+
     // The following indicate how many waits are in play for mass storage (waiting on file assign or similar)
     // and for peripherals (waiting on unit assign).
     protected final AtomicInteger _waitingForMassStorageCounter = new AtomicInteger(0);
@@ -108,6 +111,7 @@ public abstract class Run {
     public final String getDefaultQualifier() { return _defaultQualifier; }
     public final FacilitiesItemTable getFacilitiesItemTable() { return _facilitiesItemTable; }
     public final String getImpliedQualifier() { return _impliedQualifier; }
+    public final String getInvalidRunReason() { return _invalidRunReason; }
     public final Long getMaxCards() { return _runCardInfo.getMaxCards(); }
     public final Long getMaxPages() { return _runCardInfo.getMaxPages(); }
     public final Long getMaxTime() { return _runCardInfo.getMaxTime(); }
@@ -121,12 +125,15 @@ public abstract class Run {
     public void incrementWaitingForMassStorage() { _waitingForMassStorageCounter.incrementAndGet(); }
     public void incrementWaitingForPeripheral() { _waitingForPeripheralCounter.incrementAndGet(); }
     public abstract boolean isFinished();   // if true, then this exists only for output queue entries
+    public final boolean isInvalidRun() { return _invalidRunReason != null; }
     public abstract boolean isStarted();    // if false, then this is in backlog
     public abstract boolean isSuspended();
     public boolean isWaitingOnMassStorage() { return _waitingForMassStorageCounter.get() > 0; }
     public boolean isWaitingOnPeripheral() { return _waitingForPeripheralCounter.get() > 0; }
     public void setDefaultQualifier(final String qualifier) { _defaultQualifier = qualifier; }
     public void setImpliedQualifier(final String qualifier) { _impliedQualifier = qualifier; }
+    public void setInvalidRunReason(final String reason) { _invalidRunReason = reason; }
+    public void setIsReady() { _isReady = true; }
 
     public void dump(final PrintStream out,
                      final String indent,

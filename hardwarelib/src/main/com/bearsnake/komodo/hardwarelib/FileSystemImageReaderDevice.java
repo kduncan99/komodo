@@ -138,7 +138,7 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice {
         if (_reader != null) {
             var f = new File(_fileName);
             try {
-                LogManager.logInfo(_nodeName, "Deleting %s...\n", f.toPath());
+                LogManager.logInfo(_nodeName, "Deleting %s...", f.toPath());
                 Files.deleteIfExists(f.toPath());
             } catch (IOException ex) {
                 // Cannot delete the file, we have to set machine check flag

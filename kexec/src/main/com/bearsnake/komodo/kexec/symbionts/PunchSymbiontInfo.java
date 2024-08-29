@@ -32,16 +32,22 @@ class PunchSymbiontInfo extends SymbiontInfo {
         return String.format("%s %s,%s,CARDS PUNCHED = %d", _node.getNodeName(), _status, _state, _imageCount);
     }
 
-//    @Override
-//    void initiate() throws ExecStoppedException {
-//        // TODO
-//    }
-//
-//    @Override
-//    void lock() throws ExecStoppedException {
-//        // TODO
-//    }
-//
+    /**
+     * SM symbiont I keyin
+     */
+    @Override
+    public void initialize() throws ExecStoppedException {
+        // TODO
+    }
+
+    /**
+     * SM symbiont L keyin
+     */
+    @Override
+    public void lock() throws ExecStoppedException {
+        // TODO
+    }
+
 //    @Override
 //    void reposition(int count) throws ExecStoppedException {
 //        // TODO

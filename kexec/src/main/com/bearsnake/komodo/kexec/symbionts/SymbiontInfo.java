@@ -48,6 +48,7 @@ public abstract class SymbiontInfo implements Runnable {
 
         _buffer = new ArraySlice(new long[132]);
         _controlWord = new ChannelProgram.ControlWord().setBuffer(_buffer)
+                                                       .setTransferCountWords(_buffer.getSize())
                                                        .setDirection(ChannelProgram.Direction.Increment);
         _channelProgram = new ChannelProgram().addControlWord(_controlWord)
                                               .setNodeIdentifier(_nodeIdentifier);
@@ -100,18 +101,18 @@ public abstract class SymbiontInfo implements Runnable {
      */
     public abstract String getStateString();
 
-//    /**
-//     * For handling SM * I keyins - initiates the device
-//     * (Re)starts the device.
-//     */
-//    abstract void initiate() throws ExecStoppedException;
-//
-//    /**
-//     * For handling SM * L keyins - Locks out the device
-//     * Any current file runs to completion, but no subsequent file is processed
-//     */
-//    abstract void lock() throws ExecStoppedException;
-//
+    /**
+     * For handling SM * I keyins - initiates the device
+     * (Re)starts the device.
+     */
+    public abstract void initialize() throws ExecStoppedException;
+
+    /**
+     * For handling SM * L keyins - Locks out the device
+     * Any current file runs to completion, but no subsequent file is processed
+     */
+    public abstract void lock() throws ExecStoppedException;
+
 //    /**
 //     * For handling SM * R keyins - Rewinds or advances by a number of pages or cards
 //     * For input files the current file is bypassed until the next @RUN image, and the run is discarded.

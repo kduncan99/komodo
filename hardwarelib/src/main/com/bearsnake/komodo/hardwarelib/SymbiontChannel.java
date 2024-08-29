@@ -61,7 +61,6 @@ public class SymbiontChannel extends Channel {
             return;
         }
 
-        var totalWordCount = cw.getTransferCount();
         var ioPkt = new SymbiontIoPacket();
         ioPkt.setFunction(IoFunction.Read);
         device.startIo(ioPkt);
@@ -71,9 +70,14 @@ public class SymbiontChannel extends Channel {
         }
 
         var arr = ioPkt.getBuffer().array();
-        cw.getBuffer().unpack(arr, false);
+        int wordLength = arr.length / 4;
+        if (arr.length % 4 != 0) {
+            wordLength++;
+        }
 
-        channelProgram.setWordsTransferred(arr.length / 4);
+        cw.getBuffer().unpackQuarterWords(arr, false);
+
+        channelProgram.setWordsTransferred(wordLength);
         channelProgram.setIoStatus(ioPkt.getStatus(), ioPkt.getAdditionalStatus());
     }
 

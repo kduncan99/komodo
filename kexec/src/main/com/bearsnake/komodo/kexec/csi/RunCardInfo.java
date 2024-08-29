@@ -39,6 +39,7 @@ public class RunCardInfo {
         VALID_SUBFIELDS.add(SS_START_TIME);
     }
 
+    private final String _image; // image which was parsed to create this object
     private String _runid ;
     private Character _schedulingPriority;
     private Long _optionWord;
@@ -52,11 +53,13 @@ public class RunCardInfo {
     private Long _maxCards;
     private Instant _startTime; // time before which we cannot be started
 
-    public RunCardInfo() {
+    public RunCardInfo(final String image) {
+        _image = image;
     }
 
     public String getAccountId() { return _accountId; }
     public Instant getDeadlineTime() { return _deadlineTime; }
+    public String getImage() { return _image; }
     public Long getMaxCards() { return _maxCards; }
     public Long getMaxPages() { return _maxPages; }
     public Long getMaxTime() { return _maxTime; }
@@ -91,7 +94,7 @@ public class RunCardInfo {
         final String image
     ) throws Parser.SyntaxException {
         var statement = Interpreter.parseControlStatement(run, image);
-        return statement._mnemonic.equalsIgnoreCase("RUN") ? new RunCardInfo().parse(statement) : null;
+        return statement._mnemonic.equalsIgnoreCase("RUN") ? new RunCardInfo(image).parse(statement) : null;
     }
 
     /**

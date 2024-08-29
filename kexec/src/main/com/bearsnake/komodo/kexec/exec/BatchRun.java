@@ -32,7 +32,7 @@ public class BatchRun extends Run implements Runnable {
     /**
      * To be invoked when the run comes out of backlog.
      * The first image is a @RUN card, but it has already been processed by the exec (else we would not exist).
-     * So, we just start reading images (ignoring the initial @RUN card other than printing it to PRINT$)
+     * So, we just start reading images (ignoring the initial @RUN card other than printing it to PRINT$) and processing them.
      */
     public void run() {
         // TODO

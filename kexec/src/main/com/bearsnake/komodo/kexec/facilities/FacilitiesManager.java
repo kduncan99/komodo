@@ -2180,6 +2180,7 @@ public class FacilitiesManager implements Manager {
         final ConsoleId consoleId
     ) throws ExecStoppedException {
         _nodeGraph.get(nodeId).setNodeStatus(status);
+        // TODO need to lock out symbiont device
         var nss = getNodeStatusString(nodeId);
         Exec.getInstance().sendExecReadOnlyMessage(nss, consoleId);
     }
@@ -2198,6 +2199,7 @@ public class FacilitiesManager implements Manager {
         final ConsoleType consoleType
     ) throws ExecStoppedException {
         _nodeGraph.get(nodeId).setNodeStatus(status);
+        // TODO need to lock out symbiont device
         var nss = getNodeStatusString(nodeId);
         Exec.getInstance().sendExecReadOnlyMessage(nss, consoleType);
     }

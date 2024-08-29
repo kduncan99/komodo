@@ -23,7 +23,6 @@ import java.time.Instant;
  */
 public class SymbiontFileWriter implements SymbiontWriter {
 
-
     private final String _internalFileName;
     private final SDFFileType _fileType;
     private final ArraySlice _buffer;

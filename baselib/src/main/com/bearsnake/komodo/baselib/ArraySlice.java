@@ -809,7 +809,7 @@ public class ArraySlice {
         final int sourceCount,
         final boolean backward
     ) {
-        //TODO need backward logic
+        assert(!backward);//TODO need backward logic
         if (sourceOffset >= source.length) {
             return 0;
         }
@@ -995,7 +995,7 @@ public class ArraySlice {
             }
 
             if (backward) --sx;
-            long bval = (long) (source[sx] & 077);
+            long bval = (source[sx] & 077);
             switch (sw) {
                 case 0:
                     _array[dx] = (bval << 30);

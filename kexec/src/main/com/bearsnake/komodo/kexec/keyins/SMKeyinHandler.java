@@ -4,8 +4,8 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
-import com.bearsnake.komodo.hardwarelib.SymbiontDevice;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.symbionts.SymbiontInfo;
 
@@ -175,22 +175,26 @@ SM KEY ERROR : UPDATE FAILED
             return;
         }
 
-        switch (_command) {
-            case Change -> processChange(symInfo);
-            case Display -> processDisplay(symInfo);
-            case EndOfFile -> processEndOfFile(symInfo);
-            case Initialize -> processInitialize(symInfo);
-            case Lock -> processLock(symInfo);
-            case Queue -> processQueue(symInfo);
-            case Remove -> processRemove(symInfo);
-            case Reprint -> processReprint(symInfo);
-            case Suspend -> processSuspend(symInfo);
-            case Terminate -> processTerminate(symInfo);
+        try {
+            switch (_command) {
+                case Change -> processChange(symInfo);
+                case Display -> processDisplay(symInfo);
+                case EndOfFile -> processEndOfFile(symInfo);
+                case Initialize -> processInitialize(symInfo);
+                case Lock -> processLock(symInfo);
+                case Queue -> processQueue(symInfo);
+                case Remove -> processRemove(symInfo);
+                case Reprint -> processReprint(symInfo);
+                case Suspend -> processSuspend(symInfo);
+                case Terminate -> processTerminate(symInfo);
+            }
+        } catch (ExecStoppedException ex) {
+            // forget about it
         }
     }
 
     private void processChange(final SymbiontInfo symInfo) {
-        // TODO
+        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
     }
 
     private void processDisplay(final SymbiontInfo symInfo) {
@@ -198,34 +202,36 @@ SM KEY ERROR : UPDATE FAILED
     }
 
     private void processEndOfFile(final SymbiontInfo symInfo) {
-        // TODO
+        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
     }
 
-    private void processInitialize(final SymbiontInfo symInfo) {
-        // TODO
+    private void processInitialize(final SymbiontInfo symInfo) throws ExecStoppedException {
+        symInfo.initialize();
+        Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
     }
 
-    private void processLock(final SymbiontInfo symInfo) {
-        // TODO
+    private void processLock(final SymbiontInfo symInfo) throws ExecStoppedException {
+        symInfo.lock();
+        Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
     }
 
     private void processQueue(final SymbiontInfo symInfo) {
-        // TODO
+        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
     }
 
     private void processRemove(final SymbiontInfo symInfo) {
-        // TODO
+        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
     }
 
     private void processReprint(final SymbiontInfo symInfo) {
-        // TODO
+        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
     }
 
     private void processSuspend(final SymbiontInfo symInfo) {
-        // TODO
+        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
     }
 
     private void processTerminate(final SymbiontInfo symInfo) {
-        // TODO
+        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
     }
 }

@@ -42,9 +42,13 @@ public class Exec extends Run {
     public static final String EXEC_PATCH = "";
     public static final String VERSION_STRING = String.format("%dR%d%s", EXEC_VERSION, EXEC_RELEASE, EXEC_PATCH);
 
-    private static final DateTimeFormatter _dateTimeMsgFormat = DateTimeFormatter.ofPattern("EEE dd MMM yyyy HH:mm:ss");
-    private static Exec _instance = null;
+    private static final DateTimeFormatter DATE_TIME_MSG_FORMAT = DateTimeFormatter.ofPattern("EEE dd MMM yyyy HH:mm:ss");
     private static final String LOG_SOURCE = "Exec";
+    private static final String DEFAULT_RUN_ID = "RUN000";
+    private static final String DEFAULT_ACCOUNT_ID = "000000";
+    private static final String DEFAULT_PROJECT_ID = "Q$Q$Q$";
+
+    private static Exec _instance = null;
 
     private boolean _allowRecoveryBoot;
     private Configuration _configuration;
@@ -164,7 +168,7 @@ public class Exec extends Run {
             _genFileInterface.initialize(); // TODO need exec session number and number of fixed packs
         } else {
             _genFileInterface.recover(); // TODO
-            // TODO repopulate backlog and SMOQUE (is that handled by .record()?)
+            // TODO repopulate backlog and SMOQUE (is that handled by .recover()?)
         }
 
         _phase = Phase.Running;
@@ -220,20 +224,55 @@ public class Exec extends Run {
     public synchronized Run createBatchRun(
         final RunCardInfo runCardInfo
     ) throws ExecStoppedException {
+        var invalidRunId = false;
+        if (runCardInfo.getRunId() == null) {
+            runCardInfo.setRunId(DEFAULT_RUN_ID);
+        } else if (!isValidRunid(runCardInfo.getRunId())) {
+            runCardInfo.setRunId(DEFAULT_RUN_ID);
+            invalidRunId = true;
+        }
         var actualRunId = createUniqueRunid(runCardInfo.getRunId());
         if (!actualRunId.equals(runCardInfo.getRunId())) {
             var msg = String.format("%s Duplicated; New ID is %s", runCardInfo.getRunId(), actualRunId);
             sendExecReadOnlyMessage(msg, ConsoleType.System);
         }
 
+        var invalidAccountId = false;
+        if (runCardInfo.getAccountId() == null) {
+            runCardInfo.setAccountId(DEFAULT_ACCOUNT_ID);
+        } else if (!isValidAccountId(runCardInfo.getAccountId())) {
+            runCardInfo.setAccountId(DEFAULT_ACCOUNT_ID);
+            invalidAccountId = true;
+        }
+
+        var invalidUserId = (runCardInfo.getUserId() == null) || !isValidUserId(runCardInfo.getUserId());
+
+        var invalidProjectId = false;
+        if (runCardInfo.getProjectId() == null) {
+            runCardInfo.setProjectId(DEFAULT_PROJECT_ID);
+        } else if (!isValidProjectId(runCardInfo.getProjectId())) {
+            runCardInfo.setProjectId(DEFAULT_PROJECT_ID);
+            invalidProjectId = true;
+        }
+
         var run = new BatchRun(actualRunId, runCardInfo);
+        if (invalidRunId) {
+            run.setInvalidRunReason("Invalid or Missing Run ID");
+        } else if (invalidAccountId) {
+            run.setInvalidRunReason("Invalid or Missing Account ID");
+        } else if (invalidProjectId) {
+            run.setInvalidRunReason("Invalid or Missing Project ID");
+        } else if (invalidUserId) {
+            run.setInvalidRunReason("Invalid or Missing User ID");
+        }
+
         _runEntries.put(actualRunId, run);
         return run;
     }
 
     public void displayDateAndTime() {
         var dateTime = LocalDateTime.now();
-        String dtStr = dateTime.format(_dateTimeMsgFormat);
+        String dtStr = dateTime.format(DATE_TIME_MSG_FORMAT);
         var msg = String.format("The current date and time is %s", dtStr);
         sendExecReadOnlyMessage(msg, ConsoleType.System);
     }
