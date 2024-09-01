@@ -150,7 +150,7 @@ class MFDKeyinHandler extends KeyinHandler implements Runnable {
                     stream.printf("Region: %s DeviceAddr: %s\n", region.toString(), hwTid.toString());
                     for (var trackId = region.getTrackId(); trackId <= region.getHighestTrack(); trackId++) {
                         var sectorAddr = trackId * 64;
-                        fm.ioReadFromDiskFile(exec, "MFDKEYIN", sectorAddr, buffer, 1792, false, ioResult);
+                        fm.ioReadFromDiskFile(exec, "MFDKEYIN", sectorAddr, buffer, false, ioResult);
                         if (ioResult.getStatus() == ERIO$Status.Success) {
                             for (int sx = 0, wz = 0; sx < 64; sx++) {
                                 var sectorId = sectorAddr + sx;

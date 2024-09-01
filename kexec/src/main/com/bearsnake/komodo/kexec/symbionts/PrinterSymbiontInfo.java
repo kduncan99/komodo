@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.kexec.symbionts;
 
-import com.bearsnake.komodo.hardwarelib.ChannelProgram;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 
@@ -19,7 +18,6 @@ class PrinterSymbiontInfo extends SymbiontInfo {
         final NodeInfo nodeInfo
     ) {
         super(nodeInfo);
-        _channelProgram.setFunction(ChannelProgram.Function.Write);
     }
 
 //    @Override

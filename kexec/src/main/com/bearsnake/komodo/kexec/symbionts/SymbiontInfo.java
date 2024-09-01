@@ -8,6 +8,7 @@ import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.hardwarelib.IoFunction;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
+import com.bearsnake.komodo.hardwarelib.channels.TransferFormat;
 import com.bearsnake.komodo.hardwarelib.devices.SymbiontDevice;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
@@ -47,7 +48,9 @@ public abstract class SymbiontInfo implements Runnable {
         _state = SymbiontState.Stopped;
 
         _buffer = new ArraySlice(new long[132]);
-        _channelPacket = new ChannelIoPacket().setBuffer(_buffer).setNodeIdentifier(_nodeIdentifier);
+        _channelPacket = new ChannelIoPacket().setBuffer(_buffer)
+                                              .setFormat(TransferFormat.QuarterWord)
+                                              .setNodeIdentifier(_nodeIdentifier);
     }
 
     abstract boolean poll() throws ExecStoppedException;
@@ -195,7 +198,8 @@ public abstract class SymbiontInfo implements Runnable {
         var retry = true;
         while (retry) {
             try {
-                var channelPacket = new ChannelIoPacket().setNodeIdentifier(_nodeIdentifier).setIoFunction(IoFunction.Reset);
+                var channelPacket = new ChannelIoPacket().setNodeIdentifier(_nodeIdentifier)
+                                                         .setIoFunction(IoFunction.Reset);
                 fm.routeIo(channelPacket);
                 if (channelPacket.getIoStatus() == IoStatus.Successful) {
                     retry = false;

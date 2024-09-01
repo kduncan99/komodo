@@ -7,6 +7,9 @@ package com.bearsnake.komodo.kexec.keyins;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.PrepFactor;
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.hardwarelib.IoFunction;
+import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
+import com.bearsnake.komodo.hardwarelib.channels.TransferFormat;
 import com.bearsnake.komodo.hardwarelib.devices.Device;
 import com.bearsnake.komodo.hardwarelib.devices.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
@@ -71,17 +74,16 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         // TODO use facilities to read the volume label
         var label = new long[28];
         var labelSlice = new ArraySlice(label);
-        var cw = new ChannelProgram.ControlWord().setBuffer(labelSlice)
-                                                 .setDirection(TransferDirection.Increment)
-                                                 .setBufferOffset(0)
-                                                 .setTransferCountWords(28);
-        var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
-                                     .setNodeIdentifier(device.getNodeIdentifier())
-                                     .setBlockId(0)
-                                     .addControlWord(cw);
+        var channelPacket = new ChannelIoPacket().setNodeIdentifier(device.getNodeIdentifier())
+                                                 .setIoFunction(IoFunction.Read)
+                                                 .setFormat(TransferFormat.Packed)
+                                                 .setBuffer(labelSlice)
+                                                 .setDeviceWordAddress(0L);
         try {
-            Exec.getInstance().getFacilitiesManager().routeIo(cp);
-            if (cp.getIoStatus() == IoStatus.Successful) {
+            var exec = Exec.getInstance();
+            var fm = exec.getFacilitiesManager();
+            fm.routeIo(channelPacket);
+            if (channelPacket.getIoStatus() == IoStatus.Successful) {
                 if (Word36.toStringFromASCII(label[0]).equals("VOL1")) {
                     // pack already has a label - ask the operator if we really want to prep the pack
                     var existing = Word36.toStringFromASCII(label[1])
@@ -163,14 +165,13 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         var blocksPerTrack = 1792 / prepFactor;
         var capacity = ddInfo.getMaxBlockCount();
         var firstDirectoryTrackAddress = 1;
-        var directoryTrackBlockId = firstDirectoryTrackAddress * blocksPerTrack;
 
         if (!writeInitialDirectoryTrack(device,
                                         capacity,
                                         _packName,
                                         blocksPerTrack,
                                         prepFactor,
-                                        directoryTrackBlockId,
+                                        firstDirectoryTrackAddress * 1792,
                                         fixed)) {
             // TODO fail and @free the device
             return;
@@ -190,7 +191,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
                                                final String packName,
                                                final int blocksPerTrack,
                                                final int prepFactor,
-                                               final long directoryTrackBlockAddress,
+                                               final long directoryTrackWordAddress,
                                                final boolean isFixed) {
         var dirTrack = new long[1792];
         var dirTrackSlice = new ArraySlice(dirTrack);
@@ -224,19 +225,16 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         sector1.setS3(010, 1);
         sector1.setT3(010, prepFactor);
 
-        var cw = new ChannelProgram.ControlWord().setBuffer(dirTrackSlice)
-                                                 .setDirection(TransferDirection.Increment)
-                                                 .setBufferOffset(0)
-                                                 .setTransferCountWords(1792);
-        var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
-                                     .setNodeIdentifier(device.getNodeIdentifier())
-                                     .setBlockId(directoryTrackBlockAddress)
-                                     .addControlWord(cw);
+        var channelPacket = new ChannelIoPacket().setNodeIdentifier(device.getNodeIdentifier())
+                                                 .setIoFunction(IoFunction.Write)
+                                                 .setFormat(TransferFormat.Packed)
+                                                 .setBuffer(dirTrackSlice)
+                                                 .setDeviceWordAddress(directoryTrackWordAddress);
 
-        boolean err = false;
+        boolean err;
         try {
-            Exec.getInstance().getFacilitiesManager().routeIo(cp);
-            err = cp.getIoStatus() != IoStatus.Successful;
+            Exec.getInstance().getFacilitiesManager().routeIo(channelPacket);
+            err = channelPacket.getIoStatus() != IoStatus.Successful;
         } catch (KExecException ex) {
             err = true;
         }
@@ -277,18 +275,16 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
 
         label[016] = capacity;
 
-        var cw = new ChannelProgram.ControlWord().setBuffer(new ArraySlice(label))
-                                                 .setDirection(TransferDirection.Increment)
-                                                 .setBufferOffset(0)
-                                                 .setTransferCountWords(PrepFactor.getPrepFactorFromBlockSize(blockSize));
-        var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
-                                     .setNodeIdentifier(device.getNodeIdentifier())
-                                     .setBlockId(0)
-                                     .addControlWord(cw);
-        boolean err = false;
+        var channelPacket = new ChannelIoPacket().setNodeIdentifier(device.getNodeIdentifier())
+                                                 .setIoFunction(IoFunction.Write)
+                                                 .setFormat(TransferFormat.Packed)
+                                                 .setBuffer(new ArraySlice(label))
+                                                 .setDeviceWordAddress(0L);
+
+        boolean err;
         try {
-            Exec.getInstance().getFacilitiesManager().routeIo(cp);
-            err = cp.getIoStatus() != IoStatus.Successful;
+            Exec.getInstance().getFacilitiesManager().routeIo(channelPacket);
+            err = channelPacket.getIoStatus() != IoStatus.Successful;
         } catch (KExecException ex) {
             err = true;
         }

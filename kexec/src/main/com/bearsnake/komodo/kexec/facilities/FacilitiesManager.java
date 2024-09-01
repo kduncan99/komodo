@@ -12,9 +12,9 @@ import com.bearsnake.komodo.hardwarelib.devices.DeviceType;
 import com.bearsnake.komodo.hardwarelib.channels.DiskChannel;
 import com.bearsnake.komodo.hardwarelib.devices.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.devices.FileSystemDiskDevice;
-import com.bearsnake.komodo.hardwarelib.devices.FileSystemImagePrinterDevice;
-import com.bearsnake.komodo.hardwarelib.devices.FileSystemImageReaderDevice;
-import com.bearsnake.komodo.hardwarelib.devices.FileSystemImageWriterDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemPrinterDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemCardReaderDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemCardPunchDevice;
 import com.bearsnake.komodo.hardwarelib.devices.FileSystemTapeDevice;
 import com.bearsnake.komodo.hardwarelib.IoFunction;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
@@ -3153,7 +3153,7 @@ public class FacilitiesManager implements Manager {
                         error = true;
                         break;
                     }
-                    var node = new FileSystemImagePrinterDevice(nodeName, path);
+                    var node = new FileSystemPrinterDevice(nodeName, path);
                     _nodeGraph.put(node.getNodeIdentifier(), new DeviceNodeInfo(node));
                 }
                 case FILE_SYSTEM_CARD_PUNCH -> {
@@ -3163,7 +3163,7 @@ public class FacilitiesManager implements Manager {
                         error = true;
                         break;
                     }
-                    var node = new FileSystemImageWriterDevice(nodeName, path);
+                    var node = new FileSystemCardPunchDevice(nodeName, path);
                     _nodeGraph.put(node.getNodeIdentifier(), new DeviceNodeInfo(node));
                 }
                 case FILE_SYSTEM_CARD_READER -> {
@@ -3173,7 +3173,7 @@ public class FacilitiesManager implements Manager {
                         error = true;
                         break;
                     }
-                    var node = new FileSystemImageReaderDevice(nodeName, path);
+                    var node = new FileSystemCardReaderDevice(nodeName, path);
                     _nodeGraph.put(node.getNodeIdentifier(), new DeviceNodeInfo(node));
                 }
                 case FILE_SYSTEM_DISK -> {
@@ -3358,6 +3358,7 @@ public class FacilitiesManager implements Manager {
         var channel = selectRoute(disk);
         var ioPkt = new ChannelIoPacket().setNodeIdentifier(disk.getNodeIdentifier())
                                          .setIoFunction(IoFunction.Read)
+                                         .setFormat(TransferFormat.Packed)
                                          .setDeviceWordAddress(dirAddr)
                                          .setBuffer(new ArraySlice(new long[1792]));
         channel.routeIo(ioPkt);
@@ -3376,6 +3377,7 @@ public class FacilitiesManager implements Manager {
     ) throws NoRouteForIOException, ExecStoppedException {
         var ioPkt = new ChannelIoPacket().setNodeIdentifier(disk.getNodeIdentifier())
                                          .setIoFunction(IoFunction.Read)
+                                         .setFormat(TransferFormat.Packed)
                                          .setDeviceWordAddress(0L)
                                          .setBuffer(new ArraySlice(new long[28]));
         var channel = selectRoute(disk);

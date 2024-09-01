@@ -14,13 +14,13 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class FileSystemImageWriterDevice extends SymbiontPunchDevice {
+public class FileSystemCardPunchDevice extends SymbiontPunchDevice {
 
     private final String _fileSystemPath;
     private boolean _isReady = false;
     private BufferedWriter _writer = null;
 
-    public FileSystemImageWriterDevice(
+    public FileSystemCardPunchDevice(
         final String nodeName,
         final String fileSystemPath // path of directory we watch for input files
     ) {

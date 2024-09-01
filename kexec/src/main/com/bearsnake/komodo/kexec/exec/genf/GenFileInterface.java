@@ -271,7 +271,7 @@ public class GenFileInterface {
         var buffer = new ArraySlice(new long[28]);
         var addr = 0;
         var ioResult = new IOResult();
-        fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, 28, false, ioResult);
+        fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, false, ioResult);
         if (ioResult.getStatus() != ERIO$Status.Success) {
             exec.stop(StopCode.InternalExecIOFailed);
             throw new ExecStoppedException();
@@ -294,7 +294,7 @@ public class GenFileInterface {
 
         for (addr = 1; addr < si.getSectorCount(); addr++) {
             ioResult.clear();
-            fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, 28, false, ioResult);
+            fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, false, ioResult);
             if (ioResult.getStatus() != ERIO$Status.Success) {
                 exec.stop(StopCode.InternalExecIOFailed);
                 throw new ExecStoppedException();
@@ -325,7 +325,7 @@ public class GenFileInterface {
                 var partNameAddr = oqi.getPartNameSectorAddress();
                 while (partNameAddr != 0) {
                     ioResult.clear();
-                    fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, 28, false, ioResult);
+                    fm.ioReadFromDiskFile(exec, FILE_NAME, addr, buffer, false, ioResult);
                     if (ioResult.getStatus() != ERIO$Status.Success) {
                         exec.stop(StopCode.InternalExecIOFailed);
                         throw new ExecStoppedException();
@@ -438,7 +438,7 @@ public class GenFileInterface {
         for (var item : _inventory.values()) {
             if (item.isDirty()) {
                 item.serialize(buffer);
-                fm.ioWriteToDiskFile(exec, FILE_NAME, item.getSectorAddress(), buffer, 28, false, ioResult);
+                fm.ioWriteToDiskFile(exec, FILE_NAME, item.getSectorAddress(), buffer, false, ioResult);
                 if (ioResult.getStatus() != ERIO$Status.Success) {
                     exec.stop(StopCode.InternalExecIOFailed);
                     throw new ExecStoppedException();

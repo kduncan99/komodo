@@ -260,7 +260,6 @@ public class SymbiontFileWriter implements SymbiontWriter {
                              _internalFileName,
                              _nextAddress,
                              _buffer,
-                             _bufferIndex,
                              false,
                              ioResult);
         if (ioResult.getStatus() != ERIO$Status.Success) {

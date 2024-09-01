@@ -116,16 +116,16 @@ public class OutputQueueItem extends Item {
 
         item._priorityIndex = (int) source.getS2(0);
         item._absoluteCycle = (int) source.getT3(0);
-        item._runId = Word36.toStringFromFieldata(source, 1, 1);
-        item._accountId = Word36.toStringFromFieldata(source, 2, 2);
-        item._projectId = Word36.toStringFromFieldata(source, 4, 2);
-        item._userId = Word36.toStringFromFieldata(source, 6, 2);
-        item._queueId = Word36.toStringFromFieldata(source, 010, 1);
-        item._outputId = Word36.toStringFromFieldata(source, 011, 1);
-        item._useName = Word36.toStringFromFieldata(source, 012, 2);
-        item._qualifier = Word36.toStringFromFieldata(source, 014, 2);
-        item._filename = Word36.toStringFromFieldata(source, 016, 2);
-        item._banner = Word36.toStringFromFieldata(source, 020, 2);
+        item._runId = Word36.toStringFromFieldata(source.get(1)).trim();
+        item._accountId = (Word36.toStringFromFieldata(source.get(2)) + Word36.toStringFromFieldata(source.get(3))).trim();
+        item._projectId = (Word36.toStringFromFieldata(source.get(4)) + Word36.toStringFromFieldata(source.get(5))).trim();
+        item._userId = (Word36.toStringFromFieldata(source.get(6)) + Word36.toStringFromFieldata(source.get(7))).trim();
+        item._queueId = Word36.toStringFromFieldata(source.get(010)).trim();
+        item._outputId = Word36.toStringFromFieldata(source.get(011)).trim();
+        item._useName = (Word36.toStringFromFieldata(source.get(012)) + Word36.toStringFromFieldata(source.get(013))).trim();
+        item._qualifier = (Word36.toStringFromFieldata(source.get(014)) + Word36.toStringFromFieldata(source.get(015))).trim();
+        item._filename = (Word36.toStringFromFieldata(source.get(016)) + Word36.toStringFromFieldata(source.get(017))).trim();
+        item._banner = (Word36.toStringFromFieldata(source.get(020)) + Word36.toStringFromFieldata(source.get(021))).trim();
         item._symTimestamp = DateConverter.fromModifiedSingleWordTime(source.get(022));
         item._facilityStatusBits = source.get(023);
         item._facilityMessageCodes[0] = (int) source.getH1(024);

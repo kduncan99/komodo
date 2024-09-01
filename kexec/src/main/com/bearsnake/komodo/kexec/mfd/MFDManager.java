@@ -8,6 +8,7 @@ import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.hardwarelib.IoFunction;
 import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
+import com.bearsnake.komodo.hardwarelib.channels.TransferFormat;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
@@ -580,7 +581,9 @@ public class MFDManager implements Manager {
 
         var fm = Exec.getInstance().getFacilitiesManager();
         var buffer = new ArraySlice(new long[1792]);
-        var channelPacket = new ChannelIoPacket().setBuffer(buffer).setIoFunction(IoFunction.Read);
+        var channelPacket = new ChannelIoPacket().setBuffer(buffer)
+                                                 .setFormat(TransferFormat.Packed)
+                                                 .setIoFunction(IoFunction.Read);
         try {
             var dadChain = getDADChain(cycInfo.getMainItem0Address());
             var faSet = FileAllocationSet.createFromDADChain(dadChain);
@@ -1677,7 +1680,8 @@ public class MFDManager implements Manager {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
 
-        var channelPacket = new ChannelIoPacket().setIoFunction(IoFunction.Write);
+        var channelPacket = new ChannelIoPacket().setIoFunction(IoFunction.Write)
+                                                 .setFormat(TransferFormat.Packed);
         var iter = _dirtyCacheTracks.iterator();
         while (iter.hasNext()) {
             var mfdRelativeTrackId = iter.next();

@@ -4,10 +4,12 @@
 
 package com.bearsnake.komodo.kexec.symbionts;
 
+import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.hardwarelib.ChannelProgram;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
+import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
+import com.bearsnake.komodo.hardwarelib.channels.TransferFormat;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.SDFFileType;
@@ -29,6 +31,7 @@ import java.time.Instant;
  */
 class ReaderSymbiontInfo extends SymbiontInfo {
 
+    private final ChannelIoPacket _channelPacket;
     private SymbiontFileWriter _fileWriter = null;
     private int _imageCount = 0;
     private Run _run = null;
@@ -37,7 +40,10 @@ class ReaderSymbiontInfo extends SymbiontInfo {
         final NodeInfo nodeInfo
     ) {
         super(nodeInfo);
-        _channelProgram.setFunction(ChannelProgram.Function.Read);
+        _channelPacket = new ChannelIoPacket();
+        _channelPacket.setBuffer(new ArraySlice(new long[33]))
+                      .setFormat(TransferFormat.QuarterWord)
+                      .setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier());
     }
 
 //    /**
@@ -168,16 +174,8 @@ class ReaderSymbiontInfo extends SymbiontInfo {
         while (retry) {
             var failed = false;
             try {
-                fm.routeIo(_channelProgram);
-                while (_channelProgram.getIoStatus() == IoStatus.InProgress) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        // do nothing
-                    }
-                }
-
-                switch (_channelProgram.getIoStatus()) {
+                fm.routeIo(_channelPacket);
+                switch (_channelPacket.getIoStatus()) {
                     case EndOfFile -> {
                         if (_run != null) {
                             try {
@@ -198,9 +196,9 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                         exec.sendExecReadOnlyMessage(getStateString(), ConsoleType.InputOutput);
                     }
 
-                    case Complete -> {
+                case Successful -> {
                         _imageCount++;
-                        var image = Word36.toStringFromASCII(_controlWord.getBuffer(), 0, _channelProgram.getWordsTransferred());
+                        var image = Word36.toStringFromASCII(_channelPacket.getBuffer());
                         handleImage(image);
                     }
 

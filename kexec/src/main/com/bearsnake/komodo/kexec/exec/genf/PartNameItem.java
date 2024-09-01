@@ -48,7 +48,8 @@ public class PartNameItem extends Item {
             if ((source.get(wx) == 0) && (source.get(wx + 1) == 0)) {
                 break;
             }
-            pni._partNames.add(Word36.toStringFromFieldata(source, wx, 2));
+            var partName = Word36.toStringFromFieldata(source.get(wx)) + Word36.toStringFromFieldata(source.get(wx + 1));
+            pni._partNames.add(partName.trim());
         }
 
         return pni;

@@ -201,7 +201,7 @@ public class DiskChannel extends Channel {
                 return geometry;
             }
 
-            if ((buffer.getSize() & 01) != 0) {
+             if ((buffer.getSize() & 01) != 0) {
                 geometry._ioStatus = IoStatus.InvalidBufferSize;
                 return geometry;
             }
@@ -213,10 +213,6 @@ public class DiskChannel extends Channel {
 
             geometry._bytesPerBlock = diskInfo.getBlockSize();
             geometry._wordsPerBlock = (geometry._bytesPerBlock / 128) * 28;
-            if (buffer.getSize() % geometry._wordsPerBlock != 0) {
-                geometry._ioStatus = IoStatus.InvalidBufferSize;
-                return geometry;
-            }
 
             geometry._requestedWordAddress = channelPacket.getDeviceWordAddress();
             if ((geometry._requestedWordAddress & 01) != 0) {

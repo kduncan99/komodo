@@ -211,7 +211,8 @@ public class SymbiontFileReader implements SymbiontReader {
         var fm = exec.getFacilitiesManager();
         var transferCount = (int)Math.min(_buffer.getSize(), _sectorsRemaining * 28);
         var ioResult = new IOResult();
-        fm.ioReadFromDiskFile(exec, _internalFileName, _nextAddress, _buffer, transferCount, false, ioResult);
+        var subBuffer = new ArraySlice(_buffer, 0, transferCount);
+        fm.ioReadFromDiskFile(exec, _internalFileName, _nextAddress, subBuffer, false, ioResult);
         if (ioResult.getStatus() != ERIO$Status.Success) {
             exec.sendExecReadOnlyMessage("Image input canceled", ConsoleType.System);
             throw new ExecIOException(ioResult.getStatus());

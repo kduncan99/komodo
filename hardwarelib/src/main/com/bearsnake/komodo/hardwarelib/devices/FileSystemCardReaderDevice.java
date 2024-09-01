@@ -12,17 +12,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.stream.Stream;
 
-public class FileSystemImageReaderDevice extends SymbiontReaderDevice {
+public class FileSystemCardReaderDevice extends SymbiontReaderDevice {
 
     private final String _fileSystemPath;
     private String _fileName = null;
     private BufferedReader _reader = null;
 
-    public FileSystemImageReaderDevice(
+    public FileSystemCardReaderDevice(
         final String nodeName,
         final String fileSystemPath // path of directory we watch for input files
     ) {
@@ -107,13 +106,19 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice {
             return;
         }
 
+        if (packet.getBuffer() == null) {
+            packet.setStatus(IoStatus.BufferIsNull);
+            return;
+        }
+
         try {
             var input = _reader.readLine();
             if (input == null) {
                 packet.setStatus(IoStatus.EndOfFile);
                 dropAndClose();
             } else {
-                packet.setBuffer(ByteBuffer.wrap(input.getBytes()));
+                var limit = Math.min(packet.getBuffer().limit(), input.length());
+                packet.getBuffer().put(input.getBytes(), 0, limit);
                 packet.setStatus(IoStatus.Successful);
             }
         } catch (IOException ex) {

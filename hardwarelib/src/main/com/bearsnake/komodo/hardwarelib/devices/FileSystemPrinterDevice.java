@@ -13,14 +13,14 @@ import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class FileSystemImagePrinterDevice extends SymbiontPrinterDevice {
+public class FileSystemPrinterDevice extends SymbiontPrinterDevice {
 
     private final String _fileSystemPath;
     private boolean _isReady = false;
     private boolean _topOfPage = false;
     private PrintStream _printer = null;
 
-    public FileSystemImagePrinterDevice(
+    public FileSystemPrinterDevice(
         final String nodeName,
         final String fileSystemPath // path of directory we watch for input files
     ) {
