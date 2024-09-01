@@ -253,10 +253,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
                                final int prepFactor,
                                final long capacity,
                                final long firstDirectoryTrackAddress) {
-        // We are potentially writing to space which has never yet been written to.
-        // For this reason, we need to write an entire block.
-        var blockSize = device.getInfo().getBlockSize();
-        var label = new long[blockSize];
+        var label = new long[28];
         label[0] = Word36.stringToWordASCII("VOL1");
 
         var paddedPack = String.format("%-8s", packName);
@@ -274,6 +271,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         label[014] = Word36.setS2(label[014], 1);
 
         label[016] = capacity;
+        label[017] = Word36.setH1(label[017], recordsPerTrack);
 
         var channelPacket = new ChannelIoPacket().setNodeIdentifier(device.getNodeIdentifier())
                                                  .setIoFunction(IoFunction.Write)
