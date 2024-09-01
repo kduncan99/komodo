@@ -4,10 +4,10 @@
 
 package com.bearsnake.komodo.kexec.symbionts;
 
-import com.bearsnake.komodo.hardwarelib.DeviceType;
-import com.bearsnake.komodo.hardwarelib.SymbiontPrinterDevice;
-import com.bearsnake.komodo.hardwarelib.SymbiontReaderDevice;
-import com.bearsnake.komodo.hardwarelib.SymbiontPunchDevice;
+import com.bearsnake.komodo.hardwarelib.devices.DeviceType;
+import com.bearsnake.komodo.hardwarelib.devices.SymbiontPrinterDevice;
+import com.bearsnake.komodo.hardwarelib.devices.SymbiontReaderDevice;
+import com.bearsnake.komodo.hardwarelib.devices.SymbiontPunchDevice;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;

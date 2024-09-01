@@ -179,6 +179,20 @@ class ReaderSymbiontInfo extends SymbiontInfo {
 
                 switch (_channelProgram.getIoStatus()) {
                     case EndOfFile -> {
+                        if (_run != null) {
+                            try {
+                                _fileWriter.writeEndOfFileControlImage();
+                                _run.setIsReady();
+                                _fileWriter = null;
+                                _run = null;
+                            } catch (ExecIOException e) {
+                                _run.setInvalidRunReason("CANNOT WRITE TO READ$ FILE");
+                                _run.setIsReady();
+                                _run = null;
+                                _fileWriter = null;
+                                resetNode();
+                            }
+                        }
                         _status = SymbiontStatus.Inactive;
                         _state = SymbiontState.Stopped;
                         exec.sendExecReadOnlyMessage(getStateString(), ConsoleType.InputOutput);

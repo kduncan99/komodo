@@ -4,14 +4,14 @@
 
 package com.bearsnake.komodo.kexec.configuration;
 
-import com.bearsnake.komodo.hardwarelib.DiskChannel;
-import com.bearsnake.komodo.hardwarelib.FileSystemDiskDevice;
-import com.bearsnake.komodo.hardwarelib.FileSystemImagePrinterDevice;
-import com.bearsnake.komodo.hardwarelib.FileSystemImageReaderDevice;
-import com.bearsnake.komodo.hardwarelib.FileSystemImageWriterDevice;
-import com.bearsnake.komodo.hardwarelib.FileSystemTapeDevice;
-import com.bearsnake.komodo.hardwarelib.SymbiontChannel;
-import com.bearsnake.komodo.hardwarelib.TapeChannel;
+import com.bearsnake.komodo.hardwarelib.channels.DiskChannel;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemDiskDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemImagePrinterDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemImageReaderDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemImageWriterDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemTapeDevice;
+import com.bearsnake.komodo.hardwarelib.channels.SymbiontChannel;
+import com.bearsnake.komodo.hardwarelib.channels.TapeChannel;
 
 import java.util.Arrays;
 

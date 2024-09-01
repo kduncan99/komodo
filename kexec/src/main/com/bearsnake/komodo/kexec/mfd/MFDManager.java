@@ -6,8 +6,8 @@ package com.bearsnake.komodo.kexec.mfd;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.hardwarelib.ChannelProgram;
-import com.bearsnake.komodo.hardwarelib.IoStatus;
+import com.bearsnake.komodo.hardwarelib.IoFunction;
+import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
@@ -580,11 +580,7 @@ public class MFDManager implements Manager {
 
         var fm = Exec.getInstance().getFacilitiesManager();
         var buffer = new ArraySlice(new long[1792]);
-        var cw = new ChannelProgram.ControlWord().setBuffer(buffer)
-                                                 .setDirection(ChannelProgram.Direction.Increment)
-                                                 .setTransferCountWords(1792);
-        var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
-                                     .addControlWord(cw);
+        var channelPacket = new ChannelIoPacket().setBuffer(buffer).setIoFunction(IoFunction.Read);
         try {
             var dadChain = getDADChain(cycInfo.getMainItem0Address());
             var faSet = FileAllocationSet.createFromDADChain(dadChain);
@@ -597,19 +593,12 @@ public class MFDManager implements Manager {
                 var devTrackId = ht.getTrackId();
 
                 var nodeInfo = _logicalDATable.get(ldat);
-                var packInfo = (PackInfo)nodeInfo.getMediaInfo();
-
-                var blocksPerTrack = 1792 / packInfo.getPrepFactor();
-                cp.setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier());
+                channelPacket.setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier());
                 for (int tx = 0; tx < trackCount; tx++) {
                     out.printf("\nFileRel TrackID:%08o LDAT:%04o DevTrackId:%08o\n",
                                frTrackId, ldat, devTrackId);
-                    var blockId = devTrackId * blocksPerTrack;
-                    cp.setBlockId(blockId);
-                    fm.routeIo(cp);
-                    while (cp.getIoStatus() == IoStatus.InProgress) {
-                        Exec.sleep(10);
-                    }
+                    channelPacket.setDeviceWordAddress(devTrackId * 1792);
+                    fm.routeIo(channelPacket);
                 }
 
                 var bx = 0;
@@ -709,6 +698,13 @@ public class MFDManager implements Manager {
         }
 
         return fsInfo;
+    }
+
+    /**
+     * Retrieves a collection of all the file set info objects
+     */
+    public synchronized Collection<FileSetInfo> getFileSetInfos() {
+        return _leadItemLookupTable.values();
     }
 
     /**
@@ -1680,6 +1676,8 @@ public class MFDManager implements Manager {
         var faSet = acInfo.getFileAllocationSet();
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
+
+        var channelPacket = new ChannelIoPacket().setIoFunction(IoFunction.Write);
         var iter = _dirtyCacheTracks.iterator();
         while (iter.hasNext()) {
             var mfdRelativeTrackId = iter.next();
@@ -1688,24 +1686,14 @@ public class MFDManager implements Manager {
             var ldat = hwTid.getLDATIndex();
             var trackId = hwTid.getTrackId();
             var nodeInfo = _logicalDATable.get(ldat);
-            var packInfo = (PackInfo) nodeInfo.getMediaInfo();
-            var blocksPerTrack = 1792 / packInfo.getPrepFactor();
-            var blockId = trackId * blocksPerTrack;
 
             // set up IO
             var mfdRelAddr = new MFDRelativeAddress(mfdRelativeTrackId << 6);
-            var cw = new ChannelProgram.ControlWord().setBuffer(_cachedMFDTracks.get(mfdRelAddr))
-                                                     .setDirection(ChannelProgram.Direction.Increment)
-                                                     .setTransferCountWords(1792);
-            var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
-                                         .setBlockId(blockId)
-                                         .setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier())
-                                         .addControlWord(cw);
+            channelPacket.setBuffer(_cachedMFDTracks.get(mfdRelAddr))
+                         .setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier())
+                         .setDeviceWordAddress(trackId * 1792);
             try {
-                fm.routeIo(cp);
-                while (cp.getIoStatus() == IoStatus.InProgress) {
-                    Exec.sleep(10);
-                }
+                fm.routeIo(channelPacket);
             } catch (NoRouteForIOException ex) {
                 exec.stop(StopCode.InternalExecIOFailed);
                 throw new ExecStoppedException();

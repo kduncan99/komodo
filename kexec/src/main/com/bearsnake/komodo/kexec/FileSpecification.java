@@ -89,7 +89,7 @@ public class FileSpecification {
             qualifier = token;
             parser.skipNext();
 
-            filename = parser.parseUntil(cutSet);
+            filename = parser.parseUntil("(" + cutSet);
         } else {
             filename = token;
         }

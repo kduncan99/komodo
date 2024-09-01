@@ -7,9 +7,8 @@ package com.bearsnake.komodo.kexec.keyins;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.PrepFactor;
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.hardwarelib.ChannelProgram;
-import com.bearsnake.komodo.hardwarelib.Device;
-import com.bearsnake.komodo.hardwarelib.DiskDevice;
+import com.bearsnake.komodo.hardwarelib.devices.Device;
+import com.bearsnake.komodo.hardwarelib.devices.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
@@ -73,7 +72,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         var label = new long[28];
         var labelSlice = new ArraySlice(label);
         var cw = new ChannelProgram.ControlWord().setBuffer(labelSlice)
-                                                 .setDirection(ChannelProgram.Direction.Increment)
+                                                 .setDirection(TransferDirection.Increment)
                                                  .setBufferOffset(0)
                                                  .setTransferCountWords(28);
         var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
@@ -82,7 +81,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
                                      .addControlWord(cw);
         try {
             Exec.getInstance().getFacilitiesManager().routeIo(cp);
-            if (cp.getIoStatus() == IoStatus.Complete) {
+            if (cp.getIoStatus() == IoStatus.Successful) {
                 if (Word36.toStringFromASCII(label[0]).equals("VOL1")) {
                     // pack already has a label - ask the operator if we really want to prep the pack
                     var existing = Word36.toStringFromASCII(label[1])
@@ -226,7 +225,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         sector1.setT3(010, prepFactor);
 
         var cw = new ChannelProgram.ControlWord().setBuffer(dirTrackSlice)
-                                                 .setDirection(ChannelProgram.Direction.Increment)
+                                                 .setDirection(TransferDirection.Increment)
                                                  .setBufferOffset(0)
                                                  .setTransferCountWords(1792);
         var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
@@ -237,7 +236,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         boolean err = false;
         try {
             Exec.getInstance().getFacilitiesManager().routeIo(cp);
-            err = cp.getIoStatus() != IoStatus.Complete;
+            err = cp.getIoStatus() != IoStatus.Successful;
         } catch (KExecException ex) {
             err = true;
         }
@@ -279,7 +278,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         label[016] = capacity;
 
         var cw = new ChannelProgram.ControlWord().setBuffer(new ArraySlice(label))
-                                                 .setDirection(ChannelProgram.Direction.Increment)
+                                                 .setDirection(TransferDirection.Increment)
                                                  .setBufferOffset(0)
                                                  .setTransferCountWords(PrepFactor.getPrepFactorFromBlockSize(blockSize));
         var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
@@ -289,7 +288,7 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         boolean err = false;
         try {
             Exec.getInstance().getFacilitiesManager().routeIo(cp);
-            err = cp.getIoStatus() != IoStatus.Complete;
+            err = cp.getIoStatus() != IoStatus.Successful;
         } catch (KExecException ex) {
             err = true;
         }

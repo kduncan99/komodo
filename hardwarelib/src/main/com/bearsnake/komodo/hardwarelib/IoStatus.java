@@ -6,12 +6,11 @@ package com.bearsnake.komodo.hardwarelib;
 
 public enum IoStatus {
     NotStarted,
-    Complete,
-    InProgress,
+    Successful,
     Canceled,
     // -- //
     AtLoadPoint,
-    InvalidChannelProgram,
+    BufferIsNull,
     DataException, // something in the device meta-data is bad
     DeviceDoesNotExist,
     DeviceIsDown,
@@ -21,6 +20,7 @@ public enum IoStatus {
     EndOfFile,
     EndOfTape,
     InternalError,
+    InvalidAddress, // for Channel IO, address is not a multiple of 2 for Packed transfer format
     InvalidBlockCount,
     InvalidBlockId,
     InvalidBufferSize,
@@ -31,6 +31,7 @@ public enum IoStatus {
     InvalidPrepFactor,
     InvalidTapeBlock,
     InvalidTrackCount,
+    InvalidTransferFormat,
     LostPosition,
     MediaAlreadyMounted,
     MediaNotMounted,

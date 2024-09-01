@@ -4,8 +4,8 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
-import com.bearsnake.komodo.hardwarelib.Device;
-import com.bearsnake.komodo.hardwarelib.DeviceType;
+import com.bearsnake.komodo.hardwarelib.devices.Device;
+import com.bearsnake.komodo.hardwarelib.devices.DeviceType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.DeviceNodeInfo;

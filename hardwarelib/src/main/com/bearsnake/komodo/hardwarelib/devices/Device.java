@@ -2,7 +2,11 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.hardwarelib;
+package com.bearsnake.komodo.hardwarelib.devices;
+
+import com.bearsnake.komodo.hardwarelib.IoPacket;
+import com.bearsnake.komodo.hardwarelib.Node;
+import com.bearsnake.komodo.hardwarelib.NodeCategory;
 
 public abstract class Device extends Node {
 
@@ -22,7 +26,7 @@ public abstract class Device extends Node {
     // this is a nice alternative to having to establish an entire thread just for this silliness.
     public abstract void probe();
 
-    public abstract void startIo(final IoPacket packet);
+    public abstract void performIo(final IoPacket packet);
 
     // The following may be overridden by subclasses if/as necessary.
     public boolean isReady() { return _isReady; }

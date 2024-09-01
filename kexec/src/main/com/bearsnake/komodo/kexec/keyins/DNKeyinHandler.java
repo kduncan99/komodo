@@ -4,9 +4,9 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
-import com.bearsnake.komodo.hardwarelib.Device;
-import com.bearsnake.komodo.hardwarelib.DiskDevice;
-import com.bearsnake.komodo.hardwarelib.TapeDevice;
+import com.bearsnake.komodo.hardwarelib.devices.Device;
+import com.bearsnake.komodo.hardwarelib.devices.DiskDevice;
+import com.bearsnake.komodo.hardwarelib.devices.TapeDevice;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;

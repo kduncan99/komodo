@@ -2,8 +2,10 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.hardwarelib;
+package com.bearsnake.komodo.hardwarelib.devices;
 
+import com.bearsnake.komodo.hardwarelib.IoPacket;
+import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.BufferedReader;
@@ -69,13 +71,12 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice {
     }
 
     @Override
-    public synchronized void startIo(final IoPacket packet) {
+    public synchronized void performIo(final IoPacket packet) {
         if (_logIos) {
             LogManager.logTrace(_nodeName, "startIo(%s)", packet.toString());
         }
 
         if (packet instanceof SymbiontIoPacket symPacket) {
-            packet.setStatus(IoStatus.InProgress);
             switch (packet.getFunction()) {
                 case Read -> doRead(symPacket);
                 case Reset -> doReset(symPacket);
@@ -113,7 +114,7 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice {
                 dropAndClose();
             } else {
                 packet.setBuffer(ByteBuffer.wrap(input.getBytes()));
-                packet.setStatus(IoStatus.Complete);
+                packet.setStatus(IoStatus.Successful);
             }
         } catch (IOException ex) {
             dropAndClose();
@@ -128,7 +129,7 @@ public class FileSystemImageReaderDevice extends SymbiontReaderDevice {
         }
 
         dropAndClose();
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     /**

@@ -2,8 +2,10 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.hardwarelib;
+package com.bearsnake.komodo.hardwarelib.devices;
 
+import com.bearsnake.komodo.hardwarelib.IoPacket;
+import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -38,40 +40,39 @@ public class FileSystemTapeDevice extends TapeDevice {
     public final void probe() {}
 
     @Override
-    public void startIo(final IoPacket packet) {
+    public void performIo(final IoPacket packet) {
         if (_logIos) {
             LogManager.logTrace(_nodeName, "startIo(%s)", packet.toString());
         }
 
         if (packet instanceof TapeIoPacket tapePacket) {
-            packet.setStatus(IoStatus.InProgress);
             switch (packet.getFunction()) {
-            case GetInfo:
-                doGetInfo(tapePacket);
-            case Mount:
-                doMount(tapePacket);
-            case MoveBackward:
-                doMoveBackward(tapePacket);
-            case MoveForward:
-                doMoveForward(tapePacket);
-            case Read:
-                doRead(tapePacket);
-            case ReadBackward:
-                doReadBackward(tapePacket);
-            case Reset:
-                doReset(tapePacket);
-            case Rewind:
-                doRewind(tapePacket);
-            case RewindAndUnload:
-                doRewindAndUnload(tapePacket);
-            case Unmount:
-                doUnmount(tapePacket);
-            case Write:
-                doWrite(tapePacket);
-            case WriteEndOfFile:
-                doWriteTapeMark(tapePacket);
-            default:
-                packet.setStatus(IoStatus.InvalidFunction);
+                case GetInfo:
+                    doGetInfo(tapePacket);
+                case Mount:
+                    doMount(tapePacket);
+                case MoveBackward:
+                    doMoveBackward(tapePacket);
+                case MoveForward:
+                    doMoveForward(tapePacket);
+                case Read:
+                    doRead(tapePacket);
+                case ReadBackward:
+                    doReadBackward(tapePacket);
+                case Reset:
+                    doReset(tapePacket);
+                case Rewind:
+                    doRewind(tapePacket);
+                case RewindAndUnload:
+                    doRewindAndUnload(tapePacket);
+                case Unmount:
+                    doUnmount(tapePacket);
+                case Write:
+                    doWrite(tapePacket);
+                case WriteEndOfFile:
+                    doWriteTapeMark(tapePacket);
+                default:
+                    packet.setStatus(IoStatus.InvalidFunction);
             }
         } else {
             packet.setStatus(IoStatus.InvalidPacket);
@@ -104,10 +105,8 @@ public class FileSystemTapeDevice extends TapeDevice {
     public boolean isWriteProtected() { return _writeProtected; }
 
     private synchronized void doGetInfo(final TapeIoPacket packet) {
-        var info = getInfo();
-        packet.getBuffer().clear();
-        info.serialize(packet.getBuffer());
-        packet.setStatus(IoStatus.Complete);
+        packet.setDeviceInfo(getInfo());
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doMount(final TapeIoPacket packet) {
@@ -123,7 +122,7 @@ public class FileSystemTapeDevice extends TapeDevice {
 
         try {
             var path = FileSystems.getDefault().getPath(packet.getMountInfo().getFileName());
-            if (packet._mountInfo.getWriteProtected()) {
+            if (packet.getMountInfo().getWriteProtected()) {
                 _channel = FileChannel.open(path, CREATE, READ);
             } else {
                 _channel = FileChannel.open(path, CREATE, READ, WRITE);
@@ -134,10 +133,10 @@ public class FileSystemTapeDevice extends TapeDevice {
             return;
         }
 
-        _writeProtected = packet._mountInfo.getWriteProtected();
+        _writeProtected = packet.getMountInfo().getWriteProtected();
         _translator = new FSNativeTapeTranslator(_channel);
         _canRead = true;
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doMoveBackward(final TapeIoPacket packet) {
@@ -167,7 +166,7 @@ public class FileSystemTapeDevice extends TapeDevice {
             return;
         }
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doMoveForward(final TapeIoPacket packet) {
@@ -197,11 +196,11 @@ public class FileSystemTapeDevice extends TapeDevice {
             return;
         }
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doRead(final TapeIoPacket packet) {
-        if (packet._buffer == null) {
+        if (packet.getBuffer() == null) {
             packet.setStatus(IoStatus.InvalidPacket);
             return;
         }
@@ -230,11 +229,11 @@ public class FileSystemTapeDevice extends TapeDevice {
             return;
         }
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doReadBackward(final TapeIoPacket packet) {
-        if (packet._buffer == null) {
+        if (packet.getBuffer() == null) {
             packet.setStatus(IoStatus.InvalidPacket);
             return;
         }
@@ -266,7 +265,7 @@ public class FileSystemTapeDevice extends TapeDevice {
             return;
         }
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doReset(final TapeIoPacket packet) {
@@ -282,9 +281,9 @@ public class FileSystemTapeDevice extends TapeDevice {
         }
         _channel = null;
         setIsReady(false);
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doRewind(final TapeIoPacket packet) {
@@ -296,11 +295,11 @@ public class FileSystemTapeDevice extends TapeDevice {
         try {
             _channel.position(0);
         } catch (IOException ex) {
-            packet.setStatus(IoStatus.Complete);
+            packet.setStatus(IoStatus.Successful);
             return;
         }
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doRewindAndUnload(final TapeIoPacket packet) {
@@ -318,7 +317,7 @@ public class FileSystemTapeDevice extends TapeDevice {
 
         _channel = null;
         setIsReady(false);
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doUnmount(final TapeIoPacket packet) {
@@ -336,11 +335,11 @@ public class FileSystemTapeDevice extends TapeDevice {
 
         _channel = null;
         setIsReady(false);
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doWrite(final TapeIoPacket packet) {
-        if (packet._buffer == null) {
+        if (packet.getBuffer() == null) {
             packet.setStatus(IoStatus.InvalidPacket);
             return;
         }
@@ -356,7 +355,7 @@ public class FileSystemTapeDevice extends TapeDevice {
         }
 
         try {
-            int bytes = _translator.write(packet._buffer);
+            int bytes = _translator.write(packet.getBuffer());
             _canRead = false;
             packet.setBytesTransferred(bytes);
         } catch (IOException ex) {
@@ -364,11 +363,11 @@ public class FileSystemTapeDevice extends TapeDevice {
             return;
         }
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private synchronized void doWriteTapeMark(final TapeIoPacket packet) {
-        if (packet._buffer == null) {
+        if (packet.getBuffer() == null) {
             packet.setStatus(IoStatus.InvalidPacket);
             return;
         }
@@ -392,6 +391,6 @@ public class FileSystemTapeDevice extends TapeDevice {
             return;
         }
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 }

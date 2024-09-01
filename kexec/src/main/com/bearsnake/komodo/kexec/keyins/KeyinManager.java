@@ -62,6 +62,7 @@ public class KeyinManager implements Manager {
         // LC
         _handlerClasses.put(LGKeyinHandler.COMMAND.toUpperCase(), LGKeyinHandler.class);
         // MD
+        _handlerClasses.put(MFDKeyinHandler.COMMAND.toUpperCase(), MFDKeyinHandler.class);
         // MR
         // MS
         // MU

@@ -2,8 +2,10 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.hardwarelib;
+package com.bearsnake.komodo.hardwarelib.devices;
 
+import com.bearsnake.komodo.hardwarelib.IoPacket;
+import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -38,10 +40,11 @@ public class FileSystemDiskDevice extends DiskDevice {
                                 final String fileName,
                                 final boolean writeProtected) {
         super(nodeName);
-        var mi = new IoPacket.MountInfo(fileName, writeProtected);
-        var pkt = new DiskIoPacket().setMountInfo(mi);
+        var mi = new MountInfo(fileName, writeProtected);
+        var pkt = new DiskIoPacket();
+        pkt.setMountInfo(mi);
         doMount(pkt);
-        if (pkt.getStatus() == IoStatus.Complete) {
+        if (pkt.getStatus() == IoStatus.Successful) {
             setIsReady(true);
         }
     }
@@ -55,13 +58,12 @@ public class FileSystemDiskDevice extends DiskDevice {
     public final void probe() {}
 
     @Override
-    public synchronized void startIo(final IoPacket packet) {
+    public synchronized void performIo(final IoPacket packet) {
         if (_logIos) {
             LogManager.logTrace(_nodeName, "startIo(%s)", packet.toString());
         }
 
         if (packet instanceof DiskIoPacket diskPacket) {
-            packet.setStatus(IoStatus.InProgress);
             switch (packet.getFunction()) {
                 case GetInfo -> doGetInfo(diskPacket);
                 case Mount -> doMount(diskPacket);
@@ -111,10 +113,8 @@ public class FileSystemDiskDevice extends DiskDevice {
     public boolean isWriteProtected() { return _writeProtected; }
 
     private void doGetInfo(final DiskIoPacket packet) {
-        var info = getInfo();
-        packet.getBuffer().clear();
-        info.serialize(packet.getBuffer());
-        packet.setStatus(IoStatus.Complete);
+        packet.setDeviceInfo(getInfo());
+        packet.setStatus(IoStatus.Successful);
     }
 
     private void doMount(final DiskIoPacket packet) {
@@ -142,7 +142,7 @@ public class FileSystemDiskDevice extends DiskDevice {
         }
 
         _writeProtected = packet.getMountInfo().getWriteProtected();
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private void doRead(final DiskIoPacket packet) {
@@ -192,7 +192,7 @@ public class FileSystemDiskDevice extends DiskDevice {
         }
 
         packet.setBuffer(buffer);
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private void doReset(final DiskIoPacket packet) {
@@ -201,7 +201,7 @@ public class FileSystemDiskDevice extends DiskDevice {
             return;
         }
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private void doUnmount(final DiskIoPacket packet) {
@@ -223,7 +223,7 @@ public class FileSystemDiskDevice extends DiskDevice {
 
         _channel = null;
         setIsReady(false);
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private void doWrite(final DiskIoPacket packet) {
@@ -270,6 +270,6 @@ public class FileSystemDiskDevice extends DiskDevice {
             return;
         }
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 }

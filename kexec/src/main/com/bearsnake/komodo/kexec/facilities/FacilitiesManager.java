@@ -5,28 +5,28 @@
 package com.bearsnake.komodo.kexec.facilities;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.hardwarelib.Channel;
-import com.bearsnake.komodo.hardwarelib.ChannelProgram;
-import com.bearsnake.komodo.hardwarelib.Device;
-import com.bearsnake.komodo.hardwarelib.DeviceType;
-import com.bearsnake.komodo.hardwarelib.DiskChannel;
-import com.bearsnake.komodo.hardwarelib.DiskDevice;
-import com.bearsnake.komodo.hardwarelib.FileSystemDiskDevice;
-import com.bearsnake.komodo.hardwarelib.FileSystemImagePrinterDevice;
-import com.bearsnake.komodo.hardwarelib.FileSystemImageReaderDevice;
-import com.bearsnake.komodo.hardwarelib.FileSystemImageWriterDevice;
-import com.bearsnake.komodo.hardwarelib.FileSystemTapeDevice;
+import com.bearsnake.komodo.hardwarelib.channels.Channel;
+import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
+import com.bearsnake.komodo.hardwarelib.devices.Device;
+import com.bearsnake.komodo.hardwarelib.devices.DeviceType;
+import com.bearsnake.komodo.hardwarelib.channels.DiskChannel;
+import com.bearsnake.komodo.hardwarelib.devices.DiskDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemDiskDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemImagePrinterDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemImageReaderDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemImageWriterDevice;
+import com.bearsnake.komodo.hardwarelib.devices.FileSystemTapeDevice;
+import com.bearsnake.komodo.hardwarelib.IoFunction;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.hardwarelib.NodeCategory;
-import com.bearsnake.komodo.hardwarelib.SymbiontChannel;
-import com.bearsnake.komodo.hardwarelib.TapeChannel;
-import com.bearsnake.komodo.hardwarelib.TapeDevice;
+import com.bearsnake.komodo.hardwarelib.channels.SymbiontChannel;
+import com.bearsnake.komodo.hardwarelib.channels.TapeChannel;
+import com.bearsnake.komodo.hardwarelib.devices.TapeDevice;
+import com.bearsnake.komodo.hardwarelib.channels.TransferFormat;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.configuration.Configuration;
-import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.configuration.MnemonicType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
@@ -66,6 +66,7 @@ import com.bearsnake.komodo.kexec.mfd.RemovableDiskFileCycleInfo;
 import com.bearsnake.komodo.kexec.mfd.UnitSelectionIndicators;
 import com.bearsnake.komodo.logger.LogManager;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
@@ -147,8 +148,7 @@ public class FacilitiesManager implements Manager {
     static final HashMap<IoStatus, ERIO$Status> _ioStatusTranslateTable = new HashMap<>();
     static {
         /* NotStarted does not have a corresponding ERIO status */
-        _ioStatusTranslateTable.put(IoStatus.Complete, ERIO$Status.Success);
-        _ioStatusTranslateTable.put(IoStatus.InProgress, ERIO$Status.InProgress);
+        _ioStatusTranslateTable.put(IoStatus.Successful, ERIO$Status.Success);
         _ioStatusTranslateTable.put(IoStatus.Canceled, ERIO$Status.SystemError);
         _ioStatusTranslateTable.put(IoStatus.AtLoadPoint, ERIO$Status.EndOfTape);
         /*
@@ -166,6 +166,7 @@ public class FacilitiesManager implements Manager {
         /*
         TODO
             InternalError,
+            InvalidAddress,
             InvalidBlockCount,
             InvalidBlockId,
             InvalidBufferSize,
@@ -176,6 +177,8 @@ public class FacilitiesManager implements Manager {
             InvalidPrepFactor,
             InvalidTapeBlock,
             InvalidTrackCount,
+            InvalidTransferDirection,
+            InvalidTransferFormat,
         */
         _ioStatusTranslateTable.put(IoStatus.LostPosition, ERIO$Status.LostPosition);
         /*
@@ -1596,12 +1599,14 @@ public class FacilitiesManager implements Manager {
     }
 
     /**
-     * Handles mass-storage read
+     * Handles mass-storage read.
+     * Such operations are file-relative, with sector or word addresses indicating the starting address of the IO,
+     * and word counts indicating the size of the IO. Such transfers are not required to be on track or block
+     * (or even device) boundaries, although IO is more efficient if they are.
      * @param run the run which is requesting the IO
      * @param internalName the internal name of the file to be read from
-     * @param address sector or word address of the read operation
+     * @param fileRelativeAddress sector or word address of the read operation (depends on the file mode)
      * @param buffer buffer into which data is to be read
-     * @param transferCount number of words to be read
      * @param isWordAddressable true if file is word-addressable
      * @param ioResult where we return IO status
      * @throws ExecStoppedException if we stop the exec, or determine that it has been stopped during processing
@@ -1609,158 +1614,115 @@ public class FacilitiesManager implements Manager {
     public synchronized void ioReadFromDiskFile(
         final Run run,
         final String internalName,
-        final long address,
+        final long fileRelativeAddress,
         final ArraySlice buffer,
-        final int transferCount,
         final boolean isWordAddressable,
         final IOResult ioResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
-                            "ioReadFromDiskFile(%s, '%s', addr=%d words=%d",
-                            run.getActualRunId(), internalName, address, transferCount);
+                            "ioReadFromDiskFile(%s, '%s', addr=%d words=%d wAddr=%s",
+                            run.getActualRunId(), internalName, fileRelativeAddress, buffer.getSize(), isWordAddressable);
         var exec = Exec.getInstance();
         var mm = exec.getMFDManager();
 
-        if (buffer.getSize() < transferCount) {
-            LogManager.logFatal(LOG_SOURCE, "Conflict between buffer size and transfer count");
-            exec.stop(StopCode.InternalExecIOFailed);
+        try {
+            var dfi = ioGetDiskFileFacilitiesItem(internalName);
+            var aci = dfi.getAcceleratedCycleInfo();
+            var fas = aci.getFileAllocationSet();
+            var fci = (DiskFileCycleInfo)aci.getFileCycleInfo();
+            var maxTracks = fci.getMaxGranules();
+            if (fci.getPCHARFlags().getGranularity() == Granularity.Position) {
+                maxTracks <<= 6;
+            }
+
+            // maxTracks, if zero, indicates no limit. This is a Komodo peculiarity.
+            // Convert file-relative address to word-address, then do the calisthenics necessary to
+            // determine whether the IO extend is beyond  max tracks.
+            long fileRelWordAddress = fileRelativeAddress * (isWordAddressable ? 1 : 28);
+            if (maxTracks > 0) {
+                long fileRelWordLimit = fileRelWordAddress + buffer.getSize();
+                long trackLimit = fileRelWordLimit / 1792;
+                if (fileRelWordLimit % 1792 > 0) {
+                    trackLimit += 1;
+                }
+                if (trackLimit >= maxTracks) {
+                    ioResult.setStatus(ERIO$Status.ReadExtentOutOfRange)
+                            .setWordsTransferred(0);
+                    throw new IOException();
+                }
+            }
+
+            int wordsRead = 0;
+            int wordsRemaining = buffer.getSize();
+            var channelPacket = new ChannelIoPacket().setFormat(TransferFormat.Packed)
+                                                     .setIoFunction(IoFunction.Read);
+
+            while (wordsRemaining > 0) {
+                // Find the LDAT and hardware track containing the file-relative track(s) we're trying to read.
+                var relativeTrack = fileRelWordAddress / 1792;
+                var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
+                if (hwTid == null) {
+                    ioResult.setStatus(ERIO$Status.UnallocatedArea)
+                            .setWordsTransferred(wordsRead);
+                    throw new Exception();
+                }
+
+                var nodeInfo = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
+                var nodeIdentifier = nodeInfo.getNode().getNodeIdentifier();
+
+                // Calculate how far our file-rel word addr is from the start of the containing track,
+                // then determine how many non-slop words we can read from this track.
+                // Adjust that value downwards if necessary, in case the amount we have left to read is less.
+                var leadingSlop = (int)(fileRelWordAddress % 1792);
+                var subWordCount = Math.min(1792 - leadingSlop, wordsRemaining);
+
+                // Set up an IO to read this portion of the area
+                var subSlice = new ArraySlice(buffer, wordsRead, subWordCount);
+                var deviceRelWordAddress = (hwTid.getTrackId() * 1792) + leadingSlop;
+                channelPacket.setBuffer(subSlice)
+                             .setNodeIdentifier(nodeIdentifier)
+                             .setDeviceWordAddress(deviceRelWordAddress);
+
+                try {
+                    routeIo(channelPacket);
+                } catch (NoRouteForIOException ex) {
+                    ioResult.setStatus(ERIO$Status.DeviceDownOrNotAvailable)
+                            .setWordsTransferred(wordsRead);
+                    throw new IOException();
+                }
+
+                if (channelPacket.getIoStatus() != IoStatus.Successful) {
+                    ioResult.setStatus(_ioStatusTranslateTable.get(channelPacket.getIoStatus()))
+                            .setWordsTransferred(wordsRead);
+                    throw new IOException();
+                }
+
+                wordsRead += subWordCount;
+                wordsRemaining -= subWordCount;
+            }
+
+            ioResult.setStatus(ERIO$Status.Success)
+                    .setWordsTransferred(wordsRead);
+        } catch (Exception e) {
+            // do nothing
+        } catch (Throwable t) {
+            LogManager.logCatching(LOG_SOURCE, t);
+            exec.stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
 
-        var dfi = ioGetDiskFileFacilitiesItem(internalName);
-        var aci = dfi.getAcceleratedCycleInfo();
-        var fas = aci.getFileAllocationSet();
-        var fci = (DiskFileCycleInfo)aci.getFileCycleInfo();
-        var maxTracks = fci.getMaxGranules();
-        if (fci.getPCHARFlags().getGranularity() == Granularity.Position) {
-            maxTracks <<= 6;
-        }
-        if (address >= maxTracks) {
-            ioResult.setStatus(ERIO$Status.ReadExtentOutOfRange).setWordsTransferred(0);
-            return;
-        }
-
-        int destOffset = 0;
-        int wordsRemaining = transferCount;
-        int totalWordsTransferred = 0;
-
-        long nextWordAddress = address;
-        if (!isWordAddressable) {
-            nextWordAddress *= 28;
-        }
-
-        while (wordsRemaining > 0) {
-            // Find the ldat and device-relative track address of the next relative address.
-            var relativeTrack = nextWordAddress / 1792;
-            var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
-            if (hwTid == null) {
-                ioResult.setStatus(ERIO$Status.UnallocatedArea).setWordsTransferred(totalWordsTransferred);
-                return;
-            }
-
-            // Find the block address corresponding to the hardware track address.
-            // We need pack info to figure this out.
-            var ni = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
-            var pi = (PackInfo)ni.getMediaInfo();
-            int blocksPerTrack = 1792 / pi.getPrepFactor();
-            long baseBlock = hwTid.getTrackId() * blocksPerTrack;
-
-            // Considering that the requested address may not be aligned to the containing block...
-            // What is the sector offset requested, from the beginning of the containing track?
-            // Use that, with the number of sectors per block, to calculate the sector offset
-            // from the containing block, and the block offset from the containing track.
-            var wordOffsetFromTrack = nextWordAddress % 1792;
-            var wordOffsetFromBlock = wordOffsetFromTrack % pi.getPrepFactor();
-            var blockOffsetFromTrack = wordOffsetFromTrack / pi.getPrepFactor();
-
-            // Do we need to double-buffer (yes, if this sub-IO is not aligned with the containing block)
-            if (wordOffsetFromBlock != 0) {
-                // How many words are we going to transfer from disk?
-                // This is not necessarily the same as the number of words we're going to put into the user buffer.
-                // Calculate the requested amount first. This is the amount (if any) in the block ahead of the
-                // desired sector (see sectorOffsetFromBlock), added to the remaining word count.
-                // Then calculate the limit based on the number of blocks from the starting block to the end of the track.
-                int preWords = (int) wordOffsetFromBlock;
-                int reqWords = preWords + wordsRemaining;
-                int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
-                int transferWordCount = Math.min(reqWords, limitWords);
-
-                // Set up a channel program and route the IO
-                var tempBuffer = new ArraySlice(new long[transferWordCount]);
-                var blockId = baseBlock + blockOffsetFromTrack;
-                var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
-                                                         .setBuffer(tempBuffer)
-                                                         .setDirection(ChannelProgram.Direction.Increment);
-                var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
-                                             .setNodeIdentifier(ni.getNode().getNodeIdentifier())
-                                             .setBlockId(blockId)
-                                             .addControlWord(cw);
-                try {
-                    routeIo(cp);
-                    while (cp.getIoStatus() == IoStatus.InProgress) {
-                        Exec.sleep(10);
-                    }
-                } catch (NoRouteForIOException ex) {
-                    LogManager.logCatching(LOG_SOURCE, ex);
-                    exec.stop(StopCode.InternalExecIOFailed);
-                    throw new ExecStoppedException();
-                }
-
-                if (cp.getIoStatus() != IoStatus.Complete) {
-                    LogManager.logFatal(LOG_SOURCE,
-                                        "IO Error file=%s status=%s",
-                                        internalName,
-                                        cp.getIoStatus().toString());
-                    exec.stop(StopCode.InternalExecIOFailed);
-                    throw new ExecStoppedException();
-                }
-
-                // transfer from cp buffer to user buffer and update counters and indices
-                for (int sx = preWords; sx < transferWordCount; sx++) {
-                    buffer.set(destOffset++, tempBuffer.get(sx));
-                }
-                int actualWords = transferWordCount - preWords;
-                wordsRemaining -= actualWords;
-                nextWordAddress += actualWords;
-            } else {
-                // we can do IO directly into the caller's buffer
-                // The following algorithm is a simpler version of the above, given preWords is zero.
-                int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
-                int transferWordCount = Math.min(wordsRemaining, limitWords);
-
-                // Set up a channel program and route the IO
-                var blockId = baseBlock + blockOffsetFromTrack;
-                var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
-                                                         .setBuffer(buffer)
-                                                         .setBufferOffset(destOffset)
-                                                         .setDirection(ChannelProgram.Direction.Increment);
-                var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
-                                             .setNodeIdentifier(ni.getNode().getNodeIdentifier())
-                                             .setBlockId(blockId)
-                                             .addControlWord(cw);
-                ioLoop(run, dfi, cp, false);
-                totalWordsTransferred += cp.getWordsTransferred();
-                if (cp.getIoStatus() != IoStatus.Complete) {
-                    var erioStatus = _ioStatusTranslateTable.get(cp.getIoStatus());
-                    ioResult.setStatus(erioStatus).setWordsTransferred(totalWordsTransferred);
-                    return;
-                }
-
-                wordsRemaining -= transferWordCount;
-                nextWordAddress += transferWordCount;
-            }
-        }
-
-        ioResult.setStatus(ERIO$Status.Success).setWordsTransferred(totalWordsTransferred);
+        LogManager.logTrace(LOG_SOURCE, "ioReadFromDiskFile returning %s", ioResult);
     }
 
     /**
      * Handles mass-storage write
+     * Such operations are file-relative, with sector or word addresses indicating the starting address of the IO,
+     * and word counts indicating the size of the IO. Such transfers are not required to be on track or block
+     * (or even device) boundaries, although IO is more efficient if they are.
      * @param run the run which is requesting the IO
      * @param internalName the internal name of the file to be written to
-     * @param address sector or word address of the write operation
+     * @param fileRelativeAddress sector or word address of the read operation (depends on the file mode)
      * @param buffer buffer containing the data to be written
-     * @param transferCount number of words to be written
      * @param isWordAddressable true if file is word-addressable
      * @param ioResult where we return IO status
      * @throws ExecStoppedException if we stop the exec, or determine that it has been stopped during processing
@@ -1768,25 +1730,18 @@ public class FacilitiesManager implements Manager {
     public synchronized void ioWriteToDiskFile(
         final Run run,
         final String internalName,
-        final long address,
+        final long fileRelativeAddress,
         final ArraySlice buffer,
-        final int transferCount,
         final boolean isWordAddressable,
         final IOResult ioResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
-                            "ioWriteToDiskFile(%s, '%s', addr=%d words=%d",
-                            run.getActualRunId(), internalName, address, transferCount);
+                            "ioWriteToDiskFile(%s, '%s', addr=%d words=%d wAddr=%s",
+                            run.getActualRunId(), internalName, fileRelativeAddress, buffer.getSize(), isWordAddressable);
         var exec = Exec.getInstance();
         var mm = exec.getMFDManager();
 
         try {
-            if (buffer.getSize() < transferCount) {
-                LogManager.logFatal(LOG_SOURCE, "Conflict between buffer size and transfer count");
-                exec.stop(StopCode.InternalExecIOFailed);
-                throw new ExecStoppedException();
-            }
-
             var dfi = ioGetDiskFileFacilitiesItem(internalName);
             if (!dfi.isWriteable()) {
                 ioResult.setStatus(ERIO$Status.WriteInhibited).setWordsTransferred(0);
@@ -1795,132 +1750,89 @@ public class FacilitiesManager implements Manager {
 
             var aci = dfi.getAcceleratedCycleInfo();
             var fas = aci.getFileAllocationSet();
-            var fci = (DiskFileCycleInfo) aci.getFileCycleInfo();
+            var fci = (DiskFileCycleInfo)aci.getFileCycleInfo();
             var maxTracks = fci.getMaxGranules();
             if (fci.getPCHARFlags().getGranularity() == Granularity.Position) {
                 maxTracks <<= 6;
             }
 
-            int destOffset = 0;
-            int wordsRemaining = transferCount;
-            int totalWordsTransferred = 0;
-
-            // All our calculations are done with word addresses from here on out.
-            long nextWordAddress = address;
-            if (!isWordAddressable) {
-                nextWordAddress *= 28;
+            // maxTracks, if zero, indicates no limit. This is a Komodo peculiarity.
+            // Convert file-relative address to word-address, then do the calisthenics necessary to
+            // determine whether the IO extend is beyond  max tracks.
+            long fileRelWordAddress = fileRelativeAddress * (isWordAddressable ? 1 : 28);
+            if (maxTracks > 0) {
+                long fileRelWordLimit = fileRelWordAddress + buffer.getSize();
+                long trackLimit = fileRelWordLimit / 1792;
+                if (fileRelWordLimit % 1792 > 0) {
+                    trackLimit += 1;
+                }
+                if (trackLimit >= maxTracks) {
+                    ioResult.setStatus(ERIO$Status.WriteExtentOutOfRange)
+                            .setWordsTransferred(0);
+                    throw new IOException();
+                }
             }
+
+            int wordsWritten = 0;
+            int wordsRemaining = buffer.getSize();
+            var channelPacket = new ChannelIoPacket().setFormat(TransferFormat.Packed)
+                                                     .setIoFunction(IoFunction.Write);
 
             while (wordsRemaining > 0) {
-                // Find the ldat and device-relative track address of the next relative address.
-                // Ensure it is allocated...
-                var relativeTrack = nextWordAddress / 1792;
-                if (relativeTrack >= maxTracks) {
-                    ioResult.setStatus(ERIO$Status.WriteExtentOutOfRange).setWordsTransferred(totalWordsTransferred);
-                    return;
-                }
-                if (!mm.allocateDataExtent(fas, relativeTrack, 1)) {
-                    ioResult.setStatus(ERIO$Status.CannotExpandFile).setWordsTransferred(totalWordsTransferred);
-                    return;
-                }
+                // Find the LDAT and hardware track containing the file-relative track(s) we're trying to write.
+                var relativeTrack = fileRelWordAddress / 1792;
                 var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
-
-                // Find the block address corresponding to the hardware track address.
-                // We need pack info to figure this out.
-                var ni = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
-                var pi = (PackInfo) ni.getMediaInfo();
-                int blocksPerTrack = 1792 / pi.getPrepFactor();
-                long baseBlock = hwTid.getTrackId() * blocksPerTrack;
-
-                // Considering that the requested address may not be aligned to the containing block...
-                // What is the sector offset requested, from the beginning of the containing track?
-                // Use that, with the number of sectors per block, to calculate the sector offset
-                // from the containing block, and the block offset from the containing track.
-                var wordOffsetFromTrack = nextWordAddress % 1792;
-                var wordOffsetFromBlock = wordOffsetFromTrack % pi.getPrepFactor();
-                var blockOffsetFromTrack = wordOffsetFromTrack / pi.getPrepFactor();
-
-                // Do we need to double-buffer (yes, if this sub-IO is not aligned with the containing block)
-                if (wordOffsetFromBlock != 0) {
-                    // How many words are we going to transfer from disk?
-                    // This is not necessarily the same as the number of words we're going to put into the user buffer.
-                    // Calculate the requested amount first. This is the amount (if any) in the block ahead of the
-                    // desired sector (see sectorOffsetFromBlock), added to the remaining word count.
-                    // Then calculate the limit based on the number of blocks from the starting block to the end of the track.
-                    int preWords = (int) wordOffsetFromBlock;
-                    int reqWords = preWords + wordsRemaining;
-                    int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
-                    int transferWordCount = Math.min(reqWords, limitWords);
-
-                    // We need to do a read-before-write. Do so...
-                    var tempBuffer = new ArraySlice(new long[transferWordCount]);
-                    var blockId = baseBlock + blockOffsetFromTrack;
-                    var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
-                                                             .setBuffer(tempBuffer)
-                                                             .setDirection(ChannelProgram.Direction.Increment);
-                    var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Read)
-                                                 .setNodeIdentifier(ni.getNode().getNodeIdentifier())
-                                                 .setBlockId(blockId)
-                                                 .addControlWord(cw);
-                    ioLoop(run, dfi, cp, false);
-                    if (cp.getIoStatus() != IoStatus.Complete) {
-                        var erioStatus = _ioStatusTranslateTable.get(cp.getIoStatus());
-                        ioResult.setStatus(erioStatus).setWordsTransferred(totalWordsTransferred);
-                        return;
-                    }
-
-                    // Now copy user data from the caller's buffer into the temporary buffer and write it back out.
-                    var sx = 0;
-                    for (int dx = preWords; dx < transferWordCount; dx++) {
-                        tempBuffer.set(dx, buffer.get(sx++));
-                    }
-                    cp.setFunction(ChannelProgram.Function.Write);
-                    ioLoop(run, dfi, cp, false);
-                    if (cp.getIoStatus() != IoStatus.Complete) {
-                        totalWordsTransferred += ioResult.getWordsTransferred();
-                        var erioStatus = _ioStatusTranslateTable.get(cp.getIoStatus());
-                        ioResult.setStatus(erioStatus).setWordsTransferred(totalWordsTransferred);
-                        return;
-                    }
-
-                    int actualWords = transferWordCount - preWords;
-                    wordsRemaining -= actualWords;
-                    nextWordAddress += actualWords;
-                } else {
-                    // we can do IO directly from the caller's buffer
-                    // The following algorithm is a simpler version of the above, given preWords is zero.
-                    int limitWords = (int) (1792 - (blockOffsetFromTrack * pi.getPrepFactor()));
-                    int transferWordCount = Math.min(wordsRemaining, limitWords);
-
-                    // Set up a channel program and route the IO
-                    var blockId = baseBlock + blockOffsetFromTrack;
-                    var cw = new ChannelProgram.ControlWord().setTransferCountWords(transferWordCount)
-                                                             .setBuffer(buffer)
-                                                             .setBufferOffset(destOffset)
-                                                             .setDirection(ChannelProgram.Direction.Increment);
-                    var cp = new ChannelProgram().setFunction(ChannelProgram.Function.Write)
-                                                 .setNodeIdentifier(ni.getNode().getNodeIdentifier())
-                                                 .setBlockId(blockId)
-                                                 .addControlWord(cw);
-                    ioLoop(run, dfi, cp, false);
-                    if (cp.getIoStatus() != IoStatus.Complete) {
-                        totalWordsTransferred += ioResult.getWordsTransferred();
-                        var erioStatus = _ioStatusTranslateTable.get(cp.getIoStatus());
-                        ioResult.setStatus(erioStatus).setWordsTransferred(totalWordsTransferred);
-                        return;
-                    }
-
-                    wordsRemaining -= transferWordCount;
-                    nextWordAddress += transferWordCount;
+                if (hwTid == null) {
+                    ioResult.setStatus(ERIO$Status.UnallocatedArea)
+                            .setWordsTransferred(wordsWritten);
+                    throw new Exception();
                 }
+
+                var nodeInfo = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
+                var nodeIdentifier = nodeInfo.getNode().getNodeIdentifier();
+
+                // Calculate how far our file-rel word addr is from the start of the containing track,
+                // then determine how many non-slop words we can read from this track.
+                // Adjust that value downwards if necessary, in case the amount we have left to read is less.
+                var leadingSlop = (int)(fileRelWordAddress % 1792);
+                var subWordCount = Math.min(1792 - leadingSlop, wordsRemaining);
+
+                // Set up an IO to read this portion of the area
+                var subSlice = new ArraySlice(buffer, wordsWritten, subWordCount);
+                var deviceRelWordAddress = (hwTid.getTrackId() * 1792) + leadingSlop;
+                channelPacket.setBuffer(subSlice)
+                             .setNodeIdentifier(nodeIdentifier)
+                             .setDeviceWordAddress(deviceRelWordAddress);
+
+                try {
+                    routeIo(channelPacket);
+                } catch (NoRouteForIOException ex) {
+                    ioResult.setStatus(ERIO$Status.DeviceDownOrNotAvailable)
+                            .setWordsTransferred(wordsWritten);
+                    throw new IOException();
+                }
+
+                if (channelPacket.getIoStatus() != IoStatus.Successful) {
+                    ioResult.setStatus(_ioStatusTranslateTable.get(channelPacket.getIoStatus()))
+                            .setWordsTransferred(wordsWritten);
+                    throw new IOException();
+                }
+
+                wordsWritten += subWordCount;
+                wordsRemaining -= subWordCount;
             }
 
-            ioResult.setStatus(ERIO$Status.Success).setWordsTransferred(totalWordsTransferred);
+            ioResult.setStatus(ERIO$Status.Success)
+                    .setWordsTransferred(wordsWritten);
+        } catch (Exception e) {
+            // do nothing
         } catch (Throwable t) {
             LogManager.logCatching(LOG_SOURCE, t);
             exec.stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
+
+        LogManager.logTrace(LOG_SOURCE, "ioWriteToDiskFile returning %s", ioResult);
     }
 
     /**
@@ -2133,36 +2045,33 @@ public class FacilitiesManager implements Manager {
     }
 
     /**
-     * Routes an IO described by a channel program.
+     * Routes an IO described by a channel packet
      * For the case where some portion of the Exec needs to do device-specific IO.
-     * @param channelProgram IO description
+     * @param channelPacket describes the IO
      * @return selected Channel
      * @throws ExecStoppedException if the exec stops during this function
      * @throws NoRouteForIOException if the destination device has no available path
      */
     public Channel routeIo(
-        final ChannelProgram channelProgram
+        final ChannelIoPacket channelPacket
     ) throws ExecStoppedException, NoRouteForIOException {
-        var nodeInfo = _nodeGraph.get(channelProgram.getNodeIdentifier());
+        var nodeId = channelPacket.getNodeIdentifier();
+        var nodeInfo = _nodeGraph.get(nodeId);
         if (nodeInfo == null) {
-            LogManager.logFatal(LOG_SOURCE,
-                                "Node %d from channel program is not configured",
-                                channelProgram.getNodeIdentifier());
+            LogManager.logFatal(LOG_SOURCE, "Node %d from channel program is not configured", nodeId);
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
 
         var node = nodeInfo.getNode();
         if (node.getNodeCategory() != NodeCategory.Device) {
-            LogManager.logFatal(LOG_SOURCE,
-                                "Node %d from channel program is not a device",
-                                channelProgram.getNodeIdentifier());
+            LogManager.logFatal(LOG_SOURCE, "Node %d from channel program is not a device", nodeId);
             Exec.getInstance().stop(StopCode.FacilitiesComplex);
             throw new ExecStoppedException();
         }
 
         var channel = selectRoute((Device) node);
-        channel.routeIo(channelProgram);
+        channel.routeIo(channelPacket);
         return channel;
     }
 
@@ -2280,8 +2189,8 @@ public class FacilitiesManager implements Manager {
             // Assign the files to the exec (most of them)
             var filenames = new String[]{ "ACCOUNT$R1", "SEC@ACCTINFO", "SEC@ACR$", "SEC@USERID$", "LIB$", "RUN$", "RLIB$" };
             var fm = exec.getFacilitiesManager();
-            var fsResult = new FacStatusResult();
             for (var filename : filenames) {
+                var fsResult = new FacStatusResult();
                 var fs = new FileSpecification("MFD$", filename);
                 fm.assignCatalogedDiskFileToExec(fs, true, fsResult);
                 if (fsResult.hasErrorMessages()) {
@@ -2791,15 +2700,13 @@ public class FacilitiesManager implements Manager {
      * Generic IO loop for all device IO
      * @param run requesting run
      * @param facilitiesItem the facilities item describing the file for which we are doing IO
-     * @param channelProgram channel program to be executed - status information is updated in this packet.
-     * @param asynchronous true for asynchronous IO
+     * @param channelPacket channel program to be executed - status information is updated in this packet.
      * @throws ExecStoppedException if something goes badly
      */
     private void ioLoop(
         final Run run,
         final FacilitiesItem facilitiesItem,
-        final ChannelProgram channelProgram,
-        final boolean asynchronous
+        final ChannelIoPacket channelPacket
     ) throws ExecStoppedException {
         var exec = Exec.getInstance();
 
@@ -2808,33 +2715,19 @@ public class FacilitiesManager implements Manager {
         while (true) {
             Channel channel;
             try {
-                channel = routeIo(channelProgram);
+                channel = routeIo(channelPacket);
             } catch (NoRouteForIOException ex) {
                 LogManager.logCatching(LOG_SOURCE, ex);
                 exec.stop(StopCode.InternalExecIOFailed);
                 throw new ExecStoppedException();
             }
 
-            // If the IO is in progress, return immediately if async, otherwise wait for it to complete.
-            if (channelProgram.getIoStatus() == IoStatus.InProgress) {
-                if (asynchronous) {
-                    return;
-                }
-
-                while (channelProgram.getIoStatus() == IoStatus.InProgress) {
-                    if (exec.isStopped()) {
-                        throw new ExecStoppedException();
-                    }
-                    Exec.sleep(10);
-                }
-            }
-
             String errorStr = "";
             String[] responses = null;
             String responseStr = "";
-            switch (channelProgram.getIoStatus()) {
-                case NotStarted, InProgress -> { /* cannot be here */ }
-                case Complete, AtLoadPoint, InvalidChannelProgram, DeviceDoesNotExist, EndOfFile, EndOfTape, InvalidBlockCount,
+            switch (channelPacket.getIoStatus()) {
+                case NotStarted -> { /* cannot be here */ }
+                case Successful, AtLoadPoint, DeviceDoesNotExist, EndOfFile, EndOfTape, InvalidBlockCount,
                      InvalidBlockId, InvalidBufferSize, InvalidFunction, InvalidNodeType, InvalidPacket, InvalidPackName,
                      InvalidPrepFactor, InvalidTapeBlock, InvalidTrackCount, LostPosition, MediaAlreadyMounted, NonIntegralRead,
                      PackNotPrepped, ReadNotAllowed, ReadOverrun -> { return; }
@@ -2862,8 +2755,14 @@ public class FacilitiesManager implements Manager {
             boolean redisplay = true;
             while (redisplay) {
                 redisplay = false;
-                var deviceName = _nodeGraph.get(channelProgram.getNodeIdentifier()).getNode().getNodeName();
-                var msg = String.format("%s %s %s %s %s %s", deviceName, channel.getNodeName(), errorStr, channelProgram.getFunction().toString(), run.getActualRunId(), responseStr);
+                var deviceName = _nodeGraph.get(channelPacket.getNodeIdentifier()).getNode().getNodeName();
+                var msg = String.format("%s %s %s %s %s %s",
+                                        deviceName,
+                                        channel.getNodeName(),
+                                        errorStr,
+                                        channelPacket.getIoFunction().toString(),
+                                        run.getActualRunId(),
+                                        responseStr);
                 var response = exec.sendExecRestrictedReadReplyMessage(msg, responses, ConsoleType.InputOutput);
                 switch (response) {
                     case "A":
@@ -2934,7 +2833,7 @@ public class FacilitiesManager implements Manager {
                                             facilitiesItem.getAbsoluteCycle());
                         exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
 
-                        String additionalStatus = channelProgram.getAdditionalStatus();
+                        String additionalStatus = channelPacket.getAdditionalStatus();
                         if (additionalStatus != null) {
                             msg = String.format("%s %s", deviceName, additionalStatus);
                             exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
@@ -2952,13 +2851,9 @@ public class FacilitiesManager implements Manager {
      */
     private void dropTapes() throws ExecStoppedException {
         for (var ni : _nodeGraph.values()) {
-            if ((ni instanceof DeviceNodeInfo dni)
-                && (ni.getNode() instanceof TapeDevice td)
-                && td.isReady()) {
-
-                var cp = new ChannelProgram().setNodeIdentifier(ni.getNode().getNodeIdentifier())
-                                             .setFunction(ChannelProgram.Function.Control)
-                                             .setSubFunction(ChannelProgram.SubFunction.Unload);
+            if ((ni instanceof DeviceNodeInfo dni) && (ni.getNode() instanceof TapeDevice td) && td.isReady()) {
+                var cp = new ChannelIoPacket().setNodeIdentifier(ni.getNode().getNodeIdentifier());
+                cp.setIoFunction(IoFunction.RewindAndUnload);
                 try {
                     routeIo(cp);
                 } catch (NoRouteForIOException ex) {
@@ -3459,48 +3354,40 @@ public class FacilitiesManager implements Manager {
         final DiskDevice disk,
         final ArraySlice diskLabel
     ) throws NoRouteForIOException, ExecStoppedException {
-        var dirTrackId = diskLabel.get(3) / 1792;
-        var blocksPerTrack = Word36.getH1(diskLabel.get(4));
-        var dirBlockAddr = dirTrackId * blocksPerTrack;
+        var dirAddr = diskLabel.get(3);
         var channel = selectRoute(disk);
-        var cw = new ChannelProgram.ControlWord().setDirection(ChannelProgram.Direction.Increment)
-                                                 .setBuffer(new ArraySlice(new long[1792]))
-                                                 .setTransferCountWords(1792);
-        var cp = new ChannelProgram().addControlWord(cw)
-                                     .setFunction(ChannelProgram.Function.Read)
-                                     .setBlockId(dirBlockAddr)
-                                     .setNodeIdentifier(disk.getNodeIdentifier());
-        channel.routeIo(cp);
-        if (cp.getIoStatus() != IoStatus.Complete) {
-            LogManager.logError(LOG_SOURCE, "readPackLabel ioStatus=%s", cp.getIoStatus());
-            var msg = String.format("%s Cannot read directory track %s", disk.getNodeName(), cp.getIoStatus());
+        var ioPkt = new ChannelIoPacket().setNodeIdentifier(disk.getNodeIdentifier())
+                                         .setIoFunction(IoFunction.Read)
+                                         .setDeviceWordAddress(dirAddr)
+                                         .setBuffer(new ArraySlice(new long[1792]));
+        channel.routeIo(ioPkt);
+        if (ioPkt.getIoStatus() != IoStatus.Successful) {
+            LogManager.logError(LOG_SOURCE, "readPackLabel ioStatus=%s", ioPkt.getIoStatus());
+            var msg = String.format("%s Cannot read directory track %s", disk.getNodeName(), ioPkt.getIoStatus());
             Exec.getInstance().sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
             return null;
         }
 
-        return cw.getBuffer();
+        return ioPkt.getBuffer();
     }
 
     private ArraySlice readPackLabel(
         final DiskDevice disk
     ) throws NoRouteForIOException, ExecStoppedException {
+        var ioPkt = new ChannelIoPacket().setNodeIdentifier(disk.getNodeIdentifier())
+                                         .setIoFunction(IoFunction.Read)
+                                         .setDeviceWordAddress(0L)
+                                         .setBuffer(new ArraySlice(new long[28]));
         var channel = selectRoute(disk);
-        var cw = new ChannelProgram.ControlWord().setDirection(ChannelProgram.Direction.Increment)
-                                                 .setBuffer(new ArraySlice(new long[28]))
-                                                 .setTransferCountWords(28);
-        var cp = new ChannelProgram().addControlWord(cw)
-                                     .setFunction(ChannelProgram.Function.Read)
-                                     .setBlockId(0)
-                                     .setNodeIdentifier(disk.getNodeIdentifier());
-        channel.routeIo(cp);
-        if (cp.getIoStatus() != IoStatus.Complete) {
-            LogManager.logError(LOG_SOURCE, "readPackLabel ioStatus=%s", cp.getIoStatus());
-            var msg = String.format("%s Cannot read pack label %s", disk.getNodeName(), cp.getIoStatus());
+        channel.routeIo(ioPkt);
+        if (ioPkt.getIoStatus() != IoStatus.Successful) {
+            LogManager.logError(LOG_SOURCE, "readPackLabel ioStatus=%s", ioPkt.getIoStatus());
+            var msg = String.format("%s Cannot read pack label %s", disk.getNodeName(), ioPkt.getIoStatus());
             Exec.getInstance().sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
             return null;
         }
 
-        return cw.getBuffer();
+        return ioPkt.getBuffer();
     }
 
     Channel selectRoute(final Device device) throws ExecStoppedException, NoRouteForIOException {

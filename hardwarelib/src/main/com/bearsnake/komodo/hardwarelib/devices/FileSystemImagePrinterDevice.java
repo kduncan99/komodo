@@ -2,23 +2,25 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.hardwarelib;
+package com.bearsnake.komodo.hardwarelib.devices;
 
+import com.bearsnake.komodo.hardwarelib.IoPacket;
+import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.logger.LogManager;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class FileSystemImageWriterDevice extends SymbiontPunchDevice {
+public class FileSystemImagePrinterDevice extends SymbiontPrinterDevice {
 
     private final String _fileSystemPath;
     private boolean _isReady = false;
-    private BufferedWriter _writer = null;
+    private boolean _topOfPage = false;
+    private PrintStream _printer = null;
 
-    public FileSystemImageWriterDevice(
+    public FileSystemImagePrinterDevice(
         final String nodeName,
         final String fileSystemPath // path of directory we watch for input files
     ) {
@@ -28,7 +30,7 @@ public class FileSystemImageWriterDevice extends SymbiontPunchDevice {
 
     @Override
     public final DeviceModel getDeviceModel() {
-        return DeviceModel.FileSystemImageWriter;
+        return DeviceModel.FileSystemImagePrinter;
     }
 
     @Override
@@ -45,13 +47,12 @@ public class FileSystemImageWriterDevice extends SymbiontPunchDevice {
     }
 
     @Override
-    public synchronized void startIo(final IoPacket packet) {
+    public synchronized void performIo(final IoPacket packet) {
         if (_logIos) {
             LogManager.logTrace(_nodeName, "startIo(%s)", packet.toString());
         }
 
         if (packet instanceof SymbiontIoPacket symbiontPacket) {
-            packet.setStatus(IoStatus.InProgress);
             switch (packet.getFunction()) {
                 case Reset -> doReset(symbiontPacket);
                 case StartFile -> doStartFile(symbiontPacket);
@@ -85,7 +86,7 @@ public class FileSystemImageWriterDevice extends SymbiontPunchDevice {
         }
 
         close();
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private void doStartFile(final SymbiontIoPacket packet) {
@@ -94,11 +95,11 @@ public class FileSystemImageWriterDevice extends SymbiontPunchDevice {
             return;
         }
 
-        if (_writer != null) {
+        if (_printer != null) {
             close();
         }
 
-        final String fid = packet.getIdentifier();
+        final String fid = packet.getMediaIdentifier();
         if ((fid == null) || fid.isEmpty()) {
             packet.setStatus(IoStatus.InvalidPacket);
             return;
@@ -107,16 +108,17 @@ public class FileSystemImageWriterDevice extends SymbiontPunchDevice {
         var dateTime = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
         String dtStr = dateTime.format(formatter);
-        var filename = String.format("%s%s-%s.txt", _fileSystemPath, packet.getIdentifier(), dtStr);
+        var filename = String.format("%s%s-%s.txt", _fileSystemPath, packet.getMediaIdentifier(), dtStr);
         try {
-            _writer = new BufferedWriter(new FileWriter(filename));
+            _printer = new PrintStream(filename);
+            _topOfPage = true;
         } catch (IOException ex) {
-            _writer = null;
+            _printer = null;
             packet.setStatus(IoStatus.SystemError).setAdditionalStatus(ex.getMessage());
             return;
         }
 
-        packet.setStatus(IoStatus.Complete);
+        packet.setStatus(IoStatus.Successful);
     }
 
     private void doWrite(final SymbiontIoPacket packet) {
@@ -125,14 +127,21 @@ public class FileSystemImageWriterDevice extends SymbiontPunchDevice {
             return;
         }
 
-        try {
-            _writer.write(new String(packet.getBuffer().array()));
-            _writer.newLine();
-            packet.setStatus(IoStatus.Complete);
-        } catch (IOException ex) {
-            close();
-            packet.setStatus(IoStatus.SystemError).setAdditionalStatus(ex.getMessage());
+        if (packet.getSpacing() < 0) {
+            _printer.printf("%c", 0x0C); // Form Feed
+            _topOfPage = false;
+        } else if (packet.getSpacing() > 0) {
+            var spacing = packet.getSpacing();
+            if (_topOfPage) {
+                spacing--;
+            }
+            for (int nlx = 0; nlx < spacing; nlx++) {
+                _printer.println();
+            }
         }
+
+        _printer.print(new String(packet.getBuffer().array()));
+        packet.setStatus(IoStatus.Successful);
     }
 
     private void doWriteEndOfFile(final SymbiontIoPacket packet) {
@@ -141,19 +150,16 @@ public class FileSystemImageWriterDevice extends SymbiontPunchDevice {
             return;
         }
 
-        close();
-        packet.setStatus(IoStatus.Complete);
+        if (_printer != null) {
+            _printer.close();
+            packet.setStatus(IoStatus.Successful);
+        }
     }
 
-    @Override
     public void close() {
-        if (_writer != null) {
-            try {
-                _writer.close();
-            } catch (IOException ex) {
-                // nothing can be done
-            }
+        if (_printer != null) {
+            _printer.close();
+            _printer = null;
         }
-        _writer = null;
     }
 }

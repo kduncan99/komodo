@@ -6,6 +6,7 @@ package com.bearsnake.komodo.baselib;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -51,8 +52,12 @@ public class Parser {
     public String getText() { return _text; }
 
     public Parser setIndex(final int value) { _index = value; return this; }
+    public Parser setTerminators(Collection<Character> terminators) {
+        _terminators = new HashSet<>(terminators);
+        return this;
+    }
     public Parser setTerminators(final String terminators) {
-        _terminators.clear();
+        _terminators = new HashSet<>();
         for (var ch : terminators.toCharArray()) {
             _terminators.add(ch);
         }

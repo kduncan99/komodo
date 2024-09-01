@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.kexec.facilities;
 
-import com.bearsnake.komodo.hardwarelib.Channel;
+import com.bearsnake.komodo.hardwarelib.channels.Channel;
 import com.bearsnake.komodo.hardwarelib.Node;
 
 import java.util.LinkedList;

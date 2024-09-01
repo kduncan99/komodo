@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.baselib;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -1173,14 +1174,11 @@ public class Word36 implements Comparable<Word36> {
      * Interprets the given array slice as an LJSF ASCII string
      */
     public static String toStringFromASCII(
-        final ArraySlice slice,
-        final int offset,
-        final int length
+        final ArraySlice slice
     ) {
-        String sb = IntStream.range(offset, offset + length)
-                             .mapToObj(wx -> toStringFromASCII(slice.get(wx)))
-                             .collect(Collectors.joining());
-        return sb.toString().trim();
+        return Arrays.stream(slice.getAll())
+                     .mapToObj(Word36::toStringFromASCII)
+                     .collect(Collectors.joining());
     }
 
     /**
@@ -1204,14 +1202,11 @@ public class Word36 implements Comparable<Word36> {
      * Interprets the given array slice as an LJSF fieldata string
      */
     public static String toStringFromFieldata(
-        final ArraySlice slice,
-        final int offset,
-        final int length
+        final ArraySlice slice
     ) {
-        String sb = IntStream.range(offset, offset + length)
-                             .mapToObj(wx -> toStringFromFieldata(slice.get(wx)))
-                             .collect(Collectors.joining());
-        return sb.toString().trim();
+        return Arrays.stream(slice.getAll())
+                     .mapToObj(Word36::toStringFromFieldata)
+                     .collect(Collectors.joining());
     }
 
     @Override

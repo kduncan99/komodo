@@ -5,9 +5,10 @@
 package com.bearsnake.komodo.kexec.symbionts;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.hardwarelib.ChannelProgram;
+import com.bearsnake.komodo.hardwarelib.IoFunction;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
-import com.bearsnake.komodo.hardwarelib.SymbiontDevice;
+import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
+import com.bearsnake.komodo.hardwarelib.devices.SymbiontDevice;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
@@ -29,8 +30,7 @@ public abstract class SymbiontInfo implements Runnable {
     protected final SymbiontDevice _node;
     protected final int _nodeIdentifier;
     protected final ArraySlice _buffer;
-    protected final ChannelProgram _channelProgram;
-    protected final ChannelProgram.ControlWord _controlWord;
+    protected final ChannelIoPacket _channelPacket;
 
     protected SymbiontStatus _status;
     protected SymbiontState _state;
@@ -47,11 +47,7 @@ public abstract class SymbiontInfo implements Runnable {
         _state = SymbiontState.Stopped;
 
         _buffer = new ArraySlice(new long[132]);
-        _controlWord = new ChannelProgram.ControlWord().setBuffer(_buffer)
-                                                       .setTransferCountWords(_buffer.getSize())
-                                                       .setDirection(ChannelProgram.Direction.Increment);
-        _channelProgram = new ChannelProgram().addControlWord(_controlWord)
-                                              .setNodeIdentifier(_nodeIdentifier);
+        _channelPacket = new ChannelIoPacket().setBuffer(_buffer).setNodeIdentifier(_nodeIdentifier);
     }
 
     abstract boolean poll() throws ExecStoppedException;
@@ -199,18 +195,12 @@ public abstract class SymbiontInfo implements Runnable {
         var retry = true;
         while (retry) {
             try {
-                var cp = new ChannelProgram().setNodeIdentifier(_nodeIdentifier)
-                                             .setFunction(ChannelProgram.Function.Control)
-                                             .setSubFunction(ChannelProgram.SubFunction.Reset);
-                fm.routeIo(cp);
-                while (cp.getIoStatus() == IoStatus.InProgress) {
-                    Exec.sleep(10);
-                }
-
-                if (cp.getIoStatus() == IoStatus.Complete) {
+                var channelPacket = new ChannelIoPacket().setNodeIdentifier(_nodeIdentifier).setIoFunction(IoFunction.Reset);
+                fm.routeIo(channelPacket);
+                if (channelPacket.getIoStatus() == IoStatus.Successful) {
                     retry = false;
                 } else {
-                    retry = notifyConsoleIOError(cp.getIoStatus().toString(), true);
+                    retry = notifyConsoleIOError(channelPacket.getIoStatus().toString(), true);
                     failed = true;
                 }
             } catch (NoRouteForIOException e) {

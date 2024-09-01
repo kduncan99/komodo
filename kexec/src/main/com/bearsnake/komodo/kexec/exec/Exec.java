@@ -69,7 +69,7 @@ public class Exec extends Run {
     private SymbiontManager _symbiontManager;
 
     private static final RunCardInfo RUN_CARD_INFO =
-        new RunCardInfo().setRunId("EXEC-8").setAccountId("SYSTEM").setProjectId("SYS$").setUserId("EXEC8");
+        new RunCardInfo("").setRunId("EXEC-8").setAccountId("SYSTEM").setProjectId("SYS$").setUserId("EXEC8");
 
     public Exec(final boolean[] jumpKeyTable) {
         super(RunType.Exec, "EXEC-8", RUN_CARD_INFO);

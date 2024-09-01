@@ -6,9 +6,7 @@ package com.bearsnake.komodo.baselib;
 
 import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Arrays;
 
 /**
@@ -16,13 +14,8 @@ import java.util.Arrays;
  */
 public class ArraySlice {
 
-    @JsonProperty("array")
     public final long[] _array;     //  base array of which this slice is a (possibly complete) subset
-
-    @JsonProperty("length")
     public final int _length;       //  length of this array (must be <= length of base array)
-
-    @JsonProperty("offset")
     public final int _offset;       //  offset into the base array, at which this slice begins
                                     //      _length + _offset must not exceed the range of the base array
 
@@ -44,11 +37,10 @@ public class ArraySlice {
      * @param offset offset into the base array at which point this subset begins
      * @param length length of this subset
      */
-    @JsonCreator
     public ArraySlice(
-        @JsonProperty("array")  final long[] array,
-        @JsonProperty("offset") final int offset,
-        @JsonProperty("length") final int length
+        final long[] array,
+        final int offset,
+        final int length
     ) {
         if ((offset + length > array.length) || (offset < 0) || (length < 0)) {
             String msg = String.format("Invalid arguments array size=%d requested offset=%d length=%d",
@@ -187,7 +179,6 @@ public class ArraySlice {
      * Create a new array representing (but not backed by) the values of this subset
      * @return new array
      */
-    @JsonIgnore
     public long[] getAll() {
         long[] result = new long[_length];
         for (int ax = _offset, rx = 0; rx < _length; ++ax, ++rx) {
@@ -395,8 +386,8 @@ public class ArraySlice {
             return 0;
         }
 
-        int wordsLeft = getSize();
-        int sx = 0;
+        int wordsLeft = _length;
+        int sx = _offset;
         int bytesLeft = destination.length - destinationOffset;
         int dx = destinationOffset;
         int count = 0;
@@ -469,13 +460,6 @@ public class ArraySlice {
         return count;
     }
 
-    /**
-     * Packs this entire array as pairs of 36-bit words into groups of 9 bytes.
-     * We highly suggest that this array contains an even number of words, for calling this method.
-     * Convenience wrapper for the above method.
-     * @param destination array where we place byte output
-     * @return number of COMPLETE words packed - will be less than getArraySize() if we hit the end of the destination buffer
-     */
     public int pack(
         byte[] destination
     ) {
@@ -497,7 +481,8 @@ public class ArraySlice {
         int qwx = 0;
         int count = 0;
         boolean stop = false;
-        while ((sx < _length) && (dx < destination.length) && (!stop)) {
+        int wordsLeft = _length;
+        while ((wordsLeft > 0) && (dx < destination.length) && (!stop)) {
             switch (qwx++) {
                 case 0:
                     if ((Word36.getQ1(_array[sx]) & 0400) != 0) {
@@ -533,6 +518,7 @@ public class ArraySlice {
                         destination[dx++] = (byte) (Word36.getQ4(_array[sx]) & 0xFF);
                         ++count;
                         ++sx;
+                        --wordsLeft;
                         qwx = 0;
                     }
                     break;
@@ -543,11 +529,6 @@ public class ArraySlice {
         return count;
     }
 
-    /**
-     * Places quarter words, sans MSBit, into the destination byte array
-     * @param destination array where we store bytes
-     * @return number of bytes written
-     */
     public int packQuarterWords(
         byte[] destination
     ) {
@@ -568,6 +549,7 @@ public class ArraySlice {
         int dx = destinationOffset;
         int count = 0;
         int swx = 0;
+        int wordsLeft = _length;
         while ((sx < _length) && (dx < destination.length)) {
             switch (swx++) {
                 case 0:
@@ -599,6 +581,7 @@ public class ArraySlice {
                     destination[dx++] = (byte) (Word36.getS6(_array[sx]) & 0x3F);
                     ++count;
                     ++sx;
+                    --wordsLeft;
                     swx = 0;
                     break;
 
@@ -608,11 +591,6 @@ public class ArraySlice {
         return count;
     }
 
-    /**
-     * Places sixth words into the destination byte array
-     * @param destination array where we store bytes
-     * @return number of bytes written
-     */
     public int packSixthWords(
         byte[] destination
     ) {
@@ -806,10 +784,8 @@ public class ArraySlice {
     public int unpack(
         final byte[] source,
         final int sourceOffset,
-        final int sourceCount,
-        final boolean backward
+        final int sourceCount
     ) {
-        assert(!backward);//TODO need backward logic
         if (sourceOffset >= source.length) {
             return 0;
         }
@@ -820,13 +796,12 @@ public class ArraySlice {
         }
 
         int count = 0;
-        int sx = backward ? sourceOffset + sourceCount : sourceOffset;
-        int dx = 0;
-        int wordsLeft = getSize();
+        int sx = sourceOffset;
+        int dx = _offset;
+        int wordsLeft = _length;
         int partial = 0;
 
         while ((bytesLeft > 0) && (wordsLeft > 0)) {
-            if (backward) --sx;
             switch (partial) {
                 case 0:
                     set(dx, (get(dx) & 0_001777_777777L) | (((long) source[sx] & 0xFF)  << 28));
@@ -890,7 +865,7 @@ public class ArraySlice {
                     break;
             }
 
-            if (!backward) ++sx;
+            ++sx;
             ++partial;
             if (partial == 9) {
                 partial = 0;
@@ -900,17 +875,10 @@ public class ArraySlice {
         return count;
     }
 
-    /**
-     * unpacks groups of 9-bytes of data into 36-bit word pairs into this array.
-     * Convenience wrapper for the method above.
-     * @param source array containing byte input
-     * @return number of bytes unpacked - will be less than sourceCount if we run out of space in this object
-     */
     public int unpack(
-        final byte[] source,
-        final boolean backward
+        final byte[] source
     ) {
-        return unpack(source, 0, source.length, backward);
+        return unpack(source, 0, source.length);
     }
 
     /**
@@ -920,47 +888,41 @@ public class ArraySlice {
      */
     public int unpackQuarterWords(
         final byte[] source,
-        final int offset,
-        final int length,
-        final boolean backward
+        final int sourceOffset,
+        final int sourceCount
     ) {
-        int qw = 0;
-        int bcount = 0;
-        int sx = backward ? offset + length : offset;
-        for (int dcount = 0, dx = _offset; dcount < _length;) {
-            if ((backward && (sx == 0))
-                || (!backward && (sx >= offset + length))) {
-                break;
-            }
-
-            if (backward) --sx;
-            switch (qw) {
+        int quarterWord = 0;
+        int byteCount = 0;
+        int sx = sourceOffset;
+        for (int wordCount = 0, dx = _offset;
+             (wordCount < _length) && (sx < source.length) && (sx < sourceCount);
+             sx++, byteCount++) {
+            switch (quarterWord) {
                 case 0:
+                    // We do not SetQ1 here intentionally - we WANT the rest of the word zeroed out.
                     _array[dx] = (((long) source[sx]) & 0377) << 27;
-                    ++qw;
+                    ++quarterWord;
                     break;
 
                 case 1:
                     _array[dx] = Word36.setQ2(_array[dx], source[sx] & 0377);
-                    ++qw;
+                    ++quarterWord;
                     break;
 
                 case 2:
                     _array[dx] = Word36.setQ3(_array[dx], source[sx] & 0377);
-                    ++qw;
+                    ++quarterWord;
                     break;
 
                 case 3:
                     _array[dx] = Word36.setQ4(_array[dx], source[sx] & 0377);
                     ++dx;
-                    ++dcount;
-                    qw = 0;
+                    ++wordCount;
+                    quarterWord = 0;
             }
-            ++bcount;
-            if (!backward) ++sx;
         }
 
-        return bcount;
+        return byteCount;
     }
 
     /**
@@ -969,10 +931,9 @@ public class ArraySlice {
      * @return number of sixth words processed
      */
     public int unpackQuarterWords(
-        final byte[] source,
-        final boolean backward
+        final byte[] source
     ) {
-        return unpackQuarterWords(source, 0, source.length, backward);
+        return unpackQuarterWords(source, 0, source.length);
     }
 
     /**
@@ -982,56 +943,51 @@ public class ArraySlice {
      */
     public int unpackSixthWords(
         final byte[] source,
-        final int offset,
-        final int length,
-        final boolean backward
+        final int sourceOffset,
+        final int sourceCount
     ) {
-        int sw = 0;
-        int sx = backward ? offset + length : offset;
-        for (int dcount = 0, dx = _offset; dcount < _length;) {
-            if ((backward && (sx == 0))
-                || (!backward && (sx >= offset + length))) {
-                break;
-            }
-
-            if (backward) --sx;
-            long bval = (source[sx] & 077);
-            switch (sw) {
+        int sixthWord = 0;
+        int byteCount = 0;
+        int sx = sourceOffset;
+        for (int wordCount = 0, dx = _offset;
+             (wordCount < _length) && (sx < source.length) && (sx < sourceCount);
+             sx++, byteCount++) {
+            switch (sixthWord) {
                 case 0:
-                    _array[dx] = (bval << 30);
-                    ++sw;
+                    // We do not SetS1 here intentionally - we WANT the rest of the word zeroed out.
+                    _array[dx] = (((long) source[sx]) & 077) << 30;
+                    ++sixthWord;
                     break;
 
                 case 1:
-                    _array[dx] = Word36.setS2(_array[dx], bval);
-                    ++sw;
+                    _array[dx] = Word36.setS2(_array[dx], source[sx] & 077);
+                    ++sixthWord;
                     break;
 
                 case 2:
-                    _array[dx] = Word36.setS3(_array[dx], bval);
-                    ++sw;
+                    _array[dx] = Word36.setS3(_array[dx], source[sx] & 077);
+                    ++sixthWord;
                     break;
 
                 case 3:
-                    _array[dx] = Word36.setS4(_array[dx], bval);
-                    ++sw;
+                    _array[dx] = Word36.setS4(_array[dx], source[sx] & 077);
+                    ++sixthWord;
                     break;
 
                 case 4:
-                    _array[dx] = Word36.setS5(_array[dx], bval);
-                    ++sw;
+                    _array[dx] = Word36.setS5(_array[dx], source[sx] & 077);
+                    ++sixthWord;
                     break;
 
                 case 5:
-                    _array[dx] = Word36.setS6(_array[dx], bval);
+                    _array[dx] = Word36.setS6(_array[dx], source[sx] & 077);
                     ++dx;
-                    ++dcount;
-                    sw = 0;
+                    ++wordCount;
+                    sixthWord = 0;
             }
-            if (!backward) ++sx;
         }
 
-        return sx;
+        return byteCount;
     }
 
     /**
@@ -1040,9 +996,8 @@ public class ArraySlice {
      * @return number of sixth words processed
      */
     public int unpackSixthWords(
-        final byte[] source,
-        final boolean backward
+        final byte[] source
     ) {
-        return unpackSixthWords(source, 0, source.length, backward);
+        return unpackSixthWords(source, 0, source.length);
     }
 }

@@ -25,12 +25,9 @@ class SMKeyinHandler extends KeyinHandler {
     }
 
     private static final String[] HELP_TEXT = {
-        "SM symbiont_name",
-        "  Displays the status of the symbiont device.",
-        "SM symbiont_name operation",
-        "  Invokes the indicated operation on the symbiont device.",
-        "C[HANGE],[ DEF[AULT] | size,top,bottom,lpi ]",
-        "   Displays or changes the page format",
+        "SM symbiont_name [ C E I L Q R Rnnn R+nnn RALL S T ]",
+        "  With no operations, displays the status of the symbiont device.",
+        "C[HANGE],[ DEF[AULT] | sz,top,bot,lpi ]: Displays or changes the page format",
         "E: Creates an EOF, terminating the active symbiont file.",
         "I: Initiates an inactive symbiont, resumes operation, simulates ATTN.",
         "L: Locks out a symbiont.",
@@ -40,8 +37,7 @@ class SMKeyinHandler extends KeyinHandler {
         "R+nnn: Advances nnn pages or cards.",
         "RALL:  Reprints or repunches the entire file.",
         "S: Suspends symbiont operation",
-        "T: Terminates the device with an EOF, discarding the remainder of the file.",
-        "   Locks out the device."
+        "T: Terminates and locks the device.",
     };
 
     /*

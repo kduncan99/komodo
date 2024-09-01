@@ -6,10 +6,10 @@ package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.hardwarelib.Device;
-import com.bearsnake.komodo.hardwarelib.DeviceType;
-import com.bearsnake.komodo.hardwarelib.DiskDevice;
-import com.bearsnake.komodo.hardwarelib.TapeDevice;
+import com.bearsnake.komodo.hardwarelib.devices.Device;
+import com.bearsnake.komodo.hardwarelib.devices.DeviceType;
+import com.bearsnake.komodo.hardwarelib.devices.DiskDevice;
+import com.bearsnake.komodo.hardwarelib.devices.TapeDevice;
 import com.bearsnake.komodo.kexec.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;

@@ -75,10 +75,13 @@ public final class FileCycleSpecification {
         } else {
             try {
                 abs = true;
+                var terms = parser.getTerminators();
+                parser.setTerminators(")");
                 cyc = (int)parser.parseUnsignedDecimalInteger();
                 if ((cyc < 1) || (cyc > 999)) {
                     throw new Parser.SyntaxException("Invalid absolute cycle");
                 }
+                parser.setTerminators(terms);
             } catch (Parser.NotFoundException | Parser.SyntaxException ex) {
                 throw new Parser.SyntaxException("Invalid absolute cycle");
             }

@@ -70,7 +70,7 @@ public class InputQueueItem extends Item {
         final int sectorAddress,
         final ArraySlice source
     ) {
-        var runCardInfo = new RunCardInfo();
+        var runCardInfo = new RunCardInfo("");
         runCardInfo.setSchedulingPriority((char) source.getS2(0));
         runCardInfo.setProcessorPriority((char) source.getS3(0));
         runCardInfo.setOptionWord(source.get(01));
