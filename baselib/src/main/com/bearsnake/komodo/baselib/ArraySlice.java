@@ -376,11 +376,13 @@ public class ArraySlice {
      * We highly suggest that this array contains an even number of words, for calling this method.
      * @param destination array where we place byte output
      * @param destinationOffset index of byte within the destination, where we begin placing packed output
+     * @param skipOnSectorBoundary true if the byte data is organized as 28 words packed into 128 bytes (with 2 bytes of slop at the end)
      * @return number of COMPLETE words packed - will be less than getArraySize() if we hit the end of the destination buffer
      */
     public int pack(
         byte[] destination,
-        final int destinationOffset
+        final int destinationOffset,
+        final boolean skipOnSectorBoundary
     ) {
         if (destinationOffset >= destination.length) {
             return 0;
@@ -394,6 +396,9 @@ public class ArraySlice {
         int partial = 0;
 
         while ((wordsLeft > 0) && (bytesLeft > 0)) {
+            if (skipOnSectorBoundary && (sx % 128 == 126)) {
+                sx += 2;
+            }
             switch (partial) {
                 case 0:
                     destination[dx++] = (byte)(get(sx) >> 28);
@@ -458,6 +463,13 @@ public class ArraySlice {
         }
 
         return count;
+    }
+
+    public int pack(
+        byte[] destination,
+        final int destinationOffset
+    ) {
+        return pack(destination, destinationOffset, false);
     }
 
     public int pack(
@@ -779,12 +791,14 @@ public class ArraySlice {
      * @param source array containing byte input
      * @param sourceOffset index of first byte to be converted
      * @param sourceCount number of bytes to be converted (should be divisible by 9)
+     * @param skipOnSectorBoundary true if the byte data is organized as 28 words packed into 128 bytes (with 2 bytes of slop at the end)
      * @return number of bytes unpacked - will be less than sourceCount if we run out of space in this object
      */
     public int unpack(
         final byte[] source,
         final int sourceOffset,
-        final int sourceCount
+        final int sourceCount,
+        final boolean skipOnSectorBoundary
     ) {
         if (sourceOffset >= source.length) {
             return 0;
@@ -802,6 +816,9 @@ public class ArraySlice {
         int partial = 0;
 
         while ((bytesLeft > 0) && (wordsLeft > 0)) {
+            if (skipOnSectorBoundary && (sx % 128 == 126)) {
+                sx += 2;
+            }
             switch (partial) {
                 case 0:
                     set(dx, (get(dx) & 0_001777_777777L) | (((long) source[sx] & 0xFF)  << 28));
@@ -876,9 +893,17 @@ public class ArraySlice {
     }
 
     public int unpack(
+        final byte[] source,
+        final int sourceOffset,
+        final int sourceCount
+    ) {
+        return unpack(source, sourceOffset, sourceCount, false);
+    }
+
+    public int unpack(
         final byte[] source
     ) {
-        return unpack(source, 0, source.length);
+        return unpack(source, 0, source.length, false);
     }
 
     /**

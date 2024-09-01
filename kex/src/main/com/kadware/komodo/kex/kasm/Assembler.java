@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.kex.kasm;
 
-import com.kadware.komodo.baselib.*;
+import com.kadware.komodo.oldbaselib.*;
 import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.diagnostics.*;
 import com.kadware.komodo.kex.kasm.dictionary.*;

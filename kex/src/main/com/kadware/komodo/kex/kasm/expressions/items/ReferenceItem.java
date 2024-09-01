@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.kex.kasm.expressions.items;
 
-import com.kadware.komodo.baselib.FieldDescriptor;
+import com.kadware.komodo.oldbaselib.FieldDescriptor;
 import com.kadware.komodo.kex.kasm.Assembler;
 import com.kadware.komodo.kex.kasm.Locale;
 import com.kadware.komodo.kex.kasm.UnresolvedReference;

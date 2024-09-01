@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.hardwarelib.channels;
 
+import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.hardwarelib.devices.Device;
 import com.bearsnake.komodo.hardwarelib.devices.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.devices.DiskIoPacket;
@@ -28,17 +29,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class DiskChannel extends Channel {
 
     public static final int MAX_CONCURRENT_IOS = 8;
-    public static final int MAX_TRANSFER_COUNT = 1792; // in words
+    public static final int DEFAULT_BUFFER_SIZE = 8192; // in bytes
 
     private final LinkedBlockingQueue<DiskIoPacket> _freePackets = new LinkedBlockingQueue<>();
 
     public DiskChannel(final String nodeName) {
         super(nodeName);
 
-        var bufferSize = (MAX_TRANSFER_COUNT / 28) * 128;
         for (int i = 0; i < MAX_CONCURRENT_IOS; i++) {
             var ioPkt = new DiskIoPacket();
-            ioPkt.setBuffer(ByteBuffer.allocate(bufferSize));
+            ioPkt.setBuffer(ByteBuffer.allocate(DEFAULT_BUFFER_SIZE));
             _freePackets.add(ioPkt);
         }
     }
@@ -100,21 +100,23 @@ public class DiskChannel extends Channel {
     private void processRead(final DiskDevice device,
                              final ChannelIoPacket channelPacket,
                              final DiskIoPacket ioPacket) {
-        var geometry = IoGeometry.determine(device, channelPacket);
-        if (geometry._ioStatus != IoStatus.Successful) {
-            channelPacket.setIoStatus(geometry._ioStatus);
+        var blockExtent = BlockExtent.determine(device, channelPacket);
+        if (blockExtent == null) {
             return;
         }
 
-        ioPacket.setBlockId(geometry._blockId)
-                .setBlockCount(geometry._blockCount)
+        if (ioPacket.getBuffer().limit() < blockExtent._byteCount) {
+            ioPacket.setBuffer(ByteBuffer.allocate((int)blockExtent._byteCount));
+        }
+        ioPacket.setBlockId(blockExtent._blockId)
+                .setBlockCount(blockExtent._blockCount)
                 .setFunction(IoFunction.Read);
         device.performIo(ioPacket);
-
         if (ioPacket.getStatus() == IoStatus.Successful) {
-            channelPacket.getBuffer().unpack(ioPacket.getBuffer().array(),
-                                             geometry._leadingOffsetInBytes,
-                                             geometry._requestedByteCount);
+            var byteSlop = (blockExtent._preSlop / 28) * 128;
+            byteSlop += (blockExtent._preSlop % 28) * 9 / 2;
+
+            channelPacket.getBuffer().unpack(ioPacket.getBuffer().array(), byteSlop, (int)blockExtent._byteCount, true);
             channelPacket.setActualWordCount(channelPacket.getBuffer().getSize());
         }
 
@@ -142,17 +144,21 @@ public class DiskChannel extends Channel {
     private void processWrite(final DiskDevice device,
                               final ChannelIoPacket channelPacket,
                               final DiskIoPacket ioPacket) {
-        var geometry = IoGeometry.determine(device, channelPacket);
-        if (geometry._ioStatus != IoStatus.Successful) {
-            channelPacket.setIoStatus(geometry._ioStatus);
+        var blockExtent = BlockExtent.determine(device, channelPacket);
+        if (blockExtent == null) {
             return;
         }
 
-        ioPacket.setBlockId(geometry._blockId)
-                .setBlockCount(geometry._blockCount);
+        if (ioPacket.getBuffer().limit() < blockExtent._byteCount) {
+            ioPacket.setBuffer(ByteBuffer.allocate((int)blockExtent._byteCount));
+        }
+
+        ioPacket.setBlockId(blockExtent._blockId)
+                .setBlockCount(blockExtent._blockCount)
+                .setFunction(IoFunction.Read);
 
         // Do we need to do read-before-write?
-        if (channelPacket.getBuffer().getSize() != geometry._alignedWordCount) {
+        if (blockExtent._preSlop > 0 || blockExtent._postSlop > 0) {
             ioPacket.setFunction(IoFunction.Read);
             device.performIo(ioPacket);
             if (ioPacket.getStatus() != IoStatus.Successful) {
@@ -162,8 +168,11 @@ public class DiskChannel extends Channel {
             }
         }
 
-        channelPacket.getBuffer().pack(ioPacket.getBuffer().array(),
-                                       geometry._leadingOffsetInBytes);
+        var byteSlop = (blockExtent._preSlop / 28) * 128;
+        byteSlop += (blockExtent._preSlop % 28) * 9 / 2;
+
+        channelPacket.getBuffer().pack(ioPacket.getBuffer().array(), byteSlop, true);
+        channelPacket.setActualWordCount(channelPacket.getBuffer().getSize());
         ioPacket.setFunction(IoFunction.Write);
         device.performIo(ioPacket);
         if (ioPacket.getStatus() == IoStatus.Successful) {
@@ -174,66 +183,52 @@ public class DiskChannel extends Channel {
                      .setAdditionalStatus(ioPacket.getAdditionalStatus());
     }
 
-    private static class IoGeometry {
+    private static class BlockExtent {
 
-        IoStatus _ioStatus;
-        int      _bytesPerBlock;
-        int      _wordsPerBlock;
-        int      _leadingOffsetInWords;
-        int      _leadingOffsetInBytes;
-        long     _requestedWordAddress;
-        int      _requestedByteCount;
-        long     _alignedWordAddress;
-        int      _alignedWordCount;
-        long     _blockId;
-        int      _blockCount;
+        long _blockId;
+        long _blockCount;
+        int _bytesPerBlock;
+        long _byteCount;
+        int _preSlop; // words required to align backward to start of first block
+        int _postSlop; // words required to align forward to end of last block
 
-        static IoGeometry determine(final DiskDevice device,
-                                    final ChannelIoPacket channelPacket) {
-            var geometry = new IoGeometry();
+        static BlockExtent determine(final DiskDevice device,
+                                     final ChannelIoPacket channelPacket) {
+            var ioLength = channelPacket.getBuffer().getSize();
+            if (ioLength % 2 > 0) {
+                channelPacket.setIoStatus(IoStatus.InvalidBufferSize);
+                return null;
+            }
+
+            if (channelPacket.getDeviceWordAddress() % 2 > 0) {
+                channelPacket.setIoStatus(IoStatus.InvalidAddress);
+                return null;
+            }
+
+            var blockExtent = new BlockExtent();
 
             var diskInfo = device.getInfo();
-            geometry._ioStatus = IoStatus.Successful;
+            blockExtent._bytesPerBlock = diskInfo.getBlockSize();
+            var sectorsPerBlock = blockExtent._bytesPerBlock / 128; // a sector always fits in 128 bytes (2 bytes at the end are unused)
+            var wordsPerBlock = sectorsPerBlock * 28;
 
-            var buffer = channelPacket.getBuffer();
-            if (buffer == null) {
-                geometry._ioStatus = IoStatus.BufferIsNull;
-                return geometry;
-            }
+            blockExtent._blockId = channelPacket.getDeviceWordAddress() / wordsPerBlock;
+            blockExtent._preSlop = (int)(channelPacket.getDeviceWordAddress() % wordsPerBlock);
+            var mod = (ioLength + blockExtent._preSlop) % wordsPerBlock;
+            blockExtent._postSlop = mod > 0 ? wordsPerBlock - mod : 0;
+            blockExtent._blockCount = (blockExtent._preSlop + ioLength + blockExtent._postSlop) / wordsPerBlock;
+            blockExtent._byteCount = blockExtent._blockCount * blockExtent._bytesPerBlock;
 
-             if ((buffer.getSize() & 01) != 0) {
-                geometry._ioStatus = IoStatus.InvalidBufferSize;
-                return geometry;
-            }
+            return blockExtent;
+        }
 
-            if ((channelPacket.getDeviceWordAddress() & 01) != 0) {
-                geometry._ioStatus = IoStatus.InvalidAddress;
-                return geometry;
-            }
-
-            geometry._bytesPerBlock = diskInfo.getBlockSize();
-            geometry._wordsPerBlock = (geometry._bytesPerBlock / 128) * 28;
-
-            geometry._requestedWordAddress = channelPacket.getDeviceWordAddress();
-            if ((geometry._requestedWordAddress & 01) != 0) {
-                geometry._ioStatus = IoStatus.InvalidAddress;
-                return geometry;
-            }
-
-            geometry._leadingOffsetInWords = (int)(channelPacket.getDeviceWordAddress() % geometry._wordsPerBlock);
-            geometry._leadingOffsetInBytes = (geometry._leadingOffsetInWords >> 1) * 9;
-            geometry._requestedByteCount = (buffer.getSize() >> 1) * 9;
-            geometry._alignedWordCount = geometry._leadingOffsetInWords + buffer.getSize();
-            var mod = geometry._alignedWordCount % geometry._wordsPerBlock;
-            if (mod > 0) {
-                geometry._alignedWordCount += geometry._wordsPerBlock - mod;
-            }
-
-            geometry._alignedWordAddress = geometry._requestedWordAddress - geometry._leadingOffsetInWords;
-            geometry._blockId = geometry._alignedWordAddress / geometry._wordsPerBlock;
-            geometry._blockCount = geometry._alignedWordCount / geometry._wordsPerBlock;
-
-            return geometry;
+        public void dump() {
+            System.out.printf("BlockExtent bytes/block: %d\n", _bytesPerBlock);
+            System.out.printf("            blockId:     %d\n", _blockId);
+            System.out.printf("            blockCount:  %d\n", _blockCount);
+            System.out.printf("            bytesCount:  %d\n", _byteCount);
+            System.out.printf("            preSlop:     %d\n", _preSlop);
+            System.out.printf("            postSlop:    %d\n", _postSlop);
         }
     }
 }

@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.kex.kasm.dictionary;
 
-import com.kadware.komodo.baselib.FieldDescriptor;
+import com.kadware.komodo.oldbaselib.FieldDescriptor;
 import com.kadware.komodo.kex.kasm.Form;
 import com.kadware.komodo.kex.kasm.LineSpecifier;
 import com.kadware.komodo.kex.kasm.Locale;

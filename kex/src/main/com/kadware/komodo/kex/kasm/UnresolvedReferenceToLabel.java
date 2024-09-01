@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.kex.kasm;
 
-import com.kadware.komodo.baselib.FieldDescriptor;
+import com.kadware.komodo.oldbaselib.FieldDescriptor;
 
 /**
  * Describes a label for an undefined reference.

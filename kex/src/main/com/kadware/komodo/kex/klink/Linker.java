@@ -4,7 +4,7 @@
 
 package com.kadware.komodo.kex.klink;
 
-import com.kadware.komodo.baselib.FieldDescriptor;
+import com.kadware.komodo.oldbaselib.FieldDescriptor;
 import com.kadware.komodo.kex.RelocatableModule;
 import com.kadware.komodo.kex.kasm.exceptions.ParameterException;
 import java.io.OutputStream;
