@@ -9,7 +9,7 @@ import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.hardwarelib.IoFunction;
 import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
 import com.bearsnake.komodo.hardwarelib.channels.TransferFormat;
-import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.HardwareTrackId;
 import com.bearsnake.komodo.kexec.Manager;

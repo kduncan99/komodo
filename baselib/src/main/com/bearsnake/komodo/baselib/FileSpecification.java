@@ -2,10 +2,7 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kexec;
-
-import com.bearsnake.komodo.baselib.Parser;
-import com.bearsnake.komodo.kexec.exec.Exec;
+package com.bearsnake.komodo.baselib;
 
 public class FileSpecification {
 
@@ -82,7 +79,7 @@ public class FileSpecification {
 
         var token = parser.parseUntil("*" + cutSet);
         if (parser.peekNext() == '*') {
-            if (!token.isEmpty() && !Exec.isValidQualifier(token)) {
+            if (!token.isEmpty() && !Parser.isValidQualifier(token)) {
                 throw new InvalidQualifierException();
             }
 
@@ -96,7 +93,7 @@ public class FileSpecification {
 
         if (filename.isEmpty()) {
             return null;
-        } else if (!Exec.isValidFilename(filename)) {
+        } else if (!Parser.isValidFilename(filename)) {
             throw new InvalidFilenameException();
         }
 
@@ -113,14 +110,14 @@ public class FileSpecification {
             readKey = parser.parseUntil(cutSet);
             if (readKey.isEmpty()) {
                 readKey = null;
-            } else if (!Exec.isValidReadWriteKey(readKey)) {
+            } else if (!Parser.isValidReadWriteKey(readKey)) {
                 throw new InvalidReadKeyException();
             }
             if (parser.parseChar('/')) {
                 writeKey = parser.parseUntil(cutSet);
                 if (writeKey.isEmpty()) {
                     writeKey = null;
-                } else if (!Exec.isValidReadWriteKey(writeKey)) {
+                } else if (!Parser.isValidReadWriteKey(writeKey)) {
                     throw new InvalidWriteKeyException();
                 }
             }

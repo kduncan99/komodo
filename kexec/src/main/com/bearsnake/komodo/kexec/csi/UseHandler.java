@@ -5,7 +5,7 @@
 package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Parser;
-import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 
@@ -61,7 +61,7 @@ class UseHandler extends Handler {
             return;
         }
         internal = internal.toUpperCase();
-        if (!Exec.isValidFilename(internal)) {
+        if (!Parser.isValidFilename(internal)) {
             fsResult.postMessage(FacStatusCode.SyntaxErrorInImage);
             fsResult.mergeStatusBits(0_400000_000000L);
             return;

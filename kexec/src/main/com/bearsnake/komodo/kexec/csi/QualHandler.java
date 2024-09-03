@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.kexec.csi;
 
-import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.logger.LogManager;
 
@@ -53,7 +53,7 @@ class QualHandler extends Handler {
         }
 
         String qualifier = getSubField(hp, 0, 0);
-        if ((qualifier != null) && !Exec.isValidQualifier(qualifier)) {
+        if ((qualifier != null) && !Parser.isValidQualifier(qualifier)) {
             LogManager.logInfo(Interpreter.LOG_SOURCE,
                                "[%s] Invalid qualifier:%s",
                                hp._run.getActualRunId(),

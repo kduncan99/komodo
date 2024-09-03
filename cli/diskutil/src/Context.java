@@ -21,21 +21,21 @@ public class Context {
             if (args[ax].startsWith("-")) {
                 var opt = args[ax++];
                 switch (opt) {
-                    case "-a", "-ascii" -> _displayASCII = true;
+                    case "-a", "--ascii" -> _displayASCII = true;
 
-                    case "-ch", "-channel" -> _channelIO = true;
+                    case "-ch", "--channel" -> _channelIO = true;
 
-                    case "-f", "-fieldata" -> _displayFieldata = true;
+                    case "-f", "--fieldata" -> _displayFieldata = true;
 
                     case "-h", "-?", "--help" -> _displayUsage = true;
 
-                    case "-i", "-info" -> _displayInfo = true;
+                    case "-i", "--info" -> _displayInfo = true;
 
-                    case "-l", "-label" -> _interpretLabel = true;
+                    case "-l", "--label" -> _interpretLabel = true;
 
-                    case "-r", "-raw" -> _displayRaw = true;
+                    case "-r", "--raw" -> _displayRaw = true;
 
-                    case "-s", "-sector" -> {
+                    case "-s", "--sector" -> {
                         if (ax == args.length) {
                             System.err.println("ERROR:Missing sector address value");
                             err = true;
@@ -56,7 +56,7 @@ public class Context {
                         }
                     }
 
-                    case "-t", "-track" -> {
+                    case "-t", "--track" -> {
                         if (ax == args.length) {
                             System.err.println("ERROR:Missing track address value");
                             err = true;
@@ -77,7 +77,7 @@ public class Context {
                         }
                     }
 
-                    case "-w", "-word" -> {
+                    case "-w", "--word" -> {
                         if (ax == args.length) {
                             System.err.println("ERROR:Missing word address value");
                             err = true;

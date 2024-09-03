@@ -7,7 +7,7 @@ package com.bearsnake.komodo.kexec.exec.genf;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.DateConverter;
-import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Run;
 

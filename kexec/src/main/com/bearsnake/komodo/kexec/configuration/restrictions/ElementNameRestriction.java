@@ -4,13 +4,13 @@
 
 package com.bearsnake.komodo.kexec.configuration.restrictions;
 
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ElementNameException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ValueTypeException;
 import com.bearsnake.komodo.kexec.configuration.values.StringValue;
 import com.bearsnake.komodo.kexec.configuration.values.Value;
 import com.bearsnake.komodo.kexec.configuration.values.ValueType;
-import com.bearsnake.komodo.kexec.exec.Exec;
 
 public class ElementNameRestriction implements Restriction {
 
@@ -31,7 +31,7 @@ public class ElementNameRestriction implements Restriction {
             if (_allowBlank && str.isEmpty()) {
                 return;
             }
-            if (!Exec.isValidElementName(sv.getValue())) {
+            if (!Parser.isValidElementName(sv.getValue())) {
                 throw new ElementNameException(value);
             }
         } else {

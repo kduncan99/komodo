@@ -5,7 +5,7 @@
 package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Parser;
-import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;

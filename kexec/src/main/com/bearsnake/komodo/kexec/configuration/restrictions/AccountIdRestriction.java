@@ -4,13 +4,13 @@
 
 package com.bearsnake.komodo.kexec.configuration.restrictions;
 
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.configuration.exceptions.AccountIdException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ValueTypeException;
 import com.bearsnake.komodo.kexec.configuration.values.StringValue;
 import com.bearsnake.komodo.kexec.configuration.values.Value;
 import com.bearsnake.komodo.kexec.configuration.values.ValueType;
-import com.bearsnake.komodo.kexec.exec.Exec;
 
 public class AccountIdRestriction implements Restriction {
 
@@ -21,7 +21,7 @@ public class AccountIdRestriction implements Restriction {
         final Value value
     ) throws ConfigurationException {
         if (value instanceof StringValue sv) {
-            if (!Exec.isValidAccountId(sv.getValue())) {
+            if (!Parser.isValidAccountId(sv.getValue())) {
                 throw new AccountIdException(value);
             }
         } else {

@@ -5,7 +5,6 @@
 package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Parser;
-import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.Run;
 
 import java.time.Instant;
@@ -131,7 +130,7 @@ public class RunCardInfo {
         _runid = operands.get(SS_RUNID);
         if (_runid != null) {
             _runid = _runid.toUpperCase();
-            if (!Exec.isValidRunid(_runid)) {
+            if (!Parser.isValidRunid(_runid)) {
                 throw new Parser.SyntaxException("Invalid RunId");
             }
         }
@@ -139,7 +138,7 @@ public class RunCardInfo {
         _accountId = operands.get(SS_ACCOUNT_ID);
         if (_accountId != null) {
             _accountId = _accountId.toUpperCase();
-            if (!Exec.isValidAccountId(_accountId)) {
+            if (!Parser.isValidAccountId(_accountId)) {
                 throw new Parser.SyntaxException("Invalid AccountId");
             }
         }
@@ -147,7 +146,7 @@ public class RunCardInfo {
         _userId = operands.get(SS_USER_ID);
         if (_userId != null) {
             _userId = _userId.toUpperCase();
-            if (!Exec.isValidAccountId(_userId)) {
+            if (!Parser.isValidAccountId(_userId)) {
                 throw new Parser.SyntaxException("Invalid UserId");
             }
         }
@@ -155,7 +154,7 @@ public class RunCardInfo {
         _projectId = operands.get(SS_PROJECT_ID);
         if (_projectId != null) {
             _projectId = _projectId.toUpperCase();
-            if (!Exec.isValidProjectId(_projectId)) {
+            if (!Parser.isValidProjectId(_projectId)) {
                 throw new Parser.SyntaxException("Invalid ProjectId");
             }
         }

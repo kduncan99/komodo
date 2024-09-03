@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
@@ -41,7 +42,7 @@ class DFKeyinHandler extends KeyinHandler implements Runnable {
 
         _qualifier = split[0].toUpperCase();
         _filename = split[1].toUpperCase();
-        return Exec.isValidQualifier(_qualifier) && Exec.isValidFilename(_filename);
+        return Parser.isValidQualifier(_qualifier) && Parser.isValidFilename(_filename);
     }
 
     @Override

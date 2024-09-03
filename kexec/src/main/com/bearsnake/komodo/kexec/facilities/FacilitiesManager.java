@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.facilities;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.hardwarelib.channels.Channel;
 import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
 import com.bearsnake.komodo.hardwarelib.devices.Device;
@@ -23,7 +24,7 @@ import com.bearsnake.komodo.hardwarelib.channels.SymbiontChannel;
 import com.bearsnake.komodo.hardwarelib.channels.TapeChannel;
 import com.bearsnake.komodo.hardwarelib.devices.TapeDevice;
 import com.bearsnake.komodo.hardwarelib.channels.TransferFormat;
-import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.configuration.Configuration;
@@ -3082,14 +3083,14 @@ public class FacilitiesManager implements Manager {
             return null;
         }
 
-        if (!Exec.isValidPackName(pi.getPackName())) {
+        if (!Parser.isValidPackName(pi.getPackName())) {
             var msg = String.format("Pack on %s has an invalid pack name", diskDevice.getNodeName());
             Exec.getInstance().sendExecReadOnlyMessage(msg);
             diskNodeInfo.setNodeStatus(NodeStatus.Down);
             return null;
         }
 
-        if (!Exec.isValidPrepFactor(pi.getPrepFactor())) {
+        if (!Parser.isValidPrepFactor(pi.getPrepFactor())) {
             var msg = String.format("Pack on %s has an invalid prep factor: %d",
                                     diskDevice.getNodeName(),
                                     pi.getPrepFactor());

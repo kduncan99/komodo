@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.facilities;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.mfd.MFDRelativeAddress;
@@ -88,7 +89,7 @@ public class PackInfo implements MediaInfo {
         var packName = Word36.toStringFromASCII(label.get(01)) + Word36.toStringFromASCII(label.get(02));
         pi._packName = packName.substring(0, 6).trim();
         pi._prepFactor = (int)Word36.getH2(label.get(04));
-        pi._isPrepped = Exec.isValidPrepFactor(pi._prepFactor) && Exec.isValidPackName(pi._packName);
+        pi._isPrepped = Parser.isValidPrepFactor(pi._prepFactor) && Parser.isValidPackName(pi._packName);
         pi._directoryTrackAddress = label.get(03);
         pi._trackCount = label._array[016];
 

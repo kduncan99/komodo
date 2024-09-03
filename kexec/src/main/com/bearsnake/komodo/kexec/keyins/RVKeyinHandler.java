@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.hardwarelib.devices.Device;
 import com.bearsnake.komodo.hardwarelib.devices.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.devices.TapeDevice;
@@ -38,7 +39,7 @@ class RVKeyinHandler extends FacHandler implements Runnable {
             return false;
         }
 
-        return (_arguments != null) && Exec.isValidNodeName(_arguments.toUpperCase());
+        return (_arguments != null) && Parser.isValidNodeName(_arguments.toUpperCase());
     }
 
     @Override

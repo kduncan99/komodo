@@ -4,10 +4,8 @@
 
 package com.bearsnake.komodo.kexec.facilities;
 
-import com.bearsnake.komodo.kexec.FileCycleSpecification;
-import com.bearsnake.komodo.kexec.FileSpecification;
-import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
-import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.baselib.FileCycleSpecification;
+import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.exec.Run;
 import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.NameItem;

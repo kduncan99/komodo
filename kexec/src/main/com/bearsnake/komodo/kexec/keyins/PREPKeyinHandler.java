@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.baselib.PrepFactor;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.hardwarelib.IoFunction;
@@ -119,13 +120,13 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
             return;
         }
 
-        if (!Exec.isValidNodeName(_deviceName)) {
+        if (!Parser.isValidNodeName(_deviceName)) {
             var msg = "Invalid device name on PREP keyin";
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
             return;
         }
 
-        if (!Exec.isValidPackName(_packName)) {
+        if (!Parser.isValidPackName(_packName)) {
             var msg = "Invalid device name on PREP keyin";
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
             return;

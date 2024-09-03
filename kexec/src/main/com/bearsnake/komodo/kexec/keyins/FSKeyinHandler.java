@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.hardwarelib.devices.DeviceType;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
@@ -34,7 +35,7 @@ class FSKeyinHandler extends FacHandler implements Runnable {
     boolean checkSyntax() {
         // If option is ALL, we require a single argument which must be a node name
         if ((_options != null) && (_options.equalsIgnoreCase("ALL"))) {
-            return _arguments != null && Exec.isValidNodeName(_arguments);
+            return _arguments != null && Parser.isValidNodeName(_arguments);
         }
 
         // If there is any other option, the argument list must be empty

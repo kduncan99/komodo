@@ -4,9 +4,9 @@
 
 package com.bearsnake.komodo.kexec.csi;
 
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
-import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.logger.LogManager;
 
@@ -151,7 +151,7 @@ abstract class Handler {
         var placement = hp._statement._operandFields.get(new SubfieldSpecifier(1, 4));
         if ((placement != null) && !placement.isEmpty()) {
             if (placement.startsWith("*")) {
-                result = Exec.isValidNodeName(placement.substring(1));
+                result = Parser.isValidNodeName(placement.substring(1));
             } else {
                 if (!Character.isUpperCase(placement.charAt(0))) {
                     result = false;

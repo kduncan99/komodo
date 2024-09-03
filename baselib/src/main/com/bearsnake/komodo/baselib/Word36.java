@@ -7,7 +7,6 @@ package com.bearsnake.komodo.baselib;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Library for doing architecturally-correct 36-bit operations on integers
@@ -19,7 +18,6 @@ import java.util.stream.IntStream;
  * INSTRUCTION PROCESSOR CODE RELIES ON THIS BEHAVIOR WHICH WE NO LONGER EXHIBIT.
  * WATCH OUT FOR THAT.
  */
-@SuppressWarnings("Duplicates")
 public class Word36 implements Comparable<Word36> {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -469,7 +467,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setH1(
@@ -482,7 +480,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setH2(
@@ -495,7 +493,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setQ1(
@@ -508,7 +506,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setQ2(
@@ -521,7 +519,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setQ3(
@@ -534,7 +532,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setQ4(
@@ -547,7 +545,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setS1(
@@ -560,7 +558,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setS2(
@@ -573,7 +571,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setS3(
@@ -586,7 +584,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setS4(
@@ -599,7 +597,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setS5(
@@ -612,7 +610,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setS6(
@@ -625,7 +623,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setT1(
@@ -638,7 +636,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setT2(
@@ -651,7 +649,7 @@ public class Word36 implements Comparable<Word36> {
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
      * @param existingValue target of the injection
-     * @param partialValue the value to be replaced into a p ortion of the existing value
+     * @param partialValue the value to be replaced into a portion of the existing value
      * @return resulting value
      */
     public static long setT3(
@@ -1037,7 +1035,7 @@ public class Word36 implements Comparable<Word36> {
         final int offset,
         final int length
     ) {
-        int wx = 0;
+        int wx = offset;
         int cx = 0;
         while (cx < source.length()) {
             buffer.set(wx, stringToWordASCII(source.substring(cx, cx + 4)));
@@ -1111,7 +1109,7 @@ public class Word36 implements Comparable<Word36> {
         final int offset,
         final int length
     ) {
-        int wx = 0;
+        int wx = offset;
         int cx = 0;
         while (cx < source.length()) {
             buffer.set(wx, stringToWordFieldata(source.substring(cx, cx + 6)));

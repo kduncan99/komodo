@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.NodeStatus;
@@ -31,7 +32,7 @@ class UPKeyinHandler extends FacHandler implements Runnable {
             return false;
         }
 
-        return (_arguments != null) && Exec.isValidNodeName(_arguments.toUpperCase());
+        return (_arguments != null) && Parser.isValidNodeName(_arguments.toUpperCase());
     }
 
     @Override

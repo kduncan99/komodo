@@ -10,7 +10,7 @@ import com.bearsnake.komodo.hardwarelib.devices.Device;
 import com.bearsnake.komodo.hardwarelib.devices.DeviceType;
 import com.bearsnake.komodo.hardwarelib.devices.DiskDevice;
 import com.bearsnake.komodo.hardwarelib.devices.TapeDevice;
-import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;

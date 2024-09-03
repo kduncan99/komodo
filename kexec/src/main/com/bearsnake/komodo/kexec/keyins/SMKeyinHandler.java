@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
@@ -90,7 +91,7 @@ SM KEY ERROR : UPDATE FAILED
         }
 
         _symbiontName = split[0].toUpperCase();
-        if (!Exec.isValidNodeName(_symbiontName)) {
+        if (!Parser.isValidNodeName(_symbiontName)) {
             return false;
         }
 

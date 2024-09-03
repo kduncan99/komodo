@@ -7,7 +7,7 @@ package com.bearsnake.komodo.kexec.exec;
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesItemTable;
-import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.tasks.Task;
 
 import java.io.PrintStream;

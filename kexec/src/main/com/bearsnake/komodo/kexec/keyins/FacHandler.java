@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.keyins;
 
+import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.ChannelNodeInfo;
@@ -82,7 +83,7 @@ public abstract class FacHandler extends KeyinHandler {
 
     protected Collection<NodeInfo> getNodeInfoListForChannel() {
         var chName = _arguments.toUpperCase();
-        if (!Exec.isValidNodeName(chName)) {
+        if (!Parser.isValidNodeName(chName)) {
             var msg = "SYNTAX ERROR";
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
             return null;

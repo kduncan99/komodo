@@ -4,10 +4,9 @@
 
 package com.bearsnake.komodo.kexec.exec;
 
-import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.configuration.Configuration;
-import com.bearsnake.komodo.kexec.FileSpecification;
+import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.Manager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
@@ -32,7 +31,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.stream.IntStream;
+
+import static com.bearsnake.komodo.baselib.Parser.isValidAccountId;
+import static com.bearsnake.komodo.baselib.Parser.isValidProjectId;
+import static com.bearsnake.komodo.baselib.Parser.isValidRunid;
+import static com.bearsnake.komodo.baselib.Parser.isValidUserId;
 
 public class Exec extends Run {
 
@@ -355,175 +358,6 @@ public class Exec extends Run {
 
     public boolean isRunning() {
         return (_phase != Phase.Stopped) && (_phase != Phase.NotStarted);
-    }
-
-    public static boolean isValidAccountId(
-        final String accountId
-    ) {
-        if (accountId.isEmpty() || (accountId.length() > 12)) {
-            return false;
-        }
-        return IntStream.range(0, accountId.length()).allMatch(chx -> isValidAccountIdChar(accountId.charAt(chx)));
-    }
-
-    public static boolean isValidAccountIdChar(
-        final char ch
-    ) {
-        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '.';
-    }
-
-    public static boolean isValidElementName(
-        final String elementName
-    ) {
-        if ((elementName.isEmpty()) || (elementName.length() > 12)) {
-            return false;
-        }
-        return IntStream.range(0, elementName.length()).allMatch(chx -> isValidElementNameChar(elementName.charAt(chx)));
-    }
-
-    public static boolean isValidElementNameChar(
-        final char ch
-    ) {
-        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '$';
-    }
-
-    public static boolean isValidFilename(
-        final String filename
-    ) {
-        if ((filename.isEmpty()) || (filename.length() > 12)) {
-            return false;
-        }
-        return IntStream.range(0, filename.length()).allMatch(chx -> isValidFilenameChar(filename.charAt(chx)));
-    }
-
-    public static boolean isValidFilenameChar(
-        final char ch
-    ) {
-        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '$';
-    }
-
-    public static boolean isValidNodeName(
-        final String deviceName
-    ) {
-        if (deviceName.isEmpty() || deviceName.length() > 6) {
-            return false;
-        }
-
-        for (var ch : deviceName.getBytes()) {
-            if (!Character.isAlphabetic(ch) && !Character.isDigit(ch)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static boolean isValidPackName(
-        final String packName
-    ) {
-        if (packName.isEmpty() || packName.length() > 6) {
-            return false;
-        }
-
-        for (var ch : packName.getBytes()) {
-            if (!Character.isAlphabetic(ch) && !Character.isDigit(ch)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static boolean isValidPrepFactor(
-        final int value
-    ) {
-        return (value == 28)
-            || (value == 56)
-            || (value == 112)
-            || (value == 224)
-            || (value == 448)
-            || (value == 896)
-            || (value == 1792);
-    }
-
-    public static boolean isValidReadWriteKey(
-        final String key
-    ) {
-        if (key.isEmpty() || key.length() > 6) {
-            return false;
-        }
-
-        for (int ch : key.getBytes()) {
-            // any fieldata character is allowed excepting period, comma, semicolon, slash, and blank
-            if ((ch > 127) || Word36.FIELDATA_FROM_ASCII[ch] == 005) {
-                return false;
-            }
-            if (ch == '.' || ch == ',' || ch == ';' || ch == '/') {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static boolean isValidProjectId(
-        final String projectId
-    ) {
-        if (projectId.isEmpty() || (projectId.length() > 12)) {
-            return false;
-        }
-        return IntStream.range(0, projectId.length()).allMatch(chx -> isValidProjectIdChar(projectId.charAt(chx)));
-    }
-
-    public static boolean isValidProjectIdChar(
-        final char ch
-    ) {
-        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '$';
-    }
-
-    public static boolean isValidQualifier(
-        final String qualifier
-    ) {
-        if (qualifier.isEmpty() || (qualifier.length() > 12)) {
-            return false;
-        }
-        return IntStream.range(0, qualifier.length()).allMatch(chx -> isValidQualifierChar(qualifier.charAt(chx)));
-    }
-
-    public static boolean isValidQualifierChar(
-        final char ch
-    ) {
-        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '$';
-    }
-
-    public static boolean isValidRunid(
-        final String runId
-    ) {
-        if (runId.isEmpty() || (runId.length() > 6)) {
-            return false;
-        }
-        return IntStream.range(0, runId.length()).allMatch(chx -> isValidQualifierChar(runId.charAt(chx)));
-    }
-
-    public static boolean isValidRunIdChar(
-        final char ch
-    ) {
-        return Character.isAlphabetic(ch) || Character.isDigit(ch);
-    }
-
-    public static boolean isValidUserId(
-        final String accountId
-    ) {
-        if (accountId.isEmpty() || (accountId.length() > 12)) {
-            return false;
-        }
-        return IntStream.range(0, accountId.length()).allMatch(chx -> isValidUserIdChar(accountId.charAt(chx)));
-    }
-
-    public static boolean isValidUserIdChar(
-        final char ch
-    ) {
-        return Character.isAlphabetic(ch) || Character.isDigit(ch) || ch == '-' || ch == '.';
     }
 
     public void sendExecReadOnlyMessage(
