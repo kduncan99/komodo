@@ -26,6 +26,8 @@ public abstract class Device extends Node {
     // this is a nice alternative to having to establish an entire thread just for this silliness.
     public abstract void probe();
 
+    // TODO think about this - should all devices require a buffer for reads, or produce a buffer?
+    //   needs to be one way or the other, for all devices
     public abstract void performIo(final IoPacket packet);
 
     // The following may be overridden by subclasses if/as necessary.

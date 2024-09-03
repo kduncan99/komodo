@@ -309,7 +309,8 @@ public class MFDManager implements Manager {
 
     /**
      * Allocates space for a particular file allocation set to ensure that a particular
-     * fas-relative extend is entirely allocated. Updates the fas if/as necessary.
+     * fas-relative extent is entirely allocated. Updates the fas if/as necessary.
+     * Does NOT account for quota or max tracks - we don't have insight into those restrictions at this level.
      * @param fileAllocationSet file allocation set to which the allocation should be made
      * @param firstTrackId first track id of interest
      * @param trackCount number of tracks of interest
@@ -320,7 +321,7 @@ public class MFDManager implements Manager {
         final long firstTrackId,
         final long trackCount
     ) {
-        // This algorithm is sub-optimal from the perspective of minimizing fragmentation.
+        // This algorithm is suboptimal from the perspective of minimizing fragmentation.
         // Some day later we should come back here and improve it.
         // For now, just iterate over the tracks and do the simple thing.
         var trackId = firstTrackId;

@@ -1783,9 +1783,13 @@ public class FacilitiesManager implements Manager {
                 var relativeTrack = fileRelWordAddress / 1792;
                 var hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
                 if (hwTid == null) {
-                    ioResult.setStatus(ERIO$Status.UnallocatedArea)
-                            .setWordsTransferred(wordsWritten);
-                    throw new Exception();
+                    // We need to allocate a track for this IO, and possibly zero it out
+                    if (!mm.allocateDataExtent(fas, relativeTrack, 1)) {
+                        ioResult.setStatus(ERIO$Status.CannotExpandFile).setWordsTransferred(wordsWritten);
+                        throw new IOException();
+                    }
+
+                    hwTid = fas.resolveFileRelativeTrackId(relativeTrack);
                 }
 
                 var nodeInfo = mm.getNodeInfoForLDAT(hwTid.getLDATIndex());
@@ -1820,6 +1824,10 @@ public class FacilitiesManager implements Manager {
 
                 wordsWritten += subWordCount;
                 wordsRemaining -= subWordCount;
+            }
+
+            if (fas.isUpdated()) {
+                mm.persistFileCycleInfo(fci);
             }
 
             ioResult.setStatus(ERIO$Status.Success)

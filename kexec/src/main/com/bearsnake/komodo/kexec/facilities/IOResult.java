@@ -59,4 +59,9 @@ public class IOResult {
         _wordsTransferred = wordsTransferred;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s wds:%d", _status, _wordsTransferred);
+    }
 }

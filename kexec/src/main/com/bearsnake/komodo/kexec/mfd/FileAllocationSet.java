@@ -132,7 +132,6 @@ public class FileAllocationSet {
      */
     public void mergeIntoFileAllocationSet(final FileAllocation newEntry) {
         var newRegion = newEntry.getFileRegion();
-        var newHWTrk = newEntry.getHardwareTrackId();
         for (int fax = 0; fax < _fileAllocations.size(); fax++) {
             var fa = _fileAllocations.get(fax);
             if (fa.merge(newEntry)) {
@@ -141,7 +140,6 @@ public class FileAllocationSet {
             }
 
             var faRegion = fa.getFileRegion();
-            var faHWTrk = fa.getHardwareTrackId();
             if (newRegion.getTrackId() < faRegion.getTrackId()) {
                 // the new entry appears before the indexed entry and after the previous entry,
                 // and is not contiguous with the previous entry, nor with the next.

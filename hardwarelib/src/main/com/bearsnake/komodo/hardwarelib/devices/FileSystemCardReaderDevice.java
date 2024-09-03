@@ -60,6 +60,7 @@ public class FileSystemCardReaderDevice extends SymbiontReaderDevice {
      */
     @Override
     public void probe() {
+        // TODO why is the following line always false?
         if (isReady() && (_reader == null)) {
             setIsReady(openInputFile());
         } else if (!isReady()) {
@@ -119,7 +120,7 @@ public class FileSystemCardReaderDevice extends SymbiontReaderDevice {
             } else {
                 var limit = Math.min(packet.getBuffer().limit(), input.length());
                 packet.getBuffer().put(input.getBytes(), 0, limit);
-                packet.setStatus(IoStatus.Successful);
+                packet.setStatus(input.length() > packet.getBuffer().limit() ? IoStatus.ReadOverrun : IoStatus.Successful);
             }
         } catch (IOException ex) {
             dropAndClose();
