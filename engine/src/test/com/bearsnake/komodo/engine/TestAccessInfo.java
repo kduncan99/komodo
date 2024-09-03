@@ -19,28 +19,28 @@ public class TestAccessInfo {
     @Test
     public void constructor() {
         AccessInfo ai = new AccessInfo();
-        assertEquals(0, ai._domain);
-        assertEquals(0, ai._ring);
+        assertEquals(0, ai.getDomain());
+        assertEquals(0, ai.getRing());
     }
 
     @Test
     public void populatingConstructor() {
         for (int x = 0; x < 20000; ++x) {
-            int ring = _random.nextInt(0x4);
-            long domain = _random.nextInt(0x10000);
-            AccessInfo ai = new AccessInfo(ring, domain);
-            assertEquals(ring, ai._ring);
-            assertEquals(domain, ai._domain);
+            var ring = (short)_random.nextInt(0x4);
+            var domain = _random.nextInt(0x10000);
+            AccessInfo ai = new AccessInfo(domain, ring);
+            assertEquals(ring, ai.getRing());
+            assertEquals(domain, ai.getDomain());
         }
     }
 
     @Test
     public void equality() {
         for (int x = 0; x < 20000; ++x) {
-            int ring = _random.nextInt(0x4);
-            long domain = _random.nextLong() & 0xFFFF;
-            AccessInfo ai0 = new AccessInfo(ring, domain);
-            AccessInfo ai1 = new AccessInfo(ring, domain);
+            var ring = (short)_random.nextInt(0x4);
+            var domain = _random.nextInt(0xFFFF);
+            AccessInfo ai0 = new AccessInfo(domain, ring);
+            AccessInfo ai1 = new AccessInfo(domain, ring);
             assertEquals(ai0, ai1);
         }
     }
@@ -48,13 +48,13 @@ public class TestAccessInfo {
     @Test
     public void inequality() {
         for (int x = 0; x < 20000; ++x) {
-            int ring0 = _random.nextInt(0x4);
-            int ring1 = _random.nextInt(0x4);
-            long domain0 = _random.nextLong() & 0xFFFF;
-            long domain1 = _random.nextLong() & 0xFFFF;
+            var ring0 = (short)_random.nextInt(0x4);
+            var ring1 = (short)_random.nextInt(0x4);
+            var domain0 = _random.nextInt(0xFFFF);
+            var domain1 = _random.nextInt(0xFFFF);
             if ((ring0 != ring1) || (domain0 != domain1)) {
-                AccessInfo ai0 = new AccessInfo(ring0, domain0);
-                AccessInfo ai1 = new AccessInfo(ring1, domain1);
+                AccessInfo ai0 = new AccessInfo(domain0, ring0);
+                AccessInfo ai1 = new AccessInfo(domain1, ring1);
                 assertNotEquals(ai0, ai1);
             }
         }

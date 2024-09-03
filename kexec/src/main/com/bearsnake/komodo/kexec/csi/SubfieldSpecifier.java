@@ -38,4 +38,9 @@ public class SubfieldSpecifier {
     public int hashCode() {
         return _fieldIndex << 8 | _subfieldIndex;
     }
+
+    @Override
+    public String toString() {
+        return "[fld=" + _fieldIndex + ", subFld=" + _subfieldIndex + "]";
+    }
 }

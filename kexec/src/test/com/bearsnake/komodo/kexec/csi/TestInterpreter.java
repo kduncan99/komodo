@@ -29,7 +29,7 @@ public class TestInterpreter {
         LogManager.setGlobalLevel(Level.Trace);
         var ex = new Exec(new boolean[36]);
         ex.setConfiguration(new Configuration());
-        var rci = RunCardInfo.parse(_rce, "@RUN TEST");
+        var rci = RunCardInfo.parse(ex, "@RUN TEST");
         _rce = new BatchRun("RUNID", rci);
     }
 
@@ -191,41 +191,16 @@ public class TestInterpreter {
         assertEquals("ASG", ps._mnemonic);
         assertNull(ps._label);
         assertEquals(0, ps._optionsFields.size());
-        assertEquals(4, ps._operandFields.size());
+        assertEquals(5, ps._operandFields.size());
 
         assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(0, 0)));
+        assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(1, 0)));
         assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(2, 0)));
         assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(2, 1)));
         assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(2, 2)));
 
         assertEquals("qual*file(3)/read/write", ps._operandFields.get(new SubfieldSpecifier(0, 0)));
-        assertEquals("a", ps._operandFields.get(new SubfieldSpecifier(2, 0)));
-        assertEquals("bbb", ps._operandFields.get(new SubfieldSpecifier(2, 1)));
-        assertEquals("cat", ps._operandFields.get(new SubfieldSpecifier(2, 2)));
-
-        assertFalse(ps._facStatusResult.hasErrorMessages());
-        assertFalse(ps._facStatusResult.hasInfoMessages());
-        assertFalse(ps._facStatusResult.hasWarningMessages());
-        assertEquals(0, ps._facStatusResult.getStatusWord());
-    }
-
-    @Test
-    public void testCat() {
-        var text = "@cat,pg qual*file(3)/read/write, , a/  bbb/  cat comment";
-        var ps = Interpreter.parseControlStatement(_rce, text);
-        ps._facStatusResult.dump(System.out, "");
-
-        assertEquals("CAT", ps._mnemonic);
-        assertNull(ps._label);
-        assertEquals(0, ps._optionsFields.size());
-        assertEquals(4, ps._operandFields.size());
-
-        assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(0, 0)));
-        assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(2, 0)));
-        assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(2, 1)));
-        assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(2, 2)));
-
-        assertEquals("qual*file(3)/read/write", ps._operandFields.get(new SubfieldSpecifier(0, 0)));
+        assertEquals("", ps._operandFields.get(new SubfieldSpecifier(1, 0)));
         assertEquals("a", ps._operandFields.get(new SubfieldSpecifier(2, 0)));
         assertEquals("bbb", ps._operandFields.get(new SubfieldSpecifier(2, 1)));
         assertEquals("cat", ps._operandFields.get(new SubfieldSpecifier(2, 2)));
