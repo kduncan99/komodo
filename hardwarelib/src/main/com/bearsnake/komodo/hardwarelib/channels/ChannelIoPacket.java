@@ -61,6 +61,7 @@ public class ChannelIoPacket {
         final StringBuilder sb = new StringBuilder();
         sb.append("[node:").append(_nodeIdentifier).append(" ").append(_ioFunction);
         if (_ioFunction == IoFunction.Read || _ioFunction == IoFunction.ReadBackward || _ioFunction == IoFunction.Write) {
+            sb.append(" len:").append(_buffer.getSize());
             if (_deviceWordAddress != null) {
                 sb.append(" drwa:").append(_deviceWordAddress);
             }

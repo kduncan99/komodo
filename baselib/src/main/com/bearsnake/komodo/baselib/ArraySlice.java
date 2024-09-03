@@ -396,8 +396,8 @@ public class ArraySlice {
         int partial = 0;
 
         while ((wordsLeft > 0) && (bytesLeft > 0)) {
-            if (skipOnSectorBoundary && (sx % 128 == 126)) {
-                sx += 2;
+            if (skipOnSectorBoundary && (dx % 128 == 126)) {
+                dx += 2;
             }
             switch (partial) {
                 case 0:

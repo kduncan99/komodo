@@ -60,7 +60,7 @@ public class LogManager {
         if (level.ordinal() <= _level.ordinal() && _enabled) {
             var dateTime = LocalDateTime.now();
             var dtStr = _dateTimeFormatter.format(dateTime);
-            var msg = String.format("%s:%s:%s:", dtStr, level._text, source);
+            var msg = String.format("%s:%s:%s[%s]:", dtStr, level._text, source, Thread.currentThread().getName());
             msg += String.format(format, parameters);
 
             synchronized (_loggers) {
