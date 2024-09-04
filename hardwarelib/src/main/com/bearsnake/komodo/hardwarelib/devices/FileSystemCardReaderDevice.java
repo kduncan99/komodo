@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class FileSystemCardReaderDevice extends SymbiontReaderDevice {
@@ -111,6 +112,8 @@ public class FileSystemCardReaderDevice extends SymbiontReaderDevice {
             packet.setStatus(IoStatus.BufferIsNull);
             return;
         }
+
+        IntStream.range(0, packet.getBuffer().limit()).forEach(bx -> packet.getBuffer().put(bx, (byte) 0x20));
 
         try {
             var input = _reader.readLine();

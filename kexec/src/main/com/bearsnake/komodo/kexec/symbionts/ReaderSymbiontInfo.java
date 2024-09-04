@@ -7,6 +7,7 @@ package com.bearsnake.komodo.kexec.symbionts;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.hardwarelib.IoFunction;
 import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
 import com.bearsnake.komodo.hardwarelib.channels.TransferFormat;
 import com.bearsnake.komodo.baselib.FileSpecification;
@@ -24,6 +25,8 @@ import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.LinkedList;
 
 /**
  * Handles input symbionts - essentially card readers, virtual or otherwise.
@@ -42,6 +45,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
         _channelPacket = new ChannelIoPacket();
         _channelPacket.setBuffer(new ArraySlice(new long[33]))
                       .setFormat(TransferFormat.QuarterWord)
+                      .setIoFunction(IoFunction.Read)
                       .setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier());
     }
 
@@ -172,6 +176,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
         var retry = true;
         while (retry) {
             var failed = false;
+            var failMessage = "";
             try {
                 fm.routeIo(_channelPacket);
                 switch (_channelPacket.getIoStatus()) {
@@ -195,20 +200,24 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                         exec.sendExecReadOnlyMessage(getStateString(), ConsoleType.InputOutput);
                     }
 
-                case Successful -> {
+                    case Successful -> {
                         _imageCount++;
                         var image = Word36.toStringFromASCII(_channelPacket.getBuffer());
                         handleImage(image);
                     }
 
-                    default -> failed = true;
+                    default -> {
+                        failed = true;
+                        failMessage = _channelPacket.getIoStatus().toString();
+                    }
                 }
             } catch (NoRouteForIOException ex) {
                 failed = true;
+                failMessage = NO_ROUTE_FOR_IO_MSG;
             }
 
             if (failed) {
-                retry = notifyConsoleIOError(NO_ROUTE_FOR_IO_MSG, true);
+                retry = notifyConsoleIOError(failMessage, true);
             } else {
                 break;
             }
@@ -225,6 +234,9 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                 var msg = _node.getNodeName() + " Missing or Invalid @RUN card";
                 exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
                 resetNode();
+                _status = SymbiontStatus.Inactive;
+                _state = SymbiontState.Stopped;
+                exec.sendExecReadOnlyMessage(getStateString(), ConsoleType.InputOutput);
                 return;
             }
 
@@ -237,6 +249,9 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                 var msg = _node.getNodeName() + " Invalid @RUN card";
                 exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
                 resetNode();
+                _status = SymbiontStatus.Inactive;
+                _state = SymbiontState.Stopped;
+                exec.sendExecReadOnlyMessage(getStateString(), ConsoleType.InputOutput);
             }
         } else {
             // We are building a run.
@@ -273,13 +288,13 @@ class ReaderSymbiontInfo extends SymbiontInfo {
         var run = exec.createBatchRun(runCardInfo);
 
         // Create the READ$ file and assign it to the exec (for now).
-        var filename = "READ$X" + _run.getActualRunId();
+        var filename = "READ$X" + run.getActualRunId();
         var fileSpecification = new FileSpecification("SYS$", filename, null, null, null);
         var fsResult = new FacStatusResult();
         fm.catalogDiskFile(fileSpecification,
                            cfg.getStringValue(Tag.MDFALT),
-                           _run.getProjectId(),
-                           _run.getAccountId(),
+                           run.getProjectId(),
+                           run.getAccountId(),
                            false,
                            false,
                            true,
@@ -289,7 +304,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                            Granularity.Track,
                            1,
                            999,
-                           null,
+                           new LinkedList<>(),
                            fsResult);
         if ((fsResult.getStatusWord() & 0_400000_000000L) != 0) {
             run.setInvalidRunReason(String.format("FAC STATUS %012o CREATING READ$ FILE", fsResult.getStatusWord()));

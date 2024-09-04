@@ -40,7 +40,7 @@ public class Main {
 
     private static void showUsage() {
         System.out.println("Usage:");
-        System.out.println("  kexec [-h] [-c config_file] [-j jump_key,...]");
+        System.out.println("  kexec [-h] [-cf config_file] [-jk jump_key,...]");
     }
 
     private static Context processArgs(String[] args) {
@@ -50,35 +50,38 @@ public class Main {
         while (ax < args.length) {
             var sw = args[ax++];
             switch (sw.toLowerCase()) {
-            case "-c":
-                if (ax == args.length) {
-                    System.err.println("no argument specified for -c switch");
-                    return null;
-                }
-                context._configFileName = args[ax++];
-                break;
-
-            case "-h":
-                context._helpFlagSet = true;
-                break;
-
-            case "-jk":
-                if (ax == args.length) {
-                    System.err.println("no argument specified for -jk switch");
-                    return null;
-                }
-                var split = args[ax++].split(",");
-                for (var key : split) {
-                    try {
-                        var jk = Integer.parseInt(key);
-                        context._jumpKeys[jk - 1] = true;
-                        System.out.printf("Setting jk %d\n", jk);
-                    } catch (NumberFormatException ex) {
-                        System.err.printf("invalid jump key %s\n", key);
+                case "-cf" -> {
+                    if (ax == args.length) {
+                        System.err.println("no argument specified for -c switch");
                         return null;
                     }
+                    context._configFileName = args[ax++];
                 }
-                break;
+
+                case "-h" -> context._helpFlagSet = true;
+
+                case "-jk" -> {
+                    if (ax == args.length) {
+                        System.err.println("no argument specified for -jk switch");
+                        return null;
+                    }
+                    var split = args[ax++].split(",");
+                    for (var key : split) {
+                        try {
+                            var jk = Integer.parseInt(key);
+                            context._jumpKeys[jk - 1] = true;
+                            System.out.printf("Setting jk %d\n", jk);
+                        } catch (NumberFormatException ex) {
+                            System.err.printf("invalid jump key %s\n", key);
+                            return null;
+                        }
+                    }
+                }
+
+                default -> {
+                    System.err.printf("Switch %s not recognized\n", sw);
+                    return null;
+                }
             }
         }
 

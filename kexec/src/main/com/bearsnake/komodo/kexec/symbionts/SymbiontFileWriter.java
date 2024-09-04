@@ -220,9 +220,16 @@ public class SymbiontFileWriter implements SymbiontWriter {
         final int spacing,
         final String image
     ) throws ExecStoppedException, ExecIOException {
-        var dataBuffer = (_currentCharacterSet == 0)
-            ? ArraySlice.stringToWord36Fieldata(image.substring(0, 2047 * 6))
-            : ArraySlice.stringToWord36ASCII(image.substring(0, 2047 * 4));
+        ArraySlice dataBuffer = null;
+        if (_currentCharacterSet == 0) {
+            // fieldata
+            var limit = Math.min(image.length(), 2047 * 6);
+            dataBuffer = ArraySlice.stringToWord36Fieldata(image.substring(0, limit));
+        } else {
+            // ascii
+            var limit = Math.min(image.length(), 2047 * 4);
+            dataBuffer = ArraySlice.stringToWord36ASCII(image.substring(0, limit));
+        }
 
         var dataLen = dataBuffer._array.length;
         if (dataLen + 1 <= _bufferRemaining) {

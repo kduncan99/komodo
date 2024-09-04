@@ -14,6 +14,7 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 import com.bearsnake.komodo.kexec.facilities.NodeStatus;
 import com.bearsnake.komodo.logger.LogManager;
@@ -57,11 +58,12 @@ public abstract class SymbiontInfo implements Runnable {
 
     public final void run() {
         LogManager.logTrace(_node.getNodeName(), "SymbiontInfo thread starting");
+        var exec = Exec.getInstance();
 
         while (!_terminate) {
             try {
                 int delay = 0;
-                if (!Exec.getInstance().getGenFileInterface().isReady()) {
+                if (!exec.getGenFileInterface().isReady()) {
                     delay = POLL_LONG_DELAY_MILLISECONDS;
                 } else {
                     delay = poll() ? 0 : POLL_DELAY_MILLISECONDS;
@@ -71,6 +73,10 @@ public abstract class SymbiontInfo implements Runnable {
                 LogManager.logCatching(_node.getNodeName(), ex);
             } catch (ExecStoppedException ex) {
                 LogManager.logCatching(_node.getNodeName(), ex);
+                _terminate = true;
+            } catch (Throwable t) {
+                LogManager.logCatching(_node.getNodeName(), t);
+                exec.stop(StopCode.ExecActivityTakenToEMode);
                 _terminate = true;
             }
         }

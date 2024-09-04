@@ -8,7 +8,7 @@ import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.hardwarelib.IoFunction;
 import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.hardwarelib.devices.Device;
-import com.bearsnake.komodo.hardwarelib.devices.DiskDevice;
+import com.bearsnake.komodo.hardwarelib.devices.SymbiontDevice;
 import com.bearsnake.komodo.hardwarelib.devices.SymbiontDevice;
 import com.bearsnake.komodo.hardwarelib.devices.SymbiontIoPacket;
 import com.bearsnake.komodo.logger.LogManager;
@@ -48,16 +48,12 @@ public class SymbiontChannel extends Channel {
             if (!_devices.containsKey(nodeId)) {
                 channelPacket.setIoStatus(IoStatus.DeviceIsNotAttached);
             } else {
-                if (channelPacket.getFormat() != TransferFormat.Packed) {
-                    channelPacket.setIoStatus(IoStatus.InvalidTransferFormat);
-                } else {
-                    var device = (DiskDevice) _devices.get(nodeId);
-                    switch (channelPacket.getIoFunction()) {
-                        case Read -> processRead(device, channelPacket);
-                        case Reset -> processReset(device, channelPacket);
-                        case Write -> processWrite(device, channelPacket);
-                        default -> channelPacket.setIoStatus(IoStatus.InvalidFunction);
-                    }
+                var device = (SymbiontDevice) _devices.get(nodeId);
+                switch (channelPacket.getIoFunction()) {
+                    case Read -> processRead(device, channelPacket);
+                    case Reset -> processReset(device, channelPacket);
+                    case Write -> processWrite(device, channelPacket);
+                    default -> channelPacket.setIoStatus(IoStatus.InvalidFunction);
                 }
             }
         }
@@ -84,7 +80,7 @@ public class SymbiontChannel extends Channel {
         return IoStatus.Successful;
     }
 
-    private synchronized void processRead(DiskDevice device,
+    private synchronized void processRead(SymbiontDevice device,
                                           ChannelIoPacket channelPacket) {
         var ioStatus = checkPacket(channelPacket);
         if (ioStatus != IoStatus.Successful) {
@@ -93,8 +89,10 @@ public class SymbiontChannel extends Channel {
         }
 
         SymbiontIoPacket ioPacket = new SymbiontIoPacket();
-        ioPacket.setSpacing(channelPacket.getSymbiontSpacing())
-                .setFunction(IoFunction.Read);
+        if (channelPacket.getSymbiontSpacing() != null) {
+            ioPacket.setSpacing(channelPacket.getSymbiontSpacing());
+        }
+        ioPacket.setFunction(IoFunction.Read);
 
         if (channelPacket.getFormat() == TransferFormat.SixthWord) {
             // Do like below, but translate from ASCII to Fieldata...
@@ -131,7 +129,7 @@ public class SymbiontChannel extends Channel {
                      .setAdditionalStatus(ioPacket.getAdditionalStatus());
     }
 
-    private synchronized void processReset(DiskDevice device,
+    private synchronized void processReset(SymbiontDevice device,
                                            ChannelIoPacket channelPacket) {
         var ioPacket = (SymbiontIoPacket) new SymbiontIoPacket().setFunction(channelPacket.getIoFunction());
         device.performIo(ioPacket);
@@ -139,7 +137,7 @@ public class SymbiontChannel extends Channel {
                      .setAdditionalStatus(ioPacket.getAdditionalStatus());
     }
 
-    private synchronized void processWrite(DiskDevice device,
+    private synchronized void processWrite(SymbiontDevice device,
                                            ChannelIoPacket channelPacket) {
         var ioStatus = checkPacket(channelPacket);
         if (ioStatus != IoStatus.Successful) {
