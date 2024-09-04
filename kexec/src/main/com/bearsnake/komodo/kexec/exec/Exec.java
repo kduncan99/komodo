@@ -335,15 +335,9 @@ public class Exec extends Run {
         out.printf("  JumpKeys:       %s\n", jkStr);
         out.printf("  Allow Recovery: %s\n", _allowRecoveryBoot);
 
-        out.println("  Run Control Entries:");
-        for (var rce : _runEntries.values()) {
-            rce.dump(out, "    ", verbose);
-        }
-
-        for (var m : _managers) {
-            m.dump(out, "  ", verbose);
-        }
-
+        out.println("  Run control entries:");
+        _runEntries.values().forEach(rce -> rce.dump(out, "    ", verbose));
+        _managers.forEach(m -> m.dump(out, "  ", verbose));
         _genFileInterface.dump(out, "  ", verbose);
 
         out.close();

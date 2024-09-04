@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class FacilitiesItemTable {
 
-    private static final ConcurrentLinkedQueue<FacilitiesItem> _content = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<FacilitiesItem> _content = new ConcurrentLinkedQueue<>();
 
     /**
      * Adds the facilities item to the table.
@@ -30,9 +30,7 @@ public class FacilitiesItemTable {
     public void dump(final PrintStream out,
                      final String indent,
                      final boolean verbose) {
-        for (var fi : _content) {
-            fi.dump(out, indent + "  ");
-        }
+        _content.forEach(fi -> fi.dump(out, indent + "  "));
     }
 
     /**

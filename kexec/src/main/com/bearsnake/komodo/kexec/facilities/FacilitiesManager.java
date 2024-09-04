@@ -1571,20 +1571,20 @@ public class FacilitiesManager implements Manager {
     }
 
     public synchronized DiskFileFacilitiesItem ioGetDiskFileFacilitiesItem(
+        final Run run,
         final String internalName
     ) throws ExecStoppedException {
         var exec = Exec.getInstance();
 
-        var fit = exec.getFacilitiesItemTable();
-        var facItem = fit.getFacilitiesItemByInternalName(internalName);
+        var facItem = run.getFacilitiesItemTable().getFacilitiesItemByInternalName(internalName);
         switch (facItem) {
             case null -> {
-                LogManager.logFatal(LOG_SOURCE, "Cannot find facItem for file %s", internalName);
+                LogManager.logFatal(LOG_SOURCE, "[%s] Cannot find facItem for file %s", run.getActualRunId(), internalName);
                 exec.stop(StopCode.InternalExecIOFailed);
                 throw new ExecStoppedException();
             }
             case NameItem nameItem -> {
-                LogManager.logFatal(LOG_SOURCE, "File %s is not assigned", internalName);
+                LogManager.logFatal(LOG_SOURCE, "[%s] File %s is not assigned", run.getActualRunId(), internalName);
                 exec.stop(StopCode.InternalExecIOFailed);
                 throw new ExecStoppedException();
             }
@@ -1592,7 +1592,7 @@ public class FacilitiesManager implements Manager {
                 return dfi;
             }
             default -> {
-                LogManager.logFatal(LOG_SOURCE, "File %s is not a disk file", internalName);
+                LogManager.logFatal(LOG_SOURCE, "[%s] File %s is not a disk file", run.getActualRunId(), internalName);
                 exec.stop(StopCode.InternalExecIOFailed);
                 throw new ExecStoppedException();
             }
@@ -1627,7 +1627,7 @@ public class FacilitiesManager implements Manager {
         var mm = exec.getMFDManager();
 
         try {
-            var dfi = ioGetDiskFileFacilitiesItem(internalName);
+            var dfi = ioGetDiskFileFacilitiesItem(run, internalName);
             var aci = dfi.getAcceleratedCycleInfo();
             var fas = aci.getFileAllocationSet();
             var fci = (DiskFileCycleInfo)aci.getFileCycleInfo();
@@ -1743,7 +1743,7 @@ public class FacilitiesManager implements Manager {
         var mm = exec.getMFDManager();
 
         try {
-            var dfi = ioGetDiskFileFacilitiesItem(internalName);
+            var dfi = ioGetDiskFileFacilitiesItem(run, internalName);
             if (!dfi.isWriteable()) {
                 ioResult.setStatus(ERIO$Status.WriteInhibited).setWordsTransferred(0);
                 return;

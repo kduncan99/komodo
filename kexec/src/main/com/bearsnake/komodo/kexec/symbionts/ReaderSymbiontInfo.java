@@ -25,11 +25,11 @@ import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.LinkedList;
 
 /**
- * Handles input symbionts - essentially card readers, virtual or otherwise.
+ * Handles input symbionts' state machine - one instance per device.
+ * This is for anything which acts as a card reader, virtual or otherwise.
  */
 class ReaderSymbiontInfo extends SymbiontInfo {
 
@@ -273,7 +273,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
 
     /**
      * Creates a batch run for the given run card.
-     * @return true if things go well, and we can continue building the run - in which case _run will be a reference to the
+     * @return true if things go well, and we can continue building the run - in which case run will be a reference to the
      * BatchRun we are building. Otherwise, we return false indicating that the run cannot proceed. The run will be marked invalid
      * so that it can be brought out of backlog and shot down. The scanner can go ahead and drop the rest of the input.
      * @param runCardInfo represents the @RUN image which precipitated this

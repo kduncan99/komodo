@@ -152,7 +152,6 @@ public abstract class Run {
 
             // TODO privileges
 
-            out.printf("%s  Facility Items:\n", indent);
             _facilitiesItemTable.dump(out, indent + "    ", verbose);
         }
     }
