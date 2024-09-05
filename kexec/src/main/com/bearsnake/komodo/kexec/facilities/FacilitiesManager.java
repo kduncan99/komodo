@@ -1570,13 +1570,18 @@ public class FacilitiesManager implements Manager {
         return sb.toString();
     }
 
+    /**
+     * Finds the facilities item in the fac item table which best matches the given internal name.
+     * @param run run of interest
+     * @param internalName name for which we search
+     */
     public synchronized DiskFileFacilitiesItem ioGetDiskFileFacilitiesItem(
         final Run run,
         final String internalName
     ) throws ExecStoppedException {
         var exec = Exec.getInstance();
 
-        var facItem = run.getFacilitiesItemTable().getFacilitiesItemByInternalName(internalName);
+        var facItem = run.getFacilitiesItemTable().getFacilitiesItemByFilenameSearch(run, internalName);
         switch (facItem) {
             case null -> {
                 LogManager.logFatal(LOG_SOURCE, "[%s] Cannot find facItem for file %s", run.getActualRunId(), internalName);
@@ -1894,7 +1899,7 @@ public class FacilitiesManager implements Manager {
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
-                            "releaseFile %s %s inh=%s del=%s inhCat=%s relX=%s",
+                            "releaseFile %s %s del=%s inhCat=%s relX=%s",
                             fileSpecification.toString(),
                             behavior,
                             deleteFileCycle,
@@ -2030,7 +2035,7 @@ public class FacilitiesManager implements Manager {
                 // TODO release unused reserve?
 
                 fiTable.removeFacilitiesItem(facItem);
-                mm.decelerateFileCycle(fcInfo);
+                mm.decelerateFileCycle(dfi.getAcceleratedCycleInfo().getFileCycleInfo());
             } else if (facItem instanceof TapeFileFacilitiesItem tfi) {
                 if (deleteFileCycle || tfi.deleteOnAnyRunTermination() || tfi.deleteOnNormalRunTermination()) {
                     try {

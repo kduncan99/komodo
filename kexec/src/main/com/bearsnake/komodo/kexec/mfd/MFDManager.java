@@ -466,7 +466,7 @@ public class MFDManager implements Manager {
         final FileCycleInfo fcInfo
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
-                            "accelerateFileCycle %s*%s(%d)",
+                            "decelerateFileCycle %s*%s(%d)",
                             fcInfo.getQualifier(),
                             fcInfo.getFilename(),
                             fcInfo.getAbsoluteCycle());

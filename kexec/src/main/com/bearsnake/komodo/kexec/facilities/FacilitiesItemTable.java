@@ -163,6 +163,38 @@ public class FacilitiesItemTable {
     }
 
     /**
+     * Generally for any situation (esp. IO) which presents a simple filename, and expects to receive the
+     * facilities item which best matches the filename.
+     * We search first for internal names, then for any file which matches the current qualifier,
+     * and finally for the first file we can find with any qualifier, which matches on the filename.
+     * @param filename filename for the search
+     */
+    public synchronized FacilitiesItem getFacilitiesItemByFilenameSearch(
+        final Run run,
+        final String filename
+    ) {
+        var facItem = getFacilitiesItemByInternalName(filename);
+        if (facItem == null) {
+            var qual = run.getDefaultQualifier();
+            for (var fi : _content) {
+                if (fi.getQualifier().equalsIgnoreCase(qual) && fi.getFilename().equalsIgnoreCase(filename)) {
+                    facItem = fi;
+                    break;
+                }
+            }
+        }
+        if (facItem == null) {
+            for (var fi : _content) {
+                if (fi.getFilename().equalsIgnoreCase(filename)) {
+                    facItem = fi;
+                    break;
+                }
+            }
+        }
+        return facItem;
+    }
+
+    /**
      * If filename is an internal name for a facilities item return that item.
      * @param name internal filename
      * @return fac item if found, else null
