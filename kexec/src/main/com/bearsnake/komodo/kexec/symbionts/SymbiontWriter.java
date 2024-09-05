@@ -15,6 +15,12 @@ import java.time.Instant;
  */
 public interface SymbiontWriter {
 
+    /**
+     * Writes an EOF control record to the output buffer, then drains the buffer to backing storage.
+     * Does not actually close anything.
+     */
+    public abstract void close() throws ExecStoppedException, ExecIOException;
+
     public abstract void setCurrentCharacterSet(
         final int characterSet
     ) throws ExecStoppedException, ExecIOException;

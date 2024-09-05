@@ -14,6 +14,8 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.IOResult;
+import com.bearsnake.komodo.logger.Level;
+import com.bearsnake.komodo.logger.LogManager;
 
 import java.time.Instant;
 
@@ -32,6 +34,17 @@ public class SymbiontFileWriter implements SymbiontWriter {
     private int _currentCharacterSet;     // 0 is fieldata, we treat anything else as ASCII-like
 
     /**
+     * Writes an EOF control record to the output buffer, then drains the buffer to backing storage.
+     * Does not actually close anything.
+     */
+    public void close() throws ExecStoppedException, ExecIOException {
+        if (_bufferIndex > 0) {
+            writeEndOfFileControlImage();
+            writeBuffer();
+        }
+    }
+
+    /**
      * For writing an SDF file
      * @param internalFileName internal file name of file containing the symbiont input element
      * @param fileType SDFFileType (probably PRINT$ or PUNCH$)
@@ -47,6 +60,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
         _currentCharacterSet = initialCharacterSet;
         _fileType = fileType;
         _buffer = new ArraySlice(new long[bufferSize]);
+        _bufferRemaining = bufferSize;
         _nextAddress = 0;
     }
 
@@ -205,6 +219,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
     public void writeDataImage(
         final String image
     ) throws ExecStoppedException, ExecIOException {
+        LogManager.logInfo("SymbiontFileWriter", "writeDataImage:'%s'", image);// TODO remove
         writeDataImage(_fileType == SDFFileType.PRINT$ ? 1 : 0, image);
     }
 
@@ -220,6 +235,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
         final int spacing,
         final String image
     ) throws ExecStoppedException, ExecIOException {
+        LogManager.logInfo("SymbiontFileWriter", "writeDataImage:%d,'%s'", spacing, image);// TODO remove
         ArraySlice dataBuffer = null;
         if (_currentCharacterSet == 0) {
             // fieldata
@@ -260,6 +276,9 @@ public class SymbiontFileWriter implements SymbiontWriter {
     }
 
     private void writeBuffer() throws ExecStoppedException, ExecIOException {
+        // TODO remove begin
+        _buffer.logMultiFormat(Level.Info, "SymbiontFileWriter", "buffer");
+        // TODO remove end
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
         var ioResult = new IOResult();
@@ -281,6 +300,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
     private void writeWord(
         final long word
     ) throws ExecStoppedException, ExecIOException {
+        LogManager.logInfo("SymbiontFileWriter", "writeWord:%012o", word);// TODO remove
         if (_bufferRemaining == 0) {
             writeBuffer();
         }
@@ -293,6 +313,7 @@ public class SymbiontFileWriter implements SymbiontWriter {
         final int offset,
         final int count
     ) throws ExecStoppedException, ExecIOException {
+        LogManager.logInfo("SymbiontFileWriter", "writeWords offset=%d count=%d", offset, count);// TODO remove
         var wx = offset;
         var remaining = count;
         while (remaining > 0) {

@@ -494,6 +494,8 @@ public class Exec extends Run {
      * @param runid proposed (original) runid
      * @return unique runid
      */
+
+    //TODO UNIT TESTS, DAMMIT
     private String createUniqueRunid(
         final String runid
     ) throws ExecStoppedException {

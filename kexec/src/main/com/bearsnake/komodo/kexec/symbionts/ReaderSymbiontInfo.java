@@ -183,7 +183,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                     case EndOfFile -> {
                         if (_run != null) {
                             try {
-                                _fileWriter.writeEndOfFileControlImage();
+                                _fileWriter.close();
                                 _run.setIsReady();
                                 _fileWriter = null;
                                 _run = null;
@@ -320,7 +320,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
             return false;
         }
 
-        // Set up SymbiontFileWriter for READ$ file.
+        // Set up SymbiontFileWriter for READ$ file, and write the @RUN image thereto.
         // Yes, I know the READ$ file needs a SymbiontFileReader, but that only happens when the run
         // comes out of backlog.  First we have to write the stupid thing.
         SymbiontFileWriter fileWriter = null;
