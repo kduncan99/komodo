@@ -32,8 +32,8 @@ public class KeyinManager implements Manager {
         // AC
         // AP
         // AT
-        // B
-        // BL
+        _handlerClasses.put(BKeyinHandler.COMMAND.toUpperCase(), BKeyinHandler.class);
+        _handlerClasses.put(BLKeyinHandler.COMMAND.toUpperCase(), BLKeyinHandler.class);
         _handlerClasses.put(CJKeyinHandler.COMMAND.toUpperCase(), CJKeyinHandler.class);
         // CK
         // CS

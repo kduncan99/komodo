@@ -1,7 +1,5 @@
 -- TODO InProgress
 
-We need to figure out how we're going to represent the hardware configuration pretty dang soon.
-
 SymbiontFileWriter
     some unimplemented methods
 
@@ -9,10 +7,6 @@ InputSymbiontInfoFile
     lots to implement
 
 SymbiontManager
-
-Configuration
-    Hardware configuration
-    Symbiont group configuration
 
 CSI
     Several statements to be done
@@ -29,9 +23,6 @@ Hardware
 
 GENF$
     Output queue record
-    Record storage and lookup
-    Saving MS disk count, session number, (anything else?) to GENF$
-    Initialize on JK9, JK13
     Recover on normal boot
 
 Facilities
