@@ -13,7 +13,10 @@ import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 import static com.bearsnake.komodo.baselib.Parser.isValidAccountId;
 import static com.bearsnake.komodo.baselib.Parser.isValidProjectId;
@@ -121,6 +124,15 @@ public class ScheduleManager implements Manager {
 
         _runEntries.put(actualRunId, run);
         return run;
+    }
+
+    public synchronized Collection<BatchRun> getBacklogRuns() {
+        return _runEntries.values()
+                          .stream()
+                          .filter(run -> run instanceof BatchRun)
+                          .map(run -> (BatchRun) run)
+                          .filter(br -> !br.isStarted())
+                          .collect(Collectors.toCollection(LinkedList::new));
     }
 
     public int getMaxBatchJobs() { return _maxBatchJobs; }

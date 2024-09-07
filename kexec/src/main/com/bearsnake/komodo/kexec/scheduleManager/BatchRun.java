@@ -12,6 +12,16 @@ public class BatchRun extends Run implements Runnable {
     // Will be set when the input queue item is created; will be set to zero once the input queue item is removed.
     protected long _inputQueueAddress;
 
+    // True only if we have come out of backlog, and have subsequently finished.
+    // We *might* have queue items, but if we don't, we will very quickly be removed from ScheduleManager.
+    protected boolean _isFinished = false;
+
+    // False if we never left backlog; true if we are running, or we have finished.
+    // Usually there are queue items, but this might not be true for jobs which have *just* finished with no
+    // queue items and have not yet been removed from ScheduleManager, or for jobs which *did* have queue items
+    // but those queue items have just been removed and we have not yet been removed from ScheduleManager.
+    protected boolean _isStarted = false;
+
     // Indicates whether this run is currently suspended
     protected boolean _isSuspended = false;
 
@@ -21,8 +31,8 @@ public class BatchRun extends Run implements Runnable {
         _inputQueueAddress = 0;
     }
 
-    @Override public final boolean isFinished() { return false; } // TODO
-    @Override public final boolean isStarted() { return true; } // TODO
+    @Override public final boolean isFinished() { return _isFinished; }
+    @Override public final boolean isStarted() { return _isStarted; }
     @Override public final boolean isSuspended() { return _isSuspended; }
 
     public long getInputQueueAddress() { return _inputQueueAddress; }
