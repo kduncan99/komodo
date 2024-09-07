@@ -213,7 +213,7 @@ public class Parser {
         if (runId.isEmpty() || (runId.length() > 6)) {
             return false;
         }
-        return IntStream.range(0, runId.length()).allMatch(chx -> isValidQualifierChar(runId.charAt(chx)));
+        return IntStream.range(0, runId.length()).allMatch(chx -> isValidRunIdChar(runId.charAt(chx)));
     }
 
     public static boolean isValidRunIdChar(

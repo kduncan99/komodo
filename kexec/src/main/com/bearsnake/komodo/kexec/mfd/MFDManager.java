@@ -162,12 +162,12 @@ public class MFDManager implements Manager {
 
                             for (int wy = 0; wy < 7; wy++) {
                                 sb.append(" ");
-                                sb.append(String.format(Word36.toStringFromFieldata(trackData._array[wbase + wx + wy])));
+                                sb.append(Word36.toStringFromFieldata(trackData._array[wbase + wx + wy]));
                             }
 
                             for (int wy = 0; wy < 7; wy++) {
                                 sb.append(" ");
-                                sb.append(String.format(Word36.toStringFromASCII(trackData._array[wbase + wx + wy])));
+                                sb.append(Word36.toStringFromASCII(trackData._array[wbase + wx + wy]));
                             }
 
                             out.printf("%s    %s\n", indent, sb);

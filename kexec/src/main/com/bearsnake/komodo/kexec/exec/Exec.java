@@ -485,68 +485,63 @@ public class Exec extends Run {
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
+     * For createUniqueRunid, below
+     */
+    static String rotateString(final String input) {
+        var bytes = input.getBytes();
+        int ix = bytes.length - 1;
+        while (ix >= 0) {
+            if (bytes[ix] == '9') {
+                bytes[ix] = 'A';
+                ix--;
+            } else if (bytes[ix] == 'Z') {
+                bytes[ix] = '0';
+                return new String(bytes);
+            } else {
+                bytes[ix]++;
+                return new String(bytes);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Given an original runid (which should be uppercase already, but we don't trust that)
      * we generate a new unique runid so that we never have duplicated runids.
-     * Because we force uppercase, the caller should *always* use the result of this
-     * algorithm for the actual runid of a run.
-     * This needs to be invoked under synchronization during the process of adding a RunEntry,
-     * thus it is internal to the Exec class.
+     * Because we force uppercase, the caller should *always* use the result of this algorithm for the actual runid of a run.
+     * This needs to be invoked under synchronization during the process of adding a RunEntry, thus it is internal to the class.
+     * The result should be as follows:
+     *   The original run-id, if less than six characters, will have an 'A' appended to it.
+     *   Subsequent iterations will increment that appended character through 'Z', then through '0' to '9'.
+     *   The next iteration will increment the last character of the *original* run-id, and the appended characters will
+     *   then re-cycle. This will continue, incrementing each subsequent character to the left, until we have reached all
+     *   possible iterations of n+1 characters, where n is the length of the original run-id.
+     * Thus...
+     *   SYS -> SYSA -> SYSB ... SYS9 -> SYTA -> SYTB ... SYUA -> SYUB ... SZAA ... ZZZZ
+     * Once we reach Z...Z, iteration stops and we reject the run-id. Longer run-ids have more room for iteration.
+     * A run-id which begins with 6 characters will begin iterating with the last character of the run-id.
      * @param runid proposed (original) runid
      * @return unique runid
      */
-
-    //TODO UNIT TESTS, DAMMIT
-    private String createUniqueRunid(
+    String createUniqueRunid(
         final String runid
     ) throws ExecStoppedException {
         var original = runid.toUpperCase();
-        var proposed = original;
         synchronized (_runEntries) {
-            if (!_runEntries.containsKey(proposed)) {
-                return proposed;
+            if (!_runEntries.containsKey(original)) {
+                return original;
             }
 
-            if (proposed.length() < 6) {
-                proposed += 'A';
-                while (_runEntries.containsKey(proposed)) {
-                    var baseLen = proposed.length() - 1;
-                    var lastChar = proposed.charAt(baseLen);
-                    if (lastChar == '9') {
-                        // This allows us to move on from CMSA to CMSAA etc, or to use the standard
-                        // six-character rotation thereafter
-                        return createUniqueRunid(proposed);
-                    }
-
-                    lastChar = (lastChar == 'Z') ? '0' : lastChar++;
-                    proposed = proposed.substring(0, baseLen) + lastChar;
-                }
-            } else {
-                while (!_runEntries.containsKey(proposed)) {
-                    var chars = proposed.getBytes();
-                    int bx = 5;
-                    while (bx >= 0) {
-                        var ch = chars[bx];
-                        if (ch == '9') {
-                            chars[bx] = 'A';
-                            bx--;
-                        } else if (ch == 'Z') {
-                            chars[bx] = '0';
-                            break;
-                        } else {
-                            chars[bx]++;
-                            break;
-                        }
-                    }
-                    proposed = new String(chars);
-                    if (proposed.equals(original)) {
-                        stop(StopCode.FullCycleReachedForRunIds);
-                        throw new ExecStoppedException();
-                    }
+            var proposed = original.length() == 6 ? original : original + "A";
+            while (_runEntries.containsKey(proposed)) {
+                proposed = rotateString(proposed);
+                if (proposed == null) {
+                    stop(StopCode.FullCycleReachedForRunIds);
+                    throw new ExecStoppedException();
                 }
             }
+            return proposed;
         }
-
-        return proposed;
     }
 
     private String sendExecRestrictedReadReplyMessage(
