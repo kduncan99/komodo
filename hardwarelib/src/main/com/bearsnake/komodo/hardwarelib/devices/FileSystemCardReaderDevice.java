@@ -9,9 +9,11 @@ import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -108,23 +110,20 @@ public class FileSystemCardReaderDevice extends SymbiontReaderDevice {
             return;
         }
 
-        if (packet.getBuffer() == null) {
-            packet.setStatus(IoStatus.BufferIsNull);
-            return;
-        }
-
-        IntStream.range(0, packet.getBuffer().limit()).forEach(bx -> packet.getBuffer().put(bx, (byte) 0x20));
-
         try {
             var input = _reader.readLine();
             if (input == null) {
                 packet.setStatus(IoStatus.EndOfFile);
                 dropAndClose();
-            } else {
-                var limit = Math.min(packet.getBuffer().limit(), input.length());
-                packet.getBuffer().put(input.getBytes(), 0, limit);
-                packet.setStatus(input.length() > packet.getBuffer().limit() ? IoStatus.ReadOverrun : IoStatus.Successful);
+                return;
             }
+
+            var mod = input.length() % 4;
+            if (mod > 0) {
+                input += "    ".substring(mod);
+            }
+            packet.setBuffer(ByteBuffer.wrap(input.getBytes()));
+            packet.setStatus(IoStatus.Successful);
         } catch (IOException ex) {
             dropAndClose();
             packet.setStatus(IoStatus.SystemError).setAdditionalStatus(ex.getMessage());

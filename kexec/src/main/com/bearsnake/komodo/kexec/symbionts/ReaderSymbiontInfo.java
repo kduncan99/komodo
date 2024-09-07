@@ -202,7 +202,9 @@ class ReaderSymbiontInfo extends SymbiontInfo {
 
                     case Successful -> {
                         _imageCount++;
-                        var image = Word36.toStringFromASCII(_channelPacket.getBuffer());
+                        var image = Word36.toStringFromASCII(new ArraySlice(_channelPacket.getBuffer(),
+                                                                            0,
+                                                                            _channelPacket.getActualWordCount()));
                         handleImage(image);
                     }
 

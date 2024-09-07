@@ -12,6 +12,7 @@ import com.bearsnake.komodo.hardwarelib.devices.SymbiontDevice;
 import com.bearsnake.komodo.hardwarelib.devices.SymbiontDevice;
 import com.bearsnake.komodo.hardwarelib.devices.SymbiontIoPacket;
 import com.bearsnake.komodo.logger.LogManager;
+import jdk.management.jfr.FlightRecorderMXBean;
 
 import java.nio.ByteBuffer;
 
@@ -114,14 +115,22 @@ public class SymbiontChannel extends Channel {
                 channelPacket.setActualWordCount(channelPacket.getActualWordCount());
             }
         } else if (channelPacket.getFormat() == TransferFormat.QuarterWord) {
-            var byteCount = channelPacket.getBuffer().getSize() * 4;
-            var ioBuffer = ByteBuffer.allocate(byteCount);
-            ioPacket.setBuffer(ioBuffer);
-
             device.performIo(ioPacket);
             if (ioPacket.getStatus() == IoStatus.Successful) {
-                channelPacket.getBuffer().unpackQuarterWords(ioPacket.getBuffer().array());
-                channelPacket.setActualWordCount(channelPacket.getActualWordCount());
+                var maxChars = channelPacket.getBuffer().getSize() * 4;
+                var inputChars = ioPacket.getBuffer().limit();
+                var actualChars = Math.min(maxChars, inputChars);
+                var actualWords = actualChars / 4;
+                if (actualChars % 4 > 0) {
+                    actualWords++;
+                }
+
+                if (inputChars > maxChars) {
+                    ioPacket.setStatus(IoStatus.ReadOverrun);
+                }
+
+                channelPacket.getBuffer().unpackQuarterWords(ioPacket.getBuffer().array(), 0, actualChars);
+                channelPacket.setActualWordCount(actualWords);
             }
         }
 
