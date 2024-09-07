@@ -26,7 +26,21 @@ class BKeyinHandler extends KeyinHandler {
 
     @Override
     boolean checkSyntax() {
-        return true; // TODO
+        if (_options != null) {
+            return false;
+        }
+
+        if (_arguments != null) {
+            try {
+                if (_arguments.startsWith("-")) {
+                    return false;
+                }
+                _maxRuns = Integer.parseInt(_arguments);
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -43,9 +57,19 @@ class BKeyinHandler extends KeyinHandler {
 
     @Override
     void process() {
+        var exec = Exec.getInstance();
+        var sch = exec.getScheduleManager();
         if (_maxRuns != null) {
-            // TODO
+            if (_maxRuns > 99999) {
+                var msg = "B KEYIN - VALUE MUST BE <= 99999";
+                exec.sendExecReadOnlyMessage(msg, _source);
+                return;
+            }
+
+            sch.setMaxBatchJobs(_maxRuns);
         }
-        // TODO display
+
+        var msg = String.format("MAX BATCH RUNS = %d", sch.getMaxBatchJobs());
+        exec.sendExecReadOnlyMessage(msg, _source);
     }
 }

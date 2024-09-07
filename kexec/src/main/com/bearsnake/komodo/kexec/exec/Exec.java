@@ -210,6 +210,7 @@ public class Exec extends Run {
         _facilitiesManager = null;
         _keyinManager = null;
         _mfdManager = null;
+        _scheduleManager = null;
         _symbiontManager = null;
     }
 

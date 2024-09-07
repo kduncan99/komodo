@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.scheduleManager;
 
 import com.bearsnake.komodo.kexec.Manager;
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
@@ -28,13 +29,19 @@ public class ScheduleManager implements Manager {
     private static final String DEFAULT_ACCOUNT_ID = "000000";
     private static final String DEFAULT_PROJECT_ID = "Q$Q$Q$";
 
+    private int _maxBatchJobs = 0;
     private final HashMap<String, Run> _runEntries = new HashMap<>(); // keyed by RunId
+
+    public ScheduleManager() {
+        Exec.getInstance().managerRegister(this);
+    }
 
     @Override
     public void boot(boolean recoveryBoot) throws KExecException {
         var exec = Exec.getInstance();
         _runEntries.clear();
         _runEntries.put(exec.getActualRunId(), exec);
+        _maxBatchJobs = (int)(long)(exec.getConfiguration().getIntegerValue(Tag.MAXOPN));
     }
 
     @Override
@@ -58,6 +65,8 @@ public class ScheduleManager implements Manager {
     public void stop() {
 
     }
+
+    // -----------------------------------------------------------------------------------------------------------------
 
     /**
      * Atomic process to determine a unique run-id, then create the BatchRun entity,
@@ -114,6 +123,10 @@ public class ScheduleManager implements Manager {
         return run;
     }
 
+    public int getMaxBatchJobs() { return _maxBatchJobs; }
+
+    public void setMaxBatchJobs(final int maxBatchJobs) { _maxBatchJobs = maxBatchJobs; }
+
     /**
      * Unregisters a run - should be done only when there are no artifacts in the input or output queues
      * for the run (and the run itself is no longer active).
@@ -122,6 +135,8 @@ public class ScheduleManager implements Manager {
     public void unregisterRun(final String runid) {
         _runEntries.remove(runid.toUpperCase());
     }
+
+    // -----------------------------------------------------------------------------------------------------------------
 
     /**
      * For createUniqueRunid, below
