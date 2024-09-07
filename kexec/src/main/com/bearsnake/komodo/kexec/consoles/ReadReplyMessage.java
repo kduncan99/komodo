@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.kexec.consoles;
 
-import com.bearsnake.komodo.kexec.exec.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
 
 public class ReadReplyMessage {
     private final MessageId _messageId;

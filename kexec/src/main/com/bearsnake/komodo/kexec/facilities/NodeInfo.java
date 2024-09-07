@@ -5,7 +5,7 @@
 package com.bearsnake.komodo.kexec.facilities;
 
 import com.bearsnake.komodo.hardwarelib.Node;
-import com.bearsnake.komodo.kexec.exec.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
 
 /**
  * Contains temporal information for fac manager regarding a particular node

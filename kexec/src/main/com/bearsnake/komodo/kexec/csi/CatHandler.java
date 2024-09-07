@@ -12,7 +12,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;

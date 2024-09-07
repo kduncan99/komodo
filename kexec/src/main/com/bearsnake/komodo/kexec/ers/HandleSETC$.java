@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kexec.ers;
 
 import com.bearsnake.komodo.engine.ActivityState;
 import com.bearsnake.komodo.engine.GeneralRegisterSet;
-import com.bearsnake.komodo.kexec.exec.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
 
 public class HandleSETC$ extends ERHandler {
 

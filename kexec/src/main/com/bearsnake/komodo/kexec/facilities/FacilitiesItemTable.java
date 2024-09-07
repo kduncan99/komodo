@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kexec.facilities;
 
 import com.bearsnake.komodo.baselib.FileCycleSpecification;
 import com.bearsnake.komodo.baselib.FileSpecification;
-import com.bearsnake.komodo.kexec.exec.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
 import com.bearsnake.komodo.kexec.facilities.facItems.FacilitiesItem;
 import com.bearsnake.komodo.kexec.facilities.facItems.NameItem;
 

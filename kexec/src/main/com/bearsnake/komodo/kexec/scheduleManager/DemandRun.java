@@ -2,9 +2,10 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kexec.exec;
+package com.bearsnake.komodo.kexec.scheduleManager;
 
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
+import com.bearsnake.komodo.kexec.exec.Exec;
 
 public class DemandRun extends Run implements Runnable {
 

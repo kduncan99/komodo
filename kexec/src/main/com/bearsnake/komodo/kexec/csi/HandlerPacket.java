@@ -4,8 +4,8 @@
 
 package com.bearsnake.komodo.kexec.csi;
 
-import com.bearsnake.komodo.kexec.exec.Run;
-import com.bearsnake.komodo.kexec.exec.TIPRun;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.TIPRun;
 
 class HandlerPacket {
 

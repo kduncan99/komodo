@@ -20,7 +20,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecIOException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 
@@ -287,7 +287,8 @@ class ReaderSymbiontInfo extends SymbiontInfo {
         var exec = Exec.getInstance();
         var cfg = exec.getConfiguration();
         var fm = exec.getFacilitiesManager();
-        var run = exec.createBatchRun(runCardInfo);
+        var sch = exec.getScheduleManager();
+        var run = sch.createBatchRun(runCardInfo);
 
         // Create the READ$ file and assign it to the exec (for now).
         var filename = "READ$X" + run.getActualRunId();

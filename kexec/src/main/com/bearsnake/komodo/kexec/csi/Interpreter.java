@@ -6,8 +6,8 @@ package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
-import com.bearsnake.komodo.kexec.exec.Run;
-import com.bearsnake.komodo.kexec.exec.TIPRun;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.TIPRun;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.logger.LogManager;

@@ -9,7 +9,7 @@ import com.bearsnake.komodo.kexec.exceptions.ConsoleException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.RunType;
+import com.bearsnake.komodo.kexec.scheduleManager.RunType;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.logger.LogManager;
 import java.io.PrintStream;

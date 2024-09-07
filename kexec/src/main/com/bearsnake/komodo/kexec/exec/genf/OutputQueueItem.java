@@ -9,7 +9,7 @@ import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.kexec.DateConverter;
 import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
-import com.bearsnake.komodo.kexec.exec.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
 
 import java.io.PrintStream;
 import java.time.Instant;

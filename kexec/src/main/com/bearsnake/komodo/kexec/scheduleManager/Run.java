@@ -2,10 +2,12 @@
  * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kexec.exec;
+package com.bearsnake.komodo.kexec.scheduleManager;
 
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
+import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.exec.RunConditionWord;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesItemTable;
 import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.tasks.Task;

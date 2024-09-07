@@ -6,9 +6,9 @@ package com.bearsnake.komodo.kexec.csi;
 
 import com.bearsnake.komodo.baselib.Parser;
 import com.bearsnake.komodo.kexec.configuration.Configuration;
-import com.bearsnake.komodo.kexec.exec.BatchRun;
+import com.bearsnake.komodo.kexec.scheduleManager.BatchRun;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
 import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
 import org.junit.Before;

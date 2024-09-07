@@ -22,6 +22,9 @@ import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
 import com.bearsnake.komodo.kexec.mfd.MFDManager;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.RunType;
+import com.bearsnake.komodo.kexec.scheduleManager.ScheduleManager;
 import com.bearsnake.komodo.kexec.symbionts.SymbiontManager;
 import com.bearsnake.komodo.kexec.tasks.ExecTask;
 import com.bearsnake.komodo.logger.LogManager;
@@ -29,13 +32,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.LinkedList;
-
-import static com.bearsnake.komodo.baselib.Parser.isValidAccountId;
-import static com.bearsnake.komodo.baselib.Parser.isValidProjectId;
-import static com.bearsnake.komodo.baselib.Parser.isValidRunid;
-import static com.bearsnake.komodo.baselib.Parser.isValidUserId;
 
 public class Exec extends Run {
 
@@ -47,9 +44,6 @@ public class Exec extends Run {
 
     private static final DateTimeFormatter DATE_TIME_MSG_FORMAT = DateTimeFormatter.ofPattern("EEE dd MMM yyyy HH:mm:ss");
     private static final String LOG_SOURCE = "Exec";
-    private static final String DEFAULT_RUN_ID = "RUN000";
-    private static final String DEFAULT_ACCOUNT_ID = "000000";
-    private static final String DEFAULT_PROJECT_ID = "Q$Q$Q$";
 
     private static Exec _instance = null;
 
@@ -58,7 +52,6 @@ public class Exec extends Run {
     private final boolean[] _jumpKeys;
     private final LinkedList<Manager> _managers = new LinkedList<>();
     private Phase _phase;
-    private final HashMap<String, Run> _runEntries = new HashMap<>(); // keyed by RunId
     private int _session = 0;
     private StopCode _stopCode;
     private boolean _stopFlag = false;
@@ -69,6 +62,7 @@ public class Exec extends Run {
     private FacilitiesManager _facilitiesManager;
     private KeyinManager _keyinManager;
     private MFDManager _mfdManager;
+    private ScheduleManager _scheduleManager;
     private SymbiontManager _symbiontManager;
 
     private static final RunCardInfo RUN_CARD_INFO =
@@ -88,6 +82,7 @@ public class Exec extends Run {
         _facilitiesManager = new FacilitiesManager();
         _keyinManager = new KeyinManager();
         _mfdManager = new MFDManager();
+        _scheduleManager = new ScheduleManager();
         _symbiontManager = new SymbiontManager();
     }
 
@@ -110,9 +105,10 @@ public class Exec extends Run {
     public Configuration getConfiguration() { return _configuration; }
     public ConsoleManager getConsoleManager() { return _consoleManager; }
     public FacilitiesManager getFacilitiesManager() { return _facilitiesManager; }
-    public SymbiontManager getSymbiontManager() { return _symbiontManager; }
-    public MFDManager getMFDManager() { return _mfdManager; }
     public KeyinManager getKeyinManager() { return _keyinManager; }
+    public MFDManager getMFDManager() { return _mfdManager; }
+    public ScheduleManager getScheduleManager() { return _scheduleManager; }
+    public SymbiontManager getSymbiontManager() { return _symbiontManager; }
 
     public GenFileInterface getGenFileInterface() { return _genFileInterface; }
     public Phase getPhase() { return _phase; }
@@ -133,9 +129,6 @@ public class Exec extends Run {
         _phase = Phase.Booted;
         _stopFlag = false;
         _session = session;
-
-        _runEntries.clear();
-        _runEntries.put(_actualRunId, this);
 
         for (var m : _managers) {
             m.boot(recoveryBoot);
@@ -220,59 +213,6 @@ public class Exec extends Run {
         _symbiontManager = null;
     }
 
-    /**
-     * Atomic process to determine a unique run-id, then create the BatchRun entity,
-     * then store it in the runEntries table. Mostly exists to avoid run-id race conditions.
-     */
-    public synchronized Run createBatchRun(
-        final RunCardInfo runCardInfo
-    ) throws ExecStoppedException {
-        var invalidRunId = false;
-        if (runCardInfo.getRunId() == null) {
-            runCardInfo.setRunId(DEFAULT_RUN_ID);
-        } else if (!isValidRunid(runCardInfo.getRunId())) {
-            runCardInfo.setRunId(DEFAULT_RUN_ID);
-            invalidRunId = true;
-        }
-        var actualRunId = createUniqueRunid(runCardInfo.getRunId());
-        if (!actualRunId.equals(runCardInfo.getRunId())) {
-            var msg = String.format("%s Duplicated; New ID is %s", runCardInfo.getRunId(), actualRunId);
-            sendExecReadOnlyMessage(msg, ConsoleType.System);
-        }
-
-        var invalidAccountId = false;
-        if (runCardInfo.getAccountId() == null) {
-            runCardInfo.setAccountId(DEFAULT_ACCOUNT_ID);
-        } else if (!isValidAccountId(runCardInfo.getAccountId())) {
-            runCardInfo.setAccountId(DEFAULT_ACCOUNT_ID);
-            invalidAccountId = true;
-        }
-
-        var invalidUserId = (runCardInfo.getUserId() == null) || !isValidUserId(runCardInfo.getUserId());
-
-        var invalidProjectId = false;
-        if (runCardInfo.getProjectId() == null) {
-            runCardInfo.setProjectId(DEFAULT_PROJECT_ID);
-        } else if (!isValidProjectId(runCardInfo.getProjectId())) {
-            runCardInfo.setProjectId(DEFAULT_PROJECT_ID);
-            invalidProjectId = true;
-        }
-
-        var run = new BatchRun(actualRunId, runCardInfo);
-        if (invalidRunId) {
-            run.setInvalidRunReason("Invalid or Missing Run ID");
-        } else if (invalidAccountId) {
-            run.setInvalidRunReason("Invalid or Missing Account ID");
-        } else if (invalidProjectId) {
-            run.setInvalidRunReason("Invalid or Missing Project ID");
-        } else if (invalidUserId) {
-            run.setInvalidRunReason("Invalid or Missing User ID");
-        }
-
-        _runEntries.put(actualRunId, run);
-        return run;
-    }
-
     public void displayDateAndTime() {
         var dateTime = LocalDateTime.now();
         String dtStr = dateTime.format(DATE_TIME_MSG_FORMAT);
@@ -335,8 +275,6 @@ public class Exec extends Run {
         out.printf("  JumpKeys:       %s\n", jkStr);
         out.printf("  Allow Recovery: %s\n", _allowRecoveryBoot);
 
-        out.println("  Run control entries:");
-        _runEntries.values().forEach(rce -> rce.dump(out, "    ", verbose));
         _managers.forEach(m -> m.dump(out, "  ", verbose));
         _genFileInterface.dump(out, "  ", verbose);
 
@@ -476,73 +414,9 @@ public class Exec extends Run {
         }
     }
 
-    public void unregisterRun(final String runid) {
-        _runEntries.remove(runid.toUpperCase());
-    }
-
     // -----------------------------------------------------------------------------------------------------------------
     // private
     // -----------------------------------------------------------------------------------------------------------------
-
-    /**
-     * For createUniqueRunid, below
-     */
-    static String rotateString(final String input) {
-        var bytes = input.getBytes();
-        int ix = bytes.length - 1;
-        while (ix >= 0) {
-            if (bytes[ix] == '9') {
-                bytes[ix] = 'A';
-                ix--;
-            } else if (bytes[ix] == 'Z') {
-                bytes[ix] = '0';
-                return new String(bytes);
-            } else {
-                bytes[ix]++;
-                return new String(bytes);
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Given an original runid (which should be uppercase already, but we don't trust that)
-     * we generate a new unique runid so that we never have duplicated runids.
-     * Because we force uppercase, the caller should *always* use the result of this algorithm for the actual runid of a run.
-     * This needs to be invoked under synchronization during the process of adding a RunEntry, thus it is internal to the class.
-     * The result should be as follows:
-     *   The original run-id, if less than six characters, will have an 'A' appended to it.
-     *   Subsequent iterations will increment that appended character through 'Z', then through '0' to '9'.
-     *   The next iteration will increment the last character of the *original* run-id, and the appended characters will
-     *   then re-cycle. This will continue, incrementing each subsequent character to the left, until we have reached all
-     *   possible iterations of n+1 characters, where n is the length of the original run-id.
-     * Thus...
-     *   SYS -> SYSA -> SYSB ... SYS9 -> SYTA -> SYTB ... SYUA -> SYUB ... SZAA ... ZZZZ
-     * Once we reach Z...Z, iteration stops and we reject the run-id. Longer run-ids have more room for iteration.
-     * A run-id which begins with 6 characters will begin iterating with the last character of the run-id.
-     * @param runid proposed (original) runid
-     * @return unique runid
-     */
-    String createUniqueRunid(
-        final String runid
-    ) throws ExecStoppedException {
-        var original = runid.toUpperCase();
-        synchronized (_runEntries) {
-            if (!_runEntries.containsKey(original)) {
-                return original;
-            }
-
-            var proposed = original.length() == 6 ? original : original + "A";
-            while (_runEntries.containsKey(proposed)) {
-                proposed = rotateString(proposed);
-                if (proposed == null) {
-                    stop(StopCode.FullCycleReachedForRunIds);
-                    throw new ExecStoppedException();
-                }
-            }
-            return proposed;
-        }
-    }
 
     private String sendExecRestrictedReadReplyMessage(
         final String message,
