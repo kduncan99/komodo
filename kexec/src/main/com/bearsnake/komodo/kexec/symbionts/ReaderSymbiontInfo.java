@@ -19,8 +19,9 @@ import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecIOException;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
+import com.bearsnake.komodo.kexec.exceptions.ScheduleManagerException;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.scheduleManager.Run;
+import com.bearsnake.komodo.kexec.scheduleManager.BatchRun;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 
@@ -36,7 +37,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
     private final ChannelIoPacket _channelPacket;
     private SymbiontFileWriter _fileWriter = null;
     private int _imageCount = 0;
-    private Run _run = null;
+    private BatchRun _run = null;
 
     public ReaderSymbiontInfo(
         final NodeInfo nodeInfo
@@ -172,6 +173,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
     private void doRead() throws ExecStoppedException {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
+        var sch = exec.getScheduleManager();
 
         var retry = true;
         while (retry) {
@@ -184,12 +186,11 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                         if (_run != null) {
                             try {
                                 _fileWriter.close();
-                                _run.setIsReady();
+                                _run.clearIsWaitingOnFin();
                                 _fileWriter = null;
                                 _run = null;
                             } catch (ExecIOException e) {
-                                _run.setInvalidRunReason("CANNOT WRITE TO READ$ FILE");
-                                _run.setIsReady();
+                                sch.unregisterRun(_run.getActualRunId());
                                 _run = null;
                                 _fileWriter = null;
                                 resetNode();
@@ -257,15 +258,19 @@ class ReaderSymbiontInfo extends SymbiontInfo {
             }
         } else {
             // We are building a run.
-            if (image.toUpperCase().startsWith("@FILE")) {
-                // TODO handle this
+            var imUpper = image.toUpperCase();
+            var imPartial = imUpper.split(" ")[0];
+            if (imPartial.equals("@FILE")) {
+                // TODO handle this for @FILE
             }
 
             try {
                 _fileWriter.writeDataImage(image);
+                if (imPartial.equals("@FIN")) {
+                    _run.clearIsWaitingOnFin();
+                }
             } catch (ExecIOException ex) {
-                _run.setInvalidRunReason("CANNOT WRITE TO READ$ FILE");
-                _run.setIsReady();
+                exec.getScheduleManager().unregisterRun(_run.getActualRunId());
                 _run = null;
                 _fileWriter = null;
                 resetNode();
@@ -288,7 +293,13 @@ class ReaderSymbiontInfo extends SymbiontInfo {
         var cfg = exec.getConfiguration();
         var fm = exec.getFacilitiesManager();
         var sch = exec.getScheduleManager();
-        var run = sch.createBatchRun(runCardInfo);
+        BatchRun run = null;
+        try {
+            run = sch.createBatchRun(runCardInfo);
+        } catch (ScheduleManagerException ex) {
+            exec.sendExecReadOnlyMessage(ex.getMessage(), ConsoleType.InputOutput);
+            return false;
+        }
 
         // Create the READ$ file and assign it to the exec (for now).
         var filename = "READ$X" + run.getActualRunId();
@@ -310,16 +321,14 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                            new LinkedList<>(),
                            fsResult);
         if ((fsResult.getStatusWord() & 0_400000_000000L) != 0) {
-            run.setInvalidRunReason(String.format("FAC STATUS %012o CREATING READ$ FILE", fsResult.getStatusWord()));
-            run.setIsReady();
+            sch.unregisterRun(run.getActualRunId());
             return false;
         }
 
         fsResult = new FacStatusResult();
         fm.assignCatalogedDiskFileToExec(fileSpecification, true, fsResult);
         if (fsResult.hasErrorMessages()) {
-            run.setInvalidRunReason(String.format("FAC STATUS %012o ASSIGNING READ$ FILE", fsResult.getStatusWord()));
-            run.setIsReady();
+            sch.unregisterRun(run.getActualRunId());
             return false;
         }
 
@@ -339,8 +348,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                                                    Instant.now());
             fileWriter.writeDataImage(runCardInfo.getImage());
         } catch (ExecIOException ex) {
-            run.setInvalidRunReason("CANNOT WRITE TO READ$ FILE");
-            run.setIsReady();
+            sch.unregisterRun(run.getActualRunId());
             return false;
         }
 

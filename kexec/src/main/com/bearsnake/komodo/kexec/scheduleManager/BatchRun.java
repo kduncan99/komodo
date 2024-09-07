@@ -25,19 +25,31 @@ public class BatchRun extends Run implements Runnable {
     // Indicates whether this run is currently suspended
     protected boolean _isSuspended = false;
 
+    // Indicates the symbiont of site-id which produced the run. NULL if started from the console.
+    protected String _siteId;
+
+    // Runstream is still being read, have not yet reached @FIN
+    protected boolean _waitingOnFin = true;
+
     public BatchRun(final String actualRunId,
                     final RunCardInfo runCardInfo) {
         super(RunType.Batch, actualRunId, runCardInfo);
         _inputQueueAddress = 0;
     }
 
+    public final String getSiteId() { return _siteId; }
     @Override public final boolean isFinished() { return _isFinished; }
     @Override public final boolean isStarted() { return _isStarted; }
     @Override public final boolean isSuspended() { return _isSuspended; }
+    public final boolean isWaitingOnFin() { return _waitingOnFin; }
 
+    public void clearIsWaitingOnFin() { _waitingOnFin = false; }
     public long getInputQueueAddress() { return _inputQueueAddress; }
     public void clearInputQueueAddress() { _inputQueueAddress = 0; }
     public void setInputQueueAddress(final long address) { _inputQueueAddress = address; }
+    public void setIsFinished(final boolean isFinished) { _isFinished = isFinished; }
+    public void setIsStarted(final boolean isStarted) { _isStarted = isStarted; }
+    public void setSiteId(final String siteId) { _siteId = siteId; }
 
     /**
      * To be invoked when the run comes out of backlog.

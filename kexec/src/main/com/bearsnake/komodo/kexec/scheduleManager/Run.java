@@ -10,6 +10,7 @@ import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.RunConditionWord;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesItemTable;
 import com.bearsnake.komodo.baselib.FileSpecification;
+import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.tasks.Task;
 
 import java.io.PrintStream;
@@ -32,9 +33,6 @@ public abstract class Run {
     protected String _defaultQualifier;
     protected String _impliedQualifier;
     protected RunConditionWord _runConditionWord;
-
-    private String _invalidRunReason; // if not null, this run will be removed from BL with this error message
-    private boolean _isReady;         // false while the run is still being built (not ready to come out of backlog)
 
     // The following indicate how many waits are in play for mass storage (waiting on file assign or similar)
     // and for peripherals (waiting on unit assign).
@@ -113,7 +111,6 @@ public abstract class Run {
     public final String getDefaultQualifier() { return _defaultQualifier; }
     public final FacilitiesItemTable getFacilitiesItemTable() { return _facilitiesItemTable; }
     public final String getImpliedQualifier() { return _impliedQualifier; }
-    public final String getInvalidRunReason() { return _invalidRunReason; }
     public final Long getMaxCards() { return _runCardInfo.getMaxCards(); }
     public final Long getMaxPages() { return _runCardInfo.getMaxPages(); }
     public final Long getMaxTime() { return _runCardInfo.getMaxTime(); }
@@ -127,26 +124,24 @@ public abstract class Run {
     public void incrementWaitingForMassStorage() { _waitingForMassStorageCounter.incrementAndGet(); }
     public void incrementWaitingForPeripheral() { _waitingForPeripheralCounter.incrementAndGet(); }
     public abstract boolean isFinished();   // if true, then this exists only for output queue entries
-    public final boolean isInvalidRun() { return _invalidRunReason != null; }
     public abstract boolean isStarted();    // if false, then this is in backlog
     public abstract boolean isSuspended();
     public boolean isWaitingOnMassStorage() { return _waitingForMassStorageCounter.get() > 0; }
     public boolean isWaitingOnPeripheral() { return _waitingForPeripheralCounter.get() > 0; }
     public void setDefaultQualifier(final String qualifier) { _defaultQualifier = qualifier; }
     public void setImpliedQualifier(final String qualifier) { _impliedQualifier = qualifier; }
-    public void setInvalidRunReason(final String reason) { _invalidRunReason = reason; }
-    public void setIsReady() { _isReady = true; }
 
     public void dump(final PrintStream out,
                      final String indent,
                      final boolean verbose) {
-        out.printf("%s%s (%s) proj:%s acct:%s user:%s %s\n",
+        out.printf("%s%s (%s) acct:%s user:%s proj:%s %s\n",
                    indent,
                    getActualRunId(),
                    getOriginalRunId(),
-                   getProjectId(),
                    getAccountId(),
-                   getUserId(), _runType);
+                   getUserId(),
+                   getProjectId(),
+                   _runType);
         if (verbose) {
             out.printf("%s  rcw:%s defQual:%s impQual:%s cards:%d/%d pages:%d/%d\n",
                        indent, _runConditionWord.toString(), _defaultQualifier, _impliedQualifier,
@@ -171,7 +166,19 @@ public abstract class Run {
     }
 
     public boolean isPrivileged() {
-        return false; // TODO
+        // check SYS$*DLOC$
+        var facItem = _facilitiesItemTable.getFacilitiesItem("SYS$", "DLOC$");
+        if (facItem != null) {
+            var dfi = (DiskFileFacilitiesItem)facItem;
+            if (dfi.isReadable() && dfi.isWriteable()) {
+                return true;
+            }
+        }
+
+        // Is the run privileged by way of Security?
+        // That's a tricky one, there are various dimensions of privilege. This applies only to general all-encompassing privilege.
+        // TODO
+        return false;
     }
 
     public void postContingency(

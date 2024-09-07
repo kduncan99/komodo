@@ -10,6 +10,7 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
+import com.bearsnake.komodo.kexec.exceptions.ScheduleManagerException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import java.io.PrintStream;
@@ -26,7 +27,7 @@ import static com.bearsnake.komodo.baselib.Parser.isValidUserId;
 /**
  * A rough analog to the Coarse Scheduler.
  */
-public class ScheduleManager implements Manager {
+public class ScheduleManager implements Manager, Runnable {
 
     private static final String DEFAULT_RUN_ID = "RUN000";
     private static final String DEFAULT_ACCOUNT_ID = "000000";
@@ -34,6 +35,11 @@ public class ScheduleManager implements Manager {
 
     private int _maxBatchJobs = 0;
     private final HashMap<String, Run> _runEntries = new HashMap<>(); // keyed by RunId
+
+    private boolean _generalHold = true;
+
+    private boolean _isTerminated = false;
+    private boolean _terminate = false;
 
     public ScheduleManager() {
         Exec.getInstance().managerRegister(this);
@@ -45,6 +51,13 @@ public class ScheduleManager implements Manager {
         _runEntries.clear();
         _runEntries.put(exec.getActualRunId(), exec);
         _maxBatchJobs = (int)(long)(exec.getConfiguration().getIntegerValue(Tag.MAXOPN));
+
+        _generalHold = !recoveryBoot;
+
+        _isTerminated = false;
+        _terminate = false;
+        Thread thread = new Thread(this);
+        thread.start();
     }
 
     @Override
@@ -66,7 +79,20 @@ public class ScheduleManager implements Manager {
 
     @Override
     public void stop() {
+        _terminate = true;
+        while (!_isTerminated) {
+            Exec.sleep(10);
+        }
+    }
 
+    @Override
+    public void run() {
+        while (!_terminate) {
+            // TODO look for things to bring out of backlog
+            Exec.sleep(250);
+        }
+
+        _isTerminated = true;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -75,17 +101,15 @@ public class ScheduleManager implements Manager {
      * Atomic process to determine a unique run-id, then create the BatchRun entity,
      * then store it in the runEntries table. Mostly exists to avoid run-id race conditions.
      */
-    public synchronized Run createBatchRun(
+    public synchronized BatchRun createBatchRun(
         final RunCardInfo runCardInfo
-    ) throws ExecStoppedException {
+    ) throws ExecStoppedException, ScheduleManagerException {
         var exec = Exec.getInstance();
 
-        var invalidRunId = false;
         if (runCardInfo.getRunId() == null) {
             runCardInfo.setRunId(DEFAULT_RUN_ID);
         } else if (!isValidRunid(runCardInfo.getRunId())) {
-            runCardInfo.setRunId(DEFAULT_RUN_ID);
-            invalidRunId = true;
+            throw new ScheduleManagerException("RUNSTREAM CONTAINS INVALID RUN-ID");
         }
         var actualRunId = createUniqueRunid(runCardInfo.getRunId());
         if (!actualRunId.equals(runCardInfo.getRunId())) {
@@ -93,35 +117,24 @@ public class ScheduleManager implements Manager {
             exec.sendExecReadOnlyMessage(msg, ConsoleType.System);
         }
 
-        var invalidAccountId = false;
         if (runCardInfo.getAccountId() == null) {
             runCardInfo.setAccountId(DEFAULT_ACCOUNT_ID);
         } else if (!isValidAccountId(runCardInfo.getAccountId())) {
-            runCardInfo.setAccountId(DEFAULT_ACCOUNT_ID);
-            invalidAccountId = true;
+            throw new ScheduleManagerException("RUNSTREAM CONTAINS INVALID ACCOUNT-ID");
         }
 
         var invalidUserId = (runCardInfo.getUserId() == null) || !isValidUserId(runCardInfo.getUserId());
+        if (invalidUserId) {
+            throw new ScheduleManagerException("RUNSTREAM CONTAINS INVALID USER-ID");
+        }
 
-        var invalidProjectId = false;
         if (runCardInfo.getProjectId() == null) {
             runCardInfo.setProjectId(DEFAULT_PROJECT_ID);
         } else if (!isValidProjectId(runCardInfo.getProjectId())) {
-            runCardInfo.setProjectId(DEFAULT_PROJECT_ID);
-            invalidProjectId = true;
+            throw new ScheduleManagerException("RUNSTREAM CONTAINS INVALID PROJECT-ID");
         }
 
         var run = new BatchRun(actualRunId, runCardInfo);
-        if (invalidRunId) {
-            run.setInvalidRunReason("Invalid or Missing Run ID");
-        } else if (invalidAccountId) {
-            run.setInvalidRunReason("Invalid or Missing Account ID");
-        } else if (invalidProjectId) {
-            run.setInvalidRunReason("Invalid or Missing Project ID");
-        } else if (invalidUserId) {
-            run.setInvalidRunReason("Invalid or Missing User ID");
-        }
-
         _runEntries.put(actualRunId, run);
         return run;
     }

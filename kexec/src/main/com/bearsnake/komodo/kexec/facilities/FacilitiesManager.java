@@ -422,7 +422,7 @@ public class FacilitiesManager implements Manager {
             absCycle = fileSpecification.getFileCycleSpecification().getCycle();
             try {
                 fcInfo = (DiskFileCycleInfo) mm.getFileCycleInfo(qualifier, filename, absCycle);
-                facItem = (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByAbsoluteCycle(qualifier, filename, absCycle);
+                facItem = (DiskFileFacilitiesItem) fiTable.getFacilitiesItem(qualifier, filename, absCycle);
             } catch (FileCycleDoesNotExistException | FileSetDoesNotExistException ex) {
                 // we already checked for file set not existing, but we have to catch it here anyway.
                 fsResult.postMessage(FacStatusCode.FileIsNotCataloged);

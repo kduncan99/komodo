@@ -9,8 +9,10 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exceptions.ScheduleManagerException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -21,7 +23,6 @@ public class TestScheduleManager extends ScheduleManager {
     private static class TestExec extends Exec {
 
         private static final boolean[] JUMP_KEY_TABLE = new boolean[36];
-        private boolean _stopped = false;
 
         private TestExec() {
             super(JUMP_KEY_TABLE);
@@ -39,9 +40,12 @@ public class TestScheduleManager extends ScheduleManager {
         }
 
         @Override
-        public void stop(final StopCode code) {
-            _stopped = true;
-        }
+        public void stop(final StopCode code) {}
+    }
+
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        new TestExec();
     }
 
     // rotateString ------------------------------------------------------------
@@ -95,28 +99,25 @@ public class TestScheduleManager extends ScheduleManager {
     // createUniqueRunid -------------------------------------------------------
 
     @Test
-    public void testCreateUniqueRunidNormal_SYS() throws ExecStoppedException {
-        var exec = new TestExec();
-        createBatchRun(new RunCardInfo("@RUN SYS").setRunId("SYS"));
+    public void testCreateUniqueRunidNormal_SYS() throws ExecStoppedException, ScheduleManagerException {
+        createBatchRun(new RunCardInfo("@RUN SYS,/USER").setRunId("SYS").setUserId("USER"));
         var runid = createUniqueRunid("SYS");
         assertEquals("SYSA", runid);
     }
 
     @Test
-    public void testCreateUniqueRunidNormal_SYS2() throws ExecStoppedException {
-        var exec = new TestExec();
-        createBatchRun(new RunCardInfo("@RUN SYS").setRunId("SYS"));
-        createBatchRun(new RunCardInfo("@RUN SYS").setRunId("SYS"));
+    public void testCreateUniqueRunidNormal_SYS2() throws ExecStoppedException, ScheduleManagerException {
+        createBatchRun(new RunCardInfo("@RUN SYS,/USER").setRunId("SYS").setUserId("USER"));
+        createBatchRun(new RunCardInfo("@RUN SYS,/USER").setRunId("SYS").setUserId("USER"));
         var runid = createUniqueRunid("SYS");
         assertEquals("SYSB", runid);
     }
 
     @Test
-    public void testCreateUniqueRunidNormal_SYS26() throws ExecStoppedException {
-        var exec = new TestExec();
-        createBatchRun(new RunCardInfo("@RUN SYS").setRunId("SYS"));
+    public void testCreateUniqueRunidNormal_SYS26() throws ExecStoppedException, ScheduleManagerException {
+        createBatchRun(new RunCardInfo("@RUN SYS,/USER").setRunId("SYS").setUserId("USER"));
         for (int a = 0; a < 26; a++) {
-            createBatchRun(new RunCardInfo("@RUN SYS").setRunId("SYS"));
+            createBatchRun(new RunCardInfo("@RUN SYS,/USER").setRunId("SYS").setUserId("USER"));
         }
 
         var runid = createUniqueRunid("SYS");
@@ -124,11 +125,10 @@ public class TestScheduleManager extends ScheduleManager {
     }
 
     @Test
-    public void testCreateUniqueRunidNormal_SYS35() throws ExecStoppedException {
-        var exec = new TestExec();
-        createBatchRun(new RunCardInfo("@RUN SYS").setRunId("SYS"));
+    public void testCreateUniqueRunidNormal_SYS35() throws ExecStoppedException, ScheduleManagerException {
+        createBatchRun(new RunCardInfo("@RUN SYS,/USER").setRunId("SYS").setUserId("USER"));
         for (int a = 0; a < 35; a++) {
-            createBatchRun(new RunCardInfo("@RUN SYS").setRunId("SYS"));
+            createBatchRun(new RunCardInfo("@RUN SYS,/USER").setRunId("SYS").setUserId("USER"));
         }
 
         var runid = createUniqueRunid("SYS");
@@ -136,11 +136,10 @@ public class TestScheduleManager extends ScheduleManager {
     }
 
     @Test
-    public void testCreateUniqueRunidNormal_SYS36() throws ExecStoppedException {
-        var exec = new TestExec();
-        createBatchRun(new RunCardInfo("@RUN SYS").setRunId("SYS"));
+    public void testCreateUniqueRunidNormal_SYS36() throws ExecStoppedException, ScheduleManagerException {
+        createBatchRun(new RunCardInfo("@RUN SYS,/USER").setRunId("SYS").setUserId("USER"));
         for (int a = 0; a < 36; a++) {
-            createBatchRun(new RunCardInfo("@RUN SYS").setRunId("SYS"));
+            createBatchRun(new RunCardInfo("@RUN SYS,/USER").setRunId("SYS").setUserId("USER"));
         }
 
         var runid = createUniqueRunid("SYS");
@@ -148,25 +147,22 @@ public class TestScheduleManager extends ScheduleManager {
     }
 
     @Test
-    public void testCreateUniqueRunidNormal_MAPPER() throws ExecStoppedException {
-        var exec = new TestExec();
-        createBatchRun(new RunCardInfo("@RUN MAPPER").setRunId("MAPPER"));
+    public void testCreateUniqueRunidNormal_MAPPER() throws ExecStoppedException, ScheduleManagerException {
+        createBatchRun(new RunCardInfo("@RUN MAPPER").setRunId("MAPPER").setUserId("USER"));
         var runid = createUniqueRunid("MAPPER");
         assertEquals("MAPPES", runid);
     }
 
     @Test
-    public void testCreateUniqueRunidNormal_99() throws ExecStoppedException {
-        var exec = new TestExec();
-        createBatchRun(new RunCardInfo("@RUN 99").setRunId("99"));
+    public void testCreateUniqueRunidNormal_99() throws ExecStoppedException, ScheduleManagerException {
+        createBatchRun(new RunCardInfo("@RUN 99").setRunId("99").setUserId("USER"));
         var runid = createUniqueRunid("99");
         assertEquals("99A", runid);
     }
 
     @Test(expected = ExecStoppedException.class)
-    public void testCreateUniqueRunidNormal_999999() throws ExecStoppedException {
-        var exec = new TestExec();
-        createBatchRun(new RunCardInfo("@RUN 999999").setRunId("999999"));
+    public void testCreateUniqueRunidNormal_999999() throws ExecStoppedException, ScheduleManagerException {
+        createBatchRun(new RunCardInfo("@RUN 999999").setRunId("999999").setUserId("USER"));
         createUniqueRunid("999999");
     }
 }

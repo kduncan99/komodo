@@ -130,10 +130,29 @@ public class FacilitiesItemTable {
     }
 
     /**
+     * Retrieves the facilities item which matches the given qualifier and filename.
+     * Does NOT account for file cycle, so use this with care.
+     * It is used for determining whether SYS$*DLOC$ is assigned, but could also be used for other things.
+     * @return facilities item if found, else null
+     */
+    public synchronized FacilitiesItem getFacilitiesItem(
+        final String qualifier,
+        final String filename
+    ) {
+        for (var fi : _content) {
+            if (fi.getQualifier().equals(qualifier)
+                && fi.getFilename().equals(filename)) {
+                return fi;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Retrieves the facilities item which matches the given qualifier, filename, and absolute file cycle
      * @return facilities item if found, else null
      */
-    synchronized FacilitiesItem getFacilitiesItemByAbsoluteCycle(
+    public synchronized FacilitiesItem getFacilitiesItem(
         final String qualifier,
         final String filename,
         final int absoluteCycle
@@ -153,7 +172,7 @@ public class FacilitiesItemTable {
      * @param filename filename component
      * @return facilities item if found, else null
      */
-    synchronized FacilitiesItem getFacilitiesItemByFilename(
+    public synchronized FacilitiesItem getFacilitiesItemByFilename(
         final String filename
     ) {
         return _content.stream()

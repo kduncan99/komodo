@@ -87,7 +87,7 @@ class BLKeyinHandler extends KeyinHandler {
         var sch = exec.getScheduleManager();
         var backlog = new LinkedList<>(sch.getBacklogRuns());
         if (backlog.isEmpty()) {
-            exec.sendExecReadOnlyMessage("BACKLOG IS EMPTY", _source);
+            exec.sendExecReadOnlyMessage("BACKLOG: -NONE", _source);
             return;
         }
 
