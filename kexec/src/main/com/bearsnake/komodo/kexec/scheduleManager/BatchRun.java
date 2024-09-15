@@ -6,7 +6,35 @@ package com.bearsnake.komodo.kexec.scheduleManager;
 
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class BatchRun extends Run implements Runnable {
+
+    public static enum HoldCondition {
+        ArbitraryDeviceWait(7, "AD"),
+        CatalogedFileWait(5, "CT"),
+        FinStatementHold(0, "F"),
+        MassStorageAvailability(4, "MS"),
+        IndividualHold(1, "O"),
+        OtherFacilityHold(8, "OH"),
+        SOptionHold(2, "S"),
+        StartTimePending(3, "ST"),
+        TapeHold(6, "TP");
+
+        private final String _code;
+        private final int _priority; // lower value is higher priority
+
+        HoldCondition(final int priority, final String code) {
+            _priority = priority;
+            _code = code;
+        }
+
+        public String getCode() { return _code; }
+        public int getPriority() { return _priority; }
+    }
+
+    protected final Set<HoldCondition> _holdConditions = new HashSet<>();
 
     // Sector address in GENF$ of the input queue item for this job if it isn't open yet
     // Will be set when the input queue item is created; will be set to zero once the input queue item is removed.
@@ -25,7 +53,7 @@ public class BatchRun extends Run implements Runnable {
     // Indicates whether this run is currently suspended
     protected boolean _isSuspended = false;
 
-    // Indicates the symbiont of site-id which produced the run. NULL if started from the console.
+    // Indicates the symbiont of site-id which produced the run. null if started from the console.
     protected String _siteId;
 
     // Runstream is still being read, have not yet reached @FIN
@@ -37,25 +65,42 @@ public class BatchRun extends Run implements Runnable {
         _inputQueueAddress = 0;
     }
 
+    public final void clearHoldCondition(final HoldCondition condition) { _holdConditions.remove(condition); }
+    public final void clearInputQueueAddress() { _inputQueueAddress = 0; }
+    public final long getInputQueueAddress() { return _inputQueueAddress; }
     public final String getSiteId() { return _siteId; }
     @Override public final boolean isFinished() { return _isFinished; }
+    public final boolean isHeld() { return !_holdConditions.isEmpty(); }
+    public final boolean isHeldFor(final HoldCondition condition) { return _holdConditions.contains(condition); }
     @Override public final boolean isStarted() { return _isStarted; }
     @Override public final boolean isSuspended() { return _isSuspended; }
-    public final boolean isWaitingOnFin() { return _waitingOnFin; }
 
-    public void clearIsWaitingOnFin() { _waitingOnFin = false; }
-    public long getInputQueueAddress() { return _inputQueueAddress; }
-    public void clearInputQueueAddress() { _inputQueueAddress = 0; }
-    public void setInputQueueAddress(final long address) { _inputQueueAddress = address; }
-    public void setIsFinished(final boolean isFinished) { _isFinished = isFinished; }
-    public void setIsStarted(final boolean isStarted) { _isStarted = isStarted; }
-    public void setSiteId(final String siteId) { _siteId = siteId; }
+    @Override public BatchRun setDefaultQualifier(final String qualifier) { super.setDefaultQualifier(qualifier); return this; }
+    public BatchRun setHoldCondition(final HoldCondition condition) { _holdConditions.add(condition); return this; }
+    @Override public BatchRun setImpliedQualifier(final String qualifier) { super.setImpliedQualifier(qualifier); return this; }
+    public BatchRun setInputQueueAddress(final long address) { _inputQueueAddress = address; return this; }
+    public BatchRun setIsFinished(final boolean isFinished) { _isFinished = isFinished; return this; }
+    public BatchRun setIsStarted(final boolean isStarted) { _isStarted = isStarted; return this; }
+    @Override public BatchRun setProcessorPriority(final Character priority) { super.setProcessorPriority(priority); return this; }
+    @Override public BatchRun setSchedulingPriority(final Character priority) { super.setSchedulingPriority(priority); return this; }
+    public BatchRun setSiteId(final String siteId) { _siteId = siteId; return this; }
+
+    public HoldCondition getHighestPriorityHoldCondition() {
+        HoldCondition result = null;
+        for (var condition : _holdConditions) {
+            if (result == null || (condition.getPriority() < result.getPriority())) {
+                result = condition;
+            }
+        }
+        return result;
+    }
 
     /**
      * To be invoked when the run comes out of backlog.
      * The first image is a @RUN card, but it has already been processed by the exec (else we would not exist).
      * So, we just start reading images (ignoring the initial @RUN card other than printing it to PRINT$) and processing them.
      */
+    @Override
     public void run() {
         // TODO
         //IMPROPER RUNSTREAM IN FILE

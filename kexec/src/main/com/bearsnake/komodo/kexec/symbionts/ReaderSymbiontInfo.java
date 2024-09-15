@@ -186,7 +186,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                         if (_run != null) {
                             try {
                                 _fileWriter.close();
-                                _run.clearIsWaitingOnFin();
+                                _run.clearHoldCondition(BatchRun.HoldCondition.FinStatementHold);
                                 _fileWriter = null;
                                 _run = null;
                             } catch (ExecIOException e) {
@@ -267,7 +267,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
             try {
                 _fileWriter.writeDataImage(image);
                 if (imPartial.equals("@FIN")) {
-                    _run.clearIsWaitingOnFin();
+                    _run.clearHoldCondition(BatchRun.HoldCondition.FinStatementHold);
                 }
             } catch (ExecIOException ex) {
                 exec.getScheduleManager().unregisterRun(_run.getActualRunId());

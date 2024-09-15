@@ -32,7 +32,9 @@ public abstract class Run {
 
     protected String _defaultQualifier;
     protected String _impliedQualifier;
+    protected Character _processorPriority; // 'A' through 'Z'
     protected RunConditionWord _runConditionWord;
+    protected Character _schedulingPriority; // 'A' through 'Z'
 
     // The following indicate how many waits are in play for mass storage (waiting on file assign or similar)
     // and for peripherals (waiting on unit assign).
@@ -115,9 +117,11 @@ public abstract class Run {
     public final Long getMaxPages() { return _runCardInfo.getMaxPages(); }
     public final Long getMaxTime() { return _runCardInfo.getMaxTime(); }
     public final String getOriginalRunId() { return _runCardInfo.getRunId(); }
+    public final Character getProcessorPriority() { return _runCardInfo.getProcessorPriority(); }
     public final String getProjectId() { return _runCardInfo.getProjectId(); }
     public final RunConditionWord getRunConditionWord() { return _runConditionWord; }
     public final RunType getRunType() { return _runType; }
+    public final Character getSchedulingPriority() { return _runCardInfo.getSchedulingPriority(); }
     public final Instant getSubmissionTime() { return _submissionTime; }
     public final String getUserId() { return _runCardInfo.getUserId(); }
     public final boolean hasTask() { return _activeTask != null; }
@@ -128,8 +132,10 @@ public abstract class Run {
     public abstract boolean isSuspended();
     public boolean isWaitingOnMassStorage() { return _waitingForMassStorageCounter.get() > 0; }
     public boolean isWaitingOnPeripheral() { return _waitingForPeripheralCounter.get() > 0; }
-    public void setDefaultQualifier(final String qualifier) { _defaultQualifier = qualifier; }
-    public void setImpliedQualifier(final String qualifier) { _impliedQualifier = qualifier; }
+    public Run setDefaultQualifier(final String qualifier) { _defaultQualifier = qualifier; return this; }
+    public Run setImpliedQualifier(final String qualifier) { _impliedQualifier = qualifier; return this; }
+    public Run setProcessorPriority(final Character priority) { _processorPriority = priority; return this; }
+    public Run setSchedulingPriority(final Character priority) { _schedulingPriority = priority; return this; }
 
     public void dump(final PrintStream out,
                      final String indent,
