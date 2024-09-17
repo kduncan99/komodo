@@ -6,29 +6,33 @@ package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.exec.StopCode;
 
-class StopKeyinHandler extends KeyinHandler implements Runnable {
+class CSKeyinHandler extends KeyinHandler {
 
     private static final String[] HELP_TEXT = {
-        "$!",
-        "Initiates auto-recovery of the operating system",
+        "CS [A | AD | ALL | AT | H | HD | HT]",
+        "CS[,NU] [A | H] ident[,...]",
+        "CS runid* [Px | Dhhmm | Shhmm | Ly | F]",
+        // TODO help text
     };
 
     private static final String[] SYNTAX_TEXT = {
-        "$!",
+        "CS [A | AD | ALL | AT | H | HD | HT]",
+        "CS[,NU] [A | H] ident[,...]",
+        "CS runid* [Px | Dhhmm | Shhmm | Ly | F]",
     };
 
-    public static final String COMMAND = "$!";
+    public static final String COMMAND = "CS";
 
-    public StopKeyinHandler(final ConsoleId source,
-                            final String options,
-                            final String arguments) {
+    public CSKeyinHandler(final ConsoleId source,
+                          final String options,
+                          final String arguments) {
         super(source, options, arguments);
     }
 
     @Override
     boolean checkSyntax() {
+        // TODO
         return true;
     }
 
@@ -38,11 +42,12 @@ class StopKeyinHandler extends KeyinHandler implements Runnable {
 
     @Override
     boolean isAllowed() {
-        return true;
+        var genf = Exec.getInstance().getGenFileInterface();
+        return genf != null && genf.isReady();
     }
 
     @Override
     void process() {
-        Exec.getInstance().stop(StopCode.OperatorInitiatedRecovery);
+        // TODO
     }
 }

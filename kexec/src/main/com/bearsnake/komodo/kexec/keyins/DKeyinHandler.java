@@ -14,6 +14,10 @@ public class DKeyinHandler extends KeyinHandler implements Runnable {
         "Displays system date and time",
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "D",
+    };
+
     public static final String COMMAND = "D";
 
     public DKeyinHandler(final ConsoleId source,
@@ -27,11 +31,9 @@ public class DKeyinHandler extends KeyinHandler implements Runnable {
         return _options == null && _arguments == null;
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

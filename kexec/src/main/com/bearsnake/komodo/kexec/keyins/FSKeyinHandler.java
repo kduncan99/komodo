@@ -18,6 +18,12 @@ class FSKeyinHandler extends FacHandler implements Runnable {
         "Displays facility status for various system components"
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "FS,[ CM | DISK[S] | FDISK | MS | PACK[S] | RDISK | TAPE[S] ]",
+        "FS node_name[,...]",
+        "FS,ALL channel_name",
+    };
+
     public static final String COMMAND = "FS";
 
     /*
@@ -47,11 +53,9 @@ class FSKeyinHandler extends FacHandler implements Runnable {
         return _arguments != null;
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

@@ -11,7 +11,7 @@ import com.bearsnake.komodo.kexec.exec.genf.queues.OutputQueue;
 
 class SQKeyinHandler extends KeyinHandler {
 
-    private static enum Action {
+    private enum Action {
         DisplaySummary,
         MoveExistingQueue,
         MoveFuture,
@@ -35,10 +35,19 @@ class SQKeyinHandler extends KeyinHandler {
         "  Changes the priority for one or all files queued by a run-id.",
         "SQ queue_name QTO queue_name",
         "  Redirects files queued to the first queue, to the second queue.",
-        "SQ run-id file-name QTO [ queue_name | user_id/U ]",
+        "SQ run-id file-name QTO [ queue-name | user-id/U ]",
         "  Redirects a specific file to the given queue or user-name.",
         "SQ queue-name TO queue-name",
         "  Redirects future files for the first queue, to the second.",
+    };
+
+    private static final String[] SYNTAX_TEXT = {
+        "SQ [ queue_name [*] | USR*ID | run_id * R | user_id * U ]",
+        "SQ,U user_id,...",
+        "SQ run-id [ file_name ] priority",
+        "SQ queue_name QTO queue_name",
+        "SQ run-id file-name QTO [ queue-name | user-id/U ]",
+        "SQ queue-name TO queue-name",
     };
 
     public static final String COMMAND = "SQ";
@@ -174,11 +183,9 @@ The nth ID in the list passed to the SQ keyin handler is invalid or missing.
         return false;
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

@@ -26,6 +26,11 @@ class DNKeyinHandler extends FacHandler implements Runnable {
         "Devices attached to a specified channel are inaccessible via that channel."
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "DN node_name[,...]",
+        "DN,ALL channel_name",
+    };
+
     public static final String COMMAND = "DN";
 
     /*
@@ -50,11 +55,9 @@ class DNKeyinHandler extends FacHandler implements Runnable {
         return (_arguments != null);
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

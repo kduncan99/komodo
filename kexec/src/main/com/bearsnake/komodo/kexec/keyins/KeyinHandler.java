@@ -33,6 +33,7 @@ public abstract class KeyinHandler implements Runnable {
     abstract String getCommand();
     String getOptions() { return _options; }
     abstract String[] getHelp();
+    abstract String[] getSyntax();
     LocalDateTime getTimeFinished() { return _timeFinished; }
     abstract boolean isAllowed();
     boolean isDone() { return _timeFinished != null; }

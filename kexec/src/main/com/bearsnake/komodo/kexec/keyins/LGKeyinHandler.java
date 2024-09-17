@@ -11,8 +11,12 @@ import com.bearsnake.komodo.logger.LogManager;
 class LGKeyinHandler extends KeyinHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
-        "LG {message}",
+        "LG message",
         "Creates an entry in the system log",
+    };
+
+    private static final String[] SYNTAX_TEXT = {
+        "LG message",
     };
 
     public static final String COMMAND = "LG";
@@ -28,11 +32,9 @@ class LGKeyinHandler extends KeyinHandler implements Runnable {
         return _options == null && _arguments != null;
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

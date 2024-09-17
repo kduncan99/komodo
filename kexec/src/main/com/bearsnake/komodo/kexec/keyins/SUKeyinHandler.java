@@ -20,9 +20,14 @@ SU [dev] MAY BE FATAL (EXERR 052) - TERMINATE SU KEYIN? Y/N
 SU OF component IS NOT ALLOWED
 SU OF component NOT PERFORMED - KEYIN ABORTED
      */
+
     private static final String[] HELP_TEXT = {
         "SU[,ALL] node_name",
         "Makes devices available for use, however space cannot be allocated.",
+    };
+
+    private static final String[] SYNTAX_TEXT = {
+        "SU[,ALL] node_name",
     };
 
     public static final String COMMAND = "SU";
@@ -38,11 +43,9 @@ SU OF component NOT PERFORMED - KEYIN ABORTED
         return _options == null && _arguments != null;
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

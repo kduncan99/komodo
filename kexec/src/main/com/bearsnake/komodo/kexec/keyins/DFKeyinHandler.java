@@ -18,6 +18,10 @@ class DFKeyinHandler extends KeyinHandler implements Runnable {
         "Creates a dump file containing the interpreted content of the given file",
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "DF {qualifier}*{filename}",
+    };
+
     public static final String COMMAND = "DF";
 
     private String _qualifier;
@@ -45,11 +49,9 @@ class DFKeyinHandler extends KeyinHandler implements Runnable {
         return Parser.isValidQualifier(_qualifier) && Parser.isValidFilename(_filename);
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

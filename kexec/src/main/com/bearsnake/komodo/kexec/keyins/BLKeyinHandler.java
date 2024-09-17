@@ -30,6 +30,11 @@ class BLKeyinHandler extends KeyinHandler {
         "          Wildcards */? are valid within the run-id"
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "BL      [D [nnn]]\n",
+        "BL[,NU] ident[,...]\n",
+    };
+
     private boolean _detailFlag;
     private boolean _filterReversedFlag;
     private final LinkedList<String> _identPatterns = new LinkedList<>();
@@ -102,15 +107,9 @@ class BLKeyinHandler extends KeyinHandler {
         return true;
     }
 
-    @Override
-    String getCommand() {
-        return COMMAND;
-    }
-
-    @Override
-    String[] getHelp() {
-        return HELP_TEXT;
-    }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

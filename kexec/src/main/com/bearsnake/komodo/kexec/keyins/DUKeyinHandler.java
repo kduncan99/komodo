@@ -14,6 +14,10 @@ class DUKeyinHandler extends KeyinHandler implements Runnable {
         "Creates a system dump file",
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "DU MP",
+    };
+
     public static final String COMMAND = "DU";
 
     public DUKeyinHandler(final ConsoleId source,
@@ -27,11 +31,9 @@ class DUKeyinHandler extends KeyinHandler implements Runnable {
         return _options == null && _arguments != null && _arguments.equalsIgnoreCase("MP");
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

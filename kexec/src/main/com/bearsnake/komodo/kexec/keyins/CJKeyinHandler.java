@@ -9,9 +9,12 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 public class CJKeyinHandler extends JumpKeyHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
-        "CJ[,ALL]", // TODO "ALL" should be an argument, not an option
-        "CJ {key}[,...]",
+        "CJ [ALL | key,...",
         "Clears the indicated jump keys",
+    };
+
+    private static final String[] SYNTAX_TEXT = {
+        "CJ [ALL | key,...",
     };
 
     public static final String COMMAND = "CJ";
@@ -23,13 +26,20 @@ public class CJKeyinHandler extends JumpKeyHandler implements Runnable {
     }
 
     @Override
-    String getCommand() { return COMMAND; }
+    final boolean checkSyntax() {
+        if (_options != null) {
+            return false;
+        }
 
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+        return checkJumpKeyArguments();
+    }
+
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     void process() {
-        process(false);
+        setOrClearJumpKeys(false);
     }
 }

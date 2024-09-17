@@ -18,6 +18,10 @@ class UPKeyinHandler extends FacHandler implements Runnable {
         "Devices attached to a specified channel are accessible via that channel."
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "UP[,ALL] node_name",
+    };
+
     public static final String COMMAND = "UP";
 
     public UPKeyinHandler(final ConsoleId source,
@@ -35,11 +39,9 @@ class UPKeyinHandler extends FacHandler implements Runnable {
         return (_arguments != null) && Parser.isValidNodeName(_arguments.toUpperCase());
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

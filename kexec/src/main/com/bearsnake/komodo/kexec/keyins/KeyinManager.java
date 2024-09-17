@@ -15,6 +15,7 @@ import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -36,7 +37,7 @@ public class KeyinManager implements Manager {
         _handlerClasses.put(BLKeyinHandler.COMMAND.toUpperCase(), BLKeyinHandler.class);
         _handlerClasses.put(CJKeyinHandler.COMMAND.toUpperCase(), CJKeyinHandler.class);
         // CK
-        // CS
+        _handlerClasses.put(CSKeyinHandler.COMMAND.toUpperCase(), CSKeyinHandler.class);
         // CTL
         _handlerClasses.put(DKeyinHandler.COMMAND.toUpperCase(), DKeyinHandler.class);
         // DC
@@ -46,12 +47,14 @@ public class KeyinManager implements Manager {
         _handlerClasses.put(DNKeyinHandler.COMMAND.toUpperCase(), DNKeyinHandler.class);
         _handlerClasses.put(DUKeyinHandler.COMMAND.toUpperCase(), DUKeyinHandler.class);
         // E
+        // EJ (non-standard keyin - explains each known jump key)
         // ERUNS
         // FA
         // FB
         // FC
         // FF
         _handlerClasses.put(FSKeyinHandler.COMMAND.toUpperCase(), FSKeyinHandler.class);
+        _handlerClasses.put(HELPKeyinHandler.COMMAND.toUpperCase(), HELPKeyinHandler.class);
         // HU
         // II
         // IN
@@ -129,8 +132,9 @@ public class KeyinManager implements Manager {
                     Constructor<?> ctor = clazz.getConstructor(ConsoleId.class, String.class, String.class);
                     var kh = (KeyinHandler)ctor.newInstance(pk.getConsoleIdentifier(), options, arguments);
                     if (Objects.equals(kh._options, "?") || Objects.equals(kh._arguments, "?")) {
-                        var msg = kh.getHelp()[0];
-                        Exec.getInstance().sendExecReadOnlyMessage(msg, kh._source);
+                        for (var msg : kh.getSyntax()) {
+                            Exec.getInstance().sendExecReadOnlyMessage(msg, kh._source);
+                        }
                         continue;
                     }
 
@@ -161,6 +165,14 @@ public class KeyinManager implements Manager {
             var msg = String.format("Keyin not registered: %s", cmd);
             Exec.getInstance().sendExecReadOnlyMessage(msg, pk.getConsoleIdentifier());
         }
+    }
+
+    static Class<?> getHandlerClass(final String command) {
+        return _handlerClasses.get(command);
+    }
+
+    static Collection<String> getHandlerCommands() {
+        return _handlerClasses.keySet();
     }
 
     private void pruneOldKeyins() {

@@ -23,10 +23,14 @@ import com.bearsnake.komodo.kexec.mfd.MFDManager;
 class PREPKeyinHandler extends KeyinHandler implements Runnable {
 
     private static final String[] HELP_TEXT = {
-        "PREP,[F|R] {device},{packname}",
+        "PREP,[F|R] device-name,pack-name",
         "Writes a label and an initial directory track to the pack currently mounted",
         "on the indicated device. The prep factor is determined from the geometry",
         "reported by the device for the mounted pack. The device must be reserved (RV)."
+    };
+
+    private static final String[] SYNTAX_TEXT = {
+        "PREP,[F|R] device-name,pack-name",
     };
 
     public static final String COMMAND = "PREP";
@@ -60,11 +64,9 @@ class PREPKeyinHandler extends KeyinHandler implements Runnable {
         return true;
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

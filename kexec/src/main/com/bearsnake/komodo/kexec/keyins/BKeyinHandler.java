@@ -14,6 +14,10 @@ class BKeyinHandler extends KeyinHandler {
         "  Displays or sets the maximum number of batch runs allowed, 0 to 99999.",
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "B [ max_runs ]",
+    };
+
     public static final String COMMAND = "B";
 
     private Integer _maxRuns;
@@ -43,11 +47,9 @@ class BKeyinHandler extends KeyinHandler {
         return true;
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

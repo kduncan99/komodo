@@ -38,6 +38,10 @@ class MFDKeyinHandler extends KeyinHandler implements Runnable {
         "Lists all files in the MFD or dumps the content of the given file"
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "MFD [ LIST | DUMP qual*file(cycle) ]",
+    };
+
     public static final String COMMAND = "MFD";
 
     public MFDKeyinHandler(final ConsoleId source,
@@ -79,11 +83,9 @@ class MFDKeyinHandler extends KeyinHandler implements Runnable {
         return false;
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

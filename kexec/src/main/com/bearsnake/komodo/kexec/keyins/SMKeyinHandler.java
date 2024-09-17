@@ -41,6 +41,10 @@ class SMKeyinHandler extends KeyinHandler {
         "T: Terminates and locks the device.",
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "SM symbiont_name [ C E I L Q R Rnnn R+nnn RALL S T ]",
+    };
+
     /*
 SM xx Illegal PROBE INTERRUPT
 (Exec) An error was encountered while probing a card reader.
@@ -150,11 +154,9 @@ SM KEY ERROR : UPDATE FAILED
         return false;
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

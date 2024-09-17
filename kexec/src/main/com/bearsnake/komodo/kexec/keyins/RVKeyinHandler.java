@@ -25,6 +25,10 @@ class RVKeyinHandler extends FacHandler implements Runnable {
         "Reserves a device for exclusive use.",
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "RV[,ALL] node_name",
+    };
+
     public static final String COMMAND = "RV";
 
     public RVKeyinHandler(final ConsoleId source,
@@ -42,11 +46,9 @@ class RVKeyinHandler extends FacHandler implements Runnable {
         return (_arguments != null) && Parser.isValidNodeName(_arguments.toUpperCase());
     }
 
-    @Override
-    String getCommand() { return COMMAND; }
-
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     boolean isAllowed() {

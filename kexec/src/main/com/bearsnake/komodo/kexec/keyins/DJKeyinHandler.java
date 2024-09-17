@@ -14,6 +14,10 @@ public class DJKeyinHandler extends JumpKeyHandler implements Runnable {
         "Displays currently-set system jump keys",
     };
 
+    private static final String[] SYNTAX_TEXT = {
+        "DJ",
+    };
+
     public static final String COMMAND = "DJ";
 
     public DJKeyinHandler(final ConsoleId source,
@@ -23,10 +27,13 @@ public class DJKeyinHandler extends JumpKeyHandler implements Runnable {
     }
 
     @Override
-    String getCommand() { return COMMAND; }
+    boolean checkSyntax() {
+        return _options == null && _arguments == null;
+    }
 
-    @Override
-    String[] getHelp() { return HELP_TEXT; }
+    @Override String getCommand() { return COMMAND; }
+    @Override String[] getHelp() { return HELP_TEXT; }
+    @Override String[] getSyntax() { return SYNTAX_TEXT; }
 
     @Override
     void process() {
