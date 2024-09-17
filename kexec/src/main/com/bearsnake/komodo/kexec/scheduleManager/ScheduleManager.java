@@ -36,7 +36,9 @@ public class ScheduleManager implements Manager, Runnable {
     private int _maxBatchJobs = 0;
     private final HashMap<String, Run> _runEntries = new HashMap<>(); // keyed by RunId
 
-    private boolean _generalHold = true;
+    private boolean _demandSchedulingHold = false;
+    private boolean _generalHold = true; // starts out true, then maintains its current value over reboots (exception JK4/9)
+    private boolean _terminalHold = false;
 
     private boolean _isTerminated = false;
     private boolean _terminate = false;
@@ -53,6 +55,10 @@ public class ScheduleManager implements Manager, Runnable {
         _maxBatchJobs = (int)(long)(exec.getConfiguration().getIntegerValue(Tag.MAXOPN));
 
         _generalHold = !recoveryBoot;
+
+        if (exec.isJumpKeySet(4) || exec.isJumpKeySet(9)) {
+            _generalHold = true;
+        }
 
         _isTerminated = false;
         _terminate = false;
@@ -149,8 +155,13 @@ public class ScheduleManager implements Manager, Runnable {
     }
 
     public int getMaxBatchJobs() { return _maxBatchJobs; }
-
-    public void setMaxBatchJobs(final int maxBatchJobs) { _maxBatchJobs = maxBatchJobs; }
+    public boolean isDemandSchedulingHoldSet() { return _demandSchedulingHold; }
+    public boolean isGeneralHoldSet() { return _generalHold; }
+    public boolean isTerminalHoldSet() { return _terminalHold; }
+    public ScheduleManager setDemandSchedulingHold(boolean hold) { _demandSchedulingHold = hold; return this; }
+    public ScheduleManager setGeneralHold(boolean generalHold) { _generalHold = generalHold; return this; }
+    public ScheduleManager setMaxBatchJobs(final int maxBatchJobs) { _maxBatchJobs = maxBatchJobs; return this; }
+    public ScheduleManager setTerminalHold(boolean hold) { _terminalHold = hold; return this; }
 
     /**
      * Unregisters a run - should be done only when there are no artifacts in the input or output queues
