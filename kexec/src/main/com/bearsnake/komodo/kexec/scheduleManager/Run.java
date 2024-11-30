@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.scheduleManager;
 
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
+import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.RunConditionWord;
@@ -36,6 +37,8 @@ public abstract class Run {
     protected RunConditionWord _runConditionWord;
     protected Character _schedulingPriority; // 'A' through 'Z'
 
+    protected boolean _facErrorFlag = false; // true if at least one CSI fac request errored - can only happen for batch or demand
+
     // The following indicate how many waits are in play for mass storage (waiting on file assign or similar)
     // and for peripherals (waiting on unit assign).
     protected final AtomicInteger _waitingForMassStorageCounter = new AtomicInteger(0);
@@ -46,9 +49,11 @@ public abstract class Run {
 
     // TODO privileges
 
-    public Run(final RunType runType,
-               final String actualRunId,
-               final RunCardInfo runCardInfo) {
+    public Run(
+        final RunType runType,
+        final String actualRunId,
+        final RunCardInfo runCardInfo
+    ) {
         // Nothing here can rely on the Configuration - we go here when Exec is instantiated,
         // and that happens well before we have a Configuration object.
         // Or... if you do violate this, make sure you don't violate it for the Exec run.
@@ -202,6 +207,29 @@ public abstract class Run {
         final long auxiliary
     ) {
         // TODO
+    }
+
+    protected void postFinMessage() {
+        var sb = new StringBuilder();
+        sb.append(_actualRunId).append("      ").setLength(7);
+        if (_facErrorFlag) {
+            sb.append("FAC ERROR ");
+        } else if (_runConditionWord.getMostRecentActivityAbort()) {
+            sb.append("ABORT ");
+        } else if (_runConditionWord.getAtLeastOnePriorTaskError() || _runConditionWord.getMostRecentTaskError()) {
+            sb.append("ERROR ");
+        }
+        sb.append("FIN");
+
+        var msg = sb.toString();
+        Exec.getInstance().sendExecReadOnlyMessage(msg, ConsoleType.System);
+        postToTailSheet(msg);
+    }
+
+    protected void postStartMessage() {
+        var msg = String.format("%-6s START", _actualRunId);
+        Exec.getInstance().sendExecReadOnlyMessage(msg, ConsoleType.System);
+        postToTailSheet(msg);
     }
 
     public void postToPrint(

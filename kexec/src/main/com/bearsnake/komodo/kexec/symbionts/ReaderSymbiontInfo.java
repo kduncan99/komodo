@@ -31,6 +31,7 @@ import java.util.LinkedList;
 /**
  * Handles input symbionts' state machine - one instance per device.
  * This is for anything which acts as a card reader, virtual or otherwise.
+ * Functionality is constrained to reading images and writing them to a temporary READ$ file.
  */
 class ReaderSymbiontInfo extends SymbiontInfo {
 

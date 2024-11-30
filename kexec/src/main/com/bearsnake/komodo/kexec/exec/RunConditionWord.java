@@ -27,9 +27,14 @@ public class RunConditionWord extends Word36 {
 
     // TODO other bit-specific things
 
-    public boolean getInhibitPageEjects() { return (_value & 0_0400_0000_0000L) != 0; }
-    public boolean getRunRescheduledAfterBoot() { return (_value & 0_0200_0000_0000L) != 0; }
-    public boolean getInhibitRunTerminationOnTaskError() { return (_value & 0_0100_0000_0000L) != 0; }
+    public boolean getInhibitPageEjects() { return (_value & Word36.MASK_B3) != 0; }
+    public boolean getRunRescheduledAfterBoot() { return (_value & Word36.MASK_B4) != 0; }
+    public boolean getInhibitRunTerminationOnTaskError() { return (_value & Word36.MASK_B5) != 0; }
+    public boolean getAtLeastOnePriorTaskError() { return (_value & Word36.MASK_B7) != 0; }
+    public boolean getMostRecentTaskError() { return (_value & Word36.MASK_B8) != 0; }
+    public boolean getMostRecentActivityAbort() { return (_value & Word36.MASK_B9) != 0; }
+    public boolean getMostRecentActivityError() { return (_value & Word36.MASK_B10) != 0; }
+    public boolean getCurrentTaskActivityError() { return (_value & Word36.MASK_B11) != 0; }
 
     public void setInhibitPageEjects(
         final boolean flag

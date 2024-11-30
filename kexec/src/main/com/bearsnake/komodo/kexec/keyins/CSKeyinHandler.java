@@ -52,6 +52,7 @@ class CSKeyinHandler extends KeyinHandler {
         "CS[,NU] [A | H] ident[,...]",
         "  Sets (A) or removes (H) the individual hold condition on individual",
         "    runs specified by ident (which can include wildcards)",
+        // TODO should CS A runid allow a specific run out of backlog, even if the master hold is still set?
         "  N: acts on runs which are *not* in the list",
         "  U: identifiers are interpreted as user-ids instead of run-ids",
         "CS runid*[Px | Dhhmm | Shhmm | Ly | F]",

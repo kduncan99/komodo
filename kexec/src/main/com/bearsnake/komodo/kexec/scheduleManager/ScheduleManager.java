@@ -34,10 +34,12 @@ public class ScheduleManager implements Manager, Runnable {
     private static final String DEFAULT_PROJECT_ID = "Q$Q$Q$";
 
     private int _maxBatchJobs = 0;
+    private int _openBatchJobCount = 0;
     private final HashMap<String, Run> _runEntries = new HashMap<>(); // keyed by RunId
 
     private boolean _demandSchedulingHold = false;
     private boolean _generalHold = true; // starts out true, then maintains its current value over reboots (exception JK4/9)
+                                         // this hold prevents batch jobs from coming out of backlog.
     private boolean _terminalHold = false;
 
     private boolean _isTerminated = false;
@@ -92,10 +94,23 @@ public class ScheduleManager implements Manager, Runnable {
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         while (!_terminate) {
-            // TODO look for things to bring out of backlog
-            Exec.sleep(250);
+            // Look for a batch job to bring out of backlog
+            var started = false;
+            if ((!_generalHold) && (_openBatchJobCount < _maxBatchJobs)) {
+                for (Run run : _runEntries.values()) {
+                    // we check hold and run count every time through the loop, in case they change during the loop.
+                    if (run instanceof BatchRun batchRun) {
+                        if (!batchRun.isStarted() && !batchRun.isHeld()) {
+                            openBatchRun(batchRun);
+                            started = true;
+                        }
+                    }
+                }
+            }
+
+            if (!started) Exec.sleep(250);
         }
 
         _isTerminated = true;
@@ -233,5 +248,18 @@ public class ScheduleManager implements Manager, Runnable {
             }
             return proposed;
         }
+    }
+
+    /**
+     * Opens a batch run which is currently not open (thus, is in backlog)
+     * @param batchRun
+     */
+    private void openBatchRun(
+        final BatchRun batchRun
+    ) {
+        // TODO make sure the thing isn't open yet
+
+        _openBatchJobCount++;
+
     }
 }

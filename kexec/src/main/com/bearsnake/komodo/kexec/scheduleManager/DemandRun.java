@@ -7,9 +7,11 @@ package com.bearsnake.komodo.kexec.scheduleManager;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exec.Exec;
 
-public class DemandRun extends Run implements Runnable {
-
-    protected boolean _isSuspended = false; // TODO can you suspend a demand run?
+/**
+ * Handles a DEMAND run.
+ * This is not the DEMAND session, which is managed by RSI, but the subset thereof which is mostly in common with BatchRun.
+ */
+public class DemandRun extends ControlStatementRun implements Runnable {
 
     public DemandRun(final String actualRunId,
                      final RunCardInfo runCardInfo
@@ -18,14 +20,26 @@ public class DemandRun extends Run implements Runnable {
         var exec = Exec.getInstance();
     }
 
-    @Override public final boolean isFinished() { return false; } // TODO
-    @Override public final boolean isStarted() { return true; } // TODO
-    @Override public final boolean isSuspended() { return _isSuspended; }
-
     /**
-     * To be invoked when RSI is ready for us to do our thing, post sign-on.
+     * To be invoked when the run is allowed to start (usually immediately).
      */
+    @Override
     public void run() {
-        // TODO
+        // TODO handle other sign-on things? Or is that already done by RSI?
+        postStartMessage();
+        // TODO handle run termination task, if any
+        // TODO release and delete READ$
+        // TODO release all assigned facilities
+        postFinMessage();
+        // TODO post job and summary accounting report (maybe) - see ECL doc appdx. E
+        // TODO release and disposition PRINT$
+        // TODO release and disposition PUNCH$ (if any)
+        _isFinished = true;
+    }
+
+    public void startRun() {
+        _isStarted = true;
+        _thread = new Thread(this);
+        _thread.start();
     }
 }
