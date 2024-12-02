@@ -5,11 +5,11 @@
 package com.bearsnake.komodo.kexec.scheduleManager;
 
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
-import com.bearsnake.komodo.logger.LogManager;
+import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 
 public class BatchRun extends ControlStatementRun implements Runnable {
 
-    // Runstream is still being read, have not yet reached @FIN
+    // Runstream is still being read, have not yet reached @FIN TODO -- is this possible? Do we actually have a BatchRun before we finish reading input?
     protected boolean _waitingOnFin = true;
 
     public BatchRun(final String actualRunId,
@@ -25,12 +25,24 @@ public class BatchRun extends ControlStatementRun implements Runnable {
      */
     @Override
     public void run() {
-        // TODO assign PRINT$
-        postStartMessageToConsole();
-        if (!setup()) {
-            postToPrint("RUNSTREAM ANALYSIS TERMINATED", 1);
-        } else {
-            // TODO processing
+        try {
+            postStartMessageToConsole();
+            if (!setup()) {
+                postToPrint("RUNSTREAM ANALYSIS TERMINATED", 1);
+            } else {
+                // TODO loop on reading images
+            }
+
+            // TODO handle run termination task, if any
+            // TODO release and disposition PUNCH$ (if any)
+            // TODO release all assigned facilities EXCEPT for PRINT$
+            postFinMessageToConsole();
+            // TODO post job and summary accounting report (maybe) - see ECL doc appdx. E
+            // TODO release and disposition PRINT$
+            _isFinished = true;
+            // TODO scheduler.unRegisterRun()
+        } catch (ExecStoppedException ex) {
+            // Nothing to be done here
         }
 
         //IMPROPER RUNSTREAM IN FILE
@@ -78,16 +90,6 @@ public class BatchRun extends ControlStatementRun implements Runnable {
         // The user’s run has been removed due to an illegal password, or a password was not found in the runstream.
         //RUNSTREAM ANALYSIS TERMINATED
         // The run has been terminated because of an error condition, and the remaining control statements are not processed.
-
-        // TODO handle run termination task, if any
-        // TODO release and delete READ$
-        // TODO release all assigned facilities
-        postFinMessageToConsole();
-        // TODO post job and summary accounting report (maybe) - see ECL doc appdx. E
-        // TODO release and disposition PRINT$
-        // TODO release and disposition PUNCH$ (if any)
-        _isFinished = true;
-        // TODO scheduler.unRegisterRun()
     }
 
     public void startRun() {
@@ -96,12 +98,13 @@ public class BatchRun extends ControlStatementRun implements Runnable {
         _thread.start();
     }
 
-    private boolean setup() {
+    private boolean setup() throws ExecStoppedException {
         if (!assignREAD$File()) {
             return false;
         }
 
-        // TODO
+        // TODO assign PRINT$ file
+        // TODO check RUN card artifacts
 
         return true;
     }

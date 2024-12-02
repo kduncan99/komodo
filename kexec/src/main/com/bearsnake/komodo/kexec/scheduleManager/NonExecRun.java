@@ -10,6 +10,7 @@ import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
+import com.bearsnake.komodo.kexec.mfd.DiskFileCycleInfo;
 import com.bearsnake.komodo.kexec.symbionts.SymbiontFileReader;
 import com.bearsnake.komodo.kexec.symbionts.SymbiontFileWriter;
 
@@ -100,12 +101,14 @@ public abstract class NonExecRun extends Run {
     /**
      * Looks up the GENF entry for this run, and attempts to assign the input file,
      * and applies the READ$ internal use name to that file.
+     * If successful, a SymbiontReader is created for the input file.
      * Invoked upon batch run startup (demand uses RSI redirection)
      * @return true if successful; false means the run fails with FAC ERROR.
      * @throws ExecStoppedException if something goes badly wrong
      */
     protected boolean assignREAD$File() throws ExecStoppedException {
         var exec = Exec.getInstance();
+        var cfg = exec.getConfiguration();
         var genf = exec.getGenFileInterface();
 
         var fsResult = genf.assignInputFile(this, _inputQueueAddress);
@@ -119,6 +122,12 @@ public abstract class NonExecRun extends Run {
             _facErrorFlag = true;
             return false;
         }
+
+        var facItem = (DiskFileFacilitiesItem) _facilitiesItemTable.getFacilitiesItemByInternalName("READ$");
+        var fcInfo = (DiskFileCycleInfo) facItem.getAcceleratedCycleInfo().getFileCycleInfo();
+        var sectorCount = fcInfo.getHighestTrackWritten() + 1;
+        var bufferSize = (int)(long)cfg.getIntegerValue(Tag.SYMFBUF);
+        _currentReadSymbiont = new SymbiontFileReader("READ$", sectorCount, bufferSize);
 
         return true;
     }
