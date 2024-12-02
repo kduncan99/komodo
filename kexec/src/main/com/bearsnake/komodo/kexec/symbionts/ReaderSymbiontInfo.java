@@ -294,7 +294,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
         var cfg = exec.getConfiguration();
         var fm = exec.getFacilitiesManager();
         var sch = exec.getScheduleManager();
-        BatchRun run = null;
+        BatchRun run;
         try {
             run = sch.createBatchRun(runCardInfo);
         } catch (ScheduleManagerException ex) {

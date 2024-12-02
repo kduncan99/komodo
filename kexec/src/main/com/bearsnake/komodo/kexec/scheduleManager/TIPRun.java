@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kexec.scheduleManager;
 
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 
-public class TIPRun extends Run {
+public class TIPRun extends NonExecRun {
 
     public TIPRun(final String actualRunId,
                   final RunCardInfo runCardInfo

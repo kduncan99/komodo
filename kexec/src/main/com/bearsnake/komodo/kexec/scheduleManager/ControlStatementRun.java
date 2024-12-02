@@ -4,7 +4,9 @@
 
 package com.bearsnake.komodo.kexec.scheduleManager;
 
+import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
+import com.bearsnake.komodo.kexec.exec.Exec;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,7 +15,7 @@ import java.util.Set;
  * Base class for BatchRun and DemandRun
  * Contains most of the functional aspects of those two, leaving only the minor differences to be implemented in the subclasses.
  */
-public abstract class ControlStatementRun extends Run {
+public abstract class ControlStatementRun extends NonExecRun {
 
     public static enum HoldCondition {
         ArbitraryDeviceWait(7, "AD"),
@@ -40,30 +42,6 @@ public abstract class ControlStatementRun extends Run {
 
     protected final Set<BatchRun.HoldCondition> _holdConditions = new HashSet<>();
 
-    // Sector address in GENF$ of the input queue item for this job if it isn't open yet
-    // Will be set when the input queue item is created; will be set to zero once the input queue item is removed.
-    protected long _inputQueueAddress;
-
-    // True only if we have come out of backlog for batch, or are DEMAND, and have subsequently finished.
-    // We *might* have queue items, but if we don't, we will very quickly be removed from ScheduleManager.
-    protected boolean _isFinished = false;
-
-    // False if we never left backlog; true if we are running, or we have finished.
-    // Always true for DEMAND.
-    // Usually there are queue items, but this might not be true for jobs which have *just* finished with no
-    // queue items and have not yet been removed from ScheduleManager, or for jobs which *did* have queue items
-    // but those queue items have just been removed, and we have not yet been removed from ScheduleManager.
-    protected boolean _isStarted = false;
-
-    // Indicates whether this run is currently suspended
-    protected boolean _isSuspended = false;
-
-    // Indicates the symbiont of site-id which produced the run. null if started from the console.
-    protected String _siteId;
-
-    // Thread which is running this runnable, if we are started
-    protected Thread _thread;
-
     public ControlStatementRun(
         final RunType runType,
         final String actualRunId,
@@ -74,14 +52,8 @@ public abstract class ControlStatementRun extends Run {
     }
 
     public final void clearHoldCondition(final HoldCondition condition) { _holdConditions.remove(condition); }
-    public final void clearInputQueueAddress() { _inputQueueAddress = 0; }
-    public final long getInputQueueAddress() { return _inputQueueAddress; }
-    public final String getSiteId() { return _siteId; }
-    @Override public final boolean isFinished() { return _isFinished; }
     public final boolean isHeld() { return !_holdConditions.isEmpty(); }
     public final boolean isHeldFor(final HoldCondition condition) { return _holdConditions.contains(condition); }
-    @Override public final boolean isStarted() { return _isStarted; }
-    @Override public final boolean isSuspended() { return _isSuspended; }
 
     @Override public ControlStatementRun setDefaultQualifier(final String qualifier) { super.setDefaultQualifier(qualifier); return this; }
     public ControlStatementRun setHoldCondition(final HoldCondition condition) { _holdConditions.add(condition); return this; }
@@ -101,5 +73,28 @@ public abstract class ControlStatementRun extends Run {
             }
         }
         return result;
+    }
+
+    protected void postFinMessageToConsole() {
+        var sb = new StringBuilder();
+        sb.append(_actualRunId).append("      ").setLength(7);
+        if (_facErrorFlag) {
+            sb.append("FAC ERROR ");
+        } else if (_runConditionWord.getMostRecentActivityAbort()) {
+            sb.append("ABORT ");
+        } else if (_runConditionWord.getAtLeastOnePriorTaskError() || _runConditionWord.getMostRecentTaskError()) {
+            sb.append("ERROR ");
+        }
+        sb.append("FIN");
+
+        var msg = sb.toString();
+        Exec.getInstance().sendExecReadOnlyMessage(msg, ConsoleType.System);
+        postToTailSheet(msg);
+    }
+
+    protected void postStartMessageToConsole() {
+        var msg = String.format("%-6s START", _actualRunId);
+        Exec.getInstance().sendExecReadOnlyMessage(msg, ConsoleType.System);
+        postToTailSheet(msg);
     }
 }

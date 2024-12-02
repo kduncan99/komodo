@@ -8,7 +8,9 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 
 /**
- * Handles input symbionts - essentially card readers, virtual or otherwise.
+ * Handles printer-type output symbionts.
+ * Reads files in printer output queues, performs necessary formatting, and sends appropriate line or page
+ * images to the destination (which might be a virtual printer, a real printer queue on the host, or a real printer).
  */
 class PrinterSymbiontInfo extends SymbiontInfo {
 

@@ -19,7 +19,6 @@ import java.util.Map;
 
 public class SymbiontManager implements Manager {
 
-    private static final int POLL_DELAY = 100;
     static final String LOG_SOURCE = "SymbMgr";
 
     // TODO
@@ -63,7 +62,7 @@ public class SymbiontManager implements Manager {
     public void dump(PrintStream out, String indent, boolean verbose) {
         out.printf("%sSymbiontManager ********************************\n", indent);
 
-        out.printf("%s  Input Symbionts:\n", indent);
+        out.printf("%s  Symbionts:\n", indent);
         _symbiontInfos.values().forEach(symInfo -> out.printf("%s    %s\n", indent, symInfo.getStateString()));
     }
 

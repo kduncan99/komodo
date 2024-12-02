@@ -14,7 +14,6 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleManager;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.consoles.ReadOnlyMessage;
 import com.bearsnake.komodo.kexec.consoles.ReadReplyMessage;
-import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.genf.GenFileInterface;
@@ -22,8 +21,7 @@ import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
 import com.bearsnake.komodo.kexec.mfd.MFDManager;
-import com.bearsnake.komodo.kexec.scheduleManager.Run;
-import com.bearsnake.komodo.kexec.scheduleManager.RunType;
+import com.bearsnake.komodo.kexec.scheduleManager.ExecRun;
 import com.bearsnake.komodo.kexec.scheduleManager.ScheduleManager;
 import com.bearsnake.komodo.kexec.symbionts.SymbiontManager;
 import com.bearsnake.komodo.kexec.tasks.ExecTask;
@@ -34,7 +32,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 
-public class Exec extends Run {
+public class Exec extends ExecRun {
 
     public static final int INVALID_LDAT = 0_400000;
     public static final int EXEC_VERSION = 1;
@@ -65,12 +63,7 @@ public class Exec extends Run {
     private ScheduleManager _scheduleManager;
     private SymbiontManager _symbiontManager;
 
-    private static final RunCardInfo RUN_CARD_INFO =
-        new RunCardInfo("").setRunId("EXEC-8").setAccountId("SYSTEM").setProjectId("SYS$").setUserId("EXEC8");
-
     public Exec(final boolean[] jumpKeyTable) {
-        super(RunType.Exec, "EXEC-8", RUN_CARD_INFO);
-
         _jumpKeys = jumpKeyTable;
         _allowRecoveryBoot = false;
         _phase = Phase.NotStarted;
@@ -85,16 +78,6 @@ public class Exec extends Run {
         _scheduleManager = new ScheduleManager();
         _symbiontManager = new SymbiontManager();
     }
-
-    // -----------------------------------------------------------------------------------------------------------------
-    // Run interface
-    // -----------------------------------------------------------------------------------------------------------------
-
-    @Override public String getAccountId() { return _configuration.getStringValue(Tag.MSTRACC); }
-    @Override public final boolean isFinished() { return false; }
-    @Override public final boolean isPrivileged() { return true; }
-    @Override public final boolean isStarted() { return true; }
-    @Override public final boolean isSuspended() { return false; }
 
     // -----------------------------------------------------------------------------------------------------------------
     // public

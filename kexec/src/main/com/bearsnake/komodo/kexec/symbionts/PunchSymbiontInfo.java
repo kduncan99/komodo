@@ -8,7 +8,9 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 
 /**
- * Handles input symbionts - essentially card readers, virtual or otherwise.
+ * Handles punch-type output symbionts.
+ * Reads files in punch output queues, performs necessary formatting, and sends appropriate card images to the destination
+ * (which will generally be a local or remote holding area for image files - we don't expect ever to have real card punch devices).
  */
 class PunchSymbiontInfo extends SymbiontInfo {
 

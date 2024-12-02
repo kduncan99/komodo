@@ -6,12 +6,15 @@ package com.bearsnake.komodo.kexec.exec.genf;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.FileSpecification;
+import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.scheduleManager.Run;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.exec.genf.queues.OutputQueue;
@@ -26,6 +29,7 @@ import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.TreeMap;
 
 /**
@@ -188,6 +192,60 @@ public class GenFileInterface {
             queue = _readerQueues.get(name);
         }
         return queue;
+    }
+
+    /**
+     * Assigns the READ$ input file associated with the input queue item at the given sectorAddress to the requesting run.
+     * @param run requesting run
+     * @param sectorAddress sector address of the input queue item
+     * @return FacStatusResult from the attempt to assign the file, or null if the indicated queue item does not exist, or is not an input queue item
+     * @throws ExecStoppedException if something goes badly wrong during the assign attempt
+     */
+    public FacStatusResult assignInputFile(
+        final Run run,
+        final int sectorAddress
+    ) throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        var fm = exec.getFacilitiesManager();
+
+        var item = _inventory.get(sectorAddress);
+        if (item == null) {
+            LogManager.logError(LOG_SOURCE, "Caller requested input file item at sector %d which does not exist", sectorAddress);
+            return null;
+        }
+
+        if (!(item instanceof InputQueueItem iqi)) {
+            LogManager.logError(LOG_SOURCE, "Caller requested input file item at sector %d which is not an input item", sectorAddress);
+            return null;
+        }
+
+        var filename = "READ$X" + iqi.getActualRunId();
+        var fileSpecification = new FileSpecification("SYS$", filename, null, null, null);
+        var fsResult = new FacStatusResult();
+        fm.assignCatalogedDiskFileToRun(run,
+                                        fileSpecification,
+                                        Word36.A_OPTION | Word36.K_OPTION | Word36.X_OPTION,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        FacilitiesManager.DeleteBehavior.DeleteOnAnyRunTermination,
+                                        null,
+                                        false,
+                                        true,
+                                        false,
+                                        false,
+                                        false,
+                                        false,
+                                        fsResult);
+
+        if ((fsResult.getStatusWord() & 0_400000_000000L) == 0) {
+            fm.establishUseItem(run, "READ$", fileSpecification, false);
+        }
+
+        return fsResult;
     }
 
     /**

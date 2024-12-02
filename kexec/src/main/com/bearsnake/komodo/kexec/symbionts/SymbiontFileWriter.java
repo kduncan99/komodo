@@ -46,8 +46,8 @@ public class SymbiontFileWriter implements SymbiontWriter {
 
     /**
      * For writing an SDF file
-     * @param internalFileName internal file name of file containing the symbiont input element
-     * @param fileType SDFFileType (probably PRINT$ or PUNCH$)
+     * @param internalFileName internal file name of file containing the symbiont output element
+     * @param fileType SDFFileType (PRINT$ or PUNCH$)
      * @param bufferSize symbiont IO buffer size
      */
     public SymbiontFileWriter(

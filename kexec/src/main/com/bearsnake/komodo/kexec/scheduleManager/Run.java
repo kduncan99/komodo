@@ -4,10 +4,7 @@
 
 package com.bearsnake.komodo.kexec.scheduleManager;
 
-import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
-import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
-import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.RunConditionWord;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesItemTable;
 import com.bearsnake.komodo.baselib.FileSpecification;
@@ -82,27 +79,7 @@ public abstract class Run {
             _runCardInfo.setProcessorPriority('A');
         }
 
-        if (this instanceof Exec) {
-            _currentCardLimit = 0;
-            _currentPageLimit = 0;
-            _currentTimeLimit = 0;
-        } else {
-            var exec = Exec.getInstance();
-            var cfg = exec.getConfiguration();
-            if (_runCardInfo.getMaxCards() == null) {
-                _runCardInfo.setMaxCards(cfg.getIntegerValue(Tag.MAXCRD));
-            }
-            if (_runCardInfo.getMaxPages() == null) {
-                _runCardInfo.setMaxPages(cfg.getIntegerValue(Tag.MAXPAG));
-            }
-            if (_runCardInfo.getMaxTime() == null) {
-                _runCardInfo.setMaxTime(cfg.getIntegerValue(Tag.MAXTIM));
-            }
-        }
-
         _runConditionWord = new RunConditionWord();
-        _defaultQualifier = _runCardInfo.getProjectId();
-        _impliedQualifier = _runCardInfo.getProjectId();
         _currentCardCount = 0;
         _currentPageCount = 0;
         _currentTimeCount = 0;
@@ -112,7 +89,7 @@ public abstract class Run {
 
     public void decrementWaitingForMassStorage() { _waitingForMassStorageCounter.decrementAndGet(); }
     public void decrementWaitingForPeripheral() { _waitingForPeripheralCounter.decrementAndGet(); }
-    public String getAccountId() { return _runCardInfo.getAccountId(); }
+    public abstract String getAccountId();
     public final Task getActiveTask() { return _activeTask; }
     public final String getActualRunId() { return _actualRunId; }
     public final String getDefaultQualifier() { return _defaultQualifier; }
@@ -176,80 +153,24 @@ public abstract class Run {
         }
     }
 
-    public boolean isPrivileged() {
-        // check SYS$*DLOC$
-        var facItem = _facilitiesItemTable.getFacilitiesItem("SYS$", "DLOC$");
-        if (facItem != null) {
-            var dfi = (DiskFileFacilitiesItem)facItem;
-            if (dfi.isReadable() && dfi.isWriteable()) {
-                return true;
-            }
-        }
+    abstract public boolean isPrivileged();
 
-        // Is the run privileged by way of Security?
-        // That's a tricky one, there are various dimensions of privilege. This applies only to general all-encompassing privilege.
-        // TODO
-        return false;
-    }
-
-    public void postContingency(
+    abstract public void postContingency(
         final int contingencyType,
         final int errorType,
         final int errorCode
-    ) {
-        // TODO
-    }
+    );
 
-    public void postContingency(
+    abstract public void postContingency(
         final int contingencyType,
         final int errorType,
         final int errorCode,
         final long auxiliary
-    ) {
-        // TODO
-    }
+    );
 
-    protected void postFinMessage() {
-        var sb = new StringBuilder();
-        sb.append(_actualRunId).append("      ").setLength(7);
-        if (_facErrorFlag) {
-            sb.append("FAC ERROR ");
-        } else if (_runConditionWord.getMostRecentActivityAbort()) {
-            sb.append("ABORT ");
-        } else if (_runConditionWord.getAtLeastOnePriorTaskError() || _runConditionWord.getMostRecentTaskError()) {
-            sb.append("ERROR ");
-        }
-        sb.append("FIN");
-
-        var msg = sb.toString();
-        Exec.getInstance().sendExecReadOnlyMessage(msg, ConsoleType.System);
-        postToTailSheet(msg);
-    }
-
-    protected void postStartMessage() {
-        var msg = String.format("%-6s START", _actualRunId);
-        Exec.getInstance().sendExecReadOnlyMessage(msg, ConsoleType.System);
-        postToTailSheet(msg);
-    }
-
-    public void postToPrint(
-        final String text,
-        final int lineSkip
-    ) {
-        // TODO
-    }
-
-    public void postToPunch(
-        final String text
-    ) {
-        // TODO
-    }
-
-    public void postToTailSheet(
-        final String message
-    ) {
-        // TODO
-    }
+    abstract public void postToPrint(final String text, final int lineSkip);
+    abstract public void postToPunch(final String text);
+    abstract public void postToTailSheet(final String message);
 
     public FileSpecification resolveQualifier(
         final FileSpecification initialSpec
