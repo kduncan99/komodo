@@ -4,8 +4,14 @@
 
 package com.bearsnake.komodo.kexec.scheduleManager;
 
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
+import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
+import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
+import com.bearsnake.komodo.kexec.mfd.DiskFileCycleInfo;
+import com.bearsnake.komodo.kexec.symbionts.SymbiontFileReader;
 
 public class BatchRun extends ControlStatementRun implements Runnable {
 
@@ -16,6 +22,36 @@ public class BatchRun extends ControlStatementRun implements Runnable {
                     final RunCardInfo runCardInfo) {
         super(RunType.Batch, actualRunId, runCardInfo);
         _inputQueueAddress = 0;
+    }
+
+    /**
+     * Looks up the GENF entry for this run, and attempts to assign the input file,
+     * and applies the READ$ internal use name to that file.
+     * If successful, a SymbiontReader is created for the input file.
+     * Invoked upon batch run startup (demand uses RSI redirection)
+     * @return FacStatusResult describing the result of the request - only the status word is guaranteed to be populated
+     * @throws ExecStoppedException if something goes badly wrong
+     */
+    private FacStatusResult assignREAD$() throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        var cfg = exec.getConfiguration();
+        var genf = exec.getGenFileInterface();
+
+        var fsResult = genf.assignInputFile(this, _inputQueueAddress);
+        if (fsResult.statusWordFatal()) {
+            var msg = String.format("READ$FILE REJECT STATUS %06o", fsResult.getStatusWord());
+            postReadOnlyConsoleMessage(msg);
+            _facErrorFlag = true;
+            return fsResult;
+        }
+
+        var facItem = (DiskFileFacilitiesItem) _facilitiesItemTable.getFacilitiesItemByInternalName("READ$");
+        var fcInfo = (DiskFileCycleInfo) facItem.getAcceleratedCycleInfo().getFileCycleInfo();
+        var sectorCount = fcInfo.getHighestTrackWritten() + 1;
+        var bufferSize = (int)(long)cfg.getIntegerValue(Tag.SYMFBUF);
+        _currentReadSymbiont = new SymbiontFileReader("READ$", sectorCount, bufferSize);
+
+        return fsResult;
     }
 
     /**
@@ -101,12 +137,19 @@ public class BatchRun extends ControlStatementRun implements Runnable {
     }
 
     private boolean setup() throws ExecStoppedException {
-        var fsResult = assignREAD$File();
-        if ((fsResult.getStatusWord() & 0_400000_000000L) != 0) {
+        var fsResult = assignREAD$();
+        if (fsResult.statusWordFatal()) {
             return false;
         }
 
-        // TODO assign PRINT$ file
+        fsResult = assignPRINT$File();
+        if (fsResult.statusWordFatal()) {
+            var msg = String.format("PRINT$FILE REJECT STATUS %06o", fsResult.getStatusWord());
+            postReadOnlyConsoleMessage(msg);
+            _facErrorFlag = true;
+            return false;
+        }
+
         // TODO check RUN card artifacts
 
         return true;

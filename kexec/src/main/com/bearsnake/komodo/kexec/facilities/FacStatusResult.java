@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kexec.facilities;
 
+import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.logger.Level;
 import com.bearsnake.komodo.logger.LogManager;
 
@@ -21,6 +22,7 @@ public class FacStatusResult {
     private long _statusWord = 0;
 
     public long getStatusWord() { return _statusWord; }
+    public boolean statusWordFatal() { return Word36.isNegative(_statusWord); }
 
     public boolean hasErrorMessages() { return !_errors.isEmpty(); }
     public boolean hasInfoMessages() { return !_infos.isEmpty(); }

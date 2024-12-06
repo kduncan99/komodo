@@ -16,21 +16,25 @@ import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.AssignCatalogedDiskFileRequest;
 import com.bearsnake.komodo.kexec.facilities.CatalogDiskFileRequest;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
-import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
-import com.bearsnake.komodo.kexec.mfd.DiskFileCycleInfo;
-import com.bearsnake.komodo.kexec.symbionts.SymbiontFileReader;
-import com.bearsnake.komodo.kexec.symbionts.SymbiontFileWriter;
+import com.bearsnake.komodo.kexec.symbionts.SymbiontReader;
+import com.bearsnake.komodo.kexec.symbionts.SymbiontWriter;
 
 public abstract class NonExecRun extends Run {
 
-    protected SymbiontFileWriter _currentPrintSymbiont = null;
-    protected SymbiontFileWriter _currentPunchSymbiont = null;
-    protected SymbiontFileReader _currentReadSymbiont = null;
-    protected boolean _deletePrintPart = false;
-    protected String _directPrintPartTo = null;
+    // Symbiont file, part, etc management
+    protected SymbiontWriter _currentPrintSymbiont = null;
+    protected SymbiontWriter _currentPunchSymbiont = null;
+    protected SymbiontReader _currentReadSymbiont = null;
+
     protected int _nextPrintPartNumber = 0;
     protected int _nextPunchPartNumber = 0;
+
+    protected boolean _deletePrintPart = false; // i.e., @SYM,D
+    protected boolean _deletePunchPart = false;
+
+    protected String _directPrintTo = null; // i.e., @SYM,U
+    protected String _directPunchTo = null;
 
     // Sector address in GENF$ of the input queue item for this job if it isn't open yet
     // Will be set when the input queue item is created; will be set to zero once the input queue item is removed.
@@ -85,13 +89,13 @@ public abstract class NonExecRun extends Run {
 
     /**
      * Creates a new output symbiont print file, and applies the PRINT$ internal file name.
-     * If there is already a PRINT$ file in use, it is closed and possibly queued.
+     * Caller must close any current PRINT$ file before invoking this
      * Caller must ensure the next part number value is <= 0511 before invoking.
      * Invoked in the following circumstances...
      *      When a batch run starts
      *      Upon the first attempt to write output to PRINT$ for a tip run
      *      During @BRKPT processing for batch or tip (demand uses RSI redirection)
-     * @return true if successful; false means the run fails with FAC ERROR.
+     * This does not apply to all subclasses, but it seems easiest to implement this here.
      */
     protected synchronized FacStatusResult assignPRINT$File() throws ExecStoppedException {
         var exec = Exec.getInstance();
@@ -112,17 +116,10 @@ public abstract class NonExecRun extends Run {
         var ok = fm.catalogDiskFile(catReq, fsResult);
         if (ok) {
             var asgReq = new AssignCatalogedDiskFileRequest(fileSpec).setOptionsWord(Word36.A_OPTION | Word36.X_OPTION).setExclusiveUse().setDoNotHoldRun();
-            ok = fm.assignCatalogedDiskFileToRun(this, asgReq, fsResult);
+            fm.assignCatalogedDiskFileToRun(this, asgReq, fsResult);
         }
 
         if (ok) {
-            // TODO check for existing PRINT$, maybe release it, and maybe queue it if it exists
-            //  release it if we assigned it during @BRKPT processing or if it is a PR@ file.
-            //  queue it if it is a PR@ file and we have not done a @SYM,U
-            if (_deletePrintPart) {
-
-            }
-
             // Now apply PRINT$ internal file name
             fm.establishUseItem(this, "PRINT$", fileSpec, false);
             ++_nextPrintPartNumber;
@@ -133,47 +130,47 @@ public abstract class NonExecRun extends Run {
 
     /**
      * Creates a new output symbiont punch file, and applies the PUNCH$ internal file name.
-     * If there is already a PUNCH$ file in use, it is closed and possibly queued.
+     * Caller must close any current PUNCH$ file before invoking this
+     * Caller must ensure the next part number value is <= 0511 before invoking.
      * Invoked in the following circumstances...
-     *      Upon the first attempt to write output to PUNCH$
-     *      During @BRKPT processing
-     * @return true if successful; false means the run fails with FAC ERROR.
+     *      When a batch run starts
+     *      Upon the first attempt to write output to PRINT$ for a tip run
+     *      During @BRKPT processing for batch or tip (demand uses RSI redirection)
+     * This does not apply to all subclasses, but it seems easiest to implement this here.
      */
-    protected synchronized boolean assignPUNCH$File() {
-        return false;//TODO
-    }
-
-    /**
-     * Looks up the GENF entry for this run, and attempts to assign the input file,
-     * and applies the READ$ internal use name to that file.
-     * If successful, a SymbiontReader is created for the input file.
-     * Invoked upon batch run startup (demand uses RSI redirection)
-     * @return FacStatusResult describing the result of the request - only the status word is guaranteed to be populated
-     * @throws ExecStoppedException if something goes badly wrong
-     */
-    protected FacStatusResult assignREAD$File() throws ExecStoppedException {
+    protected synchronized FacStatusResult assignPUNCH$File() throws ExecStoppedException {
         var exec = Exec.getInstance();
-        var cfg = exec.getConfiguration();
-        var genf = exec.getGenFileInterface();
+        var fm = exec.getFacilitiesManager();
 
-        var fsResult = genf.assignInputFile(this, _inputQueueAddress);
-        if ((fsResult.getStatusWord() & 0_400000_000000L) != 0) {
-            var msg = String.format("READ$FILE REJECT STATUS %06o", fsResult.getStatusWord());
-            postReadOnlyConsoleMessage(msg);
-            _facErrorFlag = true;
-            return fsResult;
+        var fileName = String.format("%s@PU%03o", getActualRunId(), _nextPunchPartNumber);
+        var fileSpec = new FileSpecification("SYS$", fileName, FileCycleSpecification.newRelativeSpecification(1), null, null);
+        var fsResult = new FacStatusResult();
+        var catReq = new CatalogDiskFileRequest(fileSpec).setMnemonic("F")
+                                                         .setProjectId(exec.getProjectId())
+                                                         .setAccountId(exec.getAccountId())
+                                                         .setIsGuarded()
+                                                         .setIsPrivate()
+                                                         .setIsUnloadInhibited()
+                                                         .setGranularity(Granularity.Track)
+                                                         .setInitialGranules(1)
+                                                         .setMaximumGranules(9999);
+        var ok = fm.catalogDiskFile(catReq, fsResult);
+        if (ok) {
+            var asgReq = new AssignCatalogedDiskFileRequest(fileSpec).setOptionsWord(Word36.A_OPTION | Word36.X_OPTION).setExclusiveUse().setDoNotHoldRun();
+            fm.assignCatalogedDiskFileToRun(this, asgReq, fsResult);
         }
 
-        var facItem = (DiskFileFacilitiesItem) _facilitiesItemTable.getFacilitiesItemByInternalName("READ$");
-        var fcInfo = (DiskFileCycleInfo) facItem.getAcceleratedCycleInfo().getFileCycleInfo();
-        var sectorCount = fcInfo.getHighestTrackWritten() + 1;
-        var bufferSize = (int)(long)cfg.getIntegerValue(Tag.SYMFBUF);
-        _currentReadSymbiont = new SymbiontFileReader("READ$", sectorCount, bufferSize);
+        if (ok) {
+            // Now apply PUNCH$ internal file name
+            fm.establishUseItem(this, "PUNCH$", fileSpec, false);
+            ++_nextPunchPartNumber;
+        }
 
         return fsResult;
     }
 
     public final void clearInputQueueAddress() { _inputQueueAddress = 0; }
+
     @Override public String getAccountId() { return _runCardInfo.getAccountId(); }
     public final long getInputQueueAddress() { return _inputQueueAddress; }
     public final String getSiteId() { return _siteId; }
@@ -243,5 +240,4 @@ public abstract class NonExecRun extends Run {
     ) {
         // TODO
     }
-
 }
