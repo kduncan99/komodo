@@ -4,11 +4,17 @@
 
 package com.bearsnake.komodo.kexec.scheduleManager;
 
+import com.bearsnake.komodo.baselib.FileCycleSpecification;
+import com.bearsnake.komodo.baselib.FileSpecification;
+import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
+import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
 import com.bearsnake.komodo.kexec.mfd.DiskFileCycleInfo;
 import com.bearsnake.komodo.kexec.symbionts.SymbiontFileReader;
@@ -19,6 +25,8 @@ public abstract class NonExecRun extends Run {
     protected SymbiontFileWriter _currentPrintSymbiont = null;
     protected SymbiontFileWriter _currentPunchSymbiont = null;
     protected SymbiontFileReader _currentReadSymbiont = null;
+    protected boolean _deletePrintPart = false;
+    protected String _directPrintPartTo = null;
     protected int _nextPrintPartNumber = 0;
     protected int _nextPunchPartNumber = 0;
 
@@ -76,14 +84,70 @@ public abstract class NonExecRun extends Run {
     /**
      * Creates a new output symbiont print file, and applies the PRINT$ internal file name.
      * If there is already a PRINT$ file in use, it is closed and possibly queued.
+     * Caller must ensure the next part number value is <= 0511 before invoking.
      * Invoked in the following circumstances...
      *      When a batch run starts
      *      Upon the first attempt to write output to PRINT$ for a tip run
      *      During @BRKPT processing for batch or tip (demand uses RSI redirection)
      * @return true if successful; false means the run fails with FAC ERROR.
      */
-    protected synchronized boolean assignPRINT$File() {
-        return false;//TODO
+    protected synchronized FacStatusResult assignPRINT$File() throws ExecStoppedException {
+        var exec = Exec.getInstance();
+        var fm = exec.getFacilitiesManager();
+
+        var fileName = String.format("%s@PR%03o", getActualRunId(), _nextPrintPartNumber);
+        var fileSpec = new FileSpecification("SYS$", fileName, FileCycleSpecification.newRelativeSpecification(1), null, null);
+        var fsResult = new FacStatusResult();
+        var ok = fm.catalogDiskFile(fileSpec,
+                                    "F",
+                                    exec.getProjectId(),
+                                    exec.getAccountId(),
+                                    true,
+                                    true,
+                                    true,
+                                    false,
+                                    false,
+                                    false,
+                                    Granularity.Track,
+                                    1,
+                                    9999,
+                                    null,
+                                    fsResult);
+        if (ok) {
+            ok = fm.assignCatalogedDiskFileToRun(this,
+                                                 fileSpec,
+                                                 Word36.A_OPTION | Word36.X_OPTION,
+                                                 null,
+                                                 null,
+                                                 null,
+                                                 null,
+                                                 null,
+                                                 null,
+                                                 FacilitiesManager.DeleteBehavior.None,
+                                                 FacilitiesManager.DirectoryOnlyBehavior.None,
+                                                 false,
+                                                 false,
+                                                 false,
+                                                 true,
+                                                 false,
+                                                 true,
+                                                 fsResult);
+        }
+
+        if (ok) {
+            // TODO check for existing PRINT$, maybe release it, and maybe queue it if it exists
+            //  release it if we assigned it during @BRKPT processing or if it is a PR@ file.
+            //  queue it if it is a PR@ file and we have not done a @SYM,U
+            if (_deletePrintPart) {
+
+            }
+
+            // Now apply PRINT$ internal file name
+            fm.establishUseItem(this, "PRINT$", fileSpec, false);
+            ++_nextPrintPartNumber;
+        }
+
+        return fsResult;
     }
 
     /**
@@ -103,24 +167,20 @@ public abstract class NonExecRun extends Run {
      * and applies the READ$ internal use name to that file.
      * If successful, a SymbiontReader is created for the input file.
      * Invoked upon batch run startup (demand uses RSI redirection)
-     * @return true if successful; false means the run fails with FAC ERROR.
+     * @return FacStatusResult describing the result of the request - only the status word is guaranteed to be populated
      * @throws ExecStoppedException if something goes badly wrong
      */
-    protected boolean assignREAD$File() throws ExecStoppedException {
+    protected FacStatusResult assignREAD$File() throws ExecStoppedException {
         var exec = Exec.getInstance();
         var cfg = exec.getConfiguration();
         var genf = exec.getGenFileInterface();
 
         var fsResult = genf.assignInputFile(this, _inputQueueAddress);
-        if (fsResult == null) {
-            postReadOnlyConsoleMessage("READ$FILE does not exist");
-            _facErrorFlag = true;
-            return false;
-        } else if ((fsResult.getStatusWord() & 0_400000_000000L) != 0) {
+        if ((fsResult.getStatusWord() & 0_400000_000000L) != 0) {
             var msg = String.format("READ$FILE REJECT STATUS %06o", fsResult.getStatusWord());
             postReadOnlyConsoleMessage(msg);
             _facErrorFlag = true;
-            return false;
+            return fsResult;
         }
 
         var facItem = (DiskFileFacilitiesItem) _facilitiesItemTable.getFacilitiesItemByInternalName("READ$");
@@ -129,7 +189,7 @@ public abstract class NonExecRun extends Run {
         var bufferSize = (int)(long)cfg.getIntegerValue(Tag.SYMFBUF);
         _currentReadSymbiont = new SymbiontFileReader("READ$", sectorCount, bufferSize);
 
-        return true;
+        return fsResult;
     }
 
     public final void clearInputQueueAddress() { _inputQueueAddress = 0; }

@@ -78,7 +78,9 @@ public class BatchRun extends ControlStatementRun implements Runnable {
         // The operator entered an E keyin for this run. When used for a demand run, an E keyin terminates the task that is currently executing.
         //OPERATOR TERMINATED RUN KILLED VIA AN X-KEYIN
         // The operator entered an X keyin for this run. When used for a demand run, an X keyin terminates the task that is currently executing.
-        //READ$FILE REJECT STATUS xxxxxx
+        //PUNCH FILE CANNOT BE PUNCHED: NO PUNCH DEVICES CONFIGURED
+        //  Punch device is not configured.
+        // READ$FILE REJECT STATUS xxxxxx
         // The READ$ file cannot be assigned.
         //*RUN ALREADY ACTIVE*
         // An @RUN statement was received while in demand run mode.
@@ -99,7 +101,8 @@ public class BatchRun extends ControlStatementRun implements Runnable {
     }
 
     private boolean setup() throws ExecStoppedException {
-        if (!assignREAD$File()) {
+        var fsResult = assignREAD$File();
+        if ((fsResult.getStatusWord() & 0_400000_000000L) != 0) {
             return false;
         }
 

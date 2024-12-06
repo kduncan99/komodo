@@ -26,11 +26,12 @@ public class FacStatusResult {
     public boolean hasInfoMessages() { return !_infos.isEmpty(); }
     public boolean hasWarningMessages() { return !_warnings.isEmpty(); }
 
-    public void mergeStatusBits(final long statusWord) {
+    public FacStatusResult mergeStatusBits(final long statusWord) {
         _statusWord |= statusWord;
+        return this;
     }
 
-    public void postMessage(
+    public FacStatusResult postMessage(
         final FacStatusCode code
     ) {
         var template = FacStatusMessages.get(code);
@@ -40,9 +41,10 @@ public class FacStatusResult {
             case Info -> _infos.add(inst);
             case Warning -> _warnings.add(inst);
         }
+        return this;
     }
 
-    public void postMessage(
+    public FacStatusResult postMessage(
         final FacStatusCode code,
         final String[] parameters
     ) {
@@ -53,6 +55,7 @@ public class FacStatusResult {
         case Info -> _infos.add(inst);
         case Warning -> _warnings.add(inst);
         }
+        return this;
     }
 
     public void log(

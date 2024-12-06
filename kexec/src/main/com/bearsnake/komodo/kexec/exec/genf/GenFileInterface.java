@@ -14,6 +14,7 @@ import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.scheduleManager.Run;
 import com.bearsnake.komodo.kexec.exec.StopCode;
@@ -198,7 +199,7 @@ public class GenFileInterface {
      * Assigns the READ$ input file associated with the input queue item at the given sectorAddress to the requesting run.
      * @param run requesting run
      * @param sectorAddress sector address of the input queue item
-     * @return FacStatusResult from the attempt to assign the file, or null if the indicated queue item does not exist, or is not an input queue item
+     * @return FacStatusResult from the attempt to assign the file
      * @throws ExecStoppedException if something goes badly wrong during the assign attempt
      */
     public FacStatusResult assignInputFile(
@@ -208,20 +209,22 @@ public class GenFileInterface {
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
 
+        var fsResult = new FacStatusResult();
         var item = _inventory.get(sectorAddress);
         if (item == null) {
             LogManager.logError(LOG_SOURCE, "Caller requested input file item at sector %d which does not exist", sectorAddress);
-            return null;
+            fsResult.mergeStatusBits(0_400010_000000L).postMessage(FacStatusCode.FileIsNotCataloged, null);
+            return fsResult;
         }
 
         if (!(item instanceof InputQueueItem iqi)) {
             LogManager.logError(LOG_SOURCE, "Caller requested input file item at sector %d which is not an input item", sectorAddress);
-            return null;
+            fsResult.mergeStatusBits(0_400010_000000L).postMessage(FacStatusCode.FileIsNotCataloged, null);
+            return fsResult;
         }
 
         var filename = "READ$X" + iqi.getActualRunId();
         var fileSpecification = new FileSpecification("SYS$", filename, null, null, null);
-        var fsResult = new FacStatusResult();
         fm.assignCatalogedDiskFileToRun(run,
                                         fileSpecification,
                                         Word36.A_OPTION | Word36.K_OPTION | Word36.X_OPTION,
