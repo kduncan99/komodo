@@ -72,7 +72,6 @@ import java.io.PrintStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -83,61 +82,6 @@ import static com.bearsnake.komodo.baselib.Word36.*;
 import static com.bearsnake.komodo.logger.Level.Trace;
 
 public class FacilitiesManager implements Manager {
-
-    private static class AbsoluteCycleCatalogResult {
-        public boolean isAllowed;
-        public int absoluteCycle;
-        public boolean requiresDroppingOldestCycle;
-    }
-
-    public enum DeleteBehavior {
-        None,
-        DeleteOnNormalRunTermination,
-        DeleteOnAnyRunTermination,
-    }
-
-    public enum DirectoryOnlyBehavior {
-        None,
-        DirectoryOnlyMountPacks,
-        DirectoryOnlyDoNotMountPacks,
-    }
-
-    public enum ReleaseBehavior {
-        // If this is an internal name, release the underlying file and all internal names
-        Normal,
-
-        // If this is an internal name, release only the internal name
-        // Otherwise, assume Normal behavior
-        ReleaseUseItemOnly,
-
-        // If this is an internal name, release it.
-        // If it is the only internal name for the referenced file, release the referenced file as well
-        ReleaseUseItemOnlyUnlessLast,
-
-        // Retain use items, but release the referenced file.
-        RetainUseItems
-    }
-
-    private enum PlacementType {
-        AbsoluteByChannel,
-        AbsoluteByDevice,
-        LogicalByChannel,
-        LogicalByDevice,
-    }
-
-    private static class PlacementInfo {
-
-        public final PlacementType _placementType;
-        public final int _nodeIdentifier;
-
-        public PlacementInfo(
-            final PlacementType placementType,
-            final int nodeIdentifier
-        ) {
-            _placementType = placementType;
-            _nodeIdentifier = nodeIdentifier;
-        }
-    }
 
     static final String LOG_SOURCE = "FacMgr";
 
@@ -307,24 +251,11 @@ public class FacilitiesManager implements Manager {
 
         var exec = Exec.getInstance();
         var cfg = exec.getConfiguration();
-        var result = assignCatalogedDiskFileToRun(exec,
-                                                  fileSpecification,
-                                                  optionsWord,
-                                                  cfg.getStringValue(Tag.MDFALT),
-                                                  null,
-                                                  null,
-                                                  null,
-                                                  null,
-                                                  Collections.emptyList(),
-                                                  DeleteBehavior.None,
-                                                  DirectoryOnlyBehavior.None,
-                                                  false,
-                                                  true,
-                                                  false,
-                                                  exclusiveUse,
-                                                  false,
-                                                  false,
-                                                  fsResult);
+        var req = new AssignCatalogedDiskFileRequest(fileSpecification).setOptionsWord(optionsWord)
+                                                                       .setMnemonic(cfg.getStringValue(Tag.MDFALT))
+                                                                       .setAssignIfDisabled()
+                                                                       .setExclusiveUse(exclusiveUse);
+        var result = assignCatalogedDiskFileToRun(exec, req, fsResult);
 
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedFileToExec result:%s", fsResult.toString());
         return result;
@@ -338,27 +269,12 @@ public class FacilitiesManager implements Manager {
      */
     public synchronized boolean assignCatalogedDiskFileToRun(
         final Run run,
-        final FileSpecification fileSpecification,
-        final long optionsWord,                            // only to be used to populate a new facItem
-        final String mnemonic,                             // type/assign-mnemonic
-        final Integer initialReserve,                      // null if not specified, attempt to change existing value
-        final Granularity granularity,                     // null if not specified, must match existing file otherwise
-        final Integer maxGranules,                         // null if not specified, attempt to change existing value
-        final String placement,                            // only for fixed, can be null (must be null for removable)
-        final List<String> packIds,                        // should be empty for fixed, optional for removable
-        final DeleteBehavior deleteBehavior,               // D/K options
-        final DirectoryOnlyBehavior directoryOnlyBehavior, // E/Y options
-        final boolean saveOnCheckpoint,                    // M option (TODO CHKPT)
-        final boolean assignIfDisabled,                    // Q option
-        final boolean readOnly,                            // R option
-        final boolean exclusiveUse,                        // X option
-        final boolean releaseOnTaskEnd,                    // I option
-        final boolean doNotHoldRun,                        // Z option
+        final AssignCatalogedDiskFileRequest request,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE, "assignCatalogedDiskFileToRun %s %s",
                             run.getActualRunId(),
-                            fileSpecification.toString());
+                            request._fileSpecification.toString());
 
         var exec = Exec.getInstance();
 
@@ -369,7 +285,7 @@ public class FacilitiesManager implements Manager {
         var mm = Exec.getInstance().getMFDManager();
         FileSetInfo fsInfo;
         try {
-            fsInfo = mm.getFileSetInfo(fileSpecification.getQualifier(), fileSpecification.getFilename());
+            fsInfo = mm.getFileSetInfo(request._fileSpecification.getQualifier(), request._fileSpecification.getFilename());
         } catch (FileSetDoesNotExistException ex) {
             fsResult.postMessage(FacStatusCode.FileIsNotCataloged);
             fsResult.mergeStatusBits(0_400010_000000L);
@@ -378,7 +294,7 @@ public class FacilitiesManager implements Manager {
         }
 
         // If it is fixed, do not accept any pack-ids.
-        if ((fsInfo.getFileType() == FileType.Fixed) && (!packIds.isEmpty())) {
+        if ((fsInfo.getFileType() == FileType.Fixed) && (!request._packIds.isEmpty())) {
             fsResult.postMessage(FacStatusCode.AssignMnemonicDoesNotAllowPackIds);
             fsResult.mergeStatusBits(0_600010_000000L);
             fsResult.log(Trace, LOG_SOURCE);
@@ -394,7 +310,7 @@ public class FacilitiesManager implements Manager {
         }
 
         // Check read/write keys
-        if (!checkKeys(run, fsInfo, fileSpecification, fsResult)) {
+        if (!checkKeys(run, fsInfo, request._fileSpecification, fsResult)) {
             fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
@@ -408,18 +324,18 @@ public class FacilitiesManager implements Manager {
 
         DiskFileFacilitiesItem facItem;
         DiskFileCycleInfo fcInfo;
-        String qualifier = fileSpecification.getQualifier();
-        String filename = fileSpecification.getFilename();
+        String qualifier = request._fileSpecification.getQualifier();
+        String filename = request._fileSpecification.getFilename();
         int absCycle;
         var fiTable = run.getFacilitiesItemTable();
 
-        if (fileSpecification.hasFileCycleSpecification()
-            && fileSpecification.getFileCycleSpecification().isAbsolute()) {
+        if (request._fileSpecification.hasFileCycleSpecification()
+            && request._fileSpecification.getFileCycleSpecification().isAbsolute()) {
 
-            // This an absolute file cycle request.
+            // This an absolute file cycle request._
             // Go get the file cycle info if the file exists (else fail).
             // Get the existing fac item if the file is already assigned to the run (but it is not an error if it wasn't).
-            absCycle = fileSpecification.getFileCycleSpecification().getCycle();
+            absCycle = request._fileSpecification.getFileCycleSpecification().getCycle();
             try {
                 fcInfo = (DiskFileCycleInfo) mm.getFileCycleInfo(qualifier, filename, absCycle);
                 facItem = (DiskFileFacilitiesItem) fiTable.getFacilitiesItem(qualifier, filename, absCycle);
@@ -446,8 +362,8 @@ public class FacilitiesManager implements Manager {
             //   create new fac item with option-driven settings as necessary
             //   update use-items to point to fac item as necessary
             var relCycle = 0;
-            if (fileSpecification.hasFileCycleSpecification()) {
-                relCycle = fileSpecification.getFileCycleSpecification().getCycle();
+            if (request._fileSpecification.hasFileCycleSpecification()) {
+                relCycle = request._fileSpecification.getFileCycleSpecification().getCycle();
             }
 
             facItem = (DiskFileFacilitiesItem) fiTable.getFacilitiesItemByRelativeCycle(qualifier, filename, relCycle);
@@ -517,7 +433,7 @@ public class FacilitiesManager implements Manager {
             // facilities item - only applying them to a newly-created facilities item in the alternate
             // conditional branch below.
             // We do have to post a warning if any of the options were presented for an already assigned file...
-            if ((optionsWord & (D_OPTION | E_OPTION | K_OPTION | R_OPTION | M_OPTION)) != 0) {
+            if ((request._optionsWord & (D_OPTION | E_OPTION | K_OPTION | R_OPTION | M_OPTION)) != 0) {
                 fsResult.postMessage(FacStatusCode.OptionConflictOptionsIgnored);
             }
         }
@@ -529,7 +445,7 @@ public class FacilitiesManager implements Manager {
         PlacementInfo placementInfo;
         if (isRemovable) {
             // We are removable, check pack-ids (and ensure placement was not specified)
-            if (placement != null) {
+            if (request._placement != null) {
                 fsResult.postMessage(FacStatusCode.PlacementFieldNotAllowedForRemovable);
                 fsResult.mergeStatusBits(0_600000_000000L);
                 fsResult.log(Trace, LOG_SOURCE);
@@ -537,13 +453,14 @@ public class FacilitiesManager implements Manager {
             }
 
             var remInfo = (RemovableDiskFileCycleInfo) fcInfo;
-            if (!packIds.isEmpty() && !checkPackIdsForAssign(fsInfo, remInfo, optionsWord, packIds, fsResult)) {
+            if (!request._packIds.isEmpty()
+                && !checkPackIdsForAssign(fsInfo, remInfo, request._optionsWord, request._packIds, fsResult)) {
                 fsResult.log(Trace, LOG_SOURCE);
                 return false;
             }
         } else {
             // We are fixed, check placement validity (and ensure pack-ids were not specified)
-            if (!packIds.isEmpty()) {
+            if (!request._packIds.isEmpty()) {
                 // we'd like a better message, but this is all we have...
                 fsResult.postMessage(FacStatusCode.UndefinedFieldOrSubfield);
                 fsResult.mergeStatusBits(0_600000_000000L);
@@ -551,8 +468,8 @@ public class FacilitiesManager implements Manager {
                 return false;
             }
 
-            if (placement != null) {
-                placementInfo = checkPlacement(placement, fsResult);
+            if (request._placement != null) {
+                placementInfo = checkPlacement(request._placement, fsResult);
                 if (placementInfo == null) {
                     fsResult.log(Trace, LOG_SOURCE);
                     return false;
@@ -577,23 +494,23 @@ public class FacilitiesManager implements Manager {
 
             // Is the file read-only or write-only?
             readInhibit |= fcInfo.getInhibitFlags().isWriteOnly();
-            readInhibit |= (directoryOnlyBehavior != DirectoryOnlyBehavior.None);
+            readInhibit |= (request._directoryOnlyBehavior != DirectoryOnlyBehavior.None);
             writeInhibit |= fcInfo.getInhibitFlags().isReadOnly();
-            writeInhibit |= readOnly || (directoryOnlyBehavior != DirectoryOnlyBehavior.None);
+            writeInhibit |= request._readOnly || (request._directoryOnlyBehavior != DirectoryOnlyBehavior.None);
 
             // Create new fac item with option-driven settings as necessary and add it to the fac item table.
             facItem = isRemovable ? new RemovableDiskFileFacilitiesItem() : new FixedDiskFileFacilitiesItem();
-            facItem.setIsExclusive(exclusiveUse)
-                   .setDeleteOnNormalRunTermination(deleteBehavior == DeleteBehavior.DeleteOnNormalRunTermination)
-                   .setDeleteOnAnyRunTermination(deleteBehavior == DeleteBehavior.DeleteOnAnyRunTermination)
+            facItem.setIsExclusive(request._exclusiveUse)
+                   .setDeleteOnNormalRunTermination(request._deleteBehavior == DeleteBehavior.DeleteOnNormalRunTermination)
+                   .setDeleteOnAnyRunTermination(request._deleteBehavior == DeleteBehavior.DeleteOnAnyRunTermination)
                    .setIsReadable(!readInhibit)
                    .setIsWriteable(!writeInhibit)
                    .setQualifier(fcInfo.getQualifier())
                    .setFilename(fcInfo.getFilename())
                    .setAbsoluteCycle(fcInfo.getAbsoluteCycle())
                    .setIsTemporary(false)
-                   .setOptionsWord(optionsWord)
-                   .setReleaseOnTaskEnd(releaseOnTaskEnd);
+                   .setOptionsWord(request._optionsWord)
+                   .setReleaseOnTaskEnd(request._releaseOnTaskEnd);
         }
 
         // --------------------------------------------------------
@@ -606,7 +523,7 @@ public class FacilitiesManager implements Manager {
         // --------------------------------------------------------
 
         // Is file disabled? (should not check this until after we know it is accessible)
-        if (!checkDisabled(fcInfo, directoryOnlyBehavior, assignIfDisabled, fsResult)) {
+        if (!checkDisabled(fcInfo, request._directoryOnlyBehavior, request._assignIfDisabled, fsResult)) {
             fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
@@ -625,7 +542,7 @@ public class FacilitiesManager implements Manager {
         //     but are we allowed to change to sector addressable? If so, why? If not, what is the fac code?
 
         // Attempt to change granularity?
-        if ((granularity != null) && (granularity != fcInfo.getPCHARFlags().getGranularity())) {
+        if ((request._granularity != null) && (request._granularity != fcInfo.getPCHARFlags().getGranularity())) {
             fsResult.postMessage(FacStatusCode.AttemptToChangeGranularity);
             fsResult.mergeStatusBits(0_600000_000000L);
             fsResult.log(Trace, LOG_SOURCE);
@@ -680,8 +597,8 @@ public class FacilitiesManager implements Manager {
         // all the rollback waiting states set properly.
         if (fcInfo.getDescriptorFlags().isUnloaded()
             && !wasAlreadyAssigned
-            && (directoryOnlyBehavior == DirectoryOnlyBehavior.None)) {
-            if (doNotHoldRun) {
+            && (request._directoryOnlyBehavior == DirectoryOnlyBehavior.None)) {
+            if (request._doNotHoldRun) {
                 fsResult.postMessage(FacStatusCode.HoldForRollbackRejected);
                 fsResult.mergeStatusBits(0_400002_000000L);
                 fsResult.log(Trace, LOG_SOURCE);
@@ -701,9 +618,9 @@ public class FacilitiesManager implements Manager {
         // Are we asking for x-use of a file assigned elsewhere?
         // This is applicable even if the file is already assigned, because we might be applying x-use now,
         // where it wasn't applied previously.
-        if (exclusiveUse) {
+        if (request._exclusiveUse) {
             if (wasAlreadyAssigned ? fcInfo.getCurrentAssignCount() > 1 : fcInfo.getCurrentAssignCount() > 0) {
-                if (doNotHoldRun) {
+                if (request._doNotHoldRun) {
                     fsResult.postMessage(FacStatusCode.HoldForXUseRejected);
                     fsResult.mergeStatusBits(0_400001_000000L);
                     fsResult.log(Trace, LOG_SOURCE);
@@ -720,7 +637,7 @@ public class FacilitiesManager implements Manager {
         // If wasAlreadyAssigned is set, then we don't worry about it, because the facItem should already
         // be set to the correct states.
         if (!wasAlreadyAssigned && (fcInfo.getInhibitFlags().isAssignedExclusively())) {
-            if (doNotHoldRun) {
+            if (request._doNotHoldRun) {
                 fsResult.postMessage(FacStatusCode.HoldForReleaseXUseRejected);
                 fsResult.mergeStatusBits(0_400001_000000L);
                 fsResult.log(Trace, LOG_SOURCE);
@@ -749,7 +666,7 @@ public class FacilitiesManager implements Manager {
         // of various warnings which apply).
         // --------------------------------------------------------
 
-        if (releaseOnTaskEnd) {
+        if (request._releaseOnTaskEnd) {
             facItem.setReleaseOnTaskEnd(true);
         }
 
@@ -767,7 +684,7 @@ public class FacilitiesManager implements Manager {
             fsResult.mergeStatusBits(0_100000_000000L);
 
             // Is X-option specified and already exclusive? post warning
-            if (exclusiveUse) {
+            if (request._exclusiveUse) {
                 if (facItem.isExclusive()) {
                     fsResult.postMessage(FacStatusCode.FileAlreadyExclusivelyAssigned);
                     fsResult.mergeStatusBits(0_002000_000000L);
@@ -874,6 +791,7 @@ public class FacilitiesManager implements Manager {
      */
     public synchronized boolean assignDiskUnitToRun(
         final Run run,
+        // TODO following 6 parameters should probably be implemented in an AssignDiskUnitRequest class
         final FileSpecification fileSpecification,
         final int nodeIdentifier,
         final String packName,
@@ -1068,8 +986,6 @@ public class FacilitiesManager implements Manager {
             throw new ExecStoppedException();
         }
 
-        var disk = (DiskDevice) node;
-
         // Check the node assignment for the device - if it is already assigned to us, then fail.
         var exec = Exec.getInstance();
         var dni = (DeviceNodeInfo) nodeInfo;
@@ -1123,66 +1039,38 @@ public class FacilitiesManager implements Manager {
 
     /**
      * Catalogs a disk file - to be used when no fileset exists.
-     * @param fileSpecification needed for creating facilities item - must be fully resolved
-     * @param type assign mnemonic to be used
-     * @param projectId project id for the fileset/file cycle
-     * @param accountId account id for the file cycle
-     * @param isGuarded true for G-option files
-     * @param isPrivate true for private files
-     * @param isUnloadInhibited true for files which should not be unloaded
-     * @param isReadOnly to ensure the file is read-only
-     * @param isWriteOnly to ensure the file is write-only
-     * @param saveOnCheckpoint true to set the save-on-checkpoint state of this file
-     * @param granularity to be used for the file - null defaults to Track
-     * @param initialGranules tracks/positions to be allocated on assign
-     * @param maxGranules maximum size of file in tracks/positions
-     * @param packIds collection of pack names (populated for removable, empty for fixed)
-     * @param fsResult fac status result
      * @return true if we are successful
      * @throws ExecStoppedException if the exec is stopped
      */
     public synchronized boolean catalogDiskFile(
-        final FileSpecification fileSpecification,
-        final String type,
-        final String projectId,
-        final String accountId,
-        final boolean isGuarded,
-        final boolean isPrivate,
-        final boolean isUnloadInhibited,
-        final boolean isReadOnly,
-        final boolean isWriteOnly,
-        final boolean saveOnCheckpoint,
-        final Granularity granularity,
-        final long initialGranules,
-        final long maxGranules,
-        final LinkedList<String> packIds,
+        final CatalogDiskFileRequest request,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
         LogManager.logTrace(LOG_SOURCE,
                             "catalogDiskFile %s type=%s proj=%s acct=%s",
-                            fileSpecification.toString(), type, projectId, accountId);
+                            request._fileSpecification.toString(), request._mnemonic, request._projectId, request._accountId);
 
-        var exec = Exec.getInstance();
-        var mnemonicType = exec.getConfiguration().getMnemonicType(type);
+        var mnemonicType = Configuration.getMnemonicType(request._mnemonic);
         if (mnemonicType == null) {
-            fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
+            fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ request._mnemonic });
             fsResult.mergeStatusBits(0_600000_000000L);
             fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
+        var exec = Exec.getInstance();
         var mm = exec.getMFDManager();
-        var plusOne = fileSpecification.hasFileCycleSpecification()
-                      && fileSpecification.getFileCycleSpecification().isRelative()
-                      && fileSpecification.getFileCycleSpecification().getCycle() == 1;
+        var plusOne = request._fileSpecification.hasFileCycleSpecification()
+                      && request._fileSpecification.getFileCycleSpecification().isRelative()
+                      && request._fileSpecification.getFileCycleSpecification().getCycle() == 1;
 
-        var absInfo = getAbsoluteCycleForCatalog(null, fileSpecification, fsResult);
+        var absInfo = getAbsoluteCycleForCatalog(null, request._fileSpecification, fsResult);
         if (!absInfo.isAllowed) {
             return false;
         }
 
         // Check initial and max granularity
-        if (initialGranules > maxGranules) {
+        if (request._initialGranules > request._maximumGranules) {
             fsResult.postMessage(FacStatusCode.MaximumIsLessThanInitialReserve);
             fsResult.mergeStatusBits(0_600000_000000L);
             return false;
@@ -1191,18 +1079,18 @@ public class FacilitiesManager implements Manager {
         // Ensure pack-ids (if specified) are correct.
         // There should be no duplicates, there should be no more than 510,
         // and they should all be known removable packs.
-        if (!checkPackIdsForCatalog(packIds, fsResult)) {
+        if (!checkPackIdsForCatalog(request._packIds, fsResult)) {
             return false;
         }
 
-        var fsInfo = new FileSetInfo().setQualifier(fileSpecification.getQualifier())
-                                      .setFilename(fileSpecification.getFilename())
-                                      .setIsGuarded(isGuarded)
+        var fsInfo = new FileSetInfo().setQualifier(request._fileSpecification.getQualifier())
+                                      .setFilename(request._fileSpecification.getFilename())
+                                      .setIsGuarded(request._isGuarded)
                                       .setPlusOneExists(plusOne)
-                                      .setProjectId(projectId)
-                                      .setReadKey(fileSpecification.getReadKey())
-                                      .setWriteKey(fileSpecification.getWriteKey())
-                                      .setFileType(packIds.isEmpty() ? FileType.Fixed : FileType.Removable);
+                                      .setProjectId(request._projectId)
+                                      .setReadKey(request._fileSpecification.getReadKey())
+                                      .setWriteKey(request._fileSpecification.getWriteKey())
+                                      .setFileType(request._packIds.isEmpty() ? FileType.Fixed : FileType.Removable);
         try {
             mm.createFileSet(fsInfo);
         } catch (FileSetAlreadyExistsException ex) {
@@ -1213,19 +1101,19 @@ public class FacilitiesManager implements Manager {
 
         boolean result = catalogDiskFileCycleCommon(fsInfo,
                                                     absInfo.absoluteCycle,
-                                                    type,
+                                                    request._mnemonic,
                                                     mnemonicType,
-                                                    accountId,
-                                                    isGuarded,
-                                                    isPrivate,
-                                                    isUnloadInhibited,
-                                                    isReadOnly,
-                                                    isWriteOnly,
-                                                    saveOnCheckpoint,
-                                                    granularity,
-                                                    initialGranules,
-                                                    maxGranules,
-                                                    packIds,
+                                                    request._accountId,
+                                                    request._isGuarded,
+                                                    request._isPrivate,
+                                                    request._isUnloadInhibited,
+                                                    request._isReadOnly,
+                                                    request._isWriteOnly,
+                                                    request._saveOnCheckpoint,
+                                                    request._granularity,
+                                                    request._initialGranules,
+                                                    request._maximumGranules,
+                                                    request._packIds,
                                                     false,
                                                     fsResult);
 
@@ -1237,56 +1125,27 @@ public class FacilitiesManager implements Manager {
      * Catalogs an additional disk file cycle in an existing fileset.
      * It is expected (but I'm not sure that it is required) that the fileset contains at least one cycle.
      * @param run rce for requesting run
-     * @param fileSpecification needed for creating facilities item - must be fully resolved
-     * @param fileSetInfo describes the existing fileset
-     * @param accountId account id for the file cycle
-     * @param isGuarded true for G-option files
-     * @param isPrivate true for private files
-     * @param isUnloadInhibited true for files which should not be unloaded
-     * @param isReadOnly to ensure the file is read-only
-     * @param isWriteOnly to ensure the file is write-only
-     * @param saveOnCheckpoint true to set the save-on-checkpoint state of this file
-     * @param granularity to be used for the file - null defaults to Track
-     * @param initialGranules tracks/positions to be allocated on assign
-     * @param maxGranules maximum size of file in tracks/positions
-     * @param packIds only for removable - pack ids for this file (there are restrictions on this)
      * @param fsResult fac status result
      * @return true if we are successful
      * @throws ExecStoppedException if the exec is stopped
      */
     public synchronized boolean catalogDiskFileCycle(
         final Run run,
-        final FileSpecification fileSpecification,
-        final FileSetInfo fileSetInfo,
-        final String type,
-        final String accountId,
-        final boolean isGuarded,
-        final boolean isPrivate,
-        final boolean isUnloadInhibited,
-        final boolean isReadOnly,
-        final boolean isWriteOnly,
-        final boolean saveOnCheckpoint,
-        final Granularity granularity,
-        final long initialGranules,
-        final long maxGranules,
-        final LinkedList<String> packIds,
+        final CatalogDiskFileCycleRequest request,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
-        LogManager.logTrace(LOG_SOURCE,
-                            "catalogDiskFile %s",
-                            fileSpecification.toString());
+        LogManager.logTrace(LOG_SOURCE, "catalogDiskFile %s", request._fileSpecification.toString());
 
-        var exec = Exec.getInstance();
-        var mType = exec.getConfiguration().getMnemonicType(type);
-        if (mType == null) {
-            fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ type });
+        var mnemonicType = Configuration.getMnemonicType(request._mnemonic);
+        if (mnemonicType == null) {
+            fsResult.postMessage(FacStatusCode.MnemonicIsNotConfigured, new String[]{ request._mnemonic });
             fsResult.mergeStatusBits(0_600000_000000L);
             fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
 
         // Check read/write keys in fileSpecification against fileSetInfo
-        if (!checkKeys(run, fileSetInfo, fileSpecification, fsResult)) {
+        if (!checkKeys(run, request._fileSetInfo, request._fileSpecification, fsResult)) {
             fsResult.log(Trace, LOG_SOURCE);
             return false;
         }
@@ -1300,7 +1159,7 @@ public class FacilitiesManager implements Manager {
             return false;
         }
 
-        var absInfo = getAbsoluteCycleForCatalog(fileSetInfo, fileSpecification, fsResult);
+        var absInfo = getAbsoluteCycleForCatalog(request._fileSetInfo, request._fileSpecification, fsResult);
         if (!absInfo.isAllowed)
             return false;
 
@@ -1310,33 +1169,32 @@ public class FacilitiesManager implements Manager {
         }
 
         // Check initial and max granularity
-        if (initialGranules > maxGranules) {
+        if (request._initialGranules > request._maximumGranules) {
             fsResult.postMessage(FacStatusCode.MaximumIsLessThanInitialReserve);
             fsResult.mergeStatusBits(0_600000_000000L);
             return false;
         }
 
         // Ensure pack-ids are not specified for fixed, and that if specified for removable, they are correct.
-        if (!checkPackIdsForCatalog(packIds, fsResult)) {
+        if (!checkPackIdsForCatalog(request._packIds, fsResult)) {
             return false;
         }
 
-        var mnemonicType = exec.getConfiguration().getMnemonicType(type);
-        boolean result = catalogDiskFileCycleCommon(fileSetInfo,
+        boolean result = catalogDiskFileCycleCommon(request._fileSetInfo,
                                                     absInfo.absoluteCycle,
-                                                    type,
+                                                    request._mnemonic,
                                                     mnemonicType,
-                                                    accountId,
-                                                    isGuarded,
-                                                    isPrivate,
-                                                    isUnloadInhibited,
-                                                    isReadOnly,
-                                                    isWriteOnly,
-                                                    saveOnCheckpoint,
-                                                    granularity == null ? Granularity.Track : granularity,
-                                                    initialGranules,
-                                                    maxGranules,
-                                                    packIds,
+                                                    request._accountId,
+                                                    request._isGuarded,
+                                                    request._isPrivate,
+                                                    request._isUnloadInhibited,
+                                                    request._isReadOnly,
+                                                    request._isWriteOnly,
+                                                    request._saveOnCheckpoint,
+                                                    request._granularity == null ? Granularity.Track : request._granularity,
+                                                    request._initialGranules,
+                                                    request._maximumGranules,
+                                                    request._packIds,
                                                     absInfo.requiresDroppingOldestCycle,
                                                     fsResult);
 
@@ -1356,6 +1214,7 @@ public class FacilitiesManager implements Manager {
         final FileSpecification fileSpecification,
         final String type,
         // TODO TAPE
+        // TODO need to create a CatalogTapeFileRequest object
         // lots of tape-related options
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
@@ -1390,6 +1249,7 @@ public class FacilitiesManager implements Manager {
         final FileSetInfo fileSetInfo,
         final String type,
         // TODO TAPE
+        // TODO need to create a CatalogTapeFileCycleRequest object
         // lots of tape-related options
         final FacStatusResult fsResult
     ) throws ExecStoppedException {
@@ -2248,7 +2108,7 @@ public class FacilitiesManager implements Manager {
         final Granularity granularity,
         final long initialGranules,
         final long maxGranules,
-        final LinkedList<String> packIds, // only for removable, can be empty if fileSetInfo has a cycle
+        final List<String> packIds, // only for removable, can be empty if fileSetInfo has a cycle
         final boolean dropOldestCycle,
         final FacStatusResult fsResult
     ) throws ExecStoppedException {

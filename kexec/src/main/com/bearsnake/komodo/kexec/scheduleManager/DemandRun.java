@@ -26,11 +26,11 @@ public class DemandRun extends ControlStatementRun implements Runnable {
     @Override
     public void run() {
         // TODO handle other sign-on things? Or is that already done by RSI?
-        postStartMessage();
+        postStartMessageToConsole();
         // TODO handle run termination task, if any
         // TODO release and delete READ$
         // TODO release all assigned facilities
-        postFinMessage();
+        postFinMessageToConsole();
         // TODO post job and summary accounting report (maybe) - see ECL doc appdx. E
         // TODO release and disposition PRINT$
         // TODO release and disposition PUNCH$ (if any)

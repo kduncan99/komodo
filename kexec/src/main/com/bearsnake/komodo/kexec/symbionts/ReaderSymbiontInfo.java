@@ -21,6 +21,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exceptions.ScheduleManagerException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.CatalogDiskFileRequest;
 import com.bearsnake.komodo.kexec.scheduleManager.BatchRun;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
@@ -306,21 +307,13 @@ class ReaderSymbiontInfo extends SymbiontInfo {
         var filename = "READ$X" + run.getActualRunId();
         var fileSpecification = new FileSpecification("SYS$", filename, null, null, null);
         var fsResult = new FacStatusResult();
-        fm.catalogDiskFile(fileSpecification,
-                           cfg.getStringValue(Tag.MDFALT),
-                           run.getProjectId(),
-                           run.getAccountId(),
-                           false,
-                           false,
-                           true,
-                           false,
-                           false,
-                           false,
-                           Granularity.Track,
-                           1,
-                           999,
-                           new LinkedList<>(),
-                           fsResult);
+        var req = new CatalogDiskFileRequest(fileSpecification).setMnemonic(cfg.getStringValue(Tag.MDFALT))
+                                                               .setProjectId(run.getProjectId())
+                                                               .setAccountId(run.getAccountId())
+                                                               .setIsUnloadInhibited()
+                                                               .setGranularity(Granularity.Track)
+                                                               .setInitialGranules(1).setMaximumGranules(999);
+        fm.catalogDiskFile(req, fsResult);
         if ((fsResult.getStatusWord() & 0_400000_000000L) != 0) {
             sch.unregisterRun(run.getActualRunId());
             return false;

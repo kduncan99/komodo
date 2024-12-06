@@ -7,15 +7,15 @@ package com.bearsnake.komodo.kexec.exec.genf;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.kexec.Granularity;
 import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.AssignCatalogedDiskFileRequest;
+import com.bearsnake.komodo.kexec.facilities.DeleteBehavior;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
-import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.scheduleManager.Run;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.exec.genf.queues.OutputQueue;
@@ -30,7 +30,6 @@ import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.TreeMap;
 
 /**
@@ -225,24 +224,10 @@ public class GenFileInterface {
 
         var filename = "READ$X" + iqi.getActualRunId();
         var fileSpecification = new FileSpecification("SYS$", filename, null, null, null);
-        fm.assignCatalogedDiskFileToRun(run,
-                                        fileSpecification,
-                                        Word36.A_OPTION | Word36.K_OPTION | Word36.X_OPTION,
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        FacilitiesManager.DeleteBehavior.DeleteOnAnyRunTermination,
-                                        null,
-                                        false,
-                                        true,
-                                        false,
-                                        false,
-                                        false,
-                                        false,
-                                        fsResult);
+        var req = new AssignCatalogedDiskFileRequest(fileSpecification).setOptionsWord(Word36.A_OPTION | Word36.K_OPTION | Word36.X_OPTION)
+                                                                       .setDeleteBehavior(DeleteBehavior.DeleteOnAnyRunTermination)
+                                                                       .setAssignIfDisabled();
+        fm.assignCatalogedDiskFileToRun(run, req, fsResult);
 
         if ((fsResult.getStatusWord() & 0_400000_000000L) == 0) {
             fm.establishUseItem(run, "READ$", fileSpecification, false);

@@ -13,8 +13,8 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.ERIO$Status;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
-import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.facilities.IOResult;
+import com.bearsnake.komodo.kexec.facilities.ReleaseBehavior;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
 import com.bearsnake.komodo.logger.LogManager;
 
@@ -179,8 +179,8 @@ class MFDKeyinHandler extends KeyinHandler implements Runnable {
                 // Free file and/or use name
                 var useSpec = new FileSpecification(null, "MFDKEYIN");
                 var behavior = alreadyAssigned
-                    ? FacilitiesManager.ReleaseBehavior.ReleaseUseItemOnly
-                    : FacilitiesManager.ReleaseBehavior.Normal;
+                    ? ReleaseBehavior.ReleaseUseItemOnly
+                    : ReleaseBehavior.Normal;
                 if (!alreadyAssigned) {
                     fm.releaseFile(exec, useSpec, behavior, false, false, false, false, fsResult);
                 }

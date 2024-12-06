@@ -58,7 +58,7 @@ public abstract class ControlStatementRun extends NonExecRun {
     @Override public ControlStatementRun setDefaultQualifier(final String qualifier) { super.setDefaultQualifier(qualifier); return this; }
     public ControlStatementRun setHoldCondition(final HoldCondition condition) { _holdConditions.add(condition); return this; }
     @Override public ControlStatementRun setImpliedQualifier(final String qualifier) { super.setImpliedQualifier(qualifier); return this; }
-    public ControlStatementRun setInputQueueAddress(final long address) { _inputQueueAddress = address; return this; }
+    public ControlStatementRun setInputQueueAddress(final int address) { _inputQueueAddress = address; return this; }
     public ControlStatementRun setIsFinished(final boolean isFinished) { _isFinished = isFinished; return this; }
     public ControlStatementRun setIsStarted(final boolean isStarted) { _isStarted = isStarted; return this; }
     @Override public ControlStatementRun setProcessorPriority(final Character priority) { super.setProcessorPriority(priority); return this; }

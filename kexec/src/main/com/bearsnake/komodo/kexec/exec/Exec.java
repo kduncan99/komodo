@@ -17,6 +17,7 @@ import com.bearsnake.komodo.kexec.consoles.ReadReplyMessage;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exec.genf.GenFileInterface;
+import com.bearsnake.komodo.kexec.facilities.CatalogDiskFileRequest;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
@@ -166,22 +167,16 @@ public class Exec extends ExecRun {
     ) throws ExecStoppedException {
         var fs = new FileSpecification(qualifier, filename, null, null, null);
         var fsResult = new FacStatusResult();
-        var packIds = new LinkedList<String>();
-        return _facilitiesManager.catalogDiskFile(fs,
-                                                  type,
-                                                  getProjectId(),
-                                                  getAccountId(),
-                                                  true,
-                                                  true,
-                                                  true,
-                                                  false,
-                                                  false,
-                                                  false,
-                                                  Granularity.Track,
-                                                  initialGranules,
-                                                  maxGranules,
-                                                  packIds,
-                                                  fsResult);
+        var req = new CatalogDiskFileRequest(fs).setMnemonic(type)
+                                                .setProjectId(getProjectId())
+                                                .setAccountId(getAccountId())
+                                                .setIsGuarded()
+                                                .setIsPrivate()
+                                                .setIsUnloadInhibited()
+                                                .setGranularity(Granularity.Track)
+                                                .setInitialGranules(initialGranules)
+                                                .setMaximumGranules(maxGranules);
+        return _facilitiesManager.catalogDiskFile(req, fsResult);
     }
 
     /**
@@ -275,6 +270,10 @@ public class Exec extends ExecRun {
     public boolean isRunning() {
         return (_phase != Phase.Stopped) && (_phase != Phase.NotStarted);
     }
+
+    @Override public void postToPrint(String text, int lineSkip) {}
+    @Override public void postToPunch(String text) {}
+    @Override public void postToTailSheet(String message) {}
 
     public void sendExecReadOnlyMessage(
         final String message
@@ -452,5 +451,4 @@ public class Exec extends ExecRun {
 
         return rrmsg.getResponse().toUpperCase();
     }
-
 }

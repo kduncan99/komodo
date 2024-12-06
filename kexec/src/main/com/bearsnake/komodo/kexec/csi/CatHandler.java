@@ -12,6 +12,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.CatalogDiskFileRequest;
 import com.bearsnake.komodo.kexec.scheduleManager.Run;
 import com.bearsnake.komodo.kexec.exec.StopCode;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
@@ -277,22 +278,20 @@ class CatHandler extends Handler {
             }
         }
 
-        fm.catalogDiskFile(fileSpecification,
-                           type,
-                           rce.getProjectId(),
-                           rce.getAccountId(),
-                           isGuarded,
-                           isPrivate,
-                           isUnloadInhibited,
-                           isReadOnly,
-                           isWriteOnly,
-                           saveOnCheckpoint,
-                           granularity,
-                           initialGranules,
-                           maxGranules,
-                           packIds,
-                           fsResult);
-
+        var req = new CatalogDiskFileRequest(fileSpecification).setMnemonic(type)
+                                                               .setProjectId(rce.getProjectId())
+                                                               .setAccountId(rce.getAccountId())
+                                                               .setIsGuarded(isGuarded)
+                                                               .setIsPrivate(isPrivate)
+                                                               .setIsUnloadInhibited(isUnloadInhibited)
+                                                               .setIsReadOnly(isReadOnly)
+                                                               .setIsWriteOnly(isWriteOnly)
+                                                               .setSaveOnCheckpoint(saveOnCheckpoint)
+                                                               .setGranularity(granularity)
+                                                               .setInitialGranules(initialGranules)
+                                                               .setMaximumGranules(maxGranules)
+                                                               .setPackIds(packIds);
+        fm.catalogDiskFile(req, fsResult);
     }
 
     private void

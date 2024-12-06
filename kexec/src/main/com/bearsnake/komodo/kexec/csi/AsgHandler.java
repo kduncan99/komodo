@@ -17,8 +17,10 @@ import com.bearsnake.komodo.kexec.exceptions.FileCycleDoesNotExistException;
 import com.bearsnake.komodo.kexec.exceptions.FileSetDoesNotExistException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.kexec.facilities.AssignCatalogedDiskFileRequest;
+import com.bearsnake.komodo.kexec.facilities.DeleteBehavior;
+import com.bearsnake.komodo.kexec.facilities.DirectoryOnlyBehavior;
 import com.bearsnake.komodo.kexec.facilities.FacStatusCode;
-import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 import com.bearsnake.komodo.kexec.facilities.NodeStatus;
 import com.bearsnake.komodo.kexec.mfd.FileSetInfo;
@@ -400,15 +402,16 @@ class AsgHandler extends Handler {
             fsResult.postMessage(FacStatusCode.PlacementFieldIgnored);
         }
 
-        Integer iReserve = null;
+        var req = new AssignCatalogedDiskFileRequest(fileSpecification).setOptionsWord(hp._optionWord).setMnemonic(equip);
         try {
             var reserve = getSubField(hp, 1, 1);
-            iReserve = Integer.parseInt(reserve);
+            var iReserve = Integer.parseInt(reserve);
             if (iReserve < 0) {
                 fsResult.postMessage(FacStatusCode.IllegalInitialReserve);
                 fsResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
+            req.setInitialReserve(iReserve);
         } catch (NumberFormatException ex) {
             fsResult.postMessage(FacStatusCode.IllegalInitialReserve);
             fsResult.mergeStatusBits(0_600000_000000L);
@@ -416,12 +419,11 @@ class AsgHandler extends Handler {
         }
 
         var granularity = getSubField(hp, 1, 2);
-        Granularity eGranularity = null;
         if (granularity != null) {
             if (granularity.equalsIgnoreCase("TRK")) {
-                eGranularity = Granularity.Track;
+                req.setGranularity(Granularity.Track);
             } else if (granularity.equalsIgnoreCase("POS")) {
-                eGranularity = Granularity.Position;
+                req.setGranularity(Granularity.Position);
             } else {
                 fsResult.postMessage(FacStatusCode.IllegalValueForGranularity);
                 fsResult.mergeStatusBits(0_600000_000000L);
@@ -429,15 +431,15 @@ class AsgHandler extends Handler {
             }
         }
 
-        Integer iMaximum = null;
         try {
             var maximum = getSubField(hp, 1, 3);
-            iMaximum = Integer.parseInt(maximum);
+            var iMaximum = Integer.parseInt(maximum);
             if (iMaximum < 0) {
                 fsResult.postMessage(FacStatusCode.IllegalMaxGranules);
                 fsResult.mergeStatusBits(0_600000_000000L);
                 return;
             }
+            req.setMaxGranules(iMaximum);
         } catch (NumberFormatException ex) {
             fsResult.postMessage(FacStatusCode.IllegalMaxGranules);
             fsResult.mergeStatusBits(0_600000_000000L);
@@ -448,6 +450,7 @@ class AsgHandler extends Handler {
         if (!checkPlacementFieldSyntax(hp)) {
             return;
         }
+        req.setPlacement(placement);
 
         var packIds = new LinkedList<String>();
         for (var entry : hp._statement._operandFields.entrySet()) {
@@ -466,51 +469,29 @@ class AsgHandler extends Handler {
             fsResult.mergeStatusBits(0_600000_000000L);
             return;
         }
+        req.setPackIds(packIds);
 
-        FacilitiesManager.DeleteBehavior deleteBehavior;
         if ((hp._optionWord & D_OPTION) != 0) {
-            deleteBehavior = FacilitiesManager.DeleteBehavior.DeleteOnNormalRunTermination;
+            req.setDeleteBehavior(DeleteBehavior.DeleteOnNormalRunTermination);
         } else if ((hp._optionWord & K_OPTION) != 0) {
-            deleteBehavior = FacilitiesManager.DeleteBehavior.DeleteOnAnyRunTermination;
-        } else {
-            deleteBehavior = FacilitiesManager.DeleteBehavior.None;
+            req.setDeleteBehavior(DeleteBehavior.DeleteOnAnyRunTermination);
         }
 
-        FacilitiesManager.DirectoryOnlyBehavior directoryOnlyBehavior;
         if ((hp._optionWord & E_OPTION) != 0) {
-            directoryOnlyBehavior = FacilitiesManager.DirectoryOnlyBehavior.DirectoryOnlyMountPacks;
+            req.setDirectoryOnlyBehavior(DirectoryOnlyBehavior.DirectoryOnlyMountPacks);
         } else if ((hp._optionWord & Y_OPTION) != 0) {
-            directoryOnlyBehavior = FacilitiesManager.DirectoryOnlyBehavior.DirectoryOnlyDoNotMountPacks;
-        } else {
-            directoryOnlyBehavior = FacilitiesManager.DirectoryOnlyBehavior.None;
+            req.setDirectoryOnlyBehavior(DirectoryOnlyBehavior.DirectoryOnlyDoNotMountPacks);
         }
 
-        var saveOnCheckpoint = (hp._optionWord & M_OPTION) != 0;
-        var assignIfDisabled = (hp._optionWord & Q_OPTION) != 0;
-        var readOnly = (hp._optionWord & R_OPTION) != 0;
-        var releaseOnTaskEnd = (hp._optionWord & I_OPTION) != 0;
-        var exclusiveUse = (hp._optionWord & X_OPTION) != 0;
-        var doNotHoldRun = (hp._optionWord & Z_OPTION) != 0;
+        req.setSaveOnCheckpoint((hp._optionWord & M_OPTION) != 0);
+        req.setAssignIfDisabled((hp._optionWord & Q_OPTION) != 0);
+        req.setReadOnly((hp._optionWord & R_OPTION) != 0);
+        req.setReleaseOnTaskEnd((hp._optionWord & I_OPTION) != 0);
+        req.setExclusiveUse((hp._optionWord & X_OPTION) != 0);
+        req.setDoNotHoldRun((hp._optionWord & Z_OPTION) != 0);
 
         var fm = Exec.getInstance().getFacilitiesManager();
-        if (fm.assignCatalogedDiskFileToRun(hp._run,
-                                            fileSpecification,
-                                            hp._optionWord,
-                                            equip,
-                                            iReserve,
-                                            eGranularity,
-                                            iMaximum,
-                                            placement,
-                                            packIds,
-                                            deleteBehavior,
-                                            directoryOnlyBehavior,
-                                            saveOnCheckpoint,
-                                            assignIfDisabled,
-                                            readOnly,
-                                            exclusiveUse,
-                                            releaseOnTaskEnd,
-                                            doNotHoldRun,
-                                            fsResult)) {
+        if (fm.assignCatalogedDiskFileToRun(hp._run, req, fsResult)) {
             postComplete(hp);
         }
     }

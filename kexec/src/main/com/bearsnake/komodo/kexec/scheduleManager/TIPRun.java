@@ -13,8 +13,4 @@ public class TIPRun extends NonExecRun {
     ) {
         super(RunType.TIP, actualRunId, runCardInfo);
     }
-
-    @Override public final boolean isFinished() { return false; } // TODO
-    @Override public final boolean isStarted() { return true; } // TODO
-    @Override public final boolean isSuspended() { return false; }
 }

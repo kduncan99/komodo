@@ -13,6 +13,8 @@ import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.csi.RunCardInfo;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.facilities.AssignCatalogedDiskFileRequest;
+import com.bearsnake.komodo.kexec.facilities.CatalogDiskFileRequest;
 import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.facilities.facItems.DiskFileFacilitiesItem;
@@ -98,40 +100,19 @@ public abstract class NonExecRun extends Run {
         var fileName = String.format("%s@PR%03o", getActualRunId(), _nextPrintPartNumber);
         var fileSpec = new FileSpecification("SYS$", fileName, FileCycleSpecification.newRelativeSpecification(1), null, null);
         var fsResult = new FacStatusResult();
-        var ok = fm.catalogDiskFile(fileSpec,
-                                    "F",
-                                    exec.getProjectId(),
-                                    exec.getAccountId(),
-                                    true,
-                                    true,
-                                    true,
-                                    false,
-                                    false,
-                                    false,
-                                    Granularity.Track,
-                                    1,
-                                    9999,
-                                    null,
-                                    fsResult);
+        var catReq = new CatalogDiskFileRequest(fileSpec).setMnemonic("F")
+                                                         .setProjectId(exec.getProjectId())
+                                                         .setAccountId(exec.getAccountId())
+                                                         .setIsGuarded()
+                                                         .setIsPrivate()
+                                                         .setIsUnloadInhibited()
+                                                         .setGranularity(Granularity.Track)
+                                                         .setInitialGranules(1)
+                                                         .setMaximumGranules(9999);
+        var ok = fm.catalogDiskFile(catReq, fsResult);
         if (ok) {
-            ok = fm.assignCatalogedDiskFileToRun(this,
-                                                 fileSpec,
-                                                 Word36.A_OPTION | Word36.X_OPTION,
-                                                 null,
-                                                 null,
-                                                 null,
-                                                 null,
-                                                 null,
-                                                 null,
-                                                 FacilitiesManager.DeleteBehavior.None,
-                                                 FacilitiesManager.DirectoryOnlyBehavior.None,
-                                                 false,
-                                                 false,
-                                                 false,
-                                                 true,
-                                                 false,
-                                                 true,
-                                                 fsResult);
+            var asgReq = new AssignCatalogedDiskFileRequest(fileSpec).setOptionsWord(Word36.A_OPTION | Word36.X_OPTION).setExclusiveUse().setDoNotHoldRun();
+            ok = fm.assignCatalogedDiskFileToRun(this, asgReq, fsResult);
         }
 
         if (ok) {
