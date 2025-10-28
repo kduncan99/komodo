@@ -121,8 +121,36 @@ public class SymbiontFileWriter implements SymbiontWriter {
         final String projectId,
         final long fileSizeTracks,
         final String banner
-    ) throws ExecStoppedException {
-        // TODO
+    ) throws ExecStoppedException, ExecIOException {
+        var controlWord = 0_502425_000000L | ((partNumber & 077) << 12) | (characterSet & 077);
+        var dataWords = new long[024];
+        var padFileName = String.format("%-12s", filename);
+        dataWords[00] = Word36.stringToWordFieldata(padFileName.substring(0, 6));
+        dataWords[01] = Word36.stringToWordFieldata(padFileName.substring(6));
+        dataWords[02] = Word36.stringToWordFieldata(inputDevice);
+        dataWords[03] = Word36.stringToWordFieldata(runId);
+        dataWords[04] = 0;
+        var padUserId = String.format("%-12s", userId);
+        dataWords[05] = Word36.stringToWordFieldata(padUserId.substring(0, 6));
+        dataWords[06] = Word36.stringToWordFieldata(padUserId.substring(6));
+        dataWords[07] = 0;
+        dataWords[010] = pageCount;
+        var padAccountId = String.format("%-12s", accountId);
+        dataWords[011] = Word36.stringToWordFieldata(padAccountId.substring(0, 6));
+        dataWords[012] = Word36.stringToWordFieldata(padAccountId.substring(6));
+        var padProjectId = String.format("%-12s", projectId);
+        dataWords[013] = Word36.stringToWordFieldata(padProjectId.substring(0, 6));
+        dataWords[014] = Word36.stringToWordFieldata(padProjectId.substring(6));
+        dataWords[015] = fileSizeTracks;
+        var padBanner = String.format("%-12s", banner);
+        dataWords[016] = Word36.stringToWordFieldata(padBanner.substring(0, 6));
+        dataWords[017] = Word36.stringToWordFieldata(padBanner.substring(6));
+        dataWords[020] = 0;
+        dataWords[021] = 0;
+        dataWords[022] = (long)partNumber << 18;
+        dataWords[023] = DateConverter.getModifiedSingleWordTime(timeStamp);
+        writeWord(controlWord);
+        writeWords(dataWords, 0, 024);
     }
 
     @Override
@@ -139,8 +167,36 @@ public class SymbiontFileWriter implements SymbiontWriter {
         final String projectId,
         final long fileSizeTracks,
         final String banner
-    ) throws ExecStoppedException {
-        // TODO
+    ) throws ExecStoppedException, ExecIOException {
+        var controlWord = 0_502410_000000L | ((partNumber & 077) << 12) | (characterSet & 077);
+        var dataWords = new long[024];
+        var padFileName = String.format("%-12s", filename);
+        dataWords[00] = Word36.stringToWordFieldata(padFileName.substring(0, 6));
+        dataWords[01] = Word36.stringToWordFieldata(padFileName.substring(6));
+        dataWords[02] = Word36.stringToWordFieldata(inputDevice);
+        dataWords[03] = Word36.stringToWordFieldata(runId);
+        dataWords[04] = 0;
+        var padUserId = String.format("%-12s", userId);
+        dataWords[05] = Word36.stringToWordFieldata(padUserId.substring(0, 6));
+        dataWords[06] = Word36.stringToWordFieldata(padUserId.substring(6));
+        dataWords[07] = 0;
+        dataWords[010] = cardCount;
+        var padAccountId = String.format("%-12s", accountId);
+        dataWords[011] = Word36.stringToWordFieldata(padAccountId.substring(0, 6));
+        dataWords[012] = Word36.stringToWordFieldata(padAccountId.substring(6));
+        var padProjectId = String.format("%-12s", projectId);
+        dataWords[013] = Word36.stringToWordFieldata(padProjectId.substring(0, 6));
+        dataWords[014] = Word36.stringToWordFieldata(padProjectId.substring(6));
+        dataWords[015] = fileSizeTracks;
+        var padBanner = String.format("%-12s", banner);
+        dataWords[016] = Word36.stringToWordFieldata(padBanner.substring(0, 6));
+        dataWords[017] = Word36.stringToWordFieldata(padBanner.substring(6));
+        dataWords[020] = 0;
+        dataWords[021] = 0;
+        dataWords[022] = (long)partNumber << 18;
+        dataWords[023] = DateConverter.getModifiedSingleWordTime(timeStamp);
+        writeWord(controlWord);
+        writeWords(dataWords, 0, 024);
     }
 
     @Override

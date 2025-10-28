@@ -1,8 +1,5 @@
 -- TODO InProgress
 
-SymbiontFileWriter
-    some unimplemented methods
-
 InputSymbiontInfoFile
     lots to implement
 

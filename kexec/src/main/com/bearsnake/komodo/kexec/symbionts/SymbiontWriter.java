@@ -48,7 +48,7 @@ public interface SymbiontWriter {
         final String projectId,
         final long fileSizeTracks,
         final String banner
-    ) throws ExecStoppedException, EndOfFileException;
+    ) throws ExecStoppedException, EndOfFileException, ExecIOException;
 
     public abstract void writePUNCH$LabelControlImage(
         final int partNumber,
@@ -63,7 +63,7 @@ public interface SymbiontWriter {
         final String projectId,
         final long fileSizeTracks,
         final String banner
-    ) throws ExecStoppedException, EndOfFileException;
+    ) throws ExecStoppedException, EndOfFileException, ExecIOException;
 
     public abstract void writeREAD$LabelControlImage(
         final int characterSet,
