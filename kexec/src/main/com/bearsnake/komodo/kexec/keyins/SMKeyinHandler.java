@@ -9,7 +9,7 @@ import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
-import com.bearsnake.komodo.kexec.symbionts.SymbiontInfo;
+import com.bearsnake.komodo.kexec.symbionts.Symbiont;
 
 class SMKeyinHandler extends KeyinHandler {
 
@@ -277,7 +277,7 @@ SM KEY ERROR : UPDATE FAILED
         }
     }
 
-    private void processChange(final SymbiontInfo symInfo) {
+    private void processChange(final Symbiont symInfo) {
         // C only applies to print devices
         if (!symInfo.isPrintSymbiont()) {
             Exec.getInstance().sendExecReadOnlyMessage("SM C does not apply to " + _symbiontName, _source);
@@ -293,11 +293,11 @@ SM KEY ERROR : UPDATE FAILED
         symInfo.setPageGeometry(_changeLinesPerPage, _changeTopMargin, _changeBottomMargin, _changeLinesPerInch);
     }
 
-    private void processDisplay(final SymbiontInfo symInfo) {
+    private void processDisplay(final Symbiont symInfo) {
         Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
     }
 
-    private void processInitialize(final SymbiontInfo symInfo) throws ExecStoppedException {
+    private void processInitialize(final Symbiont symInfo) throws ExecStoppedException {
         // I only applies to onsite devices
         if (!symInfo.isOnSiteSymbiont()) {
             Exec.getInstance().sendExecReadOnlyMessage("SM I does not apply to " + _symbiontName, _source);
@@ -307,7 +307,7 @@ SM KEY ERROR : UPDATE FAILED
         }
     }
 
-    private void processLock(final SymbiontInfo symInfo) throws ExecStoppedException {
+    private void processLock(final Symbiont symInfo) throws ExecStoppedException {
         // L only applies to onsite devices
         if (!symInfo.isOnSiteSymbiont()) {
             var msg = String.format("SM L does not apply to %s", _symbiontName);
@@ -319,7 +319,7 @@ SM KEY ERROR : UPDATE FAILED
         }
     }
 
-    private void processReprintOrSkip(final SymbiontInfo symInfo) throws ExecStoppedException {
+    private void processReprintOrSkip(final Symbiont symInfo) throws ExecStoppedException {
         // R with no count and no ALL is allowed only on input devices.
         if ((_repositionCount == 0) && !_repositionAll && !symInfo.isInputSymbiont()) {
             var msg = String.format("SM R does not apply to %s", _symbiontName);
@@ -333,7 +333,7 @@ SM KEY ERROR : UPDATE FAILED
         }
     }
 
-    private void processRequeue(final SymbiontInfo symInfo) throws ExecStoppedException {
+    private void processRequeue(final Symbiont symInfo) throws ExecStoppedException {
         if (symInfo.isInputSymbiont() || symInfo.isRemoteSymbiont()) {
             var msg = String.format("SM Q does not apply to %s", symInfo.getNodeName());
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
@@ -342,7 +342,7 @@ SM KEY ERROR : UPDATE FAILED
         }
     }
 
-    private void processSuspend(final SymbiontInfo symInfo) {
+    private void processSuspend(final Symbiont symInfo) {
         if (!symInfo.isOutputSymbiont()) {
             var msg = String.format("SM S does not apply to %s", symInfo.getNodeName());
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
@@ -353,13 +353,13 @@ SM KEY ERROR : UPDATE FAILED
         }
     }
 
-    private void processTerminateDevice(final SymbiontInfo symInfo) throws ExecStoppedException {
+    private void processTerminateDevice(final Symbiont symInfo) throws ExecStoppedException {
         symInfo.lockDevice();
         symInfo.terminateFile();
         Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
     }
 
-    private void processTerminateFile(final SymbiontInfo symInfo) throws ExecStoppedException {
+    private void processTerminateFile(final Symbiont symInfo) throws ExecStoppedException {
         symInfo.terminateFile();
     }
 }

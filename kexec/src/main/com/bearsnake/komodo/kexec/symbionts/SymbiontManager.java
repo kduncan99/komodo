@@ -31,7 +31,7 @@ public class SymbiontManager implements Manager {
     //(Exec) This message is displayed in response to a UR symbiont or a SM symbiont S keyin.
     // The specified remote device has been suspended.
 
-    private final Map<String, SymbiontInfo> _symbiontInfos = new HashMap<>();
+    private final Map<String, Symbiont> _symbiontInfos = new HashMap<>();
 
     public SymbiontManager() {
         Exec.getInstance().managerRegister(this);
@@ -43,7 +43,7 @@ public class SymbiontManager implements Manager {
     @Override
     public void boot(boolean recoveryBoot) throws KExecException {
         LogManager.logTrace(LOG_SOURCE, "boot(%s)", recoveryBoot);
-        _symbiontInfos.values().forEach(SymbiontInfo::start);
+        _symbiontInfos.values().forEach(Symbiont::start);
         LogManager.logTrace(LOG_SOURCE, "boot complete", recoveryBoot);
     }
 
@@ -64,9 +64,10 @@ public class SymbiontManager implements Manager {
 
         out.printf("%s  Symbionts:\n", indent);
         _symbiontInfos.values().forEach(symInfo -> out.printf("%s    %s\n", indent, symInfo.getStateString()));
+        // TODO  sym groups
     }
 
-    public SymbiontInfo getSymbiontInfo(final String symbiontName) {
+    public Symbiont getSymbiontInfo(final String symbiontName) {
         return _symbiontInfos.get(symbiontName);
     }
 
@@ -78,21 +79,19 @@ public class SymbiontManager implements Manager {
     public void initialize() throws KExecException {
         LogManager.logTrace(LOG_SOURCE, "initialize()");
 
+        // Symbionts configuration
         var exec = Exec.getInstance();
         var fm = exec.getFacilitiesManager();
         var nodeInfos = fm.getNodeInfos(DeviceType.SymbiontDevice);
         for (var nodeInfo : nodeInfos) {
             if (nodeInfo.getNode() instanceof SymbiontReaderDevice) {
-                _symbiontInfos.put(nodeInfo.getNode().getNodeName(), new ReaderSymbiontInfo(nodeInfo));
+                _symbiontInfos.put(nodeInfo.getNode().getNodeName(), new OnSiteReaderSymbiont(nodeInfo));
             } else if (nodeInfo.getNode() instanceof SymbiontPunchDevice) {
-                _symbiontInfos.put(nodeInfo.getNode().getNodeName(), new PunchSymbiontInfo(nodeInfo));
+                _symbiontInfos.put(nodeInfo.getNode().getNodeName(), new OnSitePunchSymbiont(nodeInfo));
             } else if (nodeInfo.getNode() instanceof SymbiontPrinterDevice) {
-                _symbiontInfos.put(nodeInfo.getNode().getNodeName(), new PrinterSymbiontInfo(nodeInfo));
+                _symbiontInfos.put(nodeInfo.getNode().getNodeName(), new OnSitePrinterSymbiont(nodeInfo));
             }
         }
-
-        // Get symbiont group configuration
-        //   TODO
     }
 
     /**
@@ -101,6 +100,6 @@ public class SymbiontManager implements Manager {
     @Override
     public void stop() {
         LogManager.logTrace(LOG_SOURCE, "stop()");
-        _symbiontInfos.values().forEach(SymbiontInfo::terminate);
+        _symbiontInfos.values().forEach(Symbiont::terminate);
     }
 }

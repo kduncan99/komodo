@@ -30,7 +30,9 @@ import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.PrintStream;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Manages the GENF$ file and manages the backlog and the output queues.
@@ -59,6 +61,16 @@ public class GenFileInterface {
     private final TreeMap<String, PrintQueue> _printQueues = new TreeMap<>();
     private final TreeMap<String, PunchQueue> _punchQueues = new TreeMap<>();
 
+    // QueueGroups
+    private final Collection<Collection<Queue>> _queueGroups = new LinkedList<>();
+
+    public Collection<Queue> findQueueGroupFor(final Queue queue) {
+        return _queueGroups.stream()
+                           .filter(group -> group.contains(queue))
+                           .findFirst()
+                           .orElse(null);
+    }
+
     public Collection<PrintQueue> getPrintQueues() { return _printQueues.values(); }
     public Collection<PunchQueue> getPunchQueues() { return _punchQueues.values(); }
     public Collection<ReaderQueue> getReaderQueues() { return _readerQueues.values(); }
@@ -70,6 +82,12 @@ public class GenFileInterface {
         _readerQueues.values().forEach(q -> q.dump(out, subIndent, verbose));
         _punchQueues.values().forEach(q -> q.dump(out, subIndent, verbose));
         _printQueues.values().forEach(q -> q.dump(out, subIndent, verbose));
+        out.printf("%s  Groups:\n", indent);
+        _queueGroups.forEach(group -> {
+            var sb = new StringBuilder();
+            group.forEach(queue -> sb.append(queue.getQueueName()).append(" "));
+            out.printf("%s    %s\n", indent, sb);
+        });
 
         if (verbose) {
             _inventory.values().forEach(item -> item.dump(out, subIndent));
@@ -444,6 +462,12 @@ public class GenFileInterface {
         for (var queueName : cfg.getSymbiontPunchQueues()) {
             _punchQueues.put(queueName, new PunchQueue(queueName));
         }
+
+        // Create queue groups
+        cfg.getSymbiontGroups().forEach(cfgGroup -> {
+            var list = cfgGroup.stream().map(this::getQueue).collect(Collectors.toCollection(LinkedList::new));
+            _queueGroups.add(list);
+        });
     }
 
     /**

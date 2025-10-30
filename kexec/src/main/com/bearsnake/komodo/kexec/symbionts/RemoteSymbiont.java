@@ -11,9 +11,9 @@ import com.bearsnake.komodo.kexec.facilities.NodeInfo;
  * RSI (including DEMAND mode) symbiont handler
  * TODO - need subclasses for DEMAND and remote print/readers (and punch?)
  */
-abstract class RemoteSymbiontInfo extends SymbiontInfo {
+abstract class RemoteSymbiont extends Symbiont {
 
-    public RemoteSymbiontInfo(
+    public RemoteSymbiont(
         final NodeInfo nodeInfo
     ) {
         super(nodeInfo);

@@ -33,7 +33,7 @@ import java.time.Instant;
  * This is for anything which acts as a card reader, virtual or otherwise.
  * Functionality is constrained to reading images and writing them to a temporary READ$ file.
  */
-class ReaderSymbiontInfo extends OnSiteSymbiontInfo {
+class OnSiteReaderSymbiont extends OnSiteSymbiont {
 
     private final ChannelIoPacket _channelPacket;
     private SymbiontFileWriter _fileWriter = null;
@@ -43,7 +43,7 @@ class ReaderSymbiontInfo extends OnSiteSymbiontInfo {
     private boolean _pendingLocked = false;     // status is not yet locked, but it will be
     private boolean _skipToRunCard = false;     // implies _run is null
 
-    public ReaderSymbiontInfo(
+    public OnSiteReaderSymbiont(
         final NodeInfo nodeInfo
     ) {
         super(nodeInfo);

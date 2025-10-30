@@ -22,7 +22,7 @@ import com.bearsnake.komodo.logger.LogManager;
 /**
  * Information (and more importantly, common functionality) relating to any symbiont device.
  */
-public abstract class SymbiontInfo implements Runnable {
+public abstract class Symbiont implements Runnable {
 
     private static final int POLL_DELAY_MILLISECONDS = 1000;
     private static final int POLL_LONG_DELAY_MILLISECONDS = 5000;
@@ -39,7 +39,7 @@ public abstract class SymbiontInfo implements Runnable {
 
     private boolean _terminate = false;
 
-    protected SymbiontInfo(
+    protected Symbiont(
         final NodeInfo nodeInfo
     ) {
         _nodeInfo = nodeInfo;

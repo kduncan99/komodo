@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.configuration;
 
 import com.bearsnake.komodo.baselib.Parser;
+import com.bearsnake.komodo.kexec.configuration.exceptions.AlreadyInSymGroupException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.ConfigurationException;
 import com.bearsnake.komodo.kexec.configuration.exceptions.SyntaxException;
 import com.bearsnake.komodo.kexec.configuration.parameters.*;
@@ -20,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import static com.bearsnake.komodo.kexec.configuration.parameters.Tag.*;
 import static com.bearsnake.komodo.kexec.configuration.values.BooleanValue.FALSE;
@@ -36,8 +38,11 @@ public class Configuration {
     private static final Map<String, Parameter> CONFIG_PARAMETERS = new TreeMap<>();
     private static final Map<String, MnemonicInfo> MNEMONIC_TABLE = new TreeMap<>();
     private static final Map<String, Node> NODES = new LinkedHashMap<>();
+
+    // There are no reader queues which are not linked to reader symbionts... by design.
     private static final List<String> SYMBIONT_PRINTER_QUEUE_NAMES = new LinkedList<>();
     private static final List<String> SYMBIONT_PUNCH_QUEUE_NAMES = new LinkedList<>();
+    private static final List<List<String>> SYMBIONT_GROUPINGS = new LinkedList<>();
 
     // discrete configuration values ------------------------------------------------------------------------------------
 
@@ -1063,6 +1068,22 @@ public class Configuration {
         return new LinkedList<>(SYMBIONT_PUNCH_QUEUE_NAMES);
     }
 
+    public Collection<String> getSymbiontGroupForIdentifier(final String identifier) {
+        var idUpper = identifier.toUpperCase();
+        for (var group : SYMBIONT_GROUPINGS) {
+            if (group.contains(idUpper)) {
+                return group;
+            }
+        }
+        return null;
+    }
+
+    public Collection<Collection<String>> getSymbiontGroups() {
+        return SYMBIONT_GROUPINGS.stream()
+                                 .map(LinkedList::new)
+                                 .collect(Collectors.toCollection(LinkedList::new));
+    }
+
     // -----------------------------------------------------------------------------------------------------------------
 
     public Object getConfigValue(final Tag tag) {
@@ -1332,8 +1353,32 @@ public class Configuration {
 
     public void processSymGroup(
         final Parser parser
-    ) throws SyntaxException {
-        throw new SyntaxException("SYMGROUP not yet implemented"); // TODO
+    ) throws ConfigurationException {
+        var list = new LinkedList<String>();
+        parser.skipSpaces();
+        parser.parseToken("CONTAINS"); // this is optional so we don't check
+        parser.skipSpaces();
+        while (!parser.atEnd()) {
+            try {
+                var name = parser.parseIdentifier(6, ", ");
+                if (getSymbiontGroupForIdentifier(name) != null) {
+                    throw new AlreadyInSymGroupException(name);
+                }
+                list.add(name);
+
+                if (parser.peekNext() == ',') {
+                    parser.skipNext();
+                } else {
+                    break;
+                }
+            } catch (Parser.NotFoundException ex) {
+                throw new SyntaxException("Syntax error at end of SYMGROUP statement");
+            } catch (Parser.SyntaxException ex) {
+                throw new SyntaxException("Invalid device or queue name in SYMGROUP entry");
+            }
+        }
+
+        SYMBIONT_GROUPINGS.add(list);
     }
 
     public void processSymQueue(

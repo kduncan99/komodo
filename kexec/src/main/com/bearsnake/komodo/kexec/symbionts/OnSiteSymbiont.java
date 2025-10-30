@@ -10,9 +10,9 @@ import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 /**
  * A few things common to Print, Punch, and Reader symbionts
  */
-abstract class OnSiteSymbiontInfo extends SymbiontInfo {
+abstract class OnSiteSymbiont extends Symbiont {
 
-    public OnSiteSymbiontInfo(
+    public OnSiteSymbiont(
         final NodeInfo nodeInfo
     ) {
         super(nodeInfo);

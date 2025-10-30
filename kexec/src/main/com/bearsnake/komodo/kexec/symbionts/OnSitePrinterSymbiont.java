@@ -14,7 +14,7 @@ import com.bearsnake.komodo.kexec.facilities.NodeInfo;
  * Reads files in printer output queues, performs necessary formatting, and sends appropriate line or page
  * images to the destination (which might be a virtual printer, a real printer queue on the host, or a real printer).
  */
-class PrinterSymbiontInfo extends OnSiteSymbiontInfo {
+class OnSitePrinterSymbiont extends OnSiteSymbiont {
 
     private int _linesPerPage;
     private int _topMargin;
@@ -23,7 +23,7 @@ class PrinterSymbiontInfo extends OnSiteSymbiontInfo {
 
     private int _pageCount = 0;
 
-    public PrinterSymbiontInfo(
+    public OnSitePrinterSymbiont(
         final NodeInfo nodeInfo
     ) {
         super(nodeInfo);

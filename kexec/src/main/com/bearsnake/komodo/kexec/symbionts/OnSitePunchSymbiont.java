@@ -12,11 +12,11 @@ import com.bearsnake.komodo.kexec.facilities.NodeInfo;
  * Reads files in punch output queues, performs necessary formatting, and sends appropriate card images to the destination
  * (which will generally be a local or remote holding area for image files - we don't expect ever to have real card punch devices).
  */
-class PunchSymbiontInfo extends OnSiteSymbiontInfo {
+class OnSitePunchSymbiont extends OnSiteSymbiont {
 
     private int _imageCount = 0;
 
-    public PunchSymbiontInfo(
+    public OnSitePunchSymbiont(
         final NodeInfo nodeInfo
     ) {
         super(nodeInfo);
