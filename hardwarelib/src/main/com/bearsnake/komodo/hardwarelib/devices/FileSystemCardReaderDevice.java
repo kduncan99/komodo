@@ -9,13 +9,11 @@ import com.bearsnake.komodo.hardwarelib.IoStatus;
 import com.bearsnake.komodo.logger.LogManager;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class FileSystemCardReaderDevice extends SymbiontReaderDevice {
@@ -63,7 +61,8 @@ public class FileSystemCardReaderDevice extends SymbiontReaderDevice {
      */
     @Override
     public void probe() {
-        // TODO why is the following line always false?
+        // TODO why is _reader always null when we reach this code?
+        //   because no one calls us otherwise? (which is fine, I guess, but we need UT for this).
         if (isReady() && (_reader == null)) {
             setIsReady(openInputFile());
         } else if (!isReady()) {

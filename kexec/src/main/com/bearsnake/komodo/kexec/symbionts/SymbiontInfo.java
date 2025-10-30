@@ -54,6 +54,14 @@ public abstract class SymbiontInfo implements Runnable {
                                               .setNodeIdentifier(_nodeIdentifier);
     }
 
+    public final String getNodeName() {
+        return _node.getNodeName();
+    }
+
+    /**
+     * State machine for subclass
+     * @return true if we did something useful, false if we are waiting for something.
+     */
     abstract boolean poll() throws ExecStoppedException;
 
     public final void run() {
@@ -94,13 +102,6 @@ public abstract class SymbiontInfo implements Runnable {
         _terminate = true;
     }
 
-//    /**
-//     * For handling SM * E keyins - Terminates the active file
-//     * For input, an EOF is written and the remainder of the input is discarded (but the run is not deleted)
-//     * For output, no more output is produced for the file - it is effectively a skip-to-end.
-//     */
-//    abstract void end() throws ExecStoppedException;
-
     /**
      * Creates a string indicating the state of the symbiont device, to be sent to the console
      */
@@ -112,54 +113,61 @@ public abstract class SymbiontInfo implements Runnable {
      */
     public abstract void initialize() throws ExecStoppedException;
 
+    public abstract boolean isInputSymbiont();
+    public abstract boolean isOnSiteSymbiont();
+    public abstract boolean isOutputSymbiont();
+    public abstract boolean isPrintSymbiont();
+    public abstract boolean isRemoteSymbiont();
+
     /**
      * For handling SM * L keyins - Locks out the device
      * Any current file runs to completion, but no subsequent file is processed
      */
-    public abstract void lock() throws ExecStoppedException;
+    public abstract void lockDevice();
 
-//    /**
-//     * For handling SM * R keyins - Rewinds or advances by a number of pages or cards
-//     * For input files the current file is bypassed until the next @RUN image, and the run is discarded.
-//     * For output files a negative count rewinds by the given number of cards or pages and then output is resumed.
-//     * A positive count advances printing by the given number of cards or pages.
-//     * @param count number of cards or pages (must be zero for input symbiont)
-//     */
-//    abstract void reposition(final int count) throws ExecStoppedException;
-//
-//    /**
-//     * For handling SM * Q keyins - Re-queues current file and locks the device
-//     * Does not apply to input symbionts.
-//     */
-//    abstract void requeue() throws ExecStoppedException;
-//
-//    /**
-//     * For handling SM * S keyins - Suspends the device
-//     * Immediately pauses input or output.
-//     */
-//    abstract void suspend() throws ExecStoppedException;
-//
-//    /**
-//     * For handling SM * T keyins - Terminates and locks out the device
-//     * The remainder of the file is discarded and the devices is locked out.
-//     * For input, the run is discarded.
-//     */
-//    abstract void terminate() throws ExecStoppedException;
+    /**
+     * For handling SM * R keyins - Rewinds or advances by a number of pages or cards
+     * For input files the current file is bypassed until the next @RUN image, and the run is discarded --
+     * if count is specified, it is ignored (not specifying a count is only allowed for input).
+     * For output files a negative count rewinds by the given number of cards or pages and then output is resumed.
+     * A positive count advances printing by the given number of cards or pages.
+     * @param count number of cards or pages (must be zero for input symbiont)
+     */
+    public abstract void reposition(final int count) throws ExecStoppedException;
 
-//    /**
-//     * State machine for subclass
-//     * @return true if we did something useful, false if we are waiting for something.
-//     */
-//    abstract boolean poll() throws ExecStoppedException;
+    /**
+     * For handling SM * RALL keyins - Rewinds an entire output file.
+     * For input files the current file is bypassed until the next @RUN image, and the run is discarded.
+     */
+    public abstract void repositionAll() throws ExecStoppedException;
 
-//    /**
-//     * Default handler for invalid state values
-//     */
-//    protected boolean pollDefault() throws ExecStoppedException {
-//        LogManager.logFatal(LOG_SOURCE, "Symbiont state %s not valid for %s", _state, _node.getNodeName());
-//        Exec.getInstance().stop(StopCode.ExecActivityTakenToEMode);
-//        throw new ExecStoppedException();
-//    }
+    /**
+     * For handling SM * Q keyins - Re-queues current file and locks the device
+     * Does not apply to input symbionts.
+     */
+    public abstract void requeue();
+
+    /**
+     * For handling SM * C[HANGE] keyins - applies only to print symbions, local or remote
+     * If any particular parameter is null, its value is not changed.
+     */
+    public abstract void setPageGeometry(final Integer linesPerPage,
+                                         final Integer topMargin,
+                                         final Integer bottomMargin,
+                                         final Integer linesPerInch);
+
+    /**
+     * For handling SM * S keyins - Suspends the device
+     * Immediately pauses input or output.
+     */
+    public abstract void suspend();
+
+    /**
+     * For handling SM * E and SM * T keyins
+     * Either will discard the remainder of the file - for input, the run we are building is discarded.
+     * For SM * T, the device should be locked out before invoking this.
+     */
+    public abstract void terminateFile() throws ExecStoppedException;
 
     /**
      * Notifies the console that the symbiont encountered an IO error,

@@ -5,8 +5,6 @@
 package com.bearsnake.komodo.kexec.mfd;
 
 import com.bearsnake.komodo.kexec.HardwareTrackId;
-import com.bearsnake.komodo.kexec.mfd.FileAllocation;
-import com.bearsnake.komodo.kexec.mfd.LogicalTrackExtent;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

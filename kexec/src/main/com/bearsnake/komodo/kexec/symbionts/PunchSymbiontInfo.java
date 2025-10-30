@@ -12,7 +12,7 @@ import com.bearsnake.komodo.kexec.facilities.NodeInfo;
  * Reads files in punch output queues, performs necessary formatting, and sends appropriate card images to the destination
  * (which will generally be a local or remote holding area for image files - we don't expect ever to have real card punch devices).
  */
-class PunchSymbiontInfo extends SymbiontInfo {
+class PunchSymbiontInfo extends OnSiteSymbiontInfo {
 
     private int _imageCount = 0;
 
@@ -22,54 +22,81 @@ class PunchSymbiontInfo extends SymbiontInfo {
         super(nodeInfo);
     }
 
-//    @Override
-//    void end() throws ExecStoppedException {
-//        // TODO
-//    }
-
     @Override
     public String getStateString() {
         return String.format("%s %s,%s,CARDS PUNCHED = %d", _node.getNodeName(), _status, _state, _imageCount);
     }
 
+    @Override
+    public boolean isInputSymbiont() {
+        return false;
+    }
+
+    @Override
+    public boolean isOutputSymbiont() {
+        return true;
+    }
+
+    @Override
+    public boolean isPrintSymbiont() {
+        return false;
+    }
+
+    // -------------------------------------------------------------------------
+
     /**
      * SM symbiont I keyin
      */
     @Override
-    public void initialize() throws ExecStoppedException {
+    public synchronized final void initialize() {
+        // TODO
+    }
+
+    @Override
+    public void lockDevice() {
+        // TODO
+    }
+
+    @Override
+    public synchronized final void reposition(int count) {
+        // TODO
+    }
+
+    @Override
+    public synchronized final void repositionAll() {
+        // TODO
+    }
+
+    @Override
+    public synchronized final void requeue() {
         // TODO
     }
 
     /**
-     * SM symbiont L keyin
+     * For SM * C... but it has no applicability for card punches.
      */
     @Override
-    public void lock() throws ExecStoppedException {
+    public final void setPageGeometry(final Integer linesPerPage,
+                                      final Integer topMargin,
+                                      final Integer bottomMargin,
+                                      final Integer linesPerInch) {
+        // Ignore this... SM keyin should never invoke it
+    }
+
+    @Override
+    public synchronized final void suspend() {
         // TODO
     }
 
-//    @Override
-//    void reposition(int count) throws ExecStoppedException {
-//        // TODO
-//    }
-//
-//    @Override
-//    void requeue() throws ExecStoppedException {
-//        // TODO
-//    }
-//
-//    @Override
-//    void suspend() throws ExecStoppedException {
-//        // TODO
-//    }
-//
-//    @Override
-//    void terminate() throws ExecStoppedException {
-//        // TODO
-//    }
+    @Override
+    public synchronized final void terminateFile() throws ExecStoppedException {
+        // TODO
+    }
+
+    // -------------------------------------------------------------------------
 
     /**
-     * Implements state machine for OutputSymbiontInfo
+     * Implements state machine for PunchSymbiontInfo
      * @return true if we did something useful, false if we are waiting for something.
      */
     @Override

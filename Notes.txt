@@ -1,12 +1,19 @@
--- TODO InProgress
-
-InputSymbiontInfoFile
-    lots to implement
+--------------------
+TODO InProgress
 
 SymbiontManager
+    Symbiont group configuration
+
+ReaderSymbiontInfo
+    @FILE and @ENDF handling (do we really need or want this?)
+PunchSymbiontInfo
+    Lots to do still, mostly dealing with SM keyin and related stuff
+PrinterSymbiontInfo
+    Lots to do still, mostly dealing with SM keyin and related stuff
+    If the queued file is a tape file, we have to assign it and read from it
 
 CSI
-    Several statements to be done
+    Several statements still to be done
 
 Batch Runs
     Coarse Scheduler
@@ -14,6 +21,7 @@ Batch Runs
     CS keyin
 
 Hardware
+    IP Engine (library component which can also be rolled into a hardware emulator)
     Tape Device, Channel, Library
     Image Punch
     Printer
@@ -30,9 +38,11 @@ Facilities
     SU keyin not finished?
     RV keyin not finished
 
--- TODO BUGS
+--------------------
+TODO BUGS
 
--- TODO To be implemented
+--------------------
+TODO To be implemented
 
 Accounts
 
@@ -41,7 +51,6 @@ User-ids
 Symbionts
     Recover backlog from GENF$ on boot
     Recover print/punch queues from GENF$ on boot
-    OutputSymbiontInfoFile
 
 Recovery Boot
 
@@ -49,11 +58,13 @@ Demand Runs
 
 TIP Runs
 
+Hardware
+    IP - do we let the admin define a certain number of IPs we round-robin amongst Legacy Task activities?
+        or do we create one of these per activity?
+
 Removable Disk
 
 Tape Handling
-
-IP Engine
 
 Exec Requests
 
@@ -66,7 +77,7 @@ Nexes
 Exes
 
 
--- TODO How to interact with print services
+-- TODO How to interact with Java print services
       PrintService ps=PrintServiceLookup.lookupDefaultPrintService();
       DocPrintJob job=ps.createPrintJob();
       job.addPrintJobListener(new PrintJobAdapter() {

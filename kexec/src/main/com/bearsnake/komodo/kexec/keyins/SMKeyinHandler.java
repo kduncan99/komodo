@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kexec.keyins;
 
 import com.bearsnake.komodo.baselib.Parser;
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.consoles.ConsoleId;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.exec.Exec;
@@ -15,14 +16,13 @@ class SMKeyinHandler extends KeyinHandler {
     private enum Command {
         Change,
         Display,
-        EndOfFile,
         Initialize,
-        Lock,       // locks a device - if printing, the file is finished first
-        Queue,      // requeues the file, locking the device
-        Remove,
-        Reprint,
-        Suspend,    // immediately stops, locking the device - SM I resumes printing/punching
-        Terminate,
+        Lock,               // locks a device - if printing, the file is finished first
+        Queue,              // re-queues the file, locking the device
+        ReprintOrSkip,      // re-prints or re-punches the output, or skips the file on input
+        Suspend,            // immediately stops, locking the device - SM I resumes printing/punching
+        TerminateDevice,    // terminates file and locks device (SM T)
+        TerminateFile,      // terminates file and moves to the next (SM E)
     }
 
     private static final String[] HELP_TEXT = {
@@ -73,9 +73,14 @@ SM KEY ERROR : UPDATE FAILED
     public static final String COMMAND = "SM";
 
     private Command _command;
+
+    private Integer _changeBottomMargin;
+    private Integer _changeLinesPerInch;
+    private Integer _changeLinesPerPage;
+    private Integer _changeTopMargin;
+    private boolean _repositionAll;
+    private int _repositionCount;
     private String _symbiontName;
-    private boolean _reprintAll;
-    private int _reprintCount;
 
     public SMKeyinHandler(final ConsoleId source,
                           final String options,
@@ -103,55 +108,136 @@ SM KEY ERROR : UPDATE FAILED
             _command = Command.Display;
             return true;
         } else {
-            switch (split[1].toUpperCase()) {
-                case "C", "CHANGE" -> {
-                    _command = Command.Change;
-                    return true;
-                }
-                case "E" -> {
-                    _command = Command.EndOfFile;
-                    return true;
-                }
-                case "I" -> {
-                    _command = Command.Initialize;
-                    return true;
-                }
-                case "L" -> {
-                    _command = Command.Lock;
-                    return true;
-                }
-                case "Q" -> {
-                    _command = Command.Queue;
-                    return true;
-                }
-                case "R" -> {
-                    _command = Command.Remove;
-                    return true;
-                }
-                case "RALL" -> {
-                    _command = Command.Reprint;
-                    _reprintAll = true;
-                    return true;
-                }
-                case "S" -> {
-                    _command = Command.Suspend;
-                    return true;
-                }
-                case "T" -> {
-                    _command = Command.Terminate;
-                    return true;
-                }
-                default -> {
-                    if (split[1].charAt(0) == 'R') {
-                        // TODO
-                        _command = Command.Reprint;
-                        return true;
+            var upperStr = split[1].toUpperCase();
+            return switch (upperStr.charAt(0)) {
+                case 'C' -> checkSyntaxChange(upperStr);
+                case 'E' -> checkSyntaxEnd();
+                case 'I' -> checkSyntaxInitialize();
+                case 'L' -> checkSyntaxLock();
+                case 'Q' -> checkSyntaxQueue();
+                case 'R' -> checkSyntaxReprint(upperStr);
+                case 'S' -> checkSyntaxSuspend();
+                case 'T' -> checkSyntaxTerminate();
+                default -> false;
+            };
+        }
+    }
+
+    private boolean checkSyntaxChange(final String argStr) {
+        _command = Command.Change;
+
+        var split = argStr.split(",");
+        if ((split[0].length() > 1) && !split[0].equals("CHANGE")) {
+            return false;
+        }
+
+        var exec = Exec.getInstance();
+        var cfg = exec.getConfiguration();
+
+        try {
+            if (split.length >= 2) {
+                if (split[1].equals("*")) {
+                    _changeLinesPerPage = (int) (long) cfg.getIntegerValue(Tag.SHDGSP);
+                } else if (!split[1].isEmpty()) {
+                    _changeLinesPerPage = Integer.parseInt(split[1]);
+                    if (_changeLinesPerPage < 1 || _changeLinesPerPage > 999) {
+                        return false;
                     }
                 }
             }
+
+            if (split.length >= 3) {
+                if (split[2].equals("*")) {
+                    _changeTopMargin = (int) (long) cfg.getIntegerValue(Tag.SAFHDG);
+                } else if (!split[2].isEmpty()) {
+                    _changeTopMargin = Integer.parseInt(split[2]);
+                    if (_changeTopMargin < 0 || _changeTopMargin > 999) {
+                        return false;
+                    }
+                }
+            }
+
+            if (split.length >= 4) {
+                if (split[3].equals("*")) {
+                    _changeBottomMargin = (int) (long) cfg.getIntegerValue(Tag.STDBOT);
+                } else if (!split[3].isEmpty()) {
+                    _changeBottomMargin = Integer.parseInt(split[3]);
+                    if (_changeBottomMargin < 0 || _changeBottomMargin > 999) {
+                        return false;
+                    }
+                }
+            }
+
+            if (split.length >= 5) {
+                if (split[4].equals("*")) {
+                    _changeLinesPerInch = 8;
+                } else if (!split[4].isEmpty()) {
+                    _changeLinesPerInch = Integer.parseInt(split[4]);
+                    if ((_changeLinesPerInch != 6) && (_changeLinesPerInch != 8) &&  (_changeLinesPerInch != 12)) {
+                        return false;
+                    }
+                }
+            }
+        } catch (NumberFormatException nfe) {
+            return false;
         }
 
-        return false;
+        return true;
+    }
+
+    private boolean checkSyntaxEnd() {
+        _command = Command.TerminateFile;
+        return true;
+    }
+
+    private boolean checkSyntaxInitialize() {
+        _command = Command.Initialize;
+        return true;
+    }
+
+    private boolean checkSyntaxLock() {
+        _command = Command.Lock;
+        return true;
+    }
+
+    private boolean checkSyntaxQueue() {
+        _command = Command.Queue;
+        return true;
+    }
+
+    private boolean checkSyntaxReprint(final String argStr) {
+        _command = Command.ReprintOrSkip;
+        _repositionAll = false;
+        _repositionCount = 0;
+
+        if (argStr.length() == 1) {
+            return true;
+        } else if (argStr.equals("RALL")) {
+            _repositionAll = true;
+            return true;
+        } else {
+            var digits = 0;
+            for (int i = 1; i < argStr.length(); i++) {
+                var ch = argStr.charAt(i);
+                if (!Character.isDigit(ch)) {
+                    return false;
+                } else {
+                    _repositionCount = _repositionCount * 10 + (ch - '0');
+                    digits++;
+                }
+            }
+            return (digits > 0) && (digits <= 3) && (_repositionCount <= 504);
+        }
+    }
+
+    private boolean checkSyntaxSuspend() {
+        _command = Command.Suspend;
+        return true;
+    }
+
+    private boolean checkSyntaxTerminate() {
+        _command = Command.TerminateDevice;
+        return true;
     }
 
     @Override String getCommand() { return COMMAND; }
@@ -160,7 +246,7 @@ SM KEY ERROR : UPDATE FAILED
 
     @Override
     boolean isAllowed() {
-        return true; // TODO
+        return true; // TODO - allowed after some point early in initialization...?
     }
 
     @Override
@@ -176,16 +262,15 @@ SM KEY ERROR : UPDATE FAILED
 
         try {
             switch (_command) {
-                case Change -> processChange(symInfo);
+                case Change -> processChange(symInfo);                      // SM C
                 case Display -> processDisplay(symInfo);
-                case EndOfFile -> processEndOfFile(symInfo);
-                case Initialize -> processInitialize(symInfo);
-                case Lock -> processLock(symInfo);
-                case Queue -> processQueue(symInfo);
-                case Remove -> processRemove(symInfo);
-                case Reprint -> processReprint(symInfo);
-                case Suspend -> processSuspend(symInfo);
-                case Terminate -> processTerminate(symInfo);
+                case Initialize -> processInitialize(symInfo);              // SM I
+                case Lock -> processLock(symInfo);                          // SM L
+                case Queue -> processRequeue(symInfo);                      // SM Q
+                case ReprintOrSkip -> processReprintOrSkip(symInfo);        // SM R
+                case Suspend -> processSuspend(symInfo);                    // SM S
+                case TerminateDevice -> processTerminateDevice(symInfo);    // SM T
+                case TerminateFile -> processTerminateFile(symInfo);        // SM E
             }
         } catch (ExecStoppedException ex) {
             // forget about it
@@ -193,44 +278,88 @@ SM KEY ERROR : UPDATE FAILED
     }
 
     private void processChange(final SymbiontInfo symInfo) {
-        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
+        // C only applies to print devices
+        if (!symInfo.isPrintSymbiont()) {
+            Exec.getInstance().sendExecReadOnlyMessage("SM C does not apply to " + _symbiontName, _source);
+            return;
+        }
+
+        if (_changeTopMargin + _changeBottomMargin >= _changeLinesPerInch) {
+            var msg = "SM KEY ERROR: Top and bottom margin >= size";
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+            return;
+        }
+
+        symInfo.setPageGeometry(_changeLinesPerPage, _changeTopMargin, _changeBottomMargin, _changeLinesPerInch);
     }
 
     private void processDisplay(final SymbiontInfo symInfo) {
         Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
     }
 
-    private void processEndOfFile(final SymbiontInfo symInfo) {
-        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
-    }
-
     private void processInitialize(final SymbiontInfo symInfo) throws ExecStoppedException {
-        symInfo.initialize();
-        Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
+        // I only applies to onsite devices
+        if (!symInfo.isOnSiteSymbiont()) {
+            Exec.getInstance().sendExecReadOnlyMessage("SM I does not apply to " + _symbiontName, _source);
+        } else {
+            symInfo.initialize();
+            Exec.getInstance().sendExecReadOnlyMessage(_symbiontName + " Unlocked", _source);
+        }
     }
 
     private void processLock(final SymbiontInfo symInfo) throws ExecStoppedException {
-        symInfo.lock();
-        Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
+        // L only applies to onsite devices
+        if (!symInfo.isOnSiteSymbiont()) {
+            var msg = String.format("SM L does not apply to %s", _symbiontName);
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+        } else {
+            symInfo.lockDevice();
+            var msg = String.format("%s Locked", _symbiontName);
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+        }
     }
 
-    private void processQueue(final SymbiontInfo symInfo) {
-        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
+    private void processReprintOrSkip(final SymbiontInfo symInfo) throws ExecStoppedException {
+        // R with no count and no ALL is allowed only on input devices.
+        if ((_repositionCount == 0) && !_repositionAll && !symInfo.isInputSymbiont()) {
+            var msg = String.format("SM R does not apply to %s", _symbiontName);
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+        } else {
+            if (_repositionAll) {
+                symInfo.repositionAll();
+            } else {
+                symInfo.reposition(_repositionCount);
+            }
+        }
     }
 
-    private void processRemove(final SymbiontInfo symInfo) {
-        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
-    }
-
-    private void processReprint(final SymbiontInfo symInfo) {
-        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
+    private void processRequeue(final SymbiontInfo symInfo) throws ExecStoppedException {
+        if (symInfo.isInputSymbiont() || symInfo.isRemoteSymbiont()) {
+            var msg = String.format("SM Q does not apply to %s", symInfo.getNodeName());
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+        } else {
+            symInfo.requeue();
+        }
     }
 
     private void processSuspend(final SymbiontInfo symInfo) {
-        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
+        if (!symInfo.isOutputSymbiont()) {
+            var msg = String.format("SM S does not apply to %s", symInfo.getNodeName());
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+        } else {
+            symInfo.suspend();
+            var msg = String.format("%s Suspended", _symbiontName);
+            Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
+        }
     }
 
-    private void processTerminate(final SymbiontInfo symInfo) {
-        Exec.getInstance().sendExecReadOnlyMessage("Not Implemented", _source); // TODO
+    private void processTerminateDevice(final SymbiontInfo symInfo) throws ExecStoppedException {
+        symInfo.lockDevice();
+        symInfo.terminateFile();
+        Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
+    }
+
+    private void processTerminateFile(final SymbiontInfo symInfo) throws ExecStoppedException {
+        symInfo.terminateFile();
     }
 }

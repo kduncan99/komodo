@@ -27,19 +27,21 @@ import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 
 import java.time.Instant;
-import java.util.LinkedList;
 
 /**
  * Handles input symbionts' state machine - one instance per device.
  * This is for anything which acts as a card reader, virtual or otherwise.
  * Functionality is constrained to reading images and writing them to a temporary READ$ file.
  */
-class ReaderSymbiontInfo extends SymbiontInfo {
+class ReaderSymbiontInfo extends OnSiteSymbiontInfo {
 
     private final ChannelIoPacket _channelPacket;
     private SymbiontFileWriter _fileWriter = null;
     private int _imageCount = 0;
     private BatchRun _run = null;
+
+    private boolean _pendingLocked = false;     // status is not yet locked, but it will be
+    private boolean _skipToRunCard = false;     // implies _run is null
 
     public ReaderSymbiontInfo(
         final NodeInfo nodeInfo
@@ -52,86 +54,166 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                       .setNodeIdentifier(nodeInfo.getNode().getNodeIdentifier());
     }
 
-//    /**
-//     * SM symbiont E keyin
-//     */
-//    @Override
-//    void end() throws ExecStoppedException {
-//        // TODO
-//    }
-
     @Override
     public String getStateString() {
         return String.format("%s %s,%s,CARDS READ = %d", _node.getNodeName(), _status, _state, _imageCount);
     }
 
+    @Override
+    public boolean isInputSymbiont() {
+        return true;
+    }
+
+    @Override
+    public boolean isOutputSymbiont() {
+        return false;
+    }
+
+    @Override
+    public boolean isPrintSymbiont() {
+        return false;
+    }
+
+    // -------------------------------------------------------------------------
+
     /**
-     * SM symbiont I keyin
+     * Handles SM * I (which we don't, actually)
      */
     @Override
-    public void initialize() throws ExecStoppedException {
-        if (_state == SymbiontState.Reading) {
-            _status = SymbiontStatus.Active;
-        } else {
+    public synchronized final void initialize() {
+        if (_status == SymbiontStatus.Locked) {
             _status = SymbiontStatus.Inactive;
             _state = SymbiontState.Stopped;
+        } else if (_status == SymbiontStatus.Suspended) {
+            _status = SymbiontStatus.Active;
+            _state = SymbiontState.Reading;
+        }
+
+        _pendingLocked = false;
+    }
+
+    /**
+     * Handles SM * L
+     * Locks the symbiont right away, if possible.
+     * Otherwise, it sets the pending lock flag, which will be observed and
+     * acted upon in due course by the poll() routine.
+     */
+    @Override
+    public synchronized final void lockDevice() {
+        if (_status == SymbiontStatus.Inactive) {
+            _status = SymbiontStatus.Locked;
+            _state = SymbiontState.Stopped;
+        } else {
+            _pendingLocked = true;
         }
     }
 
     /**
-     * SM symbiont L keyin
+     * Handles SM * R[nnn]
+     * For Reader, this cancels the job we're working on (if any) and skips anything remaining in the input
+     * until we hit the next @RUN card (if any). The count is ignored.
+     * @param count number of cards or pages (must be zero for input symbiont)
      */
     @Override
-    public void lock() throws ExecStoppedException {
-        _status = SymbiontStatus.Locked;
+    public synchronized final void reposition(int count) throws ExecStoppedException {
+        abortRun();
     }
 
-//    /**
-//     * SM symbiont Rnnn or R+nnn or RALL keyin
-//     */
-//    @Override
-//    void reposition(int count) throws ExecStoppedException {
-//        // count must be zero, but we do not enforce that - we just ignore it.
-//        // TODO
-//    }
-
-//    /**
-//     * SM symbiont R keyin
-//     */
-//    @Override
-//    void requeue() throws ExecStoppedException {
-//        // TODO
-//    }
-
-//    /**
-//     * SM symbiont S keyin
-//     */
-//    @Override
-//    void suspend() throws ExecStoppedException {
-//        // TODO
-//    }
-
-//    /**
-//     * SM symbiont T keyin
-//     */
-//    @Override
-//    void terminate() throws ExecStoppedException {
-//        // TODO
-//    }
+    /**
+     * Handles SM * RALL
+     * The effects are identical to reposition().
+     */
+    @Override
+    public synchronized final void repositionAll() throws ExecStoppedException {
+        abortRun();
+    }
 
     /**
-     * Implements state machine for InputSymbiontInfo.
+     * For SM * Q... but it has no applicability for card readers.
+     */
+    @Override
+    public synchronized final void requeue() {
+        // Ignore this... SM keyin should never invoke it
+    }
+
+    /**
+     * For SM * C... but it has no applicability for card readers.
+     */
+    @Override
+    public final void setPageGeometry(final Integer linesPerPage,
+                                      final Integer topMargin,
+                                      final Integer bottomMargin,
+                                      final Integer linesPerInch) {
+        // Ignore this... SM keyin should never invoke it
+    }
+
+    /**
+     * For SM * S
+     */
+    @Override
+    public synchronized final void suspend() {
+        _status = SymbiontStatus.Suspended;
+    }
+
+    /**
+     * For SM * E or SM * T
+     * discards the current run (if any) and also discards the remainder of the card deck
+     * (aka the input file on the reader).
+     * For SM * T, caller should invoke lockDevice() first, then this.
+     */
+    @Override
+    public synchronized void terminateFile() throws ExecStoppedException {
+        var exec = Exec.getInstance();
+
+        abortRun();
+        resetNode();
+
+        if (_status != SymbiontStatus.Inactive) {
+            _status = SymbiontStatus.Inactive;
+            _state = SymbiontState.Stopped;
+            exec.sendExecReadOnlyMessage(getStateString(), ConsoleType.InputOutput);
+        }
+    }
+
+    private void abortRun() throws ExecStoppedException {
+        // abort the run we are currently building, and set skipToRun.
+        var exec = Exec.getInstance();
+        var sch = exec.getScheduleManager();
+
+        // Close the symbiont file we're writing for the job
+        if (_fileWriter != null) {
+            try {
+                _fileWriter.close();
+            } catch (ExecIOException e) {
+                // Don't do anything - there's really nothing we *can* do
+            }
+            _fileWriter = null;
+        }
+
+        // Close out the run and remove it
+        if (_run != null) {
+            sch.unregisterRun(_run.getActualRunId());
+            _run = null;
+        }
+
+        _skipToRunCard = true;
+    }
+
+    // -------------------------------------------------------------------------
+
+    /**
+     * Implements state machine for ReaderSymbiontInfo.
      * Invoked by some higher-level entity (we do not specify what that is, here) on a periodic basis.
      * Our job is to advance the reader state machine in some fashion which makes sense.
      * @return true if we did something useful, false if we are waiting for something.
      */
     @Override
-    boolean poll() throws ExecStoppedException {
+    synchronized boolean poll() throws ExecStoppedException {
         var exec = Exec.getInstance();
 
         switch (_status) {
             case Active -> {
-                // We are currently reading input - continue to do so
+                // We are currently reading input - continue to do so unless we are commanded to abort
                 doRead();
                 return true;
             }
@@ -141,6 +223,7 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                     // If the symbiont device is ready, it means there are images ready to be read.
                     _imageCount = 0;
                     _run = null;
+                    _skipToRunCard = true;
                     _status = SymbiontStatus.Active;
                     _state = SymbiontState.Reading;
                     exec.sendExecReadOnlyMessage(getStateString(), ConsoleType.InputOutput);
@@ -198,7 +281,8 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                                 resetNode();
                             }
                         }
-                        _status = SymbiontStatus.Inactive;
+
+                        _status = _pendingLocked ? SymbiontStatus.Locked : SymbiontStatus.Inactive;
                         _state = SymbiontState.Stopped;
                         exec.sendExecReadOnlyMessage(getStateString(), ConsoleType.InputOutput);
                     }
@@ -236,6 +320,10 @@ class ReaderSymbiontInfo extends SymbiontInfo {
         var exec = Exec.getInstance();
         if (_run == null) {
             if (!image.toUpperCase().startsWith("@RUN")) {
+                if (_skipToRunCard) {
+                    return;
+                }
+
                 var msg = _node.getNodeName() + " Missing or Invalid @RUN card";
                 exec.sendExecReadOnlyMessage(msg, ConsoleType.InputOutput);
                 resetNode();
@@ -244,6 +332,8 @@ class ReaderSymbiontInfo extends SymbiontInfo {
                 exec.sendExecReadOnlyMessage(getStateString(), ConsoleType.InputOutput);
                 return;
             }
+
+            _skipToRunCard = false;
 
             try {
                 var runCardInfo = RunCardInfo.parse(exec, image);
@@ -264,12 +354,20 @@ class ReaderSymbiontInfo extends SymbiontInfo {
             var imPartial = imUpper.split(" ")[0];
             if (imPartial.equals("@FILE")) {
                 // TODO handle this for @FILE
+                //  this is messy - we need to open an output SDF file and copy images from here to there
+                //  until we hit @ENDF, so that is extra things to track, extra things to clean up,
+                //  and one or more extra states to handle... but maybe we should do it anyway?
             }
 
             try {
                 _fileWriter.writeDataImage(image);
                 if (imPartial.equals("@FIN")) {
+                    // Close out symbiont file we're creating, release the run,
+                    // and skip to next @RUN statement in the device input (if there is one).
+                    _fileWriter.close();
+                    _fileWriter = null;
                     _run.clearHoldCondition(BatchRun.HoldCondition.FinStatementHold);
+                    _skipToRunCard = true;
                 }
             } catch (ExecIOException ex) {
                 exec.getScheduleManager().unregisterRun(_run.getActualRunId());
