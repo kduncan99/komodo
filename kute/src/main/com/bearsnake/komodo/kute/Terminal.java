@@ -66,29 +66,37 @@ public class Terminal extends VBox {
     private ByteArrayOutputStream _pendingToHost;
     private boolean _sendCursorPosition;
     private boolean _sendStatus;
-    private Integer _sendFunctionKey;   //  Either this can be non-null, or _sendMessageWait can be true, but not both.
-    private boolean _sendMessageWait;   //  The one would over-ride the other, except kb lock generally prevents that.
+    private Integer _sendFunctionKey;   // Either this can be non-null, or _sendMessageWait can be true, but not both.
+    private boolean _sendMessageWait;   // The one would over-ride the other, except kb lock generally prevents that.
 
-    private static class ScreenRegion {
-        private final Coordinates _startingCoordinate;  // inclusive
-        private final Coordinates _endingCoordinate;    // exclusive
-        private final int         _extent;              // size of region
-        private final boolean     _containsSOE;         // true if the starting coordinate contains an SOE
+    private ControlPage _controlPage;   // non-null when a control page is active
 
-        public ScreenRegion(final Coordinates start,
-                            final Coordinates end,
-                            final int extent,
-                            final boolean containsSOE) {
-            _startingCoordinate = start;
-            _endingCoordinate = end;
-            _extent = extent;
-            _containsSOE = containsSOE;
+    /**
+     * @param _startingCoordinate inclusive
+     * @param _endingCoordinate   exclusive
+     * @param _extent             size of region
+     * @param _containsSOE        true if the starting coordinate contains an SOE
+     */
+    private record ScreenRegion(Coordinates _startingCoordinate,
+                                Coordinates _endingCoordinate,
+                                int _extent,
+                                boolean _containsSOE) {
+
+        Coordinates getStartingCoordinate() {
+            return _startingCoordinate;
         }
 
-        Coordinates getStartingCoordinate() { return _startingCoordinate; }
-        Coordinates getEndingCoordinate() { return _endingCoordinate; }
-        int getExtent() { return _extent; }
-        boolean containsSOE() { return _containsSOE; }
+        Coordinates getEndingCoordinate() {
+            return _endingCoordinate;
+        }
+
+        int getExtent() {
+            return _extent;
+        }
+
+        boolean containsSOE() {
+            return _containsSOE;
+        }
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -176,7 +184,7 @@ public class Terminal extends VBox {
                 if (_template.getReturnKeyIsXMIT()) {
                     kbTransmit();
                 } else {
-                    carriageReturn();
+                    kbCursorReturn();
                 }
             }
             case F1 -> kbSendFunctionKey(1);
@@ -222,6 +230,9 @@ public class Terminal extends VBox {
                 case 0x08 -> { // ctrl-h
                     kbBackSpace();
                 }
+                case 0x14 -> { // ctrl-t
+                    Kute.getInstance().cycleTabs();
+                }
                 case ASCII_HT -> {
                     kbPutCharacter(ASCII_HT);
                     draw(true, true);
@@ -256,6 +267,10 @@ public class Terminal extends VBox {
         }
         if ((columns < 64) || (columns > 256)) {
             throw new ParameterException("Display.reconfigure", "columns", columns);
+        }
+
+        if (_controlPage != null) {
+            // TODO lose the control page
         }
 
         _template.setRows(rows);
@@ -305,10 +320,12 @@ public class Terminal extends VBox {
             throw new InvalidEscapeSequenceException("Invalid emphasis code");
         }
 
-        _ingestEmphasis = new Emphasis(code);
-        _ingestAddEmphasis = true;
-        _ingestRemoveEmphasis = false;
-        _ingestSetEmphasis = false;
+        if (_controlPage == null) {
+            _ingestEmphasis = new Emphasis(code);
+            _ingestAddEmphasis = true;
+            _ingestRemoveEmphasis = false;
+            _ingestSetEmphasis = false;
+        }
     }
 
     private int ingestCoordinate(final StreamBuffer strm) throws CoordinateException {
@@ -353,18 +370,20 @@ public class Terminal extends VBox {
         }
 
         var ch2 = strm.get();
-        if ((ch2 == 0x20) && (_ingestAddEmphasis || _ingestRemoveEmphasis || _ingestSetEmphasis)) {
-            _ingestEmphasis = null;
-            _ingestAddEmphasis = false;
-            _ingestRemoveEmphasis = false;
-            _ingestSetEmphasis = false;
-            return;
-        } else if ((ch2 >= 0x20) && (ch2 <= 0x2F)) {
-            _ingestEmphasis = new Emphasis(ch2);
-            _ingestAddEmphasis = false;
-            _ingestRemoveEmphasis = false;
-            _ingestSetEmphasis = true;
-            return;
+        if (_controlPage == null) {
+            if ((ch2 == 0x20) && (_ingestAddEmphasis || _ingestRemoveEmphasis || _ingestSetEmphasis)) {
+                _ingestEmphasis = null;
+                _ingestAddEmphasis = false;
+                _ingestRemoveEmphasis = false;
+                _ingestSetEmphasis = false;
+                return;
+            } else if ((ch2 >= 0x20) && (ch2 <= 0x2F)) {
+                _ingestEmphasis = new Emphasis(ch2);
+                _ingestAddEmphasis = false;
+                _ingestRemoveEmphasis = false;
+                _ingestSetEmphasis = true;
+                return;
+            }
         }
 
         switch (ch2) {
@@ -372,7 +391,7 @@ public class Terminal extends VBox {
             case ASCII_VT -> ingestCursorPosition(strm);
             case ASCII_DC1 -> transmit(ALL);
             case ASCII_DC2 -> printTransparent();
-            case ASCII_DC4 -> {
+            case ASCII_DC4 -> { // Lock the keyboard
                 _keyboardLocked = true;
                 draw(false, true);
             }
@@ -383,20 +402,26 @@ public class Terminal extends VBox {
             case 'G' -> {} // transfer all fields - not implemented
             case 'H' -> printForm();
             case 'K' -> eraseToEndOfField();
-            case 'L' -> {
+            case 'L' -> { // Unlock the keyboard
                 _keyboardLocked = false;
                 draw(false, true);
             }
             case 'M' -> eraseDisplay();
-            case 'T' -> {
-                _sendCursorPosition = true;
-                _keyboardLocked = true;
-                draw(false, true);
+            case 'T' -> { // Tell the terminal to respond with the cursor position
+                if (_controlPage == null) {
+                    _sendCursorPosition = true;
+                    _keyboardLocked = true;
+                    draw(false, true);
+                }
             }
             case 'X' -> putCharacterHex(strm);
             case 'Y' -> ingestAddEmphasis(strm);
             case 'Z' -> ingestRemoveEmphasis(strm);
-            case '[' -> putCharacter(ASCII_ESC);
+            case '[' -> {
+                if (_controlPage == null) {
+                    putCharacter(ASCII_ESC);
+                }
+            }
             case '{' -> putCharacterDecimal(strm);
             case 'a' -> eraseUnprotectedData();
             case 'b' -> eraseToEndOfLine();
@@ -521,14 +546,18 @@ public class Terminal extends VBox {
             throw new FCCSequenceException(m, n);
         }
 
-        getCharacterCell(_cursorPosition).setAttributes(attr);
+        if (_controlPage == null) {
+            getCharacterCell(_cursorPosition).setAttributes(attr);
+        }
     }
 
     private void ingestFCCWithPosition(final StreamBuffer strm) throws FCCSequenceException, CoordinateException {
         // US row col [ O ... ] M N -- We've already ingested US
         int row = ingestCoordinate(strm);
         int column = ingestCoordinate(strm);
-        setCursorPosition(new Coordinates(row, column));
+        if (_controlPage == null) {
+            setCursorPosition(new Coordinates(row, column));
+        }
         ingestFCC(strm);
     }
 
@@ -587,10 +616,12 @@ public class Terminal extends VBox {
             throw new InvalidEscapeSequenceException("Invalid emphasis code");
         }
 
-        _ingestEmphasis = new Emphasis(code);
-        _ingestAddEmphasis = false;
-        _ingestRemoveEmphasis = true;
-        _ingestSetEmphasis = false;
+        if (_controlPage == null) {
+            _ingestEmphasis = new Emphasis(code);
+            _ingestAddEmphasis = false;
+            _ingestRemoveEmphasis = true;
+            _ingestSetEmphasis = false;
+        }
     }
 
     /**
@@ -1010,25 +1041,28 @@ public class Terminal extends VBox {
         return _characterCells[coordinates.getRow() - 1][coordinates.getColumn() - 1];
     }
 
+    // Returns the controlling attributes for the given coordinates.
+    // If there are none, we return null.
     private FieldAttributes getControllingAttributes(final Coordinates coordinates) {
         var coord = getControllingAttributesCoordinates(coordinates);
-        return (coord == null) ? null : getCharacterCell(coord).getAttributes();
+        return getCharacterCell(coord).getAttributes();
     }
 
     // Returns the coordinates of the cell which contains the field attributes which govern the given coordinates.
     // Generally, this would be the FCC at that cell, or the first previous cell thereto.
-    // If there is no controlling FCC, we return null.
+    // If there is no controlling FCC, we return the home position.
     private Coordinates getControllingAttributesCoordinates(final Coordinates coordinates) {
         var coord = coordinates.copy();
         do {
             var cell = getCharacterCell(coord);
             var attr = cell.getAttributes();
             if (attr != null) {
-                return coord;
+                break;
             }
-        } while (coordinateIsHomePosition(coord));
+            backupCoordinates(coord);
+        } while (!coordinateIsHomePosition(coord));
 
-        return null;
+        return coord;
     }
 
     private boolean isCellProtected(final Coordinates coordinates) {
@@ -1091,6 +1125,10 @@ public class Terminal extends VBox {
     }
 
     private void reset() {
+        if (_controlPage != null) {
+            // TODO lose the control page
+        }
+
         for (int rx = 0; rx < _template.getRows(); rx++) {
             for (int cx = 0; cx < _template.getColumns(); cx++) {
                 _characterCells[rx][cx].setCharacter(ASCII_SP);
@@ -1157,10 +1195,35 @@ public class Terminal extends VBox {
 
     public void kbBackSpace() {
         // TODO some gnarly stuff, isProtected, isProtectedEmphasis, isRightJustified ... etc
+        if ((_keyboardLocked) || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
     }
 
     public void kbClearChanged() {
+        if ((_keyboardLocked) || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         clearChangedBits();
+    }
+
+    public void kbCursorReturn() {
+        if (_keyboardLocked) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
+        if (_controlPage != null) {
+            _controlPage.cursorReturn();
+            return;
+        }
+
+        cursorReturn();
+        // Don't resolve yet - we would like to cycle through protected fields
     }
 
     public void kbDeleteInDisplay() {
@@ -1168,6 +1231,12 @@ public class Terminal extends VBox {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
+
+        if (_controlPage != null) {
+            _controlPage.deleteCharacter();
+            return;
+        }
+
         deleteInDisplay();
     }
 
@@ -1176,26 +1245,52 @@ public class Terminal extends VBox {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
+
+        if (_controlPage != null) {
+            _controlPage.deleteCharacter();
+            return;
+        }
+
         deleteInLine();
     }
 
     public void kbDeleteLine() {
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         deleteLine();
     }
 
     public void kbDuplicateLine() {
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         duplicateLine();
     }
 
+    // Used when the space bar does not erase the character under it
+    // (which we do not support now, but might later).
     public void kbEraseCharacter() {
-        // Used when the space bar does not erase the character under it
-        // (which we do not support now, but might later).
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         kbPutCharacter(ASCII_SP);
     }
 
+    // Erases all data from the cursor to the end of the screen - protected or unprotected
+    // (including FCCs) - NOT the same as host-initiated function.
     public void kbEraseDisplay() {
-        // Erases all data from the cursor to the end of the screen - protected or unprotected
-        // (including FCCs) - NOT the same as host-initiated function.
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         var coord = _cursorPosition.copy();
         do {
             var cell = getCharacterCell(coord);
@@ -1207,10 +1302,20 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
+    // Erases unprotected data from the cursor to the end of the screen,
+    // setting (unprotected) changed field bits to false.
+    // There is no host-initiated analog for this function.
     public void kbEraseToEndOfDisplay() {
-        // Erases unprotected data from the cursor to the end of the screen,
-        // setting (unprotected) changed field bits to false.
-        // There is no host-initiated analog for this function.
+        if (_keyboardLocked) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
+        if (_controlPage != null) {
+            _controlPage.eraseToEndOfField();
+            return;
+        }
+
         var coord = _cursorPosition.copy();
         do {
             var cell = getCharacterCell(coord);
@@ -1232,10 +1337,20 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
+    // Erases unprotected data from the cursor to the end of the field (or display),
+    // setting (unprotected) changed field bits to false.
+    // NOT the same as host-initiated function.
     public void kbEraseToEndOfField() {
-        // Erases unprotected data from the cursor to the end of the field (or display),
-        // setting (unprotected) changed field bits to false.
-        // NOT the same as host-initiated function.
+        if (_keyboardLocked) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
+        if (_controlPage != null) {
+            _controlPage.eraseToEndOfField();
+            return;
+        }
+
         var coord =  _cursorPosition.copy();
         var cell = getCharacterCell(coord);
         var attr = getControllingAttributes(coord);
@@ -1262,10 +1377,20 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
+    // Erases unprotected data from the cursor to the end of the field (or line),
+    // setting (unprotected) changed field bits to false.
+    // NOT the same as host-initiated function.
     public void kbEraseToEndOfLine() {
-        // Erases unprotected data from the cursor to the end of the field (or line),
-        // setting (unprotected) changed field bits to false.
-        // NOT the same as host-initiated function.
+        if (_keyboardLocked) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
+        if (_controlPage != null) {
+            _controlPage.eraseToEndOfField();
+            return;
+        }
+
         var coord =  _cursorPosition.copy();
         var cell = getCharacterCell(coord);
         var attr = getControllingAttributes(coord);
@@ -1293,6 +1418,11 @@ public class Terminal extends VBox {
     }
 
     public void kbFCCClear() {
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         var coord = _cursorPosition.copy();
         var cell = getCharacterCell(coord);
         var attr = cell.getAttributes();
@@ -1315,6 +1445,11 @@ public class Terminal extends VBox {
      * behavior for the affected fields.
      */
     public void kbFCCEnable() {
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         for (int rx = 0; rx < _template.getRows(); rx++) {
             for (int cx = 0; cx < _template.getColumns(); cx++) {
                 var attr = _characterCells[rx][cx].getAttributes();
@@ -1329,6 +1464,11 @@ public class Terminal extends VBox {
      * Pulls up the FCC Generate dialog
      */
     public void kbFCCGenerate() {
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         var caption = String.format("Create FCC at Row=%d Col=%d",
                                     _cursorPosition.getRow(),
                                     _cursorPosition.getColumn());
@@ -1349,6 +1489,11 @@ public class Terminal extends VBox {
      * behavior for the affected fields.
      */
     public void kbFCCLocate() {
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         do {
             advanceCoordinates(_cursorPosition);
             var attr = getCharacterCell(_cursorPosition).getAttributes();
@@ -1375,6 +1520,11 @@ public class Terminal extends VBox {
             return;
         }
 
+        if (_controlPage != null) {
+            _controlPage.cursorToHome();
+            return;
+        }
+
         cursorToHome();
         resolveProtectedCell();
     }
@@ -1384,6 +1534,12 @@ public class Terminal extends VBox {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
+
+        if (_controlPage != null) {
+            _controlPage.insertCharacter();
+            return;
+        }
+
         insertInDisplay();
     }
 
@@ -1392,10 +1548,21 @@ public class Terminal extends VBox {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
+
+        if (_controlPage != null) {
+            _controlPage.insertCharacter();
+            return;
+        }
+
         insertInLine();
     }
 
     public void kbInsertLine() {
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         insertLine();
     }
 
@@ -1403,6 +1570,11 @@ public class Terminal extends VBox {
      * MessageWait key was pressed
      */
     public void kbMessageWait() {
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         _sendMessageWait = true;
         _sendFunctionKey = null;
         draw(false, true);
@@ -1412,6 +1584,11 @@ public class Terminal extends VBox {
      * Activates the print function, according to the current print mode
      */
     public void kbPrint() {
+        if (_keyboardLocked || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         switch (_printMode) {
             case ALL -> printAll();
             case FORM -> printForm();
@@ -1420,39 +1597,89 @@ public class Terminal extends VBox {
     }
 
     /**
-     * Places a character on the display at the cursor location, advancing the cursor to the
-     * next unprotected location. To be used for all keyboard-initiated character placement.
+     * If the area under the cursor is not protected, place the character on-screen
+     * at the cursor, and advance the cursor to the next unprotected location.
+     * We clear any special emphasis IFF the cell we are in is not emphasis-protected.
      */
     public void kbPutCharacter(final byte ch) {
-        // If the area under the cursor is not protected, place the character on-screen
-        // at the cursor, and advance the cursor to the next unprotected location.
-        // We clear any special emphasis IFF the cell we are in is not emphasis-protected.
-
         if (_keyboardLocked) {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
 
+        if (_controlPage != null) {
+            _controlPage.putCharacter(ch);
+            return;
+        }
+
+        var ctlCoord = getControllingAttributesCoordinates(_cursorPosition);
+        var attr = getCharacterCell(ctlCoord).getAttributes();
+        var isProtectedEmphasis = false;
+        var isRightJustified = false;
+        if (attr != null) {
+            if (attr.isProtected()
+                || (attr.isNumericOnly() && !Character.isDigit(ch))
+                || (attr.isAlphabeticOnly() && !Character.isLetter(ch))) {
+                Toolkit.getDefaultToolkit().beep();
+                return;
+            }
+            isProtectedEmphasis = attr.isProtectedEmphasis();
+            isRightJustified = attr.isRightJustified();
+        }
+
         // Are we in the first column of a right-justified field?
         var cell = getCharacterCell(_cursorPosition);
-        var attr = cell.getAttributes();
-        if ((attr != null) && attr.isRightJustified()) {
-            // TODO right-justified field insert
-        } else {
-            attr = getControllingAttributes(_cursorPosition);
-            var isProtectedEmphasis = false;
-
-            if (attr != null) {
-                if (attr.isProtected()
-                    || (attr.isNumericOnly() && !Character.isDigit(ch))
-                    || (attr.isAlphabeticOnly() && !Character.isLetter(ch))) {
-                    Toolkit.getDefaultToolkit().beep();
-                    return;
-                }
-                isProtectedEmphasis = attr.isProtectedEmphasis();
+        if (isRightJustified && (cell.getAttributes() != null)) {
+            // find coordinate of right-most character in the field or the line (whichever is first)
+            var endCoord = _cursorPosition.copy();
+            if (!coordinateIsEndOfLine(endCoord)) {
+                do {
+                    advanceCoordinates(endCoord);
+                    var cell2 = getCharacterCell(endCoord);
+                    if (cell2.getAttributes() != null) {
+                        backupCoordinates(endCoord);
+                        break;
+                    }
+                } while (!coordinateIsEndOfLine(endCoord));
             }
 
-            cell = getCharacterCell(_cursorPosition);
+            var coord = _cursorPosition.copy();
+            var nextCoord = coord;
+            advanceCoordinates(nextCoord);
+            while (!coord.equals(endCoord)) {
+                var leftCell = getCharacterCell(coord);
+                var rightCell = getCharacterCell(nextCoord);
+                leftCell.setCharacter(rightCell.getCharacter());
+                if (!isProtectedEmphasis) {
+                    leftCell.getEmphasis().set(rightCell.getEmphasis());
+                }
+            }
+
+            var endCell = getCharacterCell(endCoord);
+            endCell.setCharacter(ch);
+            if (!isProtectedEmphasis) {
+                endCell.getEmphasis().clear();
+            }
+
+            // If the field is full, move cursor to first character after the field.
+            // We will resolve unprotected-ness a bit later in this function.
+            if (cell.getCharacter() != ASCII_SP) {
+                do {
+                    advanceCoordinates(_cursorPosition);
+                    var cell2 = getCharacterCell(_cursorPosition);
+                    if (cell2.getAttributes() != null) {
+                        break;
+                    }
+                } while (!coordinateIsEndOfLine(_cursorPosition));
+            }
+        } else {
+            // Are we in a right-justified field AND on a row below the start of the field?
+            // If so, we cannot allow the user to enter anything here...
+            if (isRightJustified && (_cursorPosition.getRow() > ctlCoord.getRow())) {
+                Toolkit.getDefaultToolkit().beep();
+                return;
+            }
+
             cell.setCharacter(ch);
             if (!isProtectedEmphasis) {
                 cell.getEmphasis().clear();
@@ -1470,8 +1697,13 @@ public class Terminal extends VBox {
             return;
         }
 
+        if (_controlPage != null) {
+            _controlPage.scanDown();
+            return;
+        }
+
         scanDown();
-        resolveProtectedCell();
+        // Don't resolve yet - we would like to cycle through protected fields
     }
 
     public void kbScanLeft() {
@@ -1480,8 +1712,13 @@ public class Terminal extends VBox {
             return;
         }
 
+        if (_controlPage != null) {
+            _controlPage.scanLeft();
+            return;
+        }
+
         scanLeft();
-        resolveProtectedCell();
+        // Don't resolve yet - we would like to cycle through protected fields
     }
 
     public void kbScanRight() {
@@ -1490,8 +1727,13 @@ public class Terminal extends VBox {
             return;
         }
 
+        if (_controlPage != null) {
+            _controlPage.scanRight();
+            return;
+        }
+
         scanRight();
-        resolveProtectedCell();
+        // Don't resolve yet - we would like to cycle through protected fields
     }
 
     public void kbScanUp() {
@@ -1500,11 +1742,21 @@ public class Terminal extends VBox {
             return;
         }
 
+        if (_controlPage != null) {
+            _controlPage.scanUp();
+            return;
+        }
+
         scanUp();
-        resolveProtectedCell();
+        // Don't resolve yet - we would like to cycle through protected fields
     }
 
     public void kbSendFunctionKey(final int fKey) {
+        if ((_keyboardLocked) || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         if ((fKey >= 1) && (fKey <= 22)) {
             _sendMessageWait = false;
             _sendFunctionKey = fKey;
@@ -1514,7 +1766,7 @@ public class Terminal extends VBox {
     }
 
     public void kbSetTab() {
-        if (_keyboardLocked) {
+        if ((_keyboardLocked) || (_controlPage != null)) {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
@@ -1524,7 +1776,7 @@ public class Terminal extends VBox {
     }
 
     public void kbSOE() {
-        if (_keyboardLocked) {
+        if ((_keyboardLocked) || (_controlPage != null)) {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
@@ -1538,6 +1790,12 @@ public class Terminal extends VBox {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
+
+        if (_controlPage != null) {
+            _controlPage.tabBackward();
+            return;
+        }
+
         tabForward();
     }
 
@@ -1546,10 +1804,21 @@ public class Terminal extends VBox {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
+
+        if (_controlPage != null) {
+            _controlPage.tabForward();
+            return;
+        }
+
         tabBackward();
     }
 
     public void kbToggleColumnSeparator() {
+        if ((_keyboardLocked) || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         var attr = getControllingAttributes(_cursorPosition);
         if ((attr == null) || !attr.isProtectedEmphasis()) {
             var emph = getCharacterCell(_cursorPosition).getEmphasis();
@@ -1564,6 +1833,11 @@ public class Terminal extends VBox {
     }
 
     public void kbToggleStrikeThrough() {
+        if ((_keyboardLocked) || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         var attr = getControllingAttributes(_cursorPosition);
         if ((attr == null) || !attr.isProtectedEmphasis()) {
             var emph = getCharacterCell(_cursorPosition).getEmphasis();
@@ -1574,6 +1848,11 @@ public class Terminal extends VBox {
     }
 
     public void kbToggleUnderScore() {
+        if ((_keyboardLocked) || (_controlPage != null)) {
+            Toolkit.getDefaultToolkit().beep();
+            return;
+        }
+
         var attr = getControllingAttributes(_cursorPosition);
         if ((attr == null) || !attr.isProtectedEmphasis()) {
             var emph = getCharacterCell(_cursorPosition).getEmphasis();
@@ -1585,18 +1864,20 @@ public class Terminal extends VBox {
 
     public void kbTransfer() {
         // Not currently implemented
+        Toolkit.getDefaultToolkit().beep();
     }
 
+    // This is invoked either by the Return host keyboard being pressed AND kbReturnIsXmit being true,
+    // OR the transmit control button being pressed.
+    // If the keyboard is locked or there is already pending output we cannot send anything.
+    // Otherwise, queue a UTS stream to be sent on the next poll, and lock the keyboard.
     public void kbTransmit() {
-        // This is invoked either by the Return host keyboard being pressed AND kbReturnIsXmit being true,
-        // OR the transmit control button being pressed.
-        // If the keyboard is locked or there is already pending output we cannot send anything.
-        // Otherwise, queue a UTS stream to be sent on the next poll, and lock the keyboard.
-        if (_keyboardLocked) {
+        if ((_keyboardLocked) || (_controlPage != null)) {
             Toolkit.getDefaultToolkit().beep();
-        } else {
-            transmit(_transmitMode);
+            return;
         }
+
+        transmit(_transmitMode);
     }
 
     public void kbUnlock() {
@@ -1610,17 +1891,13 @@ public class Terminal extends VBox {
     // Anything keyboard-specific should use separate but similar functionality (see above).
     // ---------------------------------------------------------------------------------------------
 
-    private void carriageReturn() {
-        _cursorPosition.setColumn(1);
-        _cursorPosition.setRow(_cursorPosition.getRow() + 1);
-        if (_cursorPosition.getRow() > _template.getRows()) {
-            _cursorPosition.setRow(1);
-        }
-    }
-
+    // Oddly-named, but no easy other name fits either.
+    // Clears changed status of all FCCs on the display
     private void clearChangedBits() {
-        // Oddly-named, but no easy other name fits either.
-        // Clears changed status of all FCCs on the display
+        if (_controlPage != null) {
+            return;
+        }
+
         for (int rx = 0; rx < _template.getRows(); rx++) {
             for (int cx = 0; cx < _template.getColumns(); cx++) {
                 var attr = _characterCells[rx][cx].getAttributes();
@@ -1631,21 +1908,23 @@ public class Terminal extends VBox {
         }
     }
 
+    // Erases the FCC controlling the cursor position, if any
     private void clearFCC() {
-        // Erases the FCC controlling the cursor position, if any
-        var coord = getControllingAttributesCoordinates(_cursorPosition);
-        if (coord != null) {
-            getCharacterCell(coord).setAttributes(null);
-            draw(true, true);
+        if (_controlPage != null) {
+            return;
         }
-    }
 
-    private void cursorToHome() {
-        _cursorPosition = Coordinates.HOME_POSITION.copy();
+        var coord = getControllingAttributesCoordinates(_cursorPosition);
+        getCharacterCell(coord).setAttributes(null);
         draw(true, true);
     }
 
     private void cursorReturn() {
+        if (_controlPage != null) {
+            _controlPage.cursorReturn();
+            return;
+        }
+
         _cursorPosition.setColumn(1);
         _cursorPosition.setRow(_cursorPosition.getRow() + 1);
         if (_cursorPosition.getRow() > _template.getRows()) {
@@ -1654,9 +1933,24 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
+    private void cursorToHome() {
+        if (_controlPage != null) {
+            _controlPage.cursorToHome();
+            return;
+        }
+
+        _cursorPosition = Coordinates.HOME_POSITION.copy();
+        draw(true, true);
+    }
+
+    // If the cursor is not protected, delete the character under the cursor
+    // and shift subsequent characters left, up to the end of the field or the end of the display.
     private void deleteInDisplay() {
-        // If the cursor is not protected, delete the character under the cursor
-        // and shift subsequent characters left, up to the end of the field or the end of the display.
+        if (_controlPage != null) {
+            _controlPage.deleteCharacter();
+            return;
+        }
+
         var ctlAttr = getControllingAttributes(_cursorPosition);
         boolean isProtected = false;
         boolean isProtectedEmphasis = false;
@@ -1692,9 +1986,14 @@ public class Terminal extends VBox {
         }
     }
 
+    // If the cursor is not protected, delete the character under the cursor
+    // and shift subsequent characters left, up to the end of the field or the end of the line.
     private void deleteInLine() {
-        // If the cursor is not protected, delete the character under the cursor
-        // and shift subsequent characters left, up to the end of the field or the end of the line.
+        if (_controlPage != null) {
+            _controlPage.deleteCharacter();
+            return;
+        }
+
         var ctlAttr = getControllingAttributes(_cursorPosition);
         boolean isProtected = false;
         boolean isProtectedEmphasis = false;
@@ -1730,9 +2029,13 @@ public class Terminal extends VBox {
         }
     }
 
+    // Deletes the line under the cursor, shifting all subsequent lines (if any) up by one row.
+    // The bottom row is initialized with blanks and no FCCs
     private void deleteLine() {
-        // Deletes the line under the cursor, shifting all subsequent lines (if any) up by one row.
-        // The bottom row is initialized with blanks and no FCCs
+        if (_controlPage != null) {
+            return;
+        }
+
         for (int rx = _cursorPosition.getRow() - 1; rx < _template.getRows() - 1; rx++) {
             _characterCells[rx] = _characterCells[rx + 1];
         }
@@ -1742,10 +2045,14 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
+    // Duplicates the line containing the cursor to the line below,
+    // then moves the cursor to that line.
+    // Ineffective if the cursor is already on the last line.
     private void duplicateLine() {
-        // Duplicates the line containing the cursor to the line below,
-        // then moves the cursor to that line.
-        // Ineffective if the cursor is already on the last line.
+        if (_controlPage != null) {
+            return;
+        }
+
         if (_cursorPosition.getRow() < _template.getRows()) {
             for (int cx = 0; cx < _template.getColumns(); cx++) {
                 _characterCells[_cursorPosition.getRow()][cx] = _characterCells[_cursorPosition.getRow() - 1][cx].copy();
@@ -1755,8 +2062,13 @@ public class Terminal extends VBox {
         }
     }
 
+    // Erases all characters and FCCs from the cursor to the end of the display
     private void eraseDisplay() {
-        // Erases all characters and FCCs from the cursor to the end of the display
+        if (_controlPage != null) {
+            _controlPage.eraseToEndOfField();
+            return;
+        }
+
         var coord = _cursorPosition.copy();
         while (!coord.equals(Coordinates.HOME_POSITION)) {
             _characterCells[coord.getRow() - 1][coord.getColumn() - 1] = new CharacterCell();
@@ -1764,9 +2076,14 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
+    // Only allowed if the cursor is not in a protected field...
+    // Erases all characters to the end of the field, or to the end of the display
     private void eraseToEndOfField() {
-        // Only allowed if the cursor is not in a protected field...
-        // Erases all characters to the end of the field, or to the end of the display
+        if (_controlPage != null) {
+            _controlPage.eraseToEndOfField();
+            return;
+        }
+
         var attr = getControllingAttributes(_cursorPosition);
         if ((attr == null) || !attr.isProtected()) {
             var coord = _cursorPosition.copy();
@@ -1786,9 +2103,14 @@ public class Terminal extends VBox {
         }
     }
 
+    // Only allowed if the cursor is not in a protected field...
+    // Erases all characters to the end of the field, or to the end of the line
     private void eraseToEndOfLine() {
-        // Only allowed if the cursor is not in a protected field...
-        // Erases all characters to the end of the field, or to the end of the line
+        if (_controlPage != null) {
+            _controlPage.eraseToEndOfField();
+            return;
+        }
+
         var attr = getControllingAttributes(_cursorPosition);
         if ((attr == null) || !attr.isProtected()) {
             var coord = _cursorPosition.copy();
@@ -1808,15 +2130,23 @@ public class Terminal extends VBox {
         }
     }
 
+    // Erases all unprotected data (not including FCCs) from the cursor to the end of the display
     private void eraseUnprotectedData() {
-        // Erases all unprotected data (not including FCCs) from the cursor to the end of the display
+        if (_controlPage != null) {
+            _controlPage.eraseUnprotectedData();
+            return;
+        }
+
         var coord = _cursorPosition.copy();
         do {
-            if (!isCellProtected(coord)) {
+            var attr = getControllingAttributes(coord);
+            if ((attr == null) || !attr.isProtected()) {
                 int rx = coord.getRow() - 1;
                 int cx = coord.getColumn() - 1;
                 _characterCells[rx][cx].setCharacter(ASCII_SP);
-                // TODO need to maybe erase emphasis
+                if ((attr == null) || !attr.isProtectedEmphasis()) {
+                    _characterCells[rx][cx].getEmphasis().clear();
+                }
             }
             advanceCoordinates(coord);
         } while (!coord.equals(Coordinates.HOME_POSITION));
@@ -1824,12 +2154,17 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
+    // If the cursor is not in a protected field, the characters from the cursor to the end of the field
+    // or the end of the display, are shifted right and a blank is placed under the cursor.
+    // The last character in the field or display is lost.
+    // If we are in an emphasis-protected field, the emphasis characters are not affected.
+    // FCCs are not affected, and the cursor does not move.
     private void insertInDisplay() {
-        // If the cursor is not in a protected field, the characters from the cursor to the end of the field
-        // or the end of the display, are shifted right and a blank is placed under the cursor.
-        // The last character in the field or display is lost.
-        // If we are in an emphasis-protected field, the emphasis characters are not affected.
-        // FCCs are not affected, and the cursor does not move.
+        if (_controlPage != null) {
+            _controlPage.insertCharacter();
+            return;
+        }
+
         var cursorCell = getCharacterCell(_cursorPosition);
         var cursorAttr = cursorCell.getAttributes();
         var isProtected = (cursorAttr != null) && cursorAttr.isProtected();
@@ -1872,12 +2207,17 @@ public class Terminal extends VBox {
         }
     }
 
+    // If the cursor is not in a protected field, the characters from the cursor to the end of the field
+    // or the end of the line, are shifted right and a blank is placed under the cursor.
+    // The last character in the field or line is lost.
+    // If we are in an emphasis-protected field, the emphasis characters are not affected.
+    // FCCs are not affected, and the cursor does not move.
     private void insertInLine() {
-        // If the cursor is not in a protected field, the characters from the cursor to the end of the field
-        // or the end of the line, are shifted right and a blank is placed under the cursor.
-        // The last character in the field or line is lost.
-        // If we are in an emphasis-protected field, the emphasis characters are not affected.
-        // FCCs are not affected, and the cursor does not move.
+        if (_controlPage != null) {
+            _controlPage.insertCharacter();
+            return;
+        }
+
         var cursorCell = getCharacterCell(_cursorPosition);
         var cursorAttr = cursorCell.getAttributes();
         var isProtected = (cursorAttr != null) && cursorAttr.isProtected();
@@ -1920,11 +2260,14 @@ public class Terminal extends VBox {
         }
     }
 
-    private void insertLine()
-    {
-        // Shifts all the lines starting at the cursor down by one line,
-        // with the last line on the display simply being dropped.
-        // The line under the cursor is then overwritten with blanks.
+    // Shifts all the lines starting at the cursor down by one line,
+    // with the last line on the display simply being dropped.
+    // The line under the cursor is then overwritten with blanks.
+    private void insertLine() {
+        if (_controlPage != null) {
+            return;
+        }
+
         var row = _template.getRows();
         while (row > _cursorPosition.getRow()) {
             _characterCells[row] = _characterCells[row - 1];
@@ -1935,18 +2278,35 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
+    // Print content of the screen from the SOE (non-inclusive) or the home position, to the cursor.
+    // Trailing blanks are removed from the ends of rows, and each row is terminated by a CR
+    // excepting the row with the cursor.
     private void printAll() {
+        if (_controlPage != null) {
+            return;
+        }
         print(true);
     }
 
+    // Print content of the screen from the SOE (non-inclusive) or the home position, to the cursor.
+    // Protected content is replaced by blanks.
+    // Trailing blanks are removed from the ends of rows, and each row is terminated by a CR
+    // excepting the row with the cursor.
     private void printForm() {
+        if (_controlPage != null) {
+            return;
+        }
         print(false);
     }
 
+    // Print everything from the SOE most-previous to the cursor (non-inclusive)
+    // up to the cursor (inclusive) - do not translate anything, do not send CRs at the end
+    // of display lines. Ignore FCCs.
     private void printTransparent() {
-        // Print everything from the SOE most-previous to the cursor (non-inclusive)
-        // up to the cursor (inclusive) - do not translate anything, do not send CRs at the end
-        // of display lines. Ignore FCCs.
+        if (_controlPage != null) {
+            return;
+        }
+
         var region = determinePrintRegion();
         var coord = region.getStartingCoordinate();
         var strm = new ByteArrayOutputStream(2048);
@@ -1958,10 +2318,15 @@ public class Terminal extends VBox {
         sendToPrinter(strm.toByteArray(), strm.size());
     }
 
+    // For character placement initiated by the host.
+    // We place the character (excepting in the case of SUB, which merely moves the cursor),
+    // and apply the current emphasis setting if the target cell is not emphasis-protected.
     private void putCharacter(final byte ch) {
-        // For character placement initiated by the host.
-        // We place the character (excepting in the case of SUB, which merely moves the cursor),
-        // and apply the current emphasis setting if the target cell is not emphasis-protected.
+        if (_controlPage != null) {
+            _controlPage.putCharacter(ch);
+            return;
+        }
+
         var cell = getCharacterCell(_cursorPosition);
         if (ch != ASCII_SUB) {
             cell.setCharacter(ch);
@@ -1982,17 +2347,46 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
-    private void putCharacterDecimal(final StreamBuffer strm) {
-        // As above, but we have to get the character from the stream as decimal digits
-        // representing a value from 0 to 127 inclusive, followed by a '}' character
-        // TODO
+    // As above, but we have to get the character from the stream as decimal digits
+    // representing a value from 0 to 127 inclusive, followed by a '}' character
+    private void putCharacterDecimal(final StreamBuffer strm)
+        throws IncompleteEscapeSequenceException,
+               InvalidEscapeSequenceException {
+        if (_controlPage != null) {
+            return;
+        }
+
+        while (!strm.atEnd()) {
+            var ch = strm.get();
+            var value = 0;
+            while (ch != '}') {
+                if (!Character.isDigit(ch)) {
+                    throw new InvalidEscapeSequenceException();
+                }
+                value = value * 10 + (ch - '0');
+                ch = strm.get();
+            }
+
+            if (value > 127) {
+                throw new InvalidEscapeSequenceException();
+            }
+
+            putCharacter((byte)value);
+            draw(true, true);
+            return;
+        }
+        throw new IncompleteEscapeSequenceException();
     }
 
+    // As above, but we have to get the character from the stream as exactly two hex digits
+    // representing a value from 0 to 255 inclusive.
     private void putCharacterHex(final StreamBuffer strm)
         throws IncompleteEscapeSequenceException,
                InvalidEscapeSequenceException {
-        // As above, but we have to get the character from the stream as exactly two hex digits
-        // representing a value from 0 to 255 inclusive.
+        if (_controlPage != null) {
+            return;
+        }
+
         if (strm.atEnd()) {
             throw new IncompleteEscapeSequenceException();
         }
@@ -2022,11 +2416,15 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
+    // For character placement initiated by the host, when the character is presented as SUB.
+    // This acts like putCharacter(), except that it moves past the current character without
+    // overwriting the character (but still does emphasis stuff).
     private void putSubCharacter() {
-        // TODO need a different implementation if we are in the first column of a right-justified field
-        // For character placement initiated by the host, when the character is presented as SUB.
-        // This acts like putCharacter(), except that it moves past the current character without
-        // overwriting the character (but still does emphasis stuff).
+        if (_controlPage != null) {
+            _controlPage.putSubCharacter();
+            return;
+        }
+
         var cell = getCharacterCell(_cursorPosition);
         var attr = cell.getAttributes();
         if ((attr == null) || !attr.isProtectedEmphasis()) {
@@ -2044,6 +2442,11 @@ public class Terminal extends VBox {
     }
 
     private void scanDown() {
+        if (_controlPage != null) {
+            _controlPage.scanDown();
+            return;
+        }
+
         _cursorPosition.setRow(_cursorPosition.getRow() + 1);
         if (_cursorPosition.getRow() > _template.getRows()) {
             _cursorPosition.setRow(1);
@@ -2052,6 +2455,11 @@ public class Terminal extends VBox {
     }
 
     private void scanLeft() {
+        if (_controlPage != null) {
+            _controlPage.scanLeft();
+            return;
+        }
+
         _cursorPosition.setColumn(_cursorPosition.getColumn() - 1);
         if (_cursorPosition.getColumn() == 0) {
             _cursorPosition.setColumn(_template.getColumns());
@@ -2064,6 +2472,11 @@ public class Terminal extends VBox {
     }
 
     private void scanRight() {
+        if (_controlPage != null) {
+            _controlPage.scanRight();
+            return;
+        }
+
         _cursorPosition.setColumn(_cursorPosition.getColumn() + 1);
         if (_cursorPosition.getColumn() > _template.getColumns()) {
             _cursorPosition.setColumn(1);
@@ -2076,6 +2489,11 @@ public class Terminal extends VBox {
     }
 
     private void scanUp() {
+        if (_controlPage != null) {
+            _controlPage.scanUp();
+            return;
+        }
+
         _cursorPosition.setRow(_cursorPosition.getRow() - 1);
         if (_cursorPosition.getRow() == 0) {
             _cursorPosition.setRow(_template.getRows());
@@ -2084,27 +2502,47 @@ public class Terminal extends VBox {
     }
 
     private void setCursorPosition(final Coordinates coordinates) {
+        if (_controlPage != null) {
+            return;
+        }
+
         _cursorPosition.setRow(Math.min(coordinates.getRow(), _template.getRows()));
         _cursorPosition.setColumn(Math.min(coordinates.getColumn(), _template.getColumns()));
         draw(true, true);
     }
 
     private void tabBackward() {
+        if (_controlPage != null) {
+            _controlPage.tabBackward();
+            return;
+        }
+
         // TODO
     }
 
     private void tabForward() {
+        if (_controlPage != null) {
+            _controlPage.tabForward();
+            return;
+        }
+
         // TODO
     }
 
     private void toggleControlPage() {
-        // TODO
+        if (_controlPage != null) {
+            // TODO
+        } else {
+            // TODO
+        }
     }
 
     // ---------------------------------------------------------------------------------------------
     // Methods which handle drawing on the display
     // ---------------------------------------------------------------------------------------------
 
+    // Common draw() method to be invoked by all other code which is NOT in the graphics thread.
+    // We schedule a thread to do the actual drawing.
     private void draw(final boolean drawDisplay, final boolean drawStatus) {
         if (drawDisplay) {
             Platform.runLater(this::drawDisplay);
@@ -2114,10 +2552,9 @@ public class Terminal extends VBox {
         }
     }
 
+    // set current display attributes governing the appearance of characters,
+    // and then update them as we progress.
     private void drawDisplay() {
-        // set current display attributes governing the appearance of characters,
-        // and then update them as we progress.
-
         var gcDisplay = _displayPane.getGraphicsContext2D();
         UTSColor utsBgColor = _template.getBackgroundColor();
         UTSColor utsTextColor = _template.getTextColor();
@@ -2194,8 +2631,8 @@ public class Terminal extends VBox {
         }
     }
 
+    // Display the status line - ROW=XXX COL=XXX     ERR  CONN WAIT MSGW POLL
     private void drawStatus() {
-        // Display the status line - ROW=XXX COL=XXX     ERR  CONN WAIT MSGW POLL
         var gcDisplay = _displayPane.getGraphicsContext2D();
         var gcStatus = _statusPane.getGraphicsContext2D();
 

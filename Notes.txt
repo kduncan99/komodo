@@ -1,6 +1,10 @@
 --------------------
 TODO InProgress
 
+Kute
+    Need to do the control page
+    Need to load and save templates
+
 ReaderSymbiontInfo
     @FILE and @ENDF handling (do we really need or want this?)
 PunchSymbiontInfo
@@ -40,6 +44,8 @@ TODO BUGS
 
 --------------------
 TODO To be implemented
+
+Kons (A GUI console)
 
 RSI remote devices
     printers using LP protocol

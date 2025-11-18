@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2025 by Kurt Duncan - All Rights Reserved
+ */
+
 package com.bearsnake.komodo.kute;
 
 import static com.bearsnake.komodo.kute.TransmitMode.ALL;

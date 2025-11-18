@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kute;
 
 import com.bearsnake.komodo.kute.exceptions.KuteException;
+import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
@@ -30,6 +31,15 @@ public class TerminalStack extends TabPane {
             }
         }
         getTabs().clear();
+    }
+
+    public void cycleTabs() {
+        SingleSelectionModel<Tab> selectionModel = getSelectionModel();
+        int ix = selectionModel.getSelectedIndex() + 1;
+        if (ix >= getTabs().size()) {
+            ix = 0;
+        }
+        selectionModel.select(ix);
     }
 
     public Terminal getActiveTerminal() {

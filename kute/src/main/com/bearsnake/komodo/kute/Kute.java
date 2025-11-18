@@ -69,6 +69,10 @@ public class Kute extends Application {
         _instance = this;
     }
 
+    public void cycleTabs() {
+        _terminalStack.cycleTabs();
+    }
+
     public static Kute getInstance() {
         return _instance;
     }
