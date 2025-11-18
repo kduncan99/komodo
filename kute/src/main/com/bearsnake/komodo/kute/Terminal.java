@@ -9,7 +9,6 @@ import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -69,6 +68,28 @@ public class Terminal extends VBox {
     private boolean _sendStatus;
     private Integer _sendFunctionKey;   //  Either this can be non-null, or _sendMessageWait can be true, but not both.
     private boolean _sendMessageWait;   //  The one would over-ride the other, except kb lock generally prevents that.
+
+    private static class ScreenRegion {
+        private final Coordinates _startingCoordinate;  // inclusive
+        private final Coordinates _endingCoordinate;    // exclusive
+        private final int         _extent;              // size of region
+        private final boolean     _containsSOE;         // true if the starting coordinate contains an SOE
+
+        public ScreenRegion(final Coordinates start,
+                            final Coordinates end,
+                            final int extent,
+                            final boolean containsSOE) {
+            _startingCoordinate = start;
+            _endingCoordinate = end;
+            _extent = extent;
+            _containsSOE = containsSOE;
+        }
+
+        Coordinates getStartingCoordinate() { return _startingCoordinate; }
+        Coordinates getEndingCoordinate() { return _endingCoordinate; }
+        int getExtent() { return _extent; }
+        boolean containsSOE() { return _containsSOE; }
+    }
 
     // ---------------------------------------------------------------------------------------------
     // Basic API for other classes to invoke
@@ -271,7 +292,9 @@ public class Terminal extends VBox {
     // Methods which handle input from the host
     // ---------------------------------------------------------------------------------------------
 
-    private void ingestAddEmphasis(final StreamBuffer strm) throws EscapeSequenceException {
+    private void ingestAddEmphasis(final StreamBuffer strm)
+        throws InvalidEscapeSequenceException,
+               IncompleteEscapeSequenceException {
         // ESC Y code - we've already ingested ESC and Y
         if (strm.atEnd()) {
             throw new IncompleteEscapeSequenceException();
@@ -279,7 +302,7 @@ public class Terminal extends VBox {
 
         var code = strm.get();
         if ((code < 0x20) || (code > 0x2F)) {
-            throw new EscapeSequenceException("Invalid emphasis code");
+            throw new InvalidEscapeSequenceException("Invalid emphasis code");
         }
 
         _ingestEmphasis = new Emphasis(code);
@@ -307,23 +330,26 @@ public class Terminal extends VBox {
         throw new CoordinateException("Invalid coordinate");
     }
 
-    private void ingestCursorPosition(final StreamBuffer strm) throws CoordinateException, EscapeSequenceException {
+    private void ingestCursorPosition(final StreamBuffer strm) throws CoordinateException, InvalidEscapeSequenceException {
         // ESC VT row column SI - we've already parsed ESC and VT
         var row = ingestCoordinate(strm);
         var column = ingestCoordinate(strm);
         if (strm.atEnd()) {
-            throw new EscapeSequenceException("Incomplete ESC VT sequence");
+            throw new InvalidEscapeSequenceException("Incomplete ESC VT sequence");
         }
         if (strm.get() != ASCII_SI) {
-            throw new EscapeSequenceException("Missing SI at end of ESC VT sequence");
+            throw new InvalidEscapeSequenceException("Missing SI at end of ESC VT sequence");
         }
 
         setCursorPosition(new Coordinates(row, column));
     }
 
-    private void ingestEscape(final StreamBuffer strm) throws EscapeSequenceException, CoordinateException {
+    private void ingestEscape(final StreamBuffer strm)
+        throws InvalidEscapeSequenceException,
+               CoordinateException,
+               IncompleteEscapeSequenceException {
         if (strm.atEnd()) {
-            throw new EscapeSequenceException("Incomplete escape sequence");
+            throw new InvalidEscapeSequenceException("Incomplete escape sequence");
         }
 
         var ch2 = strm.get();
@@ -389,7 +415,7 @@ public class Terminal extends VBox {
             case 'w' -> clearFCC();
             case 'y' -> duplicateLine();
             case 'z' -> tabBackward();
-            default -> throw new EscapeSequenceException(ch2);
+            default -> throw new InvalidEscapeSequenceException(ch2);
         }
     }
 
@@ -528,7 +554,7 @@ public class Terminal extends VBox {
                         draw(false, true);
                     }
                     case ASCII_EM -> ingestFCC(strm);
-                    case ASCII_SUB -> putCharacter(ASCII_SUB);
+                    case ASCII_SUB -> putSubCharacter();
                     case ASCII_ESC -> ingestEscape(strm);
                     case ASCII_US -> ingestFCCWithPosition(strm);
                     case ASCII_FS -> putCharacter(ASCII_FS);
@@ -548,7 +574,9 @@ public class Terminal extends VBox {
         }
     }
 
-    private void ingestRemoveEmphasis(final StreamBuffer strm) throws EscapeSequenceException {
+    private void ingestRemoveEmphasis(final StreamBuffer strm)
+        throws InvalidEscapeSequenceException,
+               IncompleteEscapeSequenceException {
         // ESC Z code - we've already ingested ESC and Y
         if (strm.atEnd()) {
             throw new IncompleteEscapeSequenceException();
@@ -556,7 +584,7 @@ public class Terminal extends VBox {
 
         var code = strm.get();
         if ((code < 0x20) || (code > 0x2F)) {
-            throw new EscapeSequenceException("Invalid emphasis code");
+            throw new InvalidEscapeSequenceException("Invalid emphasis code");
         }
 
         _ingestEmphasis = new Emphasis(code);
@@ -800,29 +828,28 @@ public class Terminal extends VBox {
         // Encode the stream from the first SOE preceding the cursor up to the cursor itself.
         // If no SOE is found, the stream begins with the home position.
         // Format is STX ESC VT Y X NUL SI [SOE] text ETX
-        Coordinates coord = findPreviousSOE();
+        var region = determineTransmitRegion();
+        var coord = region.getStartingCoordinate();
+
         boolean isChanged = false;
         boolean isProtected = false;
-        boolean isRightJustified = false;
         var ctlAttr = getControllingAttributes(coord);
         if (ctlAttr != null) {
             isChanged = ctlAttr.isChanged();
             isProtected = ctlAttr.isProtected();
-            isRightJustified = ctlAttr.isRightJustified();
         }
 
         var strm = new ByteArrayOutputStream(1024);
         strm.write(ASCII_STX);
         pendCoordinates(strm, coord);
         var blanks = new ByteArrayOutputStream(_template.getColumns());
-        while (coord.compareTo(_cursorPosition) <= 0) {
+        for (int cx = 0; cx < region.getExtent(); cx++) {
             var cell = getCharacterCell(coord);
             var cellAttr = cell.getAttributes();
             if (cellAttr != null) {
                 // this is the beginning of a new field. set up new attributes.
                 isChanged = cellAttr.isChanged();
                 isProtected = cellAttr.isProtected();
-                isRightJustified = cellAttr.isRightJustified();
                 blanks.reset();
             }
 
@@ -842,17 +869,12 @@ public class Terminal extends VBox {
                 }
             }
 
-            if (coord.getColumn() == _template.getColumns()) {
+            if (coordinateIsEndOfLine(coord)) {
                 blanks.reset();
                 strm.write(ASCII_CR);
             }
 
             advanceCoordinates(coord);
-            if ((coord.getRow() == 1) && isRightJustified) {
-                isChanged = false;
-                isProtected = false;
-                isRightJustified = false;
-            }
         }
 
         strm.write(blanks.toByteArray(), 0, blanks.size());
@@ -929,19 +951,61 @@ public class Terminal extends VBox {
         return ch;
     }
 
-    private Coordinates findPreviousSOE() {
-        // Find the coordinates of the first previous SOE before the cursor position.
-        // If none exists, return null. Most callers will just use the home position.
-        var coord = _cursorPosition.copy();
-        while (getCharacterCell(coord).getCharacter() != ASCII_SOE) {
-            if (coord.equals(Coordinates.HOME_POSITION)) {
-                return null;
-            }
-            backupCoordinates(coord);
-        }
-        return coord;
+    private boolean coordinateIsCursorPosition(final Coordinates coordinates) {
+        return coordinates.equals(_cursorPosition);
     }
 
+    private boolean coordinateIsEndOfDisplay(final Coordinates coordinates) {
+        return (coordinates.getRow() == _template.getRows())
+            && (coordinates.getColumn() == _template.getColumns());
+    }
+
+    private boolean coordinateIsEndOfLine(final Coordinates coordinates) {
+        return coordinates.getColumn() == _template.getColumns();
+    }
+
+    private boolean coordinateIsHomePosition(final Coordinates coordinates) {
+        return coordinates.equals(Coordinates.HOME_POSITION);
+    }
+
+    // Find the region which follows the SOE to the left of the cursor,
+    // up to and including the cursor.
+    // If the SOE is under the cursor, the region is empty.
+    private ScreenRegion determinePrintRegion() {
+        var end = _cursorPosition.copy();
+        var start = _cursorPosition.copy();
+        var extent = 1;
+        while (getCharacterCell(start).getCharacter() != ASCII_SOE) {
+            if (coordinateIsHomePosition(start)) {
+                return new ScreenRegion(start, end, extent, false);
+            }
+            backupCoordinates(start);
+            extent++;
+        }
+
+        advanceCoordinates(start);
+        extent--;
+        return new ScreenRegion(start, end, extent, false);
+    }
+
+    // Find the region which begins with the SOE to the left of the cursor,
+    // up to and including the cursor. We always transmit the SOE if it exists.
+    private ScreenRegion determineTransmitRegion() {
+        var end = _cursorPosition.copy();
+        var start = _cursorPosition.copy();
+        var extent = 1;
+        while (getCharacterCell(start).getCharacter() != ASCII_SOE) {
+            if (coordinateIsHomePosition(start)) {
+                return new ScreenRegion(start, end, extent, false);
+            }
+            backupCoordinates(start);
+            extent++;
+        }
+
+        return new ScreenRegion(start, end, extent, true);
+    }
+
+    // Retrieves the character cell at the indicated coordinate
     private CharacterCell getCharacterCell(final Coordinates coordinates) {
         return _characterCells[coordinates.getRow() - 1][coordinates.getColumn() - 1];
     }
@@ -951,37 +1015,20 @@ public class Terminal extends VBox {
         return (coord == null) ? null : getCharacterCell(coord).getAttributes();
     }
 
+    // Returns the coordinates of the cell which contains the field attributes which govern the given coordinates.
+    // Generally, this would be the FCC at that cell, or the first previous cell thereto.
+    // If there is no controlling FCC, we return null.
     private Coordinates getControllingAttributesCoordinates(final Coordinates coordinates) {
         var coord = coordinates.copy();
-
-        var cell = getCharacterCell(coord);
-        var attr = cell.getAttributes();
-        if (attr != null) {
-            return coord;
-        }
-
-        while (!coord.equals(_cursorPosition)) {
-            cell = getCharacterCell(coord);
-            attr = cell.getAttributes();
+        do {
+            var cell = getCharacterCell(coord);
+            var attr = cell.getAttributes();
             if (attr != null) {
-                if (attr.isRightJustified() && (coord.getRow() != coordinates.getRow())) {
-                    return null;
-                } else {
-                    return coord;
-                }
+                return coord;
             }
-
-            if (coord.equals(Coordinates.HOME_POSITION)) {
-                break;
-            }
-            backupCoordinates(coord);
-        }
+        } while (coordinateIsHomePosition(coord));
 
         return null;
-    }
-
-    private Color getDarkerColor(final Color color) {
-        return new Color(color.getRed() * 0.75, color.getGreen() * 0.75, color.getBlue() * 0.75, color.getOpacity());
     }
 
     private boolean isCellProtected(final Coordinates coordinates) {
@@ -1008,28 +1055,19 @@ public class Terminal extends VBox {
         // up to the character at the cursor. If an SOE is under the cursor, nothing is printed.
         // If printAll is not true, we replace all protected characters with spaces.
         // We do not send spaces at the end of lines; We DO send a CR at the end of each line.
-        var coord = findPreviousSOE();
-        if (coord == null) {
-            coord = _cursorPosition.copy();
-        } else {
-            advanceCoordinates(coord);
-        }
+        var region = determinePrintRegion();
+        var coord = region.getStartingCoordinate();
 
         var attr = getControllingAttributes(coord);
         var isProtected = (attr != null) && attr.isProtected();
-        var isRightJustified = (attr != null) && attr.isRightJustified();
         var pending = new ByteArrayOutputStream();
         var blanks = new ByteArrayOutputStream();
 
-        while (coord.compareTo(_cursorPosition) <= 0) {
+        for (int cx = 0; cx < region.getExtent(); cx++) {
             var cell = getCharacterCell(coord);
             attr = cell.getAttributes();
             if (attr != null) {
                 isProtected = attr.isProtected();
-                isRightJustified = attr.isRightJustified();
-            } else if (isRightJustified && (coord.getColumn() == 1)) {
-                isProtected = false;
-                isRightJustified = false;
             }
 
             var ch = (!isProtected || printAll) ? cell.getCharacter() : ASCII_SP;
@@ -1118,7 +1156,7 @@ public class Terminal extends VBox {
     // ---------------------------------------------------------------------------------------------
 
     public void kbBackSpace() {
-        // TODO some gnarly stuff, isProtected, isProtectedEmphasis, isRightJustified? ... etc
+        // TODO some gnarly stuff, isProtected, isProtectedEmphasis, isRightJustified ... etc
     }
 
     public void kbClearChanged() {
@@ -1395,20 +1433,35 @@ public class Terminal extends VBox {
             return;
         }
 
-        var attr = getControllingAttributes(_cursorPosition);
-        var isProtected = (attr != null) && attr.isProtected();
-        var isProtectedEmphasis = (attr != null) && attr.isProtectedEmphasis();
+        // Are we in the first column of a right-justified field?
+        var cell = getCharacterCell(_cursorPosition);
+        var attr = cell.getAttributes();
+        if ((attr != null) && attr.isRightJustified()) {
+            // TODO right-justified field insert
+        } else {
+            attr = getControllingAttributes(_cursorPosition);
+            var isProtectedEmphasis = false;
 
-        if (!isProtected) {
-            var cell = getCharacterCell(_cursorPosition);
+            if (attr != null) {
+                if (attr.isProtected()
+                    || (attr.isNumericOnly() && !Character.isDigit(ch))
+                    || (attr.isAlphabeticOnly() && !Character.isLetter(ch))) {
+                    Toolkit.getDefaultToolkit().beep();
+                    return;
+                }
+                isProtectedEmphasis = attr.isProtectedEmphasis();
+            }
+
+            cell = getCharacterCell(_cursorPosition);
             cell.setCharacter(ch);
             if (!isProtectedEmphasis) {
                 cell.getEmphasis().clear();
             }
             advanceCoordinates(_cursorPosition);
-            resolveProtectedCell();
-            draw(true, true);
         }
+
+        resolveProtectedCell();
+        draw(true, true);
     }
 
     public void kbScanDown() {
@@ -1607,11 +1660,9 @@ public class Terminal extends VBox {
         var ctlAttr = getControllingAttributes(_cursorPosition);
         boolean isProtected = false;
         boolean isProtectedEmphasis = false;
-        boolean isRightJustified = false;
         if (ctlAttr != null) {
             isProtected = ctlAttr.isProtected();
             isProtectedEmphasis = ctlAttr.isProtectedEmphasis();
-            isRightJustified = ctlAttr.isRightJustified();
         }
 
         if (!isProtected) {
@@ -1620,9 +1671,6 @@ public class Terminal extends VBox {
             advanceCoordinates(nextCoord);
 
             while (!nextCoord.equals(Coordinates.HOME_POSITION) && (getCharacterCell(nextCoord).getAttributes() == null)) {
-                if (isRightJustified && (nextCoord.getColumn() == 1)) {
-                    break;
-                }
                 var cell = getCharacterCell(coord);
                 var nextCell = getCharacterCell(nextCoord);
                 cell.setCharacter(nextCell.getCharacter());
@@ -1768,6 +1816,7 @@ public class Terminal extends VBox {
                 int rx = coord.getRow() - 1;
                 int cx = coord.getColumn() - 1;
                 _characterCells[rx][cx].setCharacter(ASCII_SP);
+                // TODO need to maybe erase emphasis
             }
             advanceCoordinates(coord);
         } while (!coord.equals(Coordinates.HOME_POSITION));
@@ -1787,15 +1836,12 @@ public class Terminal extends VBox {
 
         if (!isProtected) {
             var isProtectedEmphasis = (cursorAttr == null) || !cursorAttr.isProtectedEmphasis();
-            var isRightJustified = (cursorAttr == null) || !cursorAttr.isRightJustified();
 
             // find cell at end of field or display
             var coord = _cursorPosition.copy();
             advanceCoordinates(coord);
             var attr = getCharacterCell(coord).getAttributes();
-            while (!coord.equals(Coordinates.HOME_POSITION)
-                && (attr == null)
-                && (!isRightJustified || (coord.getColumn() != 1))) {
+            while (!coord.equals(Coordinates.HOME_POSITION) && (attr == null)) {
                 advanceCoordinates(coord);
                 attr = getCharacterCell(coord).getAttributes();
             }
@@ -1818,7 +1864,7 @@ public class Terminal extends VBox {
             // Blank the character under the cursor
             var cell = getCharacterCell(_cursorPosition);
             cell.setCharacter(ASCII_SP);
-            if (!isRightJustified) {
+            if (!isProtectedEmphasis) {
                 cell.getEmphasis().clear();
             }
 
@@ -1838,7 +1884,6 @@ public class Terminal extends VBox {
 
         if (!isProtected) {
             var isProtectedEmphasis = (cursorAttr == null) || !cursorAttr.isProtectedEmphasis();
-            var isRightJustified = (cursorAttr == null) || !cursorAttr.isRightJustified();
 
             // find cell at end of field or line
             var coord = _cursorPosition.copy();
@@ -1867,7 +1912,7 @@ public class Terminal extends VBox {
             // Blank the character under the cursor
             var cell = getCharacterCell(_cursorPosition);
             cell.setCharacter(ASCII_SP);
-            if (!isRightJustified) {
+            if (!isProtectedEmphasis) {
                 cell.getEmphasis().clear();
             }
 
@@ -1902,15 +1947,10 @@ public class Terminal extends VBox {
         // Print everything from the SOE most-previous to the cursor (non-inclusive)
         // up to the cursor (inclusive) - do not translate anything, do not send CRs at the end
         // of display lines. Ignore FCCs.
-        var coord = findPreviousSOE();
-        if (coord == null) {
-            coord = _cursorPosition.copy();
-        } else {
-            advanceCoordinates(coord);
-        }
-
+        var region = determinePrintRegion();
+        var coord = region.getStartingCoordinate();
         var strm = new ByteArrayOutputStream(2048);
-        while (coord.compareTo(_cursorPosition) <= 0) {
+        for (int cx = 0; cx < _template.getColumns(); cx++) {
             strm.write(getCharacterCell(coord).getCharacter());
             advanceCoordinates(coord);
         }
@@ -1948,9 +1988,59 @@ public class Terminal extends VBox {
         // TODO
     }
 
-    private void putCharacterHex(final StreamBuffer strm) {
+    private void putCharacterHex(final StreamBuffer strm)
+        throws IncompleteEscapeSequenceException,
+               InvalidEscapeSequenceException {
         // As above, but we have to get the character from the stream as exactly two hex digits
-        // TODO
+        // representing a value from 0 to 255 inclusive.
+        if (strm.atEnd()) {
+            throw new IncompleteEscapeSequenceException();
+        }
+        var hex1 = (char)strm.get();
+
+        if (strm.atEnd()) {
+            throw new IncompleteEscapeSequenceException();
+        }
+        var hex2 = (char)strm.get();
+
+        var hexStr = String.format("%c%c", hex1, hex2);
+        var value = 0;
+        for (int i = 0; i < hexStr.length(); i++) {
+            var ch = hexStr.charAt(i);
+            if (Character.isDigit(ch)) {
+                value = value * 16 + (ch - '0');
+            } else if (ch >= 'a' && ch <= 'f') {
+                value = value * 16 + (ch - 'a' + 10);
+            } else if (ch >= 'A' && ch <= 'F') {
+                value = value * 16 + (ch - 'A' + 10);
+            } else {
+                throw new InvalidEscapeSequenceException((byte)ch);
+            }
+        }
+
+        putCharacter((byte)value);
+        draw(true, true);
+    }
+
+    private void putSubCharacter() {
+        // TODO need a different implementation if we are in the first column of a right-justified field
+        // For character placement initiated by the host, when the character is presented as SUB.
+        // This acts like putCharacter(), except that it moves past the current character without
+        // overwriting the character (but still does emphasis stuff).
+        var cell = getCharacterCell(_cursorPosition);
+        var attr = cell.getAttributes();
+        if ((attr == null) || !attr.isProtectedEmphasis()) {
+            if (_ingestAddEmphasis) {
+                cell.getEmphasis().add(_ingestEmphasis);
+            } else if (_ingestRemoveEmphasis) {
+                cell.getEmphasis().remove(_ingestEmphasis);
+            } else if (_ingestSetEmphasis) {
+                cell.getEmphasis().set(_ingestEmphasis);
+            }
+        }
+
+        advanceCoordinates(_cursorPosition);
+        draw(true, true);
     }
 
     private void scanDown() {
@@ -2034,7 +2124,6 @@ public class Terminal extends VBox {
         var intensity = Intensity.NORMAL;
         boolean blink = false;
         boolean reverse = false;
-        boolean rightJustified = false;
 
         for (int row = 1; row <= _template.getRows(); row++) {
             for (int column = 1; column <= _template.getColumns(); column++) {
@@ -2047,16 +2136,6 @@ public class Terminal extends VBox {
                     intensity = attr.getIntensity();
                     blink = attr.isBlinking();
                     reverse = attr.isReverseVideo();
-                    rightJustified = attr.isRightJustified();
-                } else if (rightJustified && (column == 1)) {
-                    // We have exited a right-justified field by virtue of being on a new row.
-                    // Set things back to defaults (since we are not on a new FCC).
-                    utsBgColor = _template.getBackgroundColor();
-                    utsTextColor = _template.getTextColor();
-                    intensity = Intensity.NORMAL;
-                    blink = false;
-                    reverse = false;
-                    rightJustified = false;
                 }
 
                 var byteChar = cell.getCharacter();
@@ -2071,8 +2150,8 @@ public class Terminal extends VBox {
                 }
 
                 if (intensity == Intensity.LOW) {
-                    jfxBgColor = getDarkerColor(jfxBgColor);
-                    jfxTextColor = getDarkerColor(jfxTextColor);
+                    jfxBgColor = jfxBgColor.darker();
+                    jfxTextColor = jfxTextColor.darker();
                 }
 
                 if (reverse) {

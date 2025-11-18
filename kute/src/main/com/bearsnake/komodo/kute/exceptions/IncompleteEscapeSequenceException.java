@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.kute.exceptions;
 
-public class IncompleteEscapeSequenceException extends EscapeSequenceException {
+public class IncompleteEscapeSequenceException extends StreamException {
 
     public IncompleteEscapeSequenceException() {
         super("Incomplete Escape Sequence");
