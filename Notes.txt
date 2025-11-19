@@ -2,8 +2,20 @@
 TODO InProgress
 
 Kute
+    Fix status line so right-hand indicators are right-justified in however many columns the display is
+    Tab backward
+    Backspace
+    Uppercase-Only mode
+    [Connect][Disconnect][Capture] buttons
     Need to do the control page
     Need to load and save templates
+    Traffic capture mechanism - Raw/ASCII/Interpreted modes, save file, etc
+    Testing panel (acts as host)
+    Print - configure up to 9 print destinations P1-P9 (files, actual print queues, local printers...?)
+    Transfer - configure up to 9 virtual disks D1-D9 (files)
+
+Networking
+    Need to think about this some more
 
 ReaderSymbiontInfo
     @FILE and @ENDF handling (do we really need or want this?)

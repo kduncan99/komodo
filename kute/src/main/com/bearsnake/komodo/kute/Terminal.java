@@ -8,6 +8,7 @@ import com.bearsnake.komodo.kute.exceptions.*;
 import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -48,7 +49,9 @@ public class Terminal extends VBox {
 
     private final int _characterHeight;
     private final int _characterWidth;
+    private ControlPage _controlPage;   // non-null when a control page is active
     private final Canvas _displayPane;
+    private final StackPane _displayStack;
     private final Canvas _statusPane;
 
     private PrintMode _printMode;
@@ -69,18 +72,15 @@ public class Terminal extends VBox {
     private Integer _sendFunctionKey;   // Either this can be non-null, or _sendMessageWait can be true, but not both.
     private boolean _sendMessageWait;   // The one would over-ride the other, except kb lock generally prevents that.
 
-    private ControlPage _controlPage;   // non-null when a control page is active
 
     /**
      * @param _startingCoordinate inclusive
      * @param _endingCoordinate   exclusive
      * @param _extent             size of region
-     * @param _containsSOE        true if the starting coordinate contains an SOE
      */
     private record ScreenRegion(Coordinates _startingCoordinate,
                                 Coordinates _endingCoordinate,
-                                int _extent,
-                                boolean _containsSOE) {
+                                int _extent) {
 
         Coordinates getStartingCoordinate() {
             return _startingCoordinate;
@@ -93,10 +93,6 @@ public class Terminal extends VBox {
         int getExtent() {
             return _extent;
         }
-
-        boolean containsSOE() {
-            return _containsSOE;
-        }
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -105,6 +101,7 @@ public class Terminal extends VBox {
 
     public Terminal(final Template template) throws KuteException {
         _template = template;
+        _displayStack = new StackPane();
         _displayPane = new Canvas();
         _statusPane = new Canvas();
 
@@ -122,7 +119,8 @@ public class Terminal extends VBox {
         _characterWidth = (int)(text.getLayoutBounds().getWidth() / 10.0) + 1;
 
         setSpacing(1.0f);
-        getChildren().add(_displayPane);
+        _displayStack.getChildren().add(_displayPane);
+        getChildren().add(_displayStack);
         getChildren().add(_statusPane);
 
         reconfigure(_template.getRows(), _template.getColumns());
@@ -164,6 +162,12 @@ public class Terminal extends VBox {
             draw(false, true);
         }
     }
+
+    // For ControlPage
+    public Font getFont() { return FONT; }
+    public int getCharacterHeight() { return _characterHeight; }
+    public int getCharacterWidth() { return _characterWidth; }
+    public Template getTemplate() { return _template; }
 
     public void handleKeyPressed(final KeyCode keyCode) {
         if (_keyboardLocked) {
@@ -270,7 +274,9 @@ public class Terminal extends VBox {
         }
 
         if (_controlPage != null) {
-            // TODO lose the control page
+            _controlPage.close();
+            _displayStack.getChildren().removeFirst();
+            _controlPage = null;
         }
 
         _template.setRows(rows);
@@ -1008,7 +1014,7 @@ public class Terminal extends VBox {
         var extent = 1;
         while (getCharacterCell(start).getCharacter() != ASCII_SOE) {
             if (coordinateIsHomePosition(start)) {
-                return new ScreenRegion(start, end, extent, false);
+                return new ScreenRegion(start, end, extent);
             }
             backupCoordinates(start);
             extent++;
@@ -1016,7 +1022,7 @@ public class Terminal extends VBox {
 
         advanceCoordinates(start);
         extent--;
-        return new ScreenRegion(start, end, extent, false);
+        return new ScreenRegion(start, end, extent);
     }
 
     // Find the region which begins with the SOE to the left of the cursor,
@@ -1027,13 +1033,13 @@ public class Terminal extends VBox {
         var extent = 1;
         while (getCharacterCell(start).getCharacter() != ASCII_SOE) {
             if (coordinateIsHomePosition(start)) {
-                return new ScreenRegion(start, end, extent, false);
+                return new ScreenRegion(start, end, extent);
             }
             backupCoordinates(start);
             extent++;
         }
 
-        return new ScreenRegion(start, end, extent, true);
+        return new ScreenRegion(start, end, extent);
     }
 
     // Retrieves the character cell at the indicated coordinate
@@ -1126,7 +1132,9 @@ public class Terminal extends VBox {
 
     private void reset() {
         if (_controlPage != null) {
-            // TODO lose the control page
+            _controlPage.close();
+            _displayStack.getChildren().removeFirst();
+            _controlPage = null;
         }
 
         for (int rx = 0; rx < _template.getRows(); rx++) {
@@ -2511,6 +2519,14 @@ public class Terminal extends VBox {
         draw(true, true);
     }
 
+    // Move the cursor to the previous tab stop.
+    // If this is an FCC with tab-stop set, we stop on that position.
+    // If it is a set-tab tab stop, the cursor moves to the first unprotected cell after that tab stop.
+    // However, if that set-tab tab stop is protected and protected and the cursor starts immediately
+    // following that protected field, the cursor goes to the next previous unprotected tab stop
+    // (FCC or set-tab).
+    // If there are no tab stops back to the home position, or if all cells back to the home position
+    // are protected, the cursor is placed at the home position.
     private void tabBackward() {
         if (_controlPage != null) {
             _controlPage.tabBackward();
@@ -2520,20 +2536,65 @@ public class Terminal extends VBox {
         // TODO
     }
 
+    // Move the cursor to the next tab stop.
+    // This might be an FCC with tab-stop set, in which case we do not worry about field protection.
+    // If it is a tab stop established by the set-tab (i.e., a tab taking up a screen position),
+    // we place the cursor at the first unprotected location following that tab-stop, potentially
+    // continuing from the home position after reaching the end of the display.
+    // If there are no tab stops or no unprotected cells following a tab-set,
+    // the cursor is placed at the home position.
     private void tabForward() {
         if (_controlPage != null) {
             _controlPage.tabForward();
             return;
         }
 
-        // TODO
+        var startingPoint = _cursorPosition.copy();
+        var foundTabSet = false;
+        do {
+            advanceCoordinates(_cursorPosition);
+            var cell = getCharacterCell(_cursorPosition);
+            var attr = cell.getAttributes();
+            if ((attr != null) && attr.isTabStop()) {
+                draw(true, true);
+                return;
+            }
+
+            if (cell.getCharacter() == ASCII_HT) {
+                foundTabSet = true;
+            } else if (foundTabSet && !isCellProtected(_cursorPosition)) {
+                draw(true, true);
+                return;
+            }
+        } while (!coordinateIsHomePosition(_cursorPosition));
+
+        // If we had found a tab on the display, we keep going until we find an unprotected cell,
+        // or it's clear there are no unprotected cells.
+        if (foundTabSet) {
+            var isProtected = false;
+            do {
+                var cell = getCharacterCell(_cursorPosition);
+                var attr = cell.getAttributes();
+                isProtected = (attr != null) && attr.isProtected();
+                if (!isProtected) {
+                    break;
+                }
+                advanceCoordinates(_cursorPosition);
+            } while (!_cursorPosition.equals(startingPoint));
+        }
+
+        draw(true, true);
     }
 
     private void toggleControlPage() {
         if (_controlPage != null) {
-            // TODO
+            // TODO save settings from control page to appropriate places here-in
+            _controlPage.close();
+            _displayStack.getChildren().removeFirst();
+            _controlPage = null;
         } else {
-            // TODO
+            _controlPage = new ControlPage(this);
+            _displayStack.getChildren().addFirst(_controlPage);
         }
     }
 
