@@ -38,6 +38,7 @@ public class Terminal extends Pane {
     private SocketHandler _socketHandler;
 
     private PrintMode _printMode;
+    private TransferMode _transferMode;
     private TransmitMode _transmitMode;
 
     private Emphasis _emphasis;
@@ -63,10 +64,10 @@ public class Terminal extends Pane {
         _displayPane.setLayoutX(0);
         _displayPane.setLayoutY(0);
         _statusPane.setLayoutX(0);
-        System.out.printf("DP HGT:%f\n", _displayPane.getHeight());//TODO remove
         _statusPane.setLayoutY(_displayPane.getHeight());
 
-        _printMode = PrintMode.ALL;
+        _printMode = PrintMode.PRINT;
+        _transferMode = TransferMode.ALL;
         _transmitMode = TransmitMode.ALL;
 
         _returnKeyIsTransmit = returnKeyIsTransmit;
@@ -844,7 +845,7 @@ public class Terminal extends Pane {
             return;
         }
 
-        sendToPrinter(_activeDisplayPane.getPrintStream(PrintMode.ALL));
+        sendToPrinter(_activeDisplayPane.getPrintStream(PrintMode.PRINT));
     }
 
     // Print content of the screen from the SOE (non-inclusive) or the home position, to the cursor.
@@ -873,8 +874,14 @@ public class Terminal extends Pane {
     private void toggleControlPage() {
         if (controlPageIsActive()) {
             _activeDisplayPane = _displayPane;
+            _statusPane.setCursorPosition(_displayPane.getCursorPosition());
             getChildren().remove(_controlPagePane);
             _controlPagePane.close();
+
+            _printMode = _controlPagePane.getPrintMode();
+            _transferMode = _controlPagePane.getTransferMode();
+            _transmitMode = _controlPagePane.getTransmitMode();
+
             _controlPagePane = null;
             _displayPane.hideCursor(false);
             _activeDisplayPane.scheduleDrawDisplay(false);
@@ -883,6 +890,10 @@ public class Terminal extends Pane {
                                                    _displayPane.getFontInfo(),
                                                    _displayPane.getColorSet(),
                                                    _statusPane);
+            _controlPagePane.setPrintMode(_printMode);
+            _controlPagePane.setTransferMode(_transferMode);
+            _controlPagePane.setTransmitMode(_transmitMode);
+
             getChildren().add(_controlPagePane);
             _activeDisplayPane = _controlPagePane;
             _displayPane.hideCursor(true);

@@ -171,12 +171,10 @@ public class StatusPane
     }
 
     /**
-     * Sets the display geometry
-     * @param geometry the new display geometry
+     * Updates the tracked cursor position
      */
-    public void setDisplayGeometry(final DisplayGeometry geometry) {
-        // TODO this is a bigger thing than just setting FontInfo
-        _columns = geometry.getColumns();
+    public void setCursorPosition(final Coordinates coordinates) {
+        _cursorPosition.set(coordinates);
         scheduleDrawStatus();
     }
 

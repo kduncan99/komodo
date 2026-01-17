@@ -170,6 +170,10 @@ public class ControlPagePane
         }
     }
 
+    private PrintMode _printMode;
+    private TransferMode _transferMode;
+    private TransmitMode _transmitMode;
+
     public ControlPagePane(
         final DisplayGeometry geometry,
         final FontInfo fontInfo,
@@ -193,6 +197,7 @@ public class ControlPagePane
             _fields.put(f.getCoordinates(), f);
         }
         repairFieldReferences();
+
         _cursorPosition.setRow(PRINT_COORDS.getRow());
         _cursorPosition.setColumn(PRINT_COORDS.getColumn());
         _cursorPositionListener.notifyCursorPositionChange(PRINT_COORDS.getRow(), PRINT_COORDS.getColumn());
@@ -220,8 +225,7 @@ public class ControlPagePane
     // Also also, we do not worry about emphasis - there is none in the control page.
     @Override
     public boolean kbPutCharacter(final byte ch) {
-        boolean b = putCharacter(ch, EmphasisAction.NONE, null);
-        return b;
+        return putCharacter(ch, EmphasisAction.NONE, null);
     }
 
     @Override
@@ -281,5 +285,56 @@ public class ControlPagePane
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         scheduleDrawDisplay(true);
         return true;
+    }
+
+    public PrintMode getPrintMode() {
+        return _printMode;
+    }
+
+    public TransferMode getTransferMode() {
+        return _transferMode;
+    }
+
+    public TransmitMode getTransmitMode() {
+        return _transmitMode;
+    }
+
+    private void putString(final Coordinates coordinates,
+                           final String string) {
+        int sx = 0;
+        int cx = getIndex(coordinates);
+        while (sx < string.length()) {
+            _characterCells[cx++].setCharacter((byte)string.charAt(sx++));
+        }
+    }
+
+    private void putPrintMode() {
+        putString(PRINT_COORDS, _printMode.toString());
+        scheduleDrawDisplay(false);
+    }
+
+    private void putTransferMode() {
+        putString(XFER_COORDS, _transferMode.toString());
+        scheduleDrawDisplay(false);
+    }
+
+    private void putTransmitMode() {
+        putString(XMIT_COORDS, _transmitMode.toString());
+        scheduleDrawDisplay(false);
+    }
+
+    public void setPrintMode(final PrintMode printMode) {
+        _printMode = printMode;
+        putPrintMode();
+    }
+
+    public void setTransferMode(final TransferMode transferMode) {
+        _transferMode = transferMode;
+        putTransferMode();
+    }
+
+    public void setTransmitMode(final TransmitMode transmitMode) {
+        _transmitMode = transmitMode;
+        putTransmitMode();
     }
 }

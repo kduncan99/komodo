@@ -4,14 +4,14 @@
 
 package com.bearsnake.komodo.kute;
 
-public enum PrintMode {
-    PRINT("PRNT"),
-    FORM("FORM"),
-    TRANSPARENT("XPAR");
+public enum TransferMode {
+    ALL("ALL"),
+    VARIABLE("VAR"),
+    CHANGED("CHAN");
 
     private final String _string;
 
-    PrintMode(final String str) {
+    TransferMode(final String str) {
         _string = str;
     }
 

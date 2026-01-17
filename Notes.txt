@@ -2,7 +2,9 @@
 TODO InProgress
 
 Kute
-    Need to do the control page
+    Need to download javafx 25
+    Working on control page
+    Instead of hideCursor(), use dimDisplay() which implicitly hides cursor
     Tab backward
     Backspace
     Uppercase-Only mode

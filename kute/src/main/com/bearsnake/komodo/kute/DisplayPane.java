@@ -1340,7 +1340,7 @@ public class DisplayPane extends Canvas {
      */
     public byte[] getPrintStream(final PrintMode mode) {
         return switch (mode) {
-            case ALL -> getPrintStreamAll();
+            case PRINT -> getPrintStreamAll();
             case FORM -> getPrintStreamForm();
             case TRANSPARENT -> getPrintStreamTransparent();
         };
