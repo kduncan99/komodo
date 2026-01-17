@@ -4,7 +4,9 @@ TODO InProgress
 Kute
     Need to download javafx 25
     Working on control page
-    Instead of hideCursor(), use dimDisplay() which implicitly hides cursor
+    Cursor seems laggy, but I think we just need to force it *on* every time it moves
+    When we scan cursor backward into protected field, it moves back to the next unprotected field...
+        should it move backward to the previous unprotected field?
     Tab backward
     Backspace
     Uppercase-Only mode

@@ -884,7 +884,7 @@ public class Terminal extends Pane {
             _transmitMode = _controlPagePane.getTransmitMode();
 
             _controlPagePane = null;
-            _displayPane.hideCursor(false);
+            _displayPane.dimDisplay(false);
             _activeDisplayPane.scheduleDrawDisplay();
         } else {
             _controlPagePane = new ControlPagePane(_displayPane.getGeometry(),
@@ -897,7 +897,7 @@ public class Terminal extends Pane {
 
             getChildren().add(_controlPagePane);
             _activeDisplayPane = _controlPagePane;
-            _displayPane.hideCursor(true);
+            _displayPane.dimDisplay(true);
         }
     }
 

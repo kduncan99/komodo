@@ -24,6 +24,7 @@ public class DisplayPane extends Canvas {
     protected final CursorPositionListener _cursorPositionListener;
     private UTSColor _bgColor;
     private UTSColor _textColor;
+    private boolean _dimDisplay;
     private final FontInfo _fontInfo;
     protected DisplayGeometry _geometry;
 
@@ -35,7 +36,6 @@ public class DisplayPane extends Canvas {
     private int _blinkCounter;
     private boolean _blinkCursorFlag;
     private boolean _blinkCharacterFlag;
-    private boolean _hideCursor;
 
     public DisplayPane(final DisplayGeometry initialGeometry,
                        final FontInfo initialFontInfo,
@@ -89,7 +89,7 @@ public class DisplayPane extends Canvas {
      */
     private char convertByteToCharacter(final byte b, final boolean atCursor) {
         char ch = ' ';
-        if ((atCursor && _blinkCursorFlag) && (!_hideCursor)) {
+        if ((atCursor && _blinkCursorFlag) && (!_dimDisplay)) {
             ch = '█';
         } else {
             if (b == ASCII_SOE) {
@@ -140,6 +140,16 @@ public class DisplayPane extends Canvas {
         _textColor = _textColor.nextColor();
     }
 
+    /**
+     * Sets or clears the flag to dim the display (and hide the cursor).
+     * This is useful for main displays when they are overlaid with a control page pane
+     * @param flag true to hide the cursor, false to show it
+     */
+    public void dimDisplay(final boolean flag) {
+        _dimDisplay = flag;
+        scheduleDrawDisplay();
+    }
+
     /*
      * Draws the character display.
      * Do not invoke this directly - use scheduleDrawStatusAction() instead.
@@ -170,7 +180,10 @@ public class DisplayPane extends Canvas {
                 jfxTextColor = jfxBgColor;
             }
 
-            if (intensity == Intensity.LOW) {
+            if (_dimDisplay) {
+                jfxBgColor = jfxBgColor.darker().darker();
+                jfxTextColor = jfxTextColor.darker().darker();
+            } else if (intensity == Intensity.LOW) {
                 jfxBgColor = jfxBgColor.darker();
                 jfxTextColor = jfxTextColor.darker();
             }
@@ -285,15 +298,6 @@ public class DisplayPane extends Canvas {
         } else {
             return _fields.higherEntry(baseField.getCoordinates()).getValue();
         }
-    }
-
-    /**
-     * Sets or clears the flag to hide the cursor.
-     * This is useful for main displays when they are overlaid with a control page pane
-     * @param flag true to hide the cursor, false to show it
-     */
-    public void hideCursor(final boolean flag) {
-        _hideCursor = flag;
     }
 
     /**
