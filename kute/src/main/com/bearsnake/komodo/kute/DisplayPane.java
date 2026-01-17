@@ -370,7 +370,7 @@ public class DisplayPane extends Canvas {
     }
 
     /*
-     * Notifies the platform that it should schedule drawDisplay() to run in the graphics thread
+     * Notifies the platform that it should schedule drawDisplay() to run in the graphics thread.
      */
     public void scheduleDrawDisplay() {
         Platform.runLater(this::drawDisplay);
@@ -389,178 +389,6 @@ public class DisplayPane extends Canvas {
         scheduleDrawDisplay();
     }
 
-
-
-
-
-
-//public class DisplayPane extends VBox {
-//
-////    public static final int MIN_ROWS = 24;
-////    public static final int STD_ROWS = 24;
-////    public static final int MAX_ROWS = 256;
-////    public static final int MIN_COLUMNS = 80;
-////    public static final int STD_COLUMNS = 80;
-////    public static final int MAX_COLUMNS = 256;
-//
-////    private static final int FONT_SIZE = 16;
-////    private static final Font FONT = Font.font("Courier New", FontWeight.BOLD, FONT_SIZE);
-//
-//    public final Canvas _displayPane;
-////    public final Canvas _statusPane;
-//    public final int _characterHeight;
-//    public final int _characterWidth;
-//
-//    protected int _rows;
-//    protected int _columns;
-//    protected final Coordinates _cursorPosition;
-//    protected CharacterCell[] _characterCells;
-//    protected final TreeMap<Coordinates, Field> _fields = new TreeMap<>();
-//    protected UTSColor _bgColor;
-//    protected UTSColor _textColor;
-//
-//    // flashing assistance
-//    private int _blinkCounter;
-//    private boolean _blinkCursorFlag;
-//    private boolean _blinkCharacterFlag;
-//    private int _pollCountdown;
-//
-//    // status indicators
-//    private boolean _errorIndicator;
-//    private boolean _isConnected;
-//    private boolean _keyboardLocked;
-//    private boolean _messageWaiting;
-//    private boolean _pollIndicator;
-//
-//    public DisplayPane(final int rows,
-//                       final int columns,
-//                       final UTSColor textColor,
-//                       final UTSColor bgColor) {
-//        _rows = rows;
-//        _columns = columns;
-//        _bgColor = bgColor;
-//        _textColor = textColor;
-//
-//        _characterCells = new CharacterCell[rows * columns];
-//        _cursorPosition = Coordinates.HOME_POSITION.copy();
-//        IntStream.range(0, rows * columns).forEach(cx -> _characterCells[cx] = new CharacterCell());
-//
-//        _displayPane = new Canvas();
-//        _statusPane = new Canvas();
-//        var gcDisplay = _displayPane.getGraphicsContext2D();
-//        var gcStatus = _statusPane.getGraphicsContext2D();
-//        gcDisplay.setFont(FONT);
-//        gcStatus.setFont(FONT);
-//
-//        Text text = new Text("ABCDEFGHIJ");
-//        text.setFont(FONT);
-//        _characterHeight = (int)text.getLayoutBounds().getHeight();
-//        _characterWidth = (int)(text.getLayoutBounds().getWidth() / 10.0) + 1;
-//
-//        setSpacing(1.0f);
-//        getChildren().add(_displayPane);
-//        getChildren().add(_statusPane);
-//
-//        reconfigure(_rows, _columns);
-//    }
-//
-//    public void advanceCoordinates(final Coordinates coordinates) {
-//        int row = coordinates.getRow();
-//        int column = coordinates.getColumn();
-//        if (++column > _columns) {
-//            column = 1;
-//            if (++row > _rows) {
-//                row = 1;
-//            }
-//        }
-//        coordinates.set(row, column);
-//    }
-//
-//    public void backupCoordinates(final Coordinates coordinates) {
-//        int row = coordinates.getRow();
-//        int column = coordinates.getColumn();
-//        if (--column == 0) {
-//            column = _columns;
-//            if (--row == 0) {
-//                row = _rows;
-//            }
-//        }
-//        coordinates.set(row, column);
-//    }
-//
-//    public final void close() {
-//        // TODO anything here?
-//    }
-//
-//    // Finds the field which follows the given field.
-//    // If the given field is the end of the display, we return the home field.
-//    public Field getNextField(final Field baseField) {
-//        if (baseField == _fields.lastEntry().getValue()) {
-//            return _fields.firstEntry().getValue();
-//        } else {
-//            return _fields.higherEntry(baseField.getCoordinates()).getValue();
-//        }
-//    }
-//
-//    // Iterate over fields and character cells, rebuilding the field references in the
-//    // character cells according to the existing fields. This is used in cases where it
-//    // is difficult to fix up the references during line insertion, deletion, duplication,etc.
-//    void repairFieldReferences() {
-//        var fIter = _fields.values().iterator();
-//        var field = fIter.next();
-//        var nextField = fIter.hasNext() ? fIter.next() : null;
-//        var coord = Coordinates.HOME_POSITION.copy();
-//        var cx = 0;
-//        while (cx < _rows * _columns) {
-//            if ((nextField != null) && coord.equals(nextField.getCoordinates())) {
-//                field = nextField;
-//                nextField = fIter.hasNext() ? fIter.next() : null;
-//            }
-//            _characterCells[cx++].setField(field);
-//        }
-//    }
-//
-//    public void reset() {
-//        IntStream.range(0, _rows * _columns).forEach(cx -> _characterCells[cx] = new CharacterCell());
-//        _fields.clear();
-//        _fields.put(Coordinates.HOME_POSITION, new ImplicitField());
-//        _cursorPosition.set(Coordinates.HOME_POSITION);
-//        repairFieldReferences();
-//        drawAll();
-//    }
-//
-//    // -----------------------------------------------------------------------------------------------------------------
-//
-//    protected char convertByteToCharacter(final byte b, final boolean atCursor) {
-//        char ch = ' ';
-//        if (atCursor && _blinkCursorFlag) {
-//            ch = '█';
-//        } else {
-//            if (b == ASCII_SOE) {
-//                ch = '▷';
-//            } else if (b == ASCII_HT) {
-//                ch = '⇥';
-//            } else if (b == ASCII_LF) {
-//                ch = '↓';
-//            } else if (b == ASCII_FF) {
-//                ch = '↖';
-//            } else if (b == ASCII_CR) {
-//                ch = '↲';
-//            } else if (b == ASCII_DEL) {
-//                ch = '░';
-//            } else if (b == ASCII_ESC) {
-//                ch = '∙';
-//            } else if (b == ASCII_FS) {
-//                ch = '«';
-//            } else if (b == ASCII_GS) {
-//                ch = '»';
-//            } else if (b >= ASCII_SP) {
-//                ch = (char)b;
-//            }
-//        }
-//        return ch;
-//    }
-//
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
@@ -578,6 +406,8 @@ public class DisplayPane extends Canvas {
                 backupCoordinates(_cursorPosition);
                 _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
                 deleteInLine();
+                _blinkCounter |= 0x01;
+                scheduleDrawDisplay();
                 return true;
             } else {
                 return false;
@@ -608,6 +438,8 @@ public class DisplayPane extends Canvas {
             _cursorPosition.setRow(1);
         }
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _blinkCounter |= 0x01;
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -618,6 +450,8 @@ public class DisplayPane extends Canvas {
     public boolean cursorToHome() {
         _cursorPosition.set(Coordinates.HOME_POSITION.copy());
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _blinkCounter |= 0x01;
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -653,6 +487,8 @@ public class DisplayPane extends Canvas {
 
             baseField.setChanged(true);
             _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+            _blinkCounter |= 0x01;
+            scheduleDrawDisplay();
             return true;
         }
         return false;
@@ -692,6 +528,8 @@ public class DisplayPane extends Canvas {
             baseField.setChanged(true);
         }
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _blinkCounter |= 0x01;
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -734,6 +572,8 @@ public class DisplayPane extends Canvas {
 
         repairFieldReferences();
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _blinkCounter |= 0x01;
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -761,10 +601,11 @@ public class DisplayPane extends Canvas {
                 }
             }
 
-            _cursorPosition.setRow(_cursorPosition.getRow() + 1);
-
             repairFieldReferences();
+            _cursorPosition.setRow(_cursorPosition.getRow() + 1);
             _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+            _blinkCounter |= 0x01;
+            scheduleDrawDisplay();
             return true;
         }
         return false;
@@ -794,6 +635,7 @@ public class DisplayPane extends Canvas {
         _fields.keySet().removeIf(fieldCoord -> fieldCoord.compareTo(baseField.getCoordinates()) > 0);
 
         baseField.setChanged(true);
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -839,6 +681,7 @@ public class DisplayPane extends Canvas {
             } while (!coord.atHome() && (_characterCells[cx].getField() == baseField));
 
             baseField.setChanged(true);
+            scheduleDrawDisplay();
             return true;
         }
         return false;
@@ -869,6 +712,7 @@ public class DisplayPane extends Canvas {
             baseField.setChanged(true);
             return true;
         }
+        scheduleDrawDisplay();
         return false;
     }
 
@@ -889,6 +733,7 @@ public class DisplayPane extends Canvas {
             }
             cx++;
         } while (cx < _geometry.getCellCount());
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -911,6 +756,8 @@ public class DisplayPane extends Canvas {
                 Arrays.stream(_characterCells).forEach(cell -> cell.setField(prev));
                 _fields.remove(field.getCoordinates());
             }
+            _blinkCounter |= 0x01;
+            scheduleDrawDisplay();
             return true;
         }
         return false;
@@ -934,6 +781,8 @@ public class DisplayPane extends Canvas {
         _cursorPosition.set(nextField.getCoordinates());
         _fields.values().forEach(f -> f.setEnabled(false));
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _blinkCounter |= 0x01;
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -973,6 +822,8 @@ public class DisplayPane extends Canvas {
             }
 
             baseField.setChanged(true);
+            _blinkCounter |= 0x01;
+            scheduleDrawDisplay();
             return true;
         }
         return false;
@@ -1014,6 +865,8 @@ public class DisplayPane extends Canvas {
             }
 
             baseField.setChanged(true);
+            _blinkCounter |= 0x01;
+            scheduleDrawDisplay();
             return true;
         }
         return false;
@@ -1053,6 +906,8 @@ public class DisplayPane extends Canvas {
         }
 
         repairFieldReferences();
+        _blinkCounter |= 0x01;
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -1131,6 +986,7 @@ public class DisplayPane extends Canvas {
         }
 
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _blinkCounter |= 0x01;
         scheduleDrawDisplay();
         return true;
     }
