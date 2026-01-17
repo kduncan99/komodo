@@ -156,6 +156,18 @@ class OnSiteReaderSymbiont extends OnSiteSymbiont {
     }
 
     /**
+     * For SM * T
+     * locks the device, discards the current run (if any) and also discards the remainder of the card deck
+     * (aka the input file on the reader).
+     * For SM * T, caller should invoke lockDevice() first, then this.
+     */
+    @Override
+    public synchronized void terminateDevice() throws ExecStoppedException {
+        _status = SymbiontStatus.Locked;
+        terminateFile();
+    }
+
+    /**
      * For SM * E or SM * T
      * discards the current run (if any) and also discards the remainder of the card deck
      * (aka the input file on the reader).
@@ -244,7 +256,9 @@ class OnSiteReaderSymbiont extends OnSiteSymbiont {
             }
 
             case Waiting -> {
-                // And how is this different from inactive? I don't know...
+                // TODO Waiting means we finished a previous file,
+                //   but have not yet started a new one, and have not yet gone inactive.
+                //   if there's another file to be read, start it. otherwise, go inactive
             }
         }
 

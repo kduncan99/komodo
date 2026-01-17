@@ -277,6 +277,8 @@ SM KEY ERROR : UPDATE FAILED
         }
     }
 
+    // TODO console messages for state changes... maybe should happen in subclasses...
+
     private void processChange(final Symbiont symInfo) {
         // C only applies to print devices
         if (!symInfo.isPrintSymbiont()) {
@@ -335,7 +337,7 @@ SM KEY ERROR : UPDATE FAILED
 
     private void processRequeue(final Symbiont symInfo) throws ExecStoppedException {
         if (symInfo.isInputSymbiont() || symInfo.isRemoteSymbiont()) {
-            var msg = String.format("SM Q does not apply to %s", symInfo.getNodeName());
+            var msg = String.format("SM Q does not apply to %s", symInfo.getSymbiontName());
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
         } else {
             symInfo.requeue();
@@ -344,7 +346,7 @@ SM KEY ERROR : UPDATE FAILED
 
     private void processSuspend(final Symbiont symInfo) {
         if (!symInfo.isOutputSymbiont()) {
-            var msg = String.format("SM S does not apply to %s", symInfo.getNodeName());
+            var msg = String.format("SM S does not apply to %s", symInfo.getSymbiontName());
             Exec.getInstance().sendExecReadOnlyMessage(msg, _source);
         } else {
             symInfo.suspend();
@@ -354,12 +356,12 @@ SM KEY ERROR : UPDATE FAILED
     }
 
     private void processTerminateDevice(final Symbiont symInfo) throws ExecStoppedException {
-        symInfo.lockDevice();
-        symInfo.terminateFile();
+        symInfo.terminateDevice();
         Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
     }
 
     private void processTerminateFile(final Symbiont symInfo) throws ExecStoppedException {
         symInfo.terminateFile();
+        Exec.getInstance().sendExecReadOnlyMessage(symInfo.getStateString(), _source);
     }
 }

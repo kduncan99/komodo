@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.kute;
@@ -10,27 +10,25 @@ public class CharacterCell {
 
     private byte _character;
     private Emphasis _emphasis;
-    private FieldAttributes _attributes;
+    private Field _field;
 
     public CharacterCell() {
         _character = ASCII_SP;
         _emphasis = new Emphasis();
-        _attributes = null;
     }
 
     public CharacterCell copy() {
         var cc = new CharacterCell();
         cc._character = _character;
         cc._emphasis = _emphasis.copy();
-        cc._attributes = _attributes == null ? null : _attributes.copy();
+        cc._field = _field;
         return cc;
     }
 
     public byte getCharacter() { return _character; }
     public Emphasis getEmphasis() { return _emphasis; }
-    public FieldAttributes getAttributes() { return _attributes; }
+    public Field getField() { return _field; }
 
-    public void setCharacter(byte character) { _character = character; }
-    public void setEmphasis(Emphasis emphasis) { _emphasis = emphasis; }
-    public void setAttributes(FieldAttributes attributes) { _attributes = attributes; }
+    public void setCharacter(final byte character) { _character = character; }
+    public void setField(final Field field) { _field = field; }
 }

@@ -1,13 +1,12 @@
---------------------
+ --------------------
 TODO InProgress
 
 Kute
-    Fix status line so right-hand indicators are right-justified in however many columns the display is
+    Need to do the control page
     Tab backward
     Backspace
     Uppercase-Only mode
     [Connect][Disconnect][Capture] buttons
-    Need to do the control page
     Need to load and save templates
     Traffic capture mechanism - Raw/ASCII/Interpreted modes, save file, etc
     Testing panel (acts as host)

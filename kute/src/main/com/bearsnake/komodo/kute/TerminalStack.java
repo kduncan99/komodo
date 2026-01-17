@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2025 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.kute;
 
-import com.bearsnake.komodo.kute.exceptions.KuteException;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -12,15 +11,23 @@ import javafx.scene.control.TabPane;
 public class TerminalStack extends TabPane {
 
     public TerminalStack() {
-        try {
-            var terminal1 = new Terminal(new Template("DEMAND", "127.0.0.1", 2200));
-            var tab1 = new Tab("DEMAND", terminal1);
-            var terminal2 = new Terminal(new Template("TIP", "127.0.0.1", 2205));
-            var tab2 = new Tab("TIP", terminal2);
-            getTabs().addAll(tab1, tab2);
-        } catch (KuteException ke) {
-            System.out.println(ke.getMessage());
-        }
+        var terminal1 = new Terminal(new DisplayGeometry(24, 80),
+                                     new FontInfo(16),
+                                     new UTSColorSet(UTSColor.GREEN, UTSColor.BLACK),
+                                     false,
+                                     true,
+                                     true);
+        var tab1 = new Tab("DEMAND", terminal1);
+
+        var terminal2 = new Terminal(new DisplayGeometry(24, 80),
+                                     new FontInfo(16),
+                                     new UTSColorSet(UTSColor.YELLOW, UTSColor.BLACK),
+                                     false,
+                                     true,
+                                     true);
+        var tab2 = new Tab("TIP", terminal2);
+
+        getTabs().addAll(tab1, tab2);
     }
 
     public void closeAll() {

@@ -4,19 +4,9 @@
 
 package com.bearsnake.komodo.kexec.symbionts;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.hardwarelib.IoFunction;
-import com.bearsnake.komodo.hardwarelib.IoStatus;
-import com.bearsnake.komodo.hardwarelib.channels.ChannelIoPacket;
-import com.bearsnake.komodo.hardwarelib.channels.TransferFormat;
-import com.bearsnake.komodo.hardwarelib.devices.SymbiontDevice;
-import com.bearsnake.komodo.kexec.consoles.ConsoleType;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
-import com.bearsnake.komodo.kexec.exceptions.NoRouteForIOException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
-import com.bearsnake.komodo.kexec.facilities.NodeInfo;
-import com.bearsnake.komodo.kexec.facilities.NodeStatus;
 import com.bearsnake.komodo.logger.LogManager;
 
 /**
@@ -24,38 +14,20 @@ import com.bearsnake.komodo.logger.LogManager;
  */
 public abstract class Symbiont implements Runnable {
 
-    private static final int POLL_DELAY_MILLISECONDS = 1000;
-    private static final int POLL_LONG_DELAY_MILLISECONDS = 5000;
-    protected static final String NO_ROUTE_FOR_IO_MSG = "No Route to Device";
+    protected static final int POLL_DELAY_MILLISECONDS = 1000;
+    protected static final int POLL_LONG_DELAY_MILLISECONDS = 5000;
 
-    protected final NodeInfo _nodeInfo;
-    protected final SymbiontDevice _node;
-    protected final int _nodeIdentifier;
-    protected final ArraySlice _buffer;
-    protected final ChannelIoPacket _channelPacket;
-
-    protected SymbiontStatus _status;
-    protected SymbiontState _state;
-
-    private boolean _terminate = false;
+    private final String _symbiontName;
+    protected boolean _terminate = false;
 
     protected Symbiont(
-        final NodeInfo nodeInfo
+        final String symbiontName
     ) {
-        _nodeInfo = nodeInfo;
-        _node = (SymbiontDevice) _nodeInfo.getNode();
-        _nodeIdentifier = _node.getNodeIdentifier();
-        _status = SymbiontStatus.Locked;
-        _state = SymbiontState.Stopped;
-
-        _buffer = new ArraySlice(new long[132]);
-        _channelPacket = new ChannelIoPacket().setBuffer(_buffer)
-                                              .setFormat(TransferFormat.QuarterWord)
-                                              .setNodeIdentifier(_nodeIdentifier);
+        _symbiontName = symbiontName;
     }
 
-    public final String getNodeName() {
-        return _node.getNodeName();
+    public final String getSymbiontName() {
+        return _symbiontName;
     }
 
     /**
@@ -64,40 +36,18 @@ public abstract class Symbiont implements Runnable {
      */
     abstract boolean poll() throws ExecStoppedException;
 
-    public final void run() {
-        LogManager.logTrace(_node.getNodeName(), "SymbiontInfo thread starting");
-        var exec = Exec.getInstance();
-
-        while (!_terminate) {
-            try {
-                int delay = 0;
-                if (!exec.getGenFileInterface().isReady()) {
-                    delay = POLL_LONG_DELAY_MILLISECONDS;
-                } else {
-                    delay = poll() ? 0 : POLL_DELAY_MILLISECONDS;
-                }
-                Thread.sleep(delay);
-            } catch (InterruptedException ex) {
-                LogManager.logCatching(_node.getNodeName(), ex);
-            } catch (ExecStoppedException ex) {
-                LogManager.logCatching(_node.getNodeName(), ex);
-                _terminate = true;
-            } catch (Throwable t) {
-                LogManager.logCatching(_node.getNodeName(), t);
-                exec.stop(StopCode.ExecActivityTakenToEMode);
-                _terminate = true;
-            }
-        }
-
-        LogManager.logTrace(_node.getNodeName(), "SymbiontInfo thread stopped");
-    }
-
+    /**
+     * Starts the run method
+     */
     final void start() {
         _terminate = false;
         Thread thread = new Thread(this);
         thread.start();
     }
 
+    /**
+     * Stops the run method
+     */
     final void terminate() {
         _terminate = true;
     }
@@ -158,75 +108,47 @@ public abstract class Symbiont implements Runnable {
 
     /**
      * For handling SM * S keyins - Suspends the device
-     * Immediately pauses input or output.
      */
     public abstract void suspend();
 
     /**
-     * For handling SM * E and SM * T keyins
-     * Either will discard the remainder of the file - for input, the run we are building is discarded.
-     * For SM * T, the device should be locked out before invoking this.
+     * For handling SM * T keyin
+     */
+    public abstract void terminateDevice() throws ExecStoppedException;
+
+    /**
+     * For handling SM * E keyin
      */
     public abstract void terminateFile() throws ExecStoppedException;
 
     /**
-     * Notifies the console that the symbiont encountered an IO error,
-     * and sets the device status to DN.
-     * @param detail detail message
-     * @return true if caller should retry, false if we abort
+     * Thread run method
      */
-    protected boolean notifyConsoleIOError(
-        final String detail,
-        final boolean allowRetry
-    ) throws ExecStoppedException {
+    public final void run() {
+        LogManager.logTrace(_symbiontName, "Symbiont thread starting");
         var exec = Exec.getInstance();
-        var fm = exec.getFacilitiesManager();
-        String msg;
-        String[] responses;
-        if (allowRetry) {
-            msg = String.format("%s IO error - %s: AE", _node.getNodeName(), detail);
-            responses = new String[]{"A", "E"};
-        } else {
-            msg = String.format("%s IO error - %s: E", _node.getNodeName(), detail);
-            responses = new String[]{"E"};
-        }
 
-        var response = exec.sendExecRestrictedReadReplyMessage(msg, responses, ConsoleType.InputOutput);
-        if (response.equalsIgnoreCase("E")) {
-            fm.setNodeStatus(_nodeIdentifier, NodeStatus.Down, ConsoleType.InputOutput);
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    /**
-     * Issues a reset for the underlying node.
-     * Can be issued while another IO using the object's generic buffer is in progress.
-     * @return true generally, false if the IO (and all retries, if any) failed
-     */
-    protected boolean resetNode() throws ExecStoppedException {
-        var exec = Exec.getInstance();
-        var fm = exec.getFacilitiesManager();
-        var failed = false;
-        var retry = true;
-        while (retry) {
+        while (!_terminate) {
             try {
-                var channelPacket = new ChannelIoPacket().setNodeIdentifier(_nodeIdentifier)
-                                                         .setIoFunction(IoFunction.Reset);
-                fm.routeIo(channelPacket);
-                if (channelPacket.getIoStatus() == IoStatus.Successful) {
-                    retry = false;
+                int delay = 0;
+                if (!exec.getGenFileInterface().isReady()) {
+                    delay = POLL_LONG_DELAY_MILLISECONDS;
                 } else {
-                    retry = notifyConsoleIOError(channelPacket.getIoStatus().toString(), true);
-                    failed = true;
+                    delay = poll() ? 0 : POLL_DELAY_MILLISECONDS;
                 }
-            } catch (NoRouteForIOException e) {
-                retry = notifyConsoleIOError(NO_ROUTE_FOR_IO_MSG, true);
-                failed = true;
+                Thread.sleep(delay);
+            } catch (InterruptedException ex) {
+                LogManager.logCatching(_symbiontName, ex);
+            } catch (ExecStoppedException ex) {
+                LogManager.logCatching(_symbiontName, ex);
+                _terminate = true;
+            } catch (Throwable t) {
+                LogManager.logCatching(_symbiontName, t);
+                exec.stop(StopCode.ExecActivityTakenToEMode);
+                _terminate = true;
             }
         }
 
-        return !failed;
+        LogManager.logTrace(_symbiontName, "Symbiont thread stopped");
     }
 }

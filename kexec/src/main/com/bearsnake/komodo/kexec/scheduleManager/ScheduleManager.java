@@ -13,6 +13,8 @@ import com.bearsnake.komodo.kexec.exceptions.KExecException;
 import com.bearsnake.komodo.kexec.exceptions.ScheduleManagerException;
 import com.bearsnake.komodo.kexec.exec.Exec;
 import com.bearsnake.komodo.kexec.exec.StopCode;
+import com.bearsnake.komodo.logger.LogManager;
+
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,6 +34,7 @@ public class ScheduleManager implements Manager, Runnable {
     private static final String DEFAULT_RUN_ID = "RUN000";
     private static final String DEFAULT_ACCOUNT_ID = "000000";
     private static final String DEFAULT_PROJECT_ID = "Q$Q$Q$";
+    private static final String LOG_SOURCE = "ScheduleMgr";
 
     private int _maxBatchJobs = 0;
     private int _openBatchJobCount = 0;
@@ -51,6 +54,7 @@ public class ScheduleManager implements Manager, Runnable {
 
     @Override
     public void boot(boolean recoveryBoot) throws KExecException {
+        LogManager.logTrace(LOG_SOURCE, "boot(%s)", recoveryBoot);
         var exec = Exec.getInstance();
         _runEntries.clear();
         _runEntries.put(exec.getActualRunId(), exec);
@@ -70,7 +74,7 @@ public class ScheduleManager implements Manager, Runnable {
 
     @Override
     public void close() {
-
+        LogManager.logTrace(LOG_SOURCE, "close()");
     }
 
     @Override
@@ -82,7 +86,7 @@ public class ScheduleManager implements Manager, Runnable {
 
     @Override
     public void initialize() throws KExecException {
-
+        LogManager.logTrace(LOG_SOURCE, "initialize()");
     }
 
     @Override
@@ -95,6 +99,8 @@ public class ScheduleManager implements Manager, Runnable {
 
     @Override
     public synchronized void run() {
+        LogManager.logTrace(LOG_SOURCE, "stop()");
+
         while (!_terminate) {
             // Look for a batch job to bring out of backlog
             var started = false;

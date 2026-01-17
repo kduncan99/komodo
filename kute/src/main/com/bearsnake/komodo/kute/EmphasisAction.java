@@ -4,8 +4,9 @@
 
 package com.bearsnake.komodo.kute;
 
-public enum TransmitMode {
-    ALL,
-    VARIABLE,
-    CHANGED,
+public enum EmphasisAction {
+    NONE,
+    ADD,
+    REMOVE,
+    SET,
 }

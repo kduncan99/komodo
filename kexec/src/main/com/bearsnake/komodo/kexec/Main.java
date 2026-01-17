@@ -95,7 +95,7 @@ public class Main {
             e.setConfiguration(config);
             e.initialize();
         } catch (KExecException ex) {
-            LogManager.logFatal("Exec", "Initialization error %v", ex.toString());
+            LogManager.logFatal("Exec", "Initialization error %s", ex.toString());
             return;
         }
 

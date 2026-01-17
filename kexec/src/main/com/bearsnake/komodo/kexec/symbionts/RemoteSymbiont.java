@@ -4,8 +4,13 @@
 
 package com.bearsnake.komodo.kexec.symbionts;
 
+import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
-import com.bearsnake.komodo.kexec.facilities.NodeInfo;
+import com.bearsnake.komodo.kexec.exceptions.ResourceException;
+import com.bearsnake.komodo.kexec.exec.Exec;
+
+import java.rmi.Remote;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * RSI (including DEMAND mode) symbiont handler
@@ -13,36 +18,39 @@ import com.bearsnake.komodo.kexec.facilities.NodeInfo;
  */
 abstract class RemoteSymbiont extends Symbiont {
 
-    public RemoteSymbiont(
-        final NodeInfo nodeInfo
+    protected RemoteSymbiont(
+        final String symbiontName
     ) {
-        super(nodeInfo);
+        super(symbiontName);
     }
 
     @Override
-    boolean poll() throws ExecStoppedException {
-        return false;// TODO
+    public abstract String getStateString();
+
+    @Override
+    public final boolean isInputSymbiont() {
+        return true;
     }
 
     @Override
-    public String getStateString() {
-        return "";// TODO
+    public final boolean isOnSiteSymbiont() {
+        return false;
     }
 
     @Override
-    public abstract boolean isInputSymbiont();
+    public final boolean isOutputSymbiont() {
+        return true;
+    }
 
     @Override
-    public abstract boolean isOnSiteSymbiont();
+    public final boolean isPrintSymbiont() {
+        return true;
+    }
 
     @Override
-    public abstract boolean isOutputSymbiont();
-
-    @Override
-    public abstract boolean isPrintSymbiont();
-
-    @Override
-    public abstract boolean isRemoteSymbiont();
+    public final boolean isRemoteSymbiont() {
+        return true;
+    }
 
     @Override
     public void initialize() {
@@ -60,30 +68,23 @@ abstract class RemoteSymbiont extends Symbiont {
     }
 
     @Override
-    public final void setPageGeometry(final Integer linesPerPage,
-                                      final Integer topMargin,
-                                      final Integer bottomMargin,
-                                      final Integer linesPerInch) {
-        // TODO applies to RSI devices...
-    }
+    public abstract void setPageGeometry(final Integer linesPerPage,
+                                         final Integer topMargin,
+                                         final Integer bottomMargin,
+                                         final Integer linesPerInch);
 
     @Override
-    public void repositionAll() {
-        // TODO
-    }
+    public abstract void repositionAll();
 
     @Override
-    public void requeue() {
-        // TODO
-    }
+    public abstract void requeue();
 
     @Override
-    public final void suspend() {
-        // TODO
-    }
+    public abstract void suspend();
 
     @Override
-    public final void terminateFile() {
-        // TODO
-    }
+    public abstract void terminateFile();
+
+    @Override
+    abstract boolean poll() throws ExecStoppedException;
 }

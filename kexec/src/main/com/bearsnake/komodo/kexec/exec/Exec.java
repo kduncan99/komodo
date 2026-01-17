@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.kexec.exec;
 
-import com.bearsnake.komodo.kexec.configuration.parameters.Tag;
 import com.bearsnake.komodo.kexec.configuration.Configuration;
 import com.bearsnake.komodo.baselib.FileSpecification;
 import com.bearsnake.komodo.kexec.Granularity;
@@ -22,6 +21,7 @@ import com.bearsnake.komodo.kexec.facilities.FacStatusResult;
 import com.bearsnake.komodo.kexec.facilities.FacilitiesManager;
 import com.bearsnake.komodo.kexec.keyins.KeyinManager;
 import com.bearsnake.komodo.kexec.mfd.MFDManager;
+import com.bearsnake.komodo.kexec.networkManager.NetworkManager;
 import com.bearsnake.komodo.kexec.scheduleManager.ExecRun;
 import com.bearsnake.komodo.kexec.scheduleManager.ScheduleManager;
 import com.bearsnake.komodo.kexec.symbionts.SymbiontManager;
@@ -61,6 +61,7 @@ public class Exec extends ExecRun {
     private FacilitiesManager _facilitiesManager;
     private KeyinManager _keyinManager;
     private MFDManager _mfdManager;
+    private NetworkManager _netManager;
     private ScheduleManager _scheduleManager;
     private SymbiontManager _symbiontManager;
 
@@ -76,6 +77,7 @@ public class Exec extends ExecRun {
         _facilitiesManager = new FacilitiesManager();
         _keyinManager = new KeyinManager();
         _mfdManager = new MFDManager();
+        _netManager = new NetworkManager();
         _scheduleManager = new ScheduleManager();
         _symbiontManager = new SymbiontManager();
     }
@@ -91,6 +93,7 @@ public class Exec extends ExecRun {
     public FacilitiesManager getFacilitiesManager() { return _facilitiesManager; }
     public KeyinManager getKeyinManager() { return _keyinManager; }
     public MFDManager getMFDManager() { return _mfdManager; }
+    public NetworkManager getNetworkManager() { return _netManager; }
     public ScheduleManager getScheduleManager() { return _scheduleManager; }
     public SymbiontManager getSymbiontManager() { return _symbiontManager; }
 
@@ -188,6 +191,7 @@ public class Exec extends ExecRun {
         _facilitiesManager = null;
         _keyinManager = null;
         _mfdManager = null;
+        _netManager = null;
         _scheduleManager = null;
         _symbiontManager = null;
     }

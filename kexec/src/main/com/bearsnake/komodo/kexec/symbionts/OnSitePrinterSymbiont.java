@@ -102,6 +102,11 @@ class OnSitePrinterSymbiont extends OnSiteSymbiont {
     }
 
     @Override
+    public final void terminateDevice() throws ExecStoppedException {
+        // TODO
+    }
+
+    @Override
     public void terminateFile() throws ExecStoppedException {
         // TODO
     }

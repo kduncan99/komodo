@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.kute;
@@ -44,5 +44,18 @@ public enum UTSColor {
 
     public Color getFxTextColor() {
         return _fxTextColor;
+    }
+
+    public UTSColor nextColor() {
+        return switch (this) {
+            case BLACK -> RED;
+            case RED -> GREEN;
+            case GREEN -> YELLOW;
+            case YELLOW -> BLUE;
+            case BLUE -> MAGENTA;
+            case MAGENTA -> CYAN;
+            case CYAN -> WHITE;
+            case WHITE -> BLACK;
+        };
     }
 }

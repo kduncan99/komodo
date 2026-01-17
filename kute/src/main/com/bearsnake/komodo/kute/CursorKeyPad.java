@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.kute;
@@ -23,7 +23,7 @@ public class CursorKeyPad extends GridPane {
         setFocusTraversable(false);
 
         var homeButton = new Button("↖");
-        homeButton.setOnAction(_ -> Kute.getInstance().getActiveTerminal().kbHome());
+        homeButton.setOnAction(_ -> Kute.getInstance().getActiveTerminal().kbCursorToHome());
         homeButton.setMinWidth(MIN_WIDTH);
         homeButton.setMinHeight(MIN_HEIGHT);
         add(homeButton, 0, 0);

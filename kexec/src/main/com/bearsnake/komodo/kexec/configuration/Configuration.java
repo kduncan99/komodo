@@ -44,6 +44,8 @@ public class Configuration {
     private static final List<String> SYMBIONT_PUNCH_QUEUE_NAMES = new LinkedList<>();
     private static final List<List<String>> SYMBIONT_GROUPINGS = new LinkedList<>();
 
+    private static final List<NetworkInfo> NETWORKS = new LinkedList<>();
+
     // discrete configuration values ------------------------------------------------------------------------------------
 
     static {
@@ -1052,13 +1054,19 @@ public class Configuration {
 
     // hardware configuration ------------------------------------------------------------------------------------------
 
-    public Collection<Node> getNodes() {
-        return NODES.values();
-    }
-
     // this is the default - if there is any hardware configuration in the loaded configuration file
     // (see updateFromFile()) then this configuration is completely overridden.
     // TODO (default hardware configuration)
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+    public Collection<NetworkInfo> getNetworks() {
+        return new LinkedList<>(NETWORKS);
+    }
+
+    public Collection<Node> getNodes() {
+        return new LinkedList<>(NODES.values());
+    }
 
     public Collection<String> getSymbiontPrintQueues() {
         return new LinkedList<>(SYMBIONT_PRINTER_QUEUE_NAMES);
@@ -1276,6 +1284,40 @@ public class Configuration {
         return sb.toString();
     }
 
+    public void processNetwork(
+        final Parser parser
+    ) throws SyntaxException {
+        // NETWORK name [ ADDR={ip_address} ]  [ CONSOLE={port} ]  [ DEMAND={port} ]
+        try {
+            parser.skipSpaces();
+            var netName = parser.parseIdentifier(6, " ");
+            parser.skipSpaces();
+
+            String addrStr = null;
+            Integer consolePort = null;
+            Integer demandPort = null;
+            while (!parser.atEnd()) {
+                if (parser.parseToken("ADDR=")) {
+                    addrStr = parser.parseUntil(" ");
+                } else if (parser.parseToken("CONSOLE=")) {
+                    consolePort = (int)parser.parseUnsignedInteger();
+                } else if (parser.parseToken("DEMAND=")) {
+                    demandPort = (int)parser.parseUnsignedInteger();
+                } else {
+                    throw new SyntaxException("Syntax error in NETWORK configuration");
+                }
+
+                parser.skipSpaces();
+            }
+
+            NETWORKS.add(new NetworkInfo(netName, addrStr, consolePort, demandPort));
+        } catch (Parser.NotFoundException pex) {
+            throw new SyntaxException("Invalid NETWORK configuration");
+        } catch (Parser.SyntaxException pex) {
+            throw new SyntaxException(pex.getMessage());
+        }
+    }
+
     public void processNode(
         final Parser parser
     ) throws SyntaxException {
@@ -1467,10 +1509,11 @@ public class Configuration {
                         var p = new Parser(line);
                         var token = p.parseUntil(" =").toUpperCase();
                         switch (token) {
+                            case "NETWORK" -> processNetwork(p);
                             case "NODE" -> processNode(p);
+                            case "PARAMETER" -> processParameter(p);
                             case "SYMGROUP" -> processSymGroup(p);
                             case "SYMQUEUE" -> processSymQueue(p);
-                            case "PARAMETER" -> processParameter(p);
                             default ->
                                 throw new SyntaxException("Unrecognized token " + token);
                         }

@@ -8,7 +8,7 @@ import com.bearsnake.komodo.kexec.exceptions.ExecStoppedException;
 import com.bearsnake.komodo.kexec.facilities.NodeInfo;
 
 /**
- * Handles punch-type output symbionts.
+ * Handles punch-type output symbionts. These symbionts write to text files in a targeted directory.
  * Reads files in punch output queues, performs necessary formatting, and sends appropriate card images to the destination
  * (which will generally be a local or remote holding area for image files - we don't expect ever to have real card punch devices).
  */
@@ -89,6 +89,11 @@ class OnSitePunchSymbiont extends OnSiteSymbiont {
     }
 
     @Override
+    public synchronized final void terminateDevice() throws ExecStoppedException {
+        // TODO
+    }
+
+    @Override
     public synchronized final void terminateFile() throws ExecStoppedException {
         // TODO
     }
@@ -103,9 +108,25 @@ class OnSitePunchSymbiont extends OnSiteSymbiont {
     boolean poll() throws ExecStoppedException {
         var result = false;
 
-//        if (!_isSuspended) {
-//            // TODO
-//        }
+        switch (_status) {
+            case Active -> {
+                // TODO
+            }
+            case Inactive -> {
+                // TODO Is there a job to print? If so, set it up and go active
+            }
+            case Locked -> {
+                // TODO If we are working on a job, continue doing so
+            }
+            case Suspended -> {
+                // Do nothing
+            }
+            case Waiting -> {
+                // TODO Waiting means we finished a previous file,
+                //   but have not yet started a new one, and have not yet gone inactive.
+                //   if there's another file to be read, start it. otherwise, go inactive
+            }
+        }
 
         return result;
     }

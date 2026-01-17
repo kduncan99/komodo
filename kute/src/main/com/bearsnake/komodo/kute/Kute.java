@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.kute;
@@ -88,7 +88,6 @@ public class Kute extends Application {
     @Override
     public void stop() throws Exception {
         // TODO ask if the user is sure he wants to exit
-
         _terminalStack.closeAll();
     }
 

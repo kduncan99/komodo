@@ -1,10 +1,17 @@
 /*
- * Copyright (c) 2025 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.kute;
 
 public abstract class Constants {
+
+    static final int MIN_DISPLAY_COLUMNS = 64;
+    static final int MIN_DISPLAY_ROWS = 16;
+    static final int STD_DISPLAY_COLUMNS = 80;
+    static final int STD_DISPLAY_ROWS = 24;
+    static final int MAX_DISPLAY_COLUMNS = 256;
+    static final int MAX_DISPLAY_ROWS = 256;
 
     static final byte ASCII_NUL = 0x00;
     static final byte ASCII_SOH = 0x01;

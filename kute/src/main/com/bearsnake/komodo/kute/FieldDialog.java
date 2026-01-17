@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.kute;
@@ -20,11 +20,12 @@ import java.util.Optional;
 
 import static com.bearsnake.komodo.kute.Intensity.NORMAL;
 
-public class FieldAttributesDialog {
+public class FieldDialog {
 
     private final Stage _stage;
 
-    private FieldAttributes _attributes = null;
+    private Field field = null;
+    private final Coordinates _coordinates;
 
     private final ChoiceBox<Intensity> _intensity;
     private final ChoiceBox<UTSColor> _textColor;
@@ -38,12 +39,14 @@ public class FieldAttributesDialog {
     private final CheckBox _numericOnly;
     private final CheckBox _rightJustified;
 
-    public FieldAttributesDialog(final String caption,
-                                 final Window dialog) {
+    public FieldDialog(final Window dialog,
+                       final Coordinates coordinates) {
+        _coordinates = coordinates.copy();
+
         _stage = new Stage();
         _stage.initOwner(dialog);
         _stage.initModality(Modality.APPLICATION_MODAL);
-        _stage.setTitle(caption);
+        _stage.setTitle(String.format("Create FCC at Row=%d Col=%d", coordinates.getRow(), coordinates.getColumn()));
 
         _intensity = new ChoiceBox<>(FXCollections.observableArrayList(Intensity.values()));
         _textColor = new ChoiceBox<>(FXCollections.observableArrayList(UTSColor.values()));
@@ -101,7 +104,7 @@ public class FieldAttributesDialog {
 
         var okButton = new Button("Ok");
         okButton.setOnAction(event -> {
-            _attributes = createFieldAttributes();
+            field = createField();
             _stage.close();
         });
 
@@ -119,24 +122,24 @@ public class FieldAttributesDialog {
         _stage.setScene(scene);
     }
 
-    private FieldAttributes createFieldAttributes() {
-        var attr = new FieldAttributes();
-        attr.setIntensity(_intensity.getValue());
-        attr.setTextColor(_textColor.getValue());
-        attr.setBackgroundColor(_backgroundColor.getValue());
-        attr.setTabStop(_tabStop.isSelected());
-        attr.setBlinking(_blinking.isSelected());
-        attr.setReverseVideo(_reverseVideo.isSelected());
-        attr.setProtected(_protected.isSelected());
-        attr.setProtectedEmphasis(_protectedEmphasis.isSelected());
-        attr.setAlphabeticOnly(_alphaOnly.isSelected());
-        attr.setNumericOnly(_numericOnly.isSelected());
-        attr.setRightJustified(_rightJustified.isSelected());
-        return attr;
+    private Field createField() {
+        var field = new ExplicitField(_coordinates);
+        field.setIntensity(_intensity.getValue());
+        field.setTextColor(_textColor.getValue());
+        field.setBackgroundColor(_backgroundColor.getValue());
+        field.setTabStop(_tabStop.isSelected());
+        field.setBlinking(_blinking.isSelected());
+        field.setReverseVideo(_reverseVideo.isSelected());
+        field.setProtected(_protected.isSelected());
+        field.setProtectedEmphasis(_protectedEmphasis.isSelected());
+        field.setAlphabeticOnly(_alphaOnly.isSelected());
+        field.setNumericOnly(_numericOnly.isSelected());
+        field.setRightJustified(_rightJustified.isSelected());
+        return field;
     }
 
-    public Optional<FieldAttributes> showDialog() {
+    public Optional<Field> showDialog() {
         _stage.showAndWait();
-        return Optional.ofNullable(_attributes);
+        return Optional.ofNullable(field);
     }
 }
