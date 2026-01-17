@@ -6,8 +6,6 @@ package com.bearsnake.komodo.kute;
 
 import java.nio.charset.StandardCharsets;
 
-import static com.bearsnake.komodo.kute.Constants.*;
-
 /**
  * This is a special overlay to which Terminal directs host and keyboard traffic when it exists.
  */
@@ -218,6 +216,24 @@ public class ControlPagePane
     @Override public boolean setCursorPosition(final Coordinates coordinates) { return false; }
     @Override public boolean toggleEmphasis(final Emphasis emphasis) { return false; }
 
+    /*
+     * Retrieves the next field following the given location,
+     * or the first unprotected field on the screen if there are none following the location.
+     */
+    private Field fieldAfter(final Coordinates location) {
+        var result = _fields.higherEntry(location);
+        return result == null ? _fields.firstEntry().getValue() : result.getValue();
+    }
+
+    /*
+     * Retrieves the previous field before the given location,
+     * or the last unprotected field on the screen if there are none before the location.
+     */
+    private Field fieldBefore(final Coordinates location) {
+        var result = _fields.lowerEntry(location);
+        return result == null ? _fields.lastEntry().getValue() : result.getValue();
+    }
+
     // Things we do slightly differently than the regular display.
     // We allow only alphabetic and numeric characters, ignoring the rest.
     // Also, we do not advance beyond the field if we are in the last position of the field...
@@ -253,17 +269,14 @@ public class ControlPagePane
      */
     @Override
     public boolean tabBackward() {
-        if (getCharacterCell(_cursorPosition).getField().getCoordinates().atHome()) {
-            // we're in the first field - move to the last
-            _cursorPosition.set(_fields.lastKey());
-        } else {
-            // Find the previous field coordinates
-            var prevCoord = _fields.lowerEntry(_cursorPosition).getKey();
-            _cursorPosition.set(prevCoord);
+        // Find the previous unprotected field coordinates
+        var field = fieldBefore(_cursorPosition);
+        while (field.isProtected()) {
+            field = fieldBefore(field.getCoordinates());
         }
-
+        _cursorPosition.set(field.getCoordinates());
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
-        scheduleDrawDisplay(true);
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -273,17 +286,14 @@ public class ControlPagePane
      */
     @Override
     public boolean tabForward() {
-        if (getCharacterCell(_cursorPosition).getField() == _fields.lastEntry().getValue()) {
-            // we're in the last field - move to the beginning of the first field.
-            _cursorPosition.set(Coordinates.HOME_POSITION);
-        } else {
-            // Find the next field coordinates
-            var nextCoord = _fields.higherEntry(_cursorPosition).getKey();
-            _cursorPosition.set(nextCoord);
+        // Find the next unprotected field coordinates
+        var field = fieldAfter(_cursorPosition);
+        while (field.isProtected()) {
+            field = fieldAfter(field.getCoordinates());
         }
-
+        _cursorPosition.set(field.getCoordinates());
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
-        scheduleDrawDisplay(true);
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -310,17 +320,17 @@ public class ControlPagePane
 
     private void putPrintMode() {
         putString(PRINT_COORDS, _printMode.toString());
-        scheduleDrawDisplay(false);
+        scheduleDrawDisplay();
     }
 
     private void putTransferMode() {
         putString(XFER_COORDS, _transferMode.toString());
-        scheduleDrawDisplay(false);
+        scheduleDrawDisplay();
     }
 
     private void putTransmitMode() {
         putString(XMIT_COORDS, _transmitMode.toString());
-        scheduleDrawDisplay(false);
+        scheduleDrawDisplay();
     }
 
     public void setPrintMode(final PrintMode printMode) {

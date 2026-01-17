@@ -143,76 +143,73 @@ public class DisplayPane extends Canvas {
     /*
      * Draws the character display.
      * Do not invoke this directly - use scheduleDrawStatusAction() instead.
-     * @param cursorOnly set this true if we are invoked only because the cursor moved
      */
-    private void drawDisplay(final boolean cursorOnly) {
+    private void drawDisplay() {
         var gcDisplay = getGraphicsContext2D();
         gcDisplay.setFont(_fontInfo.getFont());
 
         var coord = Coordinates.HOME_POSITION.copy();
         var cx = 0;
         do {
-            if (!cursorOnly || coord.equals(_cursorPosition)) {
-                var cell = _characterCells[cx];
-                var field = cell.getField();
-                var utsBgColor = field.getBackgroundColor() == null ? _bgColor : field.getBackgroundColor();
-                var utsTextColor = field.getTextColor() == null ? _textColor : field.getTextColor();
-                var intensity = field.getIntensity();
-                var blink = field.isBlinking();
-                var reverse = field.isReverseVideo();
+            var cell = _characterCells[cx];
+            var field = cell.getField();
+            var utsBgColor = field.getBackgroundColor() == null ? _bgColor : field.getBackgroundColor();
+            var utsTextColor = field.getTextColor() == null ? _textColor : field.getTextColor();
+            var intensity = field.getIntensity();
+            var blink = field.isBlinking();
+            var reverse = field.isReverseVideo();
 
-                var byteChar = cell.getCharacter();
-                var atCursor = (coord.getRow() == _cursorPosition.getRow()) && (coord.getColumn() == _cursorPosition.getColumn());
-                var ch = convertByteToCharacter(byteChar, atCursor);
-                var effectiveBlink = blink || (byteChar == ASCII_FS) || (byteChar == ASCII_GS);
+            var byteChar = cell.getCharacter();
+            var atCursor = (coord.getRow() == _cursorPosition.getRow()) && (coord.getColumn() == _cursorPosition.getColumn());
+            var ch = convertByteToCharacter(byteChar, atCursor);
+            var effectiveBlink = blink || (byteChar == ASCII_FS) || (byteChar == ASCII_GS);
 
-                var jfxBgColor = utsBgColor.getFxTextColor();
-                var jfxTextColor = utsTextColor.getFxTextColor();
-                if (effectiveBlink && _blinkCharacterFlag) {
-                    jfxTextColor = jfxBgColor;
-                }
+            var jfxBgColor = utsBgColor.getFxTextColor();
+            var jfxTextColor = utsTextColor.getFxTextColor();
+            if (effectiveBlink && _blinkCharacterFlag) {
+                jfxTextColor = jfxBgColor;
+            }
 
-                if (intensity == Intensity.LOW) {
-                    jfxBgColor = jfxBgColor.darker();
-                    jfxTextColor = jfxTextColor.darker();
-                }
+            if (intensity == Intensity.LOW) {
+                jfxBgColor = jfxBgColor.darker();
+                jfxTextColor = jfxTextColor.darker();
+            }
 
-                if (reverse) {
-                    var temp = jfxTextColor;
-                    jfxTextColor = jfxBgColor;
-                    jfxBgColor = temp;
-                }
+            if (reverse) {
+                var temp = jfxTextColor;
+                jfxTextColor = jfxBgColor;
+                jfxBgColor = temp;
+            }
 
-                // draw background first
-                var x = (coord.getColumn() - 1) * _fontInfo.getCharacterWidth();
-                var yRect = ((coord.getRow() - 1) * _fontInfo.getCharacterHeight());
-                gcDisplay.setFill(jfxBgColor);
-                gcDisplay.fillRect(x, yRect, _fontInfo.getCharacterWidth() + 1, _fontInfo.getCharacterHeight() + 1);
+            // draw background first
+            var x = (coord.getColumn() - 1) * _fontInfo.getCharacterWidth();
+            var yRect = ((coord.getRow() - 1) * _fontInfo.getCharacterHeight());
+            gcDisplay.setFill(jfxBgColor);
+            gcDisplay.fillRect(x, yRect, _fontInfo.getCharacterWidth() + 1, _fontInfo.getCharacterHeight() + 1);
 
-                // now draw text
-                var yText = yRect + _fontInfo.getCharacterHeight() - 4;
-                gcDisplay.setFill(jfxTextColor);// text color
-                gcDisplay.fillText(String.valueOf(ch), x, yText);
+            // now draw text
+            var yText = yRect + _fontInfo.getCharacterHeight() - 4;
+            gcDisplay.setFill(jfxTextColor);// text color
+            gcDisplay.fillText(String.valueOf(ch), x, yText);
 
-                // now draw emphasis (if any)
-                if (cell.getEmphasis().isColumnSeparator()) {
-                    gcDisplay.setStroke(jfxTextColor);// text color
-                    gcDisplay.setLineWidth(1.0);
-                    var y = yRect + _fontInfo.getCharacterHeight() - 1;
-                    gcDisplay.strokeLine(x, y, x, yRect);
-                }
-                if (cell.getEmphasis().isStrikeThrough()) {
-                    gcDisplay.setStroke(jfxTextColor);// text color
-                    gcDisplay.setLineWidth(1.0);
-                    var y = yRect + (_fontInfo.getCharacterHeight() / 2);
-                    gcDisplay.strokeLine(x, y, x + _fontInfo.getCharacterWidth() - 1, y);
-                }
-                if (cell.getEmphasis().isUnderscore()) {
-                    gcDisplay.setStroke(jfxTextColor);// text color
-                    gcDisplay.setLineWidth(1.0);
-                    var y = yRect + _fontInfo.getCharacterHeight() - 1;
-                    gcDisplay.strokeLine(x, y, x + _fontInfo.getCharacterWidth() - 1, y);
-                }
+            // now draw emphasis (if any)
+            if (cell.getEmphasis().isColumnSeparator()) {
+                gcDisplay.setStroke(jfxTextColor);// text color
+                gcDisplay.setLineWidth(1.0);
+                var y = yRect + _fontInfo.getCharacterHeight() - 1;
+                gcDisplay.strokeLine(x, y, x, yRect);
+            }
+            if (cell.getEmphasis().isStrikeThrough()) {
+                gcDisplay.setStroke(jfxTextColor);// text color
+                gcDisplay.setLineWidth(1.0);
+                var y = yRect + (_fontInfo.getCharacterHeight() / 2);
+                gcDisplay.strokeLine(x, y, x + _fontInfo.getCharacterWidth() - 1, y);
+            }
+            if (cell.getEmphasis().isUnderscore()) {
+                gcDisplay.setStroke(jfxTextColor);// text color
+                gcDisplay.setLineWidth(1.0);
+                var y = yRect + _fontInfo.getCharacterHeight() - 1;
+                gcDisplay.strokeLine(x, y, x + _fontInfo.getCharacterWidth() - 1, y);
             }
 
             advanceCoordinates(coord);
@@ -342,7 +339,7 @@ public class DisplayPane extends Canvas {
         _cursorPosition.set(Coordinates.HOME_POSITION);
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         repairFieldReferences();
-        scheduleDrawDisplay(false);
+        scheduleDrawDisplay();
     }
 
     /**
@@ -358,20 +355,20 @@ public class DisplayPane extends Canvas {
                 if (!field.isProtected()) {
                     _cursorPosition.set(field.getCoordinates());
                     _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
-                    scheduleDrawDisplay(false);
+                    scheduleDrawDisplay();
                     return;
                 }
             } while (!field.getCoordinates().equals(baseField.getCoordinates()));
             _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
-            scheduleDrawDisplay(false);
+            scheduleDrawDisplay();
         }
     }
 
     /*
      * Notifies the platform that it should schedule drawDisplay() to run in the graphics thread
      */
-    public void scheduleDrawDisplay(final boolean cursorOnly) {
-        Platform.runLater(() -> drawDisplay(cursorOnly));
+    public void scheduleDrawDisplay() {
+        Platform.runLater(this::drawDisplay);
     }
 
     /**
@@ -384,7 +381,7 @@ public class DisplayPane extends Canvas {
         _cursorPosition.setRow(row);
         _cursorPosition.setColumn(column);
         _cursorPositionListener.notifyCursorPositionChange(row, column);
-        scheduleDrawDisplay(true);
+        scheduleDrawDisplay();
     }
 
 
@@ -1129,7 +1126,7 @@ public class DisplayPane extends Canvas {
         }
 
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
-        scheduleDrawDisplay(false);
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -1162,7 +1159,7 @@ public class DisplayPane extends Canvas {
 
         advanceCoordinates(_cursorPosition);
         _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
-        scheduleDrawDisplay(false);
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -1455,7 +1452,7 @@ public class DisplayPane extends Canvas {
             _blinkCounter = (_blinkCounter + 1) & 0x3;
             _blinkCursorFlag = (_blinkCounter & 0x01) != 0;
             _blinkCharacterFlag = (_blinkCounter & 0x02) != 0;
-            scheduleDrawDisplay(false);
+            scheduleDrawDisplay();
         }
     }
 }

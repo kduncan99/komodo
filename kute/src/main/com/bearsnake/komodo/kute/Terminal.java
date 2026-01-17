@@ -165,6 +165,8 @@ public class Terminal extends Pane {
                     kbCursorReturn();
                 }
             }
+            case TAB -> kbTabForward();
+            //TODO backward tab
             case F1 -> kbSendFunctionKey(1);
             case F2 -> kbSendFunctionKey(2);
             case F3 -> kbSendFunctionKey(3);
@@ -214,7 +216,6 @@ public class Terminal extends Pane {
                 }
                 case 0x08 -> /* ctrl h */ kbBackSpace();
                 case 0x14 -> /* ctrl t */ Kute.getInstance().cycleTabs();
-                case ASCII_HT -> kbPutCharacter(ASCII_HT);
                 case ASCII_LF -> kbPutCharacter(ASCII_LF);
                 case ASCII_FF -> kbPutCharacter(ASCII_FF);
                 default -> {
@@ -751,7 +752,7 @@ public class Terminal extends Pane {
     }
 
     public void kbTabBackward() {
-        if (_statusPane.isKeyboardLocked() || controlPageIsActive()) {
+        if (_statusPane.isKeyboardLocked()) {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
@@ -884,7 +885,7 @@ public class Terminal extends Pane {
 
             _controlPagePane = null;
             _displayPane.hideCursor(false);
-            _activeDisplayPane.scheduleDrawDisplay(false);
+            _activeDisplayPane.scheduleDrawDisplay();
         } else {
             _controlPagePane = new ControlPagePane(_displayPane.getGeometry(),
                                                    _displayPane.getFontInfo(),
@@ -1171,7 +1172,7 @@ public class Terminal extends Pane {
                 }
             }
         } finally {
-            _activeDisplayPane.scheduleDrawDisplay(false);
+            _activeDisplayPane.scheduleDrawDisplay();
         }
     }
 
