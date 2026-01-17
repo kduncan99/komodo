@@ -358,6 +358,7 @@ public class DisplayPane extends Canvas {
                     scheduleDrawDisplay();
                     return;
                 }
+                field = getNextField(field);
             } while (!field.getCoordinates().equals(baseField.getCoordinates()));
             _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
             scheduleDrawDisplay();
