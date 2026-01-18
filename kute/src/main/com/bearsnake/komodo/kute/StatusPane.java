@@ -17,8 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * There is one of these per Terminal, aligned directly below the Display for the Terminal.
  */
 public class StatusPane
-    extends Canvas
-    implements CursorPositionListener {
+    extends Canvas {
 
     // amount of time between executions of poll indicator de-illumination check
     private static final int PULSE_POLL_INDICATOR_CYCLE_MSEC = 10;
@@ -79,6 +78,10 @@ public class StatusPane
         gfContext.setFill(jfxBgColor);
         gfContext.fillRect(0, 0, getWidth(), getHeight());
 
+        // draw separator line
+        gfContext.setFill(jfxTextColor);
+        gfContext.fillRect(0, 0, getWidth(), 1);
+
         // construct cursor position and draw it left-justified
         gfContext.setFill(jfxTextColor);
         gfContext.fillText(String.format("ROW=%03d COL=%03d", _cursorPosition.getRow(), _cursorPosition.getColumn()),
@@ -110,9 +113,18 @@ public class StatusPane
     }
 
     /**
+     * Notifies us that the terminal's color scheme has changed.
+     * @param colorSet new color scheme
+     */
+    public void notifyColorChange(final UTSColorSet colorSet) {
+        _textColor = colorSet.getFGColor();
+        _bgColor = colorSet.getBGColor();
+        scheduleDrawStatus();
+    }
+
+    /**
      * Notifies us that the terminal's cursor position has changed
      */
-    @Override
     public void notifyCursorPositionChange(int newRow, int newColumn) {
         setCursorPosition(newRow, newColumn);
     }

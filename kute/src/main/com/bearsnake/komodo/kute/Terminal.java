@@ -203,16 +203,14 @@ public class Terminal extends Pane {
             var ch = str.charAt(0);
             switch (ch) {
                 case 0x02 -> /* ctrl b */ {
+                    // affects the display pane even if control page is active...
+                    // control page fields have fixed colors, so they don't react to this anyway.
                     _displayPane.cycleBackgroundColor();
-                    if (_controlPagePane != null) {
-                        _controlPagePane.cycleBackgroundColor();
-                    }
                 }
                 case 0x03 -> /* ctrl c */ {
+                    // affects the display pane even if control page is active...
+                    // control page fields have fixed colors, so they don't react to this anyway.
                     _displayPane.cycleTextColor();
-                    if (_controlPagePane != null) {
-                        _controlPagePane.cycleTextColor();
-                    }
                 }
                 case 0x08 -> /* ctrl h */ kbBackSpace();
                 case 0x14 -> /* ctrl t */ Kute.getInstance().cycleTabs();

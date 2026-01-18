@@ -21,7 +21,7 @@ import static com.bearsnake.komodo.kute.Constants.*;
 public class DisplayPane extends Canvas {
 
     protected final Coordinates _cursorPosition = Coordinates.HOME_POSITION.copy();
-    protected final CursorPositionListener _cursorPositionListener;
+    protected final StatusPane _statusPane;
     private UTSColor _bgColor;
     private UTSColor _textColor;
     private boolean _dimDisplay;
@@ -40,11 +40,11 @@ public class DisplayPane extends Canvas {
     public DisplayPane(final DisplayGeometry initialGeometry,
                        final FontInfo initialFontInfo,
                        final UTSColorSet initialDefaultColors,
-                       final CursorPositionListener cursorPositionListener) {
+                       final StatusPane statusPane) {
         _fontInfo = initialFontInfo;
         _bgColor = initialDefaultColors.getBGColor();
         _textColor = initialDefaultColors.getFGColor();
-        _cursorPositionListener = cursorPositionListener;
+        _statusPane = statusPane;
 
         reconfigure(initialGeometry);
 
@@ -134,10 +134,14 @@ public class DisplayPane extends Canvas {
 
     public final void cycleBackgroundColor() {
         _bgColor = _bgColor.nextColor();
+        _statusPane.notifyColorChange(new UTSColorSet(_textColor, _bgColor));
+        scheduleDrawDisplay();
     }
 
     public final void cycleTextColor() {
         _textColor = _textColor.nextColor();
+        _statusPane.notifyColorChange(new UTSColorSet(_textColor, _bgColor));
+        scheduleDrawDisplay();
     }
 
     /**
@@ -341,7 +345,7 @@ public class DisplayPane extends Canvas {
         _fields.clear();
         _fields.put(Coordinates.HOME_POSITION, new ImplicitField());
         _cursorPosition.set(Coordinates.HOME_POSITION);
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         repairFieldReferences();
         scheduleDrawDisplay();
     }
@@ -358,13 +362,13 @@ public class DisplayPane extends Canvas {
             do {
                 if (!field.isProtected()) {
                     _cursorPosition.set(field.getCoordinates());
-                    _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+                    _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
                     scheduleDrawDisplay();
                     return;
                 }
                 field = getNextField(field);
             } while (!field.getCoordinates().equals(baseField.getCoordinates()));
-            _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+            _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
             scheduleDrawDisplay();
         }
     }
@@ -385,7 +389,7 @@ public class DisplayPane extends Canvas {
                                   final int column) {
         _cursorPosition.setRow(row);
         _cursorPosition.setColumn(column);
-        _cursorPositionListener.notifyCursorPositionChange(row, column);
+        _statusPane.notifyCursorPositionChange(row, column);
         scheduleDrawDisplay();
     }
 
@@ -404,7 +408,7 @@ public class DisplayPane extends Canvas {
             if (!_characterCells[cx].getField()
                                     .isProtected()) {
                 backupCoordinates(_cursorPosition);
-                _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+                _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
                 deleteInLine();
                 _blinkCounter |= 0x01;
                 scheduleDrawDisplay();
@@ -437,7 +441,7 @@ public class DisplayPane extends Canvas {
         if (_cursorPosition.getRow() > _geometry.getRows()) {
             _cursorPosition.setRow(1);
         }
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         _blinkCounter |= 0x01;
         scheduleDrawDisplay();
         return true;
@@ -449,7 +453,7 @@ public class DisplayPane extends Canvas {
      */
     public boolean cursorToHome() {
         _cursorPosition.set(Coordinates.HOME_POSITION.copy());
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         _blinkCounter |= 0x01;
         scheduleDrawDisplay();
         return true;
@@ -486,7 +490,7 @@ public class DisplayPane extends Canvas {
             }
 
             baseField.setChanged(true);
-            _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+            _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
             _blinkCounter |= 0x01;
             scheduleDrawDisplay();
             return true;
@@ -527,7 +531,7 @@ public class DisplayPane extends Canvas {
 
             baseField.setChanged(true);
         }
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         _blinkCounter |= 0x01;
         scheduleDrawDisplay();
         return true;
@@ -571,7 +575,7 @@ public class DisplayPane extends Canvas {
         }
 
         repairFieldReferences();
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         _blinkCounter |= 0x01;
         scheduleDrawDisplay();
         return true;
@@ -603,7 +607,7 @@ public class DisplayPane extends Canvas {
 
             repairFieldReferences();
             _cursorPosition.setRow(_cursorPosition.getRow() + 1);
-            _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+            _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
             _blinkCounter |= 0x01;
             scheduleDrawDisplay();
             return true;
@@ -780,7 +784,7 @@ public class DisplayPane extends Canvas {
         var nextField = getNextField(getCharacterCell(_cursorPosition).getField());
         _cursorPosition.set(nextField.getCoordinates());
         _fields.values().forEach(f -> f.setEnabled(false));
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         _blinkCounter |= 0x01;
         scheduleDrawDisplay();
         return true;
@@ -985,7 +989,7 @@ public class DisplayPane extends Canvas {
             advanceCoordinates(_cursorPosition);
         }
 
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         _blinkCounter |= 0x01;
         scheduleDrawDisplay();
         return true;
@@ -1019,7 +1023,7 @@ public class DisplayPane extends Canvas {
         }
 
         advanceCoordinates(_cursorPosition);
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         scheduleDrawDisplay();
         return true;
     }
@@ -1043,7 +1047,7 @@ public class DisplayPane extends Canvas {
         if (_cursorPosition.getRow() > _geometry.getRows()) {
             _cursorPosition.setRow(1);
         }
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         return true;
     }
 
@@ -1060,7 +1064,7 @@ public class DisplayPane extends Canvas {
                 _cursorPosition.setRow(_geometry.getRows());
             }
         }
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         return true;
     }
 
@@ -1077,7 +1081,7 @@ public class DisplayPane extends Canvas {
                 _cursorPosition.setRow(1);
             }
         }
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         return true;
     }
 
@@ -1090,7 +1094,7 @@ public class DisplayPane extends Canvas {
         if (_cursorPosition.getRow() == 0) {
             _cursorPosition.setRow(_geometry.getRows());
         }
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         return true;
     }
 
@@ -1101,7 +1105,7 @@ public class DisplayPane extends Canvas {
     public boolean setCursorPosition(final Coordinates coordinates) {
         _cursorPosition.setRow(Math.min(coordinates.getRow(), _geometry.getRows()));
         _cursorPosition.setColumn(Math.min(coordinates.getColumn(), _geometry.getColumns()));
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         return true;
     }
 
@@ -1138,14 +1142,14 @@ public class DisplayPane extends Canvas {
             advanceCoordinates(_cursorPosition);
             var cell = getCharacterCell(_cursorPosition);
             if (cell.getField().isTabStop()) {
-                _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+                _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
                 return true;
             }
 
             if (cell.getCharacter() == ASCII_HT) {
                 foundTabSet = true;
             } else if (foundTabSet && !cell.getField().isProtected()) {
-                _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+                _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
                 return true;
             }
         } while (!_cursorPosition.atHome());
@@ -1162,7 +1166,7 @@ public class DisplayPane extends Canvas {
             } while (!_cursorPosition.equals(startingPoint));
         }
 
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         return true;
     }
 

@@ -178,7 +178,7 @@ public class ControlPagePane
         final DisplayGeometry geometry,
         final FontInfo fontInfo,
         final UTSColorSet colorSet,
-        final CursorPositionListener listener,
+        final StatusPane listener,
         final Settings settings) {
         super(new DisplayGeometry(2, geometry.getColumns()), fontInfo, colorSet, listener);
 
@@ -208,7 +208,7 @@ public class ControlPagePane
 
         _cursorPosition.setRow(PRINT_COORDS.getRow());
         _cursorPosition.setColumn(PRINT_COORDS.getColumn());
-        _cursorPositionListener.notifyCursorPositionChange(PRINT_COORDS.getRow(), PRINT_COORDS.getColumn());
+        _statusPane.notifyCursorPositionChange(PRINT_COORDS.getRow(), PRINT_COORDS.getColumn());
     }
 
     // Things we don't allow in the control page
@@ -323,7 +323,7 @@ public class ControlPagePane
             field = fieldBefore(field.getCoordinates());
         }
         _cursorPosition.set(field.getCoordinates());
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         scheduleDrawDisplay();
         return true;
     }
@@ -340,7 +340,7 @@ public class ControlPagePane
             field = fieldAfter(field.getCoordinates());
         }
         _cursorPosition.set(field.getCoordinates());
-        _cursorPositionListener.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
+        _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         scheduleDrawDisplay();
         return true;
     }
