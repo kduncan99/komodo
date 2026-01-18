@@ -15,6 +15,15 @@ public enum TransmitMode {
         _string = str;
     }
 
+    public static TransmitMode getTransmitMode(final String str) {
+        for (TransmitMode mode : TransmitMode.values()) {
+            if (mode._string.equals(str)) {
+                return mode;
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return _string;

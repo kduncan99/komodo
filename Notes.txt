@@ -2,13 +2,13 @@
 TODO InProgress
 
 Kute
-    Working on control page
     When we scan cursor backward into protected field, it moves back to the next unprotected field...
         should it move backward to the previous unprotected field?
     Tab backward
     Backspace
     Uppercase-Only mode
     [Connect][Disconnect][Capture] buttons
+    [Reset] button
     Need to load and save templates
     Traffic capture mechanism - Raw/ASCII/Interpreted modes, save file, etc
     Testing panel (acts as host)

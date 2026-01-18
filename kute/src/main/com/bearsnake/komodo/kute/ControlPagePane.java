@@ -50,6 +50,8 @@ public class ControlPagePane
     //  TF/CF - enables transmission of color FCCs
     //  US/YS - uppercase only, US/NO - upper/lower case
 
+    public record Settings(PrintMode printMode, TransferMode transferMode, TransmitMode transmitMode) {}
+
     private static final byte[] TOP_TEXT =
         "(**PRNT**)STA-NA 000(**XFER**)PRNT(    )XFER(    )XMIT(    )MM  (PARAM)".getBytes(StandardCharsets.UTF_8);
 
@@ -176,7 +178,8 @@ public class ControlPagePane
         final DisplayGeometry geometry,
         final FontInfo fontInfo,
         final UTSColorSet colorSet,
-        final CursorPositionListener listener) {
+        final CursorPositionListener listener,
+        final Settings settings) {
         super(new DisplayGeometry(2, geometry.getColumns()), fontInfo, colorSet, listener);
 
         // Set fields and text
@@ -195,6 +198,13 @@ public class ControlPagePane
             _fields.put(f.getCoordinates(), f);
         }
         repairFieldReferences();
+
+        _printMode = settings.printMode;
+        _transferMode = settings.transferMode;
+        _transmitMode = settings.transmitMode;
+        putPrintMode();
+        putTransferMode();
+        putTransmitMode();
 
         _cursorPosition.setRow(PRINT_COORDS.getRow());
         _cursorPosition.setColumn(PRINT_COORDS.getColumn());
@@ -216,6 +226,34 @@ public class ControlPagePane
     @Override public boolean setCursorPosition(final Coordinates coordinates) { return false; }
     @Override public boolean toggleEmphasis(final Emphasis emphasis) { return false; }
 
+    public Settings evaluate() {
+        var printStr = getString(PRINT_COORDS, 4).trim();
+        if (!printStr.isEmpty()) {
+            _printMode = PrintMode.getPrintMode(printStr);
+            if (_printMode == null) {
+                return null;
+            }
+        }
+
+        var xferStr = getString(XFER_COORDS, 4).trim();
+        if (!xferStr.isEmpty()) {
+            _transferMode = TransferMode.getTransferMode(xferStr);
+            if (_transferMode == null) {
+                return null;
+            }
+        }
+
+        var xmitStr = getString(XMIT_COORDS, 4).trim();
+        if (!xmitStr.isEmpty()) {
+            _transmitMode = TransmitMode.getTransmitMode(xmitStr);
+            if (_transmitMode == null) {
+                return null;
+            }
+        }
+
+        return new Settings(_printMode, _transferMode, _transmitMode);
+    }
+
     /*
      * Retrieves the next field following the given location,
      * or the first unprotected field on the screen if there are none following the location.
@@ -232,6 +270,16 @@ public class ControlPagePane
     private Field fieldBefore(final Coordinates location) {
         var result = _fields.lowerEntry(location);
         return result == null ? _fields.lastEntry().getValue() : result.getValue();
+    }
+
+    private String getString(final Coordinates coordinates,
+                             final int length) {
+        final int cx = getIndex(coordinates);
+        final StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            sb.append((char)_characterCells[cx + i].getCharacter());
+        }
+        return sb.toString();
     }
 
     // Things we do slightly differently than the regular display.
@@ -297,18 +345,6 @@ public class ControlPagePane
         return true;
     }
 
-    public PrintMode getPrintMode() {
-        return _printMode;
-    }
-
-    public TransferMode getTransferMode() {
-        return _transferMode;
-    }
-
-    public TransmitMode getTransmitMode() {
-        return _transmitMode;
-    }
-
     private void putString(final Coordinates coordinates,
                            final String string) {
         int sx = 0;
@@ -331,20 +367,5 @@ public class ControlPagePane
     private void putTransmitMode() {
         putString(XMIT_COORDS, _transmitMode.toString());
         scheduleDrawDisplay();
-    }
-
-    public void setPrintMode(final PrintMode printMode) {
-        _printMode = printMode;
-        putPrintMode();
-    }
-
-    public void setTransferMode(final TransferMode transferMode) {
-        _transferMode = transferMode;
-        putTransferMode();
-    }
-
-    public void setTransmitMode(final TransmitMode transmitMode) {
-        _transmitMode = transmitMode;
-        putTransmitMode();
     }
 }
