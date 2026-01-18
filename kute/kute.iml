@@ -7,6 +7,28 @@
     </content>
     <orderEntry type="jdk" jdkName="25" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="javafx-swt" level="project" />
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../lib" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/../lib" recursive="false" />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../lib/javafx" />
+        </CLASSES>
+        <JAVADOC />
+        <NATIVE>
+          <root url="file://$MODULE_DIR$/../lib/javafx" />
+        </NATIVE>
+        <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/../lib/javafx" recursive="false" />
+      </library>
+    </orderEntry>
   </component>
 </module>

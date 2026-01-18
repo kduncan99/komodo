@@ -2,7 +2,6 @@
 TODO InProgress
 
 Kute
-    Need to download javafx 25
     Working on control page
     When we scan cursor backward into protected field, it moves back to the next unprotected field...
         should it move backward to the previous unprotected field?
@@ -60,6 +59,8 @@ TODO BUGS
 TODO To be implemented
 
 Kons (A GUI console)
+
+Maybe a GUI version of kexec?
 
 RSI remote devices
     printers using LP protocol
