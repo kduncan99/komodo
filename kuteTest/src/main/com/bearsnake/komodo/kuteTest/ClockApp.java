@@ -4,13 +4,17 @@
 
 package com.bearsnake.komodo.kuteTest;
 
+import com.bearsnake.komodo.kutelib.SocketChannelHandler;
+import com.bearsnake.komodo.kutelib.UTSOutputStream;
+import com.bearsnake.komodo.kutelib.messages.TextMessage;
+
 import java.io.IOException;
 import java.time.Instant;
 
 public class ClockApp extends Application {
 
     private final Thread _thread = new Thread(this);
-    public ClockApp(final Session session) {
+    public ClockApp(final SocketChannelHandler session) {
         super(session);
         _thread.start();
     }
@@ -22,13 +26,11 @@ public class ClockApp extends Application {
                 var thisInstant = Instant.now();
                 var elapsed = thisInstant.toEpochMilli() - lastInstant.toEpochMilli();
                 if (elapsed > 1000) {
-                    IO.println("ClockApp sending message");//TODO
                     var strm = new UTSOutputStream();
                     strm.writeCursorToHome()
                         .writeEraseDisplay()
-                        .writeCursorPosition(3, 3)
-                        .write(thisInstant.toString());
-                    _session.sendMessage(strm);
+                        .writeCursorPosition(3, 3);
+                    _channel.writeMessage(new TextMessage(strm.getBuffer()));
                     lastInstant = thisInstant;
                 }
                 Thread.sleep(25);
