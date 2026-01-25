@@ -2,6 +2,7 @@
 TODO InProgress
 
 Kute
+    Application for testing Kute
     Uppercase-Only mode (We can catch CAPS keypress and adjust accordingly)
     Less than 80-columns needs to prevent control page toggle
     Need terminal attribute enable/disable for
@@ -15,7 +16,6 @@ Kute
     Backspace
     Need to load and save templates
     Traffic capture mechanism - Raw/ASCII/Interpreted modes, save file, etc
-    Testing panel (acts as host)
     Print - configure up to 9 print destinations P1-P9 (files, actual print queues, local printers...?)
     Transfer - configure up to 9 virtual disks D1-D9 (files)
     Graphics - this is a major undertaking, and we must support color disabled option
