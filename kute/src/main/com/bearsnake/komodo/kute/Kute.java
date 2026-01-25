@@ -4,6 +4,12 @@
 
 package com.bearsnake.komodo.kute;
 
+import com.bearsnake.komodo.kutelib.Terminal;
+import com.bearsnake.komodo.kutelib.TerminalStack;
+import com.bearsnake.komodo.kutelib.keypads.ControlKeyPad;
+import com.bearsnake.komodo.kutelib.keypads.CursorKeyPad;
+import com.bearsnake.komodo.kutelib.keypads.FunctionKeyPad;
+import com.bearsnake.komodo.kutelib.keypads.MiscKeyPad;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -115,6 +121,10 @@ public class Kute extends Application {
         content.setRight(cursorMiscSet);
 
         _terminalStack = new TerminalStack();
+        _terminalStack.registerKeyPad(ctlPad);
+        _terminalStack.registerKeyPad(fkPad);
+        _terminalStack.registerKeyPad(cursorPad);
+        _terminalStack.registerKeyPad(miscKeyPad);
         BorderPane.setMargin(_terminalStack, new Insets(5)); // optional
         content.setCenter(_terminalStack);
 
@@ -132,7 +142,7 @@ public class Kute extends Application {
         connectItem.setOnAction(e -> _terminalStack.getActiveTerminal().connect());
 
         var disconnectItem = new MenuItem("Disconnect");
-        connectItem.setOnAction(e -> _terminalStack.getActiveTerminal().disconnect());
+        disconnectItem.setOnAction(e -> _terminalStack.getActiveTerminal().disconnect());
 
         var exitItem = new MenuItem("Exit");
         exitItem.setOnAction(e -> Platform.exit());
