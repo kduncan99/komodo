@@ -117,18 +117,18 @@ public class DisplayPane extends Canvas {
         return ch;
     }
 
-    private boolean coordinatesAtEndOfDisplay(final Coordinates coordinates) {
+    public boolean coordinatesAtEndOfDisplay(final Coordinates coordinates) {
         return (coordinates.getRow() == _geometry.getRows())
                && (coordinates.getColumn() == _geometry.getColumns());
     }
 
-    protected boolean coordinatesAtEndOfField(final Coordinates coordinates) {
+    public boolean coordinatesAtEndOfField(final Coordinates coordinates) {
         var ix = getIndex(coordinates);
         return (ix == _geometry.getCellCount())
             || (_characterCells[ix].getField() != _characterCells[ix + 1].getField());
     }
 
-    private boolean coordinatesAtEndOfLine(final Coordinates coordinates) {
+    public boolean coordinatesAtEndOfLine(final Coordinates coordinates) {
         return (coordinates.getColumn() == _geometry.getColumns());
     }
 
@@ -296,7 +296,7 @@ public class DisplayPane extends Canvas {
      * Finds the field which follows the given field.
      * If the given field is the end of the display, we return the home field.
      */
-    private Field getNextField(final Field baseField) {
+    public Field getNextField(final Field baseField) {
         if (baseField == _fields.lastEntry().getValue()) {
             return _fields.firstEntry().getValue();
         } else {

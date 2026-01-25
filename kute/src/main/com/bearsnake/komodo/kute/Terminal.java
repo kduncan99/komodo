@@ -44,12 +44,6 @@ public class Terminal extends Pane {
     private Emphasis _emphasis;
     private EmphasisAction _emphasisAction;
 
-    private ByteArrayOutputStream _pendingToHost;
-    private boolean _sendCursorPosition;
-    private boolean _sendStatus;
-    private Integer _sendFunctionKey;   // Either this can be non-null, or _sendMessageWait can be true, but not both.
-    private boolean _sendMessageWait;   // The one would over-ride the other, except kb lock generally prevents that.
-
     public Terminal(final DisplayGeometry initialGeometry,
                     final FontInfo initialFontInfo,
                     final UTSColorSet colorSet,
@@ -60,6 +54,7 @@ public class Terminal extends Pane {
         _displayPane = new DisplayPane(initialGeometry, initialFontInfo, colorSet, _statusPane);
         _controlPagePane = null;
         _activeDisplayPane = _displayPane;
+        _emphasis = new Emphasis();
 
         _displayPane.setLayoutX(0);
         _displayPane.setLayoutY(0);
@@ -80,6 +75,9 @@ public class Terminal extends Pane {
         setPrefHeight(_displayPane.getHeight() + _statusPane.getHeight());
         setPrefWidth(_displayPane.getWidth());
         reset();
+
+        _hostName = "127.0.0.1";//TODO remove
+        _hostPort = 2200;//TODO remove
     }
 
     /**
@@ -237,76 +235,6 @@ public class Terminal extends Pane {
     }
 
     /**
-     * The host wants us to send something. We do so according to:
-     *      Priority 1: Status message
-     *      Priority 2: Text or host-initiated transmit messages (only if includeText is set)
-     *      Priority 3: MsgWait or Function Key messages
-     * Terminal should send:
-     *      for status:             SOH DLE 0x3B ETX (always ready)
-     *      for text:               STX text ETX
-     *          (include host-initiated XMIT)
-     *      for cursor position:    STX ESC VT row col NUL SI ETX
-     *      for function keys:      SOH code ETX (see 2-2 pg 2-12 for codes)
-     *      for no-traffic:         EOT EOT ETX
-     * @param includeText true if host will accept a text message
-     */
-    public void poll(final boolean includeText) {
-        _statusPane.pulsePollIndicator();
-
-        if (_sendStatus) {
-            _socketHandler.send(new StreamBuffer(STATUS_MESSAGE, 0, STATUS_MESSAGE.length));
-            _sendStatus = false;
-            return;
-        }
-
-        if (includeText) {
-            if (_pendingToHost != null) {
-                var sb = new StreamBuffer(_pendingToHost.toByteArray(), 0, _pendingToHost.size());
-                _socketHandler.send(sb);
-                _pendingToHost = null;
-                _statusPane.setKeyboardLocked(false);
-                return;
-            }
-
-            if (_sendCursorPosition) {
-                var strm = new ByteArrayOutputStream(16);
-                strm.write(ASCII_STX);
-                pendCoordinates(strm, _activeDisplayPane.getCursorPosition());
-                strm.write(ASCII_ETX);
-                _socketHandler.send(new StreamBuffer(strm.toByteArray(), 0, strm.size()));
-                _sendCursorPosition = false;
-                _statusPane.setKeyboardLocked(false);
-                return;
-            }
-        }
-
-        if (_sendMessageWait) {
-            _socketHandler.send(new StreamBuffer(MESSAGE_WAIT_MESSAGE, 0, MESSAGE_WAIT_MESSAGE.length));
-            _sendMessageWait = false;
-            _statusPane.setKeyboardLocked(false);
-            return;
-        }
-
-        if (_sendFunctionKey != null) {
-            byte code = switch (_sendFunctionKey) {
-                case 1 -> 0x37;
-                case 2 -> 0x47;
-                case 3 -> 0x57;
-                case 4 -> 0x67;
-                default -> (byte)(_sendFunctionKey - 5 + 0x20);
-            };
-
-            var bb = new byte[]{ASCII_SOH, code, ASCII_ETX};
-            _socketHandler.send(new StreamBuffer(bb, 0, bb.length));
-            _sendFunctionKey = null;
-            _statusPane.setKeyboardLocked(false);
-            return;
-        }
-
-        _socketHandler.send(new StreamBuffer(NO_TRAFFIC_MESSAGE, 0, NO_TRAFFIC_MESSAGE.length));
-    }
-
-    /**
      * Resets the terminal - this can be invoked externally, but that is not a requirement of this project.
      */
     public void reset() {
@@ -316,11 +244,6 @@ public class Terminal extends Pane {
         _statusPane.setErrorIndicator(false);
         _statusPane.setKeyboardLocked(false);
         _statusPane.setMessageWaiting(false);
-        _pendingToHost = null;
-        _sendCursorPosition = false;
-        _sendStatus = true;
-        _sendFunctionKey = null;
-        _sendMessageWait = false;
     }
 
     /*
@@ -661,8 +584,7 @@ public class Terminal extends Pane {
         }
 
         _statusPane.setKeyboardLocked(true);
-        _sendMessageWait = true;
-        _sendFunctionKey = null;
+        _socketHandler.send(new StreamBuffer(MESSAGE_WAIT_MESSAGE, 0, MESSAGE_WAIT_MESSAGE.length));
     }
 
     /**
@@ -725,9 +647,16 @@ public class Terminal extends Pane {
         }
 
         if ((fKey >= 1) && (fKey <= 22)) {
-            _sendMessageWait = false;
-            _sendFunctionKey = fKey;
-            _statusPane.setKeyboardLocked(true);
+            byte code = switch (fKey) {
+                case 1 -> 0x37;
+                case 2 -> 0x47;
+                case 3 -> 0x57;
+                case 4 -> 0x67;
+                default -> (byte)(fKey - 5 + 0x20);
+            };
+
+            var bb = new byte[]{ASCII_SOH, code, ASCII_ETX};
+            _socketHandler.send(new StreamBuffer(bb, 0, bb.length));
         }
     }
 
@@ -998,7 +927,11 @@ public class Terminal extends Pane {
             case 'M' -> _activeDisplayPane.eraseDisplay();
             case 'T' -> { // Tell the terminal to respond with the cursor position
                 if (!controlPageIsActive()) {
-                    _sendCursorPosition = true;
+                    var outStrm = new ByteArrayOutputStream(16);
+                    outStrm.write(ASCII_STX);
+                    pendCoordinates(outStrm, _activeDisplayPane.getCursorPosition());
+                    outStrm.write(ASCII_ETX);
+                    _socketHandler.send(new StreamBuffer(outStrm.toByteArray(), 0, outStrm.size()));
                     _statusPane.setKeyboardLocked(true);
                 }
             }
@@ -1286,14 +1219,13 @@ public class Terminal extends Pane {
         //  SOH DLE EOT STX ETX - causes terminal to drop the session (host could just drop the TCP session anyway...)
 
         // If the message is empty, this is a poll for any messages which the terminal has queued up for us
+        // NOTE THAT WE DO NOT DO POLLING FOR TERMINAL INPUT - Communications partner should not do this.
         if (length == 0) {
-            poll(true);
             return;
         }
 
         // If the message has a single ENQ byte, this is a poll for non-text messages.
         if ((length == 1) && (data[0] == ASCII_ENQ)) {
-            poll(false);
             return;
         }
 
@@ -1318,6 +1250,7 @@ public class Terminal extends Pane {
         // If the content is DLE EOT STX then the host is asking us to drop the session
         if ((length == 3) && (data[0] == ASCII_DLE) && (data[1] == ASCII_EOT) && (data[2] == ASCII_STX)) {
             disconnect();
+
             return;
         }
 
@@ -1327,8 +1260,28 @@ public class Terminal extends Pane {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // Methods which create or contribute content to the output stream
+    // Methods which create or contribute content to the output stream, or otherwise relate to
+    // transmit or print functionality.
     // ---------------------------------------------------------------------------------------------
+
+    /*
+     * Find the region which begins with the SOE to the left of the cursor,
+     * up to and including the cursor. We always transmit the SOE if it exists.
+     */
+    private ScreenRegion determineTransmitRegion() {
+        var end = _displayPane.getCursorPosition().copy();
+        var start = _displayPane.getCursorPosition().copy();
+        var extent = 1;
+        while (_displayPane.getCharacterCell(start).getCharacter() != ASCII_SOE) {
+            if (start.atHome()) {
+                return new ScreenRegion(start, end, extent);
+            }
+            _displayPane.backupCoordinates(start);
+            extent++;
+        }
+
+        return new ScreenRegion(start, end, extent);
+    }
 
     private void pendCoordinate(final ByteArrayOutputStream strm,
                                 final int coordinate) {
@@ -1352,65 +1305,64 @@ public class Terminal extends Pane {
     }
 
     private void pendFCC(final ByteArrayOutputStream strm,
-                         final Coordinates coordinates,
-                         final FieldAttributes attr) {
+                         final Field field) {
         strm.write(ASCII_US);
-        pendCoordinates(strm, coordinates);
+        pendCoordinates(strm, field.getCoordinates());
         if (_sendColorFCCs) {
-            if (attr.getTextColor() != null) {
-                if (attr.getBackgroundColor() != null) {
+            if (field.getTextColor() != null) {
+                if (field.getBackgroundColor() != null) {
                     // write both colors in a single color byte after O character
                     strm.write(0x20);
                     byte b = 0x40;
-                    b |= attr.getTextColor().getByteValue();
-                    b |= (byte) (attr.getBackgroundColor().getByteValue() << 3);
+                    b |= field.getTextColor().getByteValue();
+                    b |= (byte) (field.getBackgroundColor().getByteValue() << 3);
                     strm.write(b);
                 } else {
                     // write text color after O character
                     strm.write(0x21);
-                    strm.write(0x40 | attr.getTextColor().getByteValue());
+                    strm.write(0x40 | field.getTextColor().getByteValue());
                 }
-            } else if (attr.getBackgroundColor() != null) {
+            } else if (field.getBackgroundColor() != null) {
                 // write bg color after O character
                 strm.write(0x22);
-                strm.write(0x40 | attr.getBackgroundColor().getByteValue());
+                strm.write(0x40 | field.getBackgroundColor().getByteValue());
             }
         }
         if (_sendExpandedFCCs || _sendColorFCCs) {
             // pend expanded FCC M and N characters
             byte m = 0x40;
-            m |= (byte)(attr.getIntensity() == NONE ? 0x01 : 0x00);
-            m |= (byte)(attr.getIntensity() == LOW ? 0x02 : 0x00);
-            m |= (byte)(attr.isChanged() ? 0x04 : 0x00);
-            m |= (byte)(attr.isTabStop() ? 0x08 : 0x00);
+            m |= (byte)(field.getIntensity() == NONE ? 0x01 : 0x00);
+            m |= (byte)(field.getIntensity() == LOW ? 0x02 : 0x00);
+            m |= (byte)(field.isChanged() ? 0x04 : 0x00);
+            m |= (byte)(field.isTabStop() ? 0x08 : 0x00);
 
             byte n = 0x40;
-            n |= (byte)(attr.isAlphabeticOnly() ? 0x01 : 0x00);
-            n |= (byte)(attr.isNumericOnly() ? 0x02 : 0x00);
-            n |= (byte)(attr.isProtected() ? 0x03 : 0x00);
-            n |= (byte)(attr.isRightJustified() ? 0x04 : 0x00);
-            n |= (byte)(attr.isBlinking() ? 0x08 : 0x00);
-            n |= (byte)(attr.isReverseVideo() ? 0x10 : 0x00);
+            n |= (byte)(field.isAlphabeticOnly() ? 0x01 : 0x00);
+            n |= (byte)(field.isNumericOnly() ? 0x02 : 0x00);
+            n |= (byte)(field.isProtected() ? 0x03 : 0x00);
+            n |= (byte)(field.isRightJustified() ? 0x04 : 0x00);
+            n |= (byte)(field.isBlinking() ? 0x08 : 0x00);
+            n |= (byte)(field.isReverseVideo() ? 0x10 : 0x00);
 
             strm.write(m);
             strm.write(n);
         } else {
             // pend UTS400-compatible FCC M and N characters
             byte m = 0x30;
-            m |= attr.isBlinking() ? 0x03 :
-                 (byte) switch (attr.getIntensity()) {
+            m |= field.isBlinking() ? 0x03 :
+                 (byte) switch (field.getIntensity()) {
                      case NONE -> 0x01;
                      case LOW -> 0x02;
                      case NORMAL -> 0x00;
                  };
-            m |= (byte)(attr.isChanged() ? 0x04 : 0x00);
-            m |= (byte)(attr.isTabStop() ? 0x08 : 0x00);
+            m |= (byte)(field.isChanged() ? 0x04 : 0x00);
+            m |= (byte)(field.isTabStop() ? 0x08 : 0x00);
 
             byte n = 0x30;
-            n |= (byte)(attr.isAlphabeticOnly() ? 0x01 : 0x00);
-            n |= (byte)(attr.isNumericOnly() ? 0x02 : 0x00);
-            n |= (byte)(attr.isProtected() ? 0x03 : 0x00);
-            n |= (byte)(attr.isRightJustified() ? 0x04 : 0x00);
+            n |= (byte)(field.isAlphabeticOnly() ? 0x01 : 0x00);
+            n |= (byte)(field.isNumericOnly() ? 0x02 : 0x00);
+            n |= (byte)(field.isProtected() ? 0x03 : 0x00);
+            n |= (byte)(field.isRightJustified() ? 0x04 : 0x00);
 
             strm.write(m);
             strm.write(n);
@@ -1418,130 +1370,72 @@ public class Terminal extends Pane {
     }
 
     /**
-     * Does not actually transmit anything, but it does put together a UTS stream to be sent to the host
-     * upon the next pull. Observes transmit mode (all, var, or changed).
+     * Creates a UTS stream to be sent to the host, observing transmit mode (all, var, or changed).
      * Encode the stream from the first SOE preceding the cursor up to the cursor itself.
      * If no SOE is found, the stream begins with the home position.
      * Format is STX ESC VT Y X NUL SI [SOE] text ETX
      * @param xmitMode mode which controls the data to be transmitted
      */
     private void transmit(final TransmitMode xmitMode) {
-        /* TODO
-        var region = determineTransmitRegion();
-        var coord = region.getStartingCoordinates();
-
-        boolean isChanged = false;
-        boolean isProtected = false;
-        var ctlAttr = getControllingAttributes(coord);
-        if (ctlAttr != null) {
-            isChanged = ctlAttr.isChanged();
-            isProtected = ctlAttr.isProtected();
-        }
-
         var strm = new ByteArrayOutputStream(1024);
         strm.write(ASCII_STX);
+
+        var region = determineTransmitRegion();
+        var coord = region.getStartingPosition();
         pendCoordinates(strm, coord);
-        var blanks = new ByteArrayOutputStream(_template.getColumns());
-        for (int cx = 0; cx < region.getExtent(); cx++) {
-            var cell = getCharacterCell(coord);
-            var cellAttr = cell.getAttributes();
-            if (cellAttr != null) {
-                // this is the beginning of a new field. set up new attributes.
-                isChanged = cellAttr.isChanged();
-                isProtected = cellAttr.isProtected();
-                blanks.reset();
-            }
 
-            if ( (xmitMode == ALL)
-                || ((xmitMode == VARIABLE) && !isProtected)
-                || ((xmitMode == CHANGED) && isChanged) ) {
-                if (cellAttr != null) {
-                    pendFCC(strm, coord, cellAttr);
+        var field = _displayPane.getCharacterCell(coord).getField();
+        var blankCounter = 0;
+        while (coord.compareTo(region.getEndingPosition()) <= 0) {
+            if (xmitMode == TransmitMode.ALL
+                    || (xmitMode == TransmitMode.VARIABLE && !field.isProtected())
+                    || (xmitMode == TransmitMode.CHANGED && field.isChanged())) {
+
+                // Serialize FCC sequence if we're at the first character of a field
+                if (coord.equals(field.getCoordinates())) {
+                    pendFCC(strm, field);
                 }
 
-                if (cell.getCharacter() == ASCII_SP) {
-                    blanks.write(ASCII_SP);
+                // Grab the character - if it's a blank, just increment the blank counter so we can
+                // avoid including field-trailing or line-trailing blanks - else add the character
+                // to the stream.
+                var ch = _displayPane.getCharacterCell(coord).getCharacter();
+                if (ch == ASCII_SP) {
+                    blankCounter++;
                 } else {
-                    strm.write(blanks.toByteArray(), 0, blanks.size());
-                    blanks.reset();
-                    strm.write(cell.getCharacter());
+                    for (int i = 0; i < blankCounter; i++) {
+                        strm.write(ASCII_SP);
+                        blankCounter = 0;
+                    }
+                    strm.write(ch);
                 }
-            }
 
-            if (coordinateIsEndOfLine(coord)) {
-                blanks.reset();
-                strm.write(ASCII_CR);
-            }
+                // If we're at the end of a line, dispense with pending blanks and
+                // insert a CR (but not if we're at the end of the display).
+                if (_displayPane.coordinatesAtEndOfLine(coord)) {
+                    if (!_displayPane.coordinatesAtEndOfDisplay(coord)) {
+                        strm.write(ASCII_CR);
+                    }
+                    blankCounter = 0;
+                }
 
-            advanceCoordinates(coord);
+                // Move to the next cell and update the field.
+                // If we're still in the same field, this has no consequence.
+                _displayPane.advanceCoordinates(coord);
+                field = _displayPane.getCharacterCell(coord).getField();
+            } else {
+                // The characters in this field should not be transmitted - move to the next field.
+                field = _displayPane.getNextField(field);
+                coord = field.getCoordinates();
+            }
         }
 
-        strm.write(blanks.toByteArray(), 0, blanks.size());
-        strm.write(ASCII_ETX);
+        // Serialize any remaining trailing blanks, then send the stream.
+        for (int i = 0; i < blankCounter; i++) {
+            strm.write(ASCII_SP);
+        }
 
-        _keyboardLocked = true;
-        _pendingToHost = strm;
-        draw(false, true);
-         */
+        var sb = new StreamBuffer(strm.toByteArray(), 0, strm.size());
+        _socketHandler.send(sb);
     }
 }
-
-//    // ---------------------------------------------------------------------------------------------
-//    // Generally-useful functionality
-//    // ---------------------------------------------------------------------------------------------
-//
-//    private boolean controlPageIsActive() {
-//        return _displayStack.size() > 1;
-//    }
-//
-//    // Find the region which begins with the SOE to the left of the cursor,
-//    // up to and including the cursor. We always transmit the SOE if it exists.
-////    private ScreenRegion determineTransmitRegion() {
-////        var end = _cursorPosition.copy();
-////        var start = _cursorPosition.copy();
-////        var extent = 1;
-////        while (getCharacterCell(start).getCharacter() != ASCII_SOE) {
-////            if (coordinateIsHomePosition(start)) {
-////                return new ScreenRegion(start, end, extent);
-////            }
-////            backupCoordinates(start);
-////            extent++;
-////        }
-////
-////        return new ScreenRegion(start, end, extent);
-////    }
-//
-//    // Retrieves the character cell at the indicated coordinate
-////    private CharacterCell getCharacterCell(final Coordinates coordinates) {
-////        return _characterCells[coordinates.getRow() - 1][coordinates.getColumn() - 1];
-////    }
-//
-//    // Returns the controlling attributes for the given coordinates.
-//    // If there are none, we return null.
-////    private FieldAttributes getControllingAttributes(final Coordinates coordinates) {
-////        var coord = getControllingAttributesCoordinates(coordinates);
-////        return getCharacterCell(coord).getAttributes();
-////    }
-//
-//    // Returns the coordinates of the cell which contains the field attributes which govern the given coordinates.
-//    // Generally, this would be the FCC at that cell, or the first previous cell thereto.
-//    // If there is no controlling FCC, we return the home position.
-////    private Coordinates getControllingAttributesCoordinates(final Coordinates coordinates) {
-////        var coord = coordinates.copy();
-////        do {
-////            var cell = getCharacterCell(coord);
-////            var attr = cell.getAttributes();
-////            if (attr != null) {
-////                break;
-////            }
-////            backupCoordinates(coord);
-////        } while (!coordinateIsHomePosition(coord));
-////
-////        return coord;
-////    }
-//
-////    private boolean isCellProtected(final Coordinates coordinates) {
-////        // Checks the cell to see if it is located in a protected field
-////        var attr = getControllingAttributes(coordinates);
-////        return (attr != null) && (attr.isProtected());
-////    }

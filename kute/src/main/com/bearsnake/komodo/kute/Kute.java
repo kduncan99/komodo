@@ -128,10 +128,16 @@ public class Kute extends Application {
     public Menu createFileMenu() {
         var menu = new Menu("File");
 
+        var connectItem = new MenuItem("Connect");
+        connectItem.setOnAction(e -> _terminalStack.getActiveTerminal().connect());
+
+        var disconnectItem = new MenuItem("Disconnect");
+        connectItem.setOnAction(e -> _terminalStack.getActiveTerminal().disconnect());
+
         var exitItem = new MenuItem("Exit");
         exitItem.setOnAction(e -> Platform.exit());
 
-        menu.getItems().add(exitItem);
+        menu.getItems().addAll(connectItem, disconnectItem, exitItem);
         return menu;
     }
 
