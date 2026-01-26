@@ -4,6 +4,8 @@
 
 package com.bearsnake.komodo.kutelib.messages;
 
+import com.bearsnake.komodo.kutelib.SocketChannelHandler;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -26,6 +28,7 @@ public class MessageWaitMessage implements Message {
     @Override
     public void write(final SocketChannel channel)
         throws IOException {
+        SocketChannelHandler.dumpBuffer("Sending: ", PATTERN);//TODO remove
         channel.write(ByteBuffer.wrap(PATTERN));
     }
 

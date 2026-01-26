@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kutelib.messages;
 
+import com.bearsnake.komodo.kutelib.SocketChannelHandler;
 import com.bearsnake.komodo.kutelib.exceptions.InternalException;
 
 import java.io.IOException;
@@ -57,6 +58,9 @@ public class FunctionKeyMessage implements Message {
             default -> bb.put((byte) (_key - 5 + 0x20));
         }
         bb.put(ASCII_ETX);
+        SocketChannelHandler.dumpBuffer("Sending: ", bb.array(), 0, bb.position());//TODO remove
+        bb.flip();
+        channel.write(bb);
     }
 
     @Override

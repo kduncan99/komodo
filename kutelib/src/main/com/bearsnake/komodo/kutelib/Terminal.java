@@ -16,13 +16,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
 /**
  * Implements a display with backing memory, cursor and protocol handling, and a status line.
  */
-public class Terminal extends Pane {
+public class Terminal extends Pane implements SocketChannelListener {
+
+    private static final byte[] MESSAGE_POLL = {ASCII_SOH, ASCII_ETX};
+    private static final byte[] STATUS_POLL = {ASCII_SOH, ASCII_ENQ, ASCII_ETX};
+    private static final byte[] MESSAGE_WAITING_NOTIFICATION = {ASCII_SOH, ASCII_BEL, ASCII_STX, ASCII_ETX};
+    private static final byte[] DISCONNECT_REQUEST = {ASCII_SOH, ASCII_DLE, ASCII_EOT, ASCII_STX, ASCII_ETX};
 
     private DisplayPane _displayPane;
     private StatusPane _statusPane;
@@ -114,6 +120,7 @@ public class Terminal extends Pane {
                 InetSocketAddress address = new InetSocketAddress(_hostName, _hostPort);
                 SocketChannel channel = SocketChannel.open(address);
                 _socketHandler = new SocketChannelHandler(channel);
+                _socketHandler.setListener(this);
                 _statusPane.setConnected(true);
                 reset();
             } catch (IOException ex) {
@@ -847,15 +854,15 @@ public class Terminal extends Pane {
     // Methods which handle input from the host
     // ---------------------------------------------------------------------------------------------
 
-    private void ingestAddEmphasis(final StreamBuffer strm)
+    private void ingestAddEmphasis(final UTSInputStream stream)
         throws InvalidEscapeSequenceException,
                IncompleteEscapeSequenceException {
         // ESC Y code - we've already ingested ESC and Y
-        if (strm.atEnd()) {
+        if (stream.atEnd()) {
             throw new IncompleteEscapeSequenceException();
         }
 
-        var code = strm.get();
+        var code = (byte) stream.read();
         if ((code < 0x20) || (code > 0x2F)) {
             throw new InvalidEscapeSequenceException("Invalid emphasis code");
         }
@@ -864,48 +871,14 @@ public class Terminal extends Pane {
         _emphasisAction = EmphasisAction.ADD;
     }
 
-    private int ingestCoordinate(final StreamBuffer strm) throws CoordinateException {
-        if (strm.atEnd()) {
-            throw new CoordinateException("Incomplete or missing coordinate");
-        }
-        var ch = strm.get();
-        if ((ch >= 0x20) && (ch <= 0x6f)) {
-            return (ch - 0x20 + 1);
-        } else if (ch >= 0x75) {
-            if (strm.atEnd()) {
-                throw new CoordinateException("Incomplete or missing coordinate");
-            }
-            var ch2 = strm.get();
-            if (ch2 >= 70) {
-                return 81 + ((ch - 0x75) << 4) + (ch2 & 0x0F);
-            }
-        }
-        throw new CoordinateException("Invalid coordinate");
-    }
-
-    private void ingestCursorPosition(final StreamBuffer strm) throws CoordinateException, InvalidEscapeSequenceException {
-        // ESC VT row column SI - we've already parsed ESC and VT
-        var row = ingestCoordinate(strm);
-        var column = ingestCoordinate(strm);
-        if (strm.atEnd()) {
-            throw new InvalidEscapeSequenceException("Incomplete ESC VT sequence");
-        }
-        if (strm.get() != ASCII_SI) {
-            throw new InvalidEscapeSequenceException("Missing SI at end of ESC VT sequence");
-        }
-
-        _activeDisplayPane.setCursorPosition(row, column);
-    }
-
-    private void ingestEscape(final StreamBuffer strm)
+    private void ingestEscape(final UTSInputStream stream)
         throws InvalidEscapeSequenceException,
-               CoordinateException,
                IncompleteEscapeSequenceException {
-        if (strm.atEnd()) {
+        if (stream.atEnd()) {
             throw new InvalidEscapeSequenceException("Incomplete escape sequence");
         }
 
-        var ch2 = strm.get();
+        var ch2 = (byte) stream.read();
         if ((ch2 == 0x20) && (_emphasisAction != EmphasisAction.NONE)) {
             _emphasis = null;
             _emphasisAction = EmphasisAction.NONE;
@@ -918,7 +891,6 @@ public class Terminal extends Pane {
 
         switch (ch2) {
             case ASCII_HT -> _activeDisplayPane.putCharacter(ASCII_HT, _emphasisAction, _emphasis);
-            case ASCII_VT -> ingestCursorPosition(strm);
             case ASCII_DC1 -> transmit(TransmitMode.ALL);
             case ASCII_DC2 -> printTransparent();
             case ASCII_DC4 -> _statusPane.setKeyboardLocked(true);
@@ -943,11 +915,11 @@ public class Terminal extends Pane {
                     }
                 }
             }
-            case 'X' -> ingestPutCharacterHex(strm);
-            case 'Y' -> ingestAddEmphasis(strm);
-            case 'Z' -> ingestRemoveEmphasis(strm);
+            case 'X' -> ingestPutCharacterHex(stream);
+            case 'Y' -> ingestAddEmphasis(stream);
+            case 'Z' -> ingestRemoveEmphasis(stream);
             case '[' -> _activeDisplayPane.putCharacter(ASCII_ESC, _emphasisAction, _emphasis);
-            case '{' -> ingestPutCharacterDecimal(strm);
+            case '{' -> ingestPutCharacterDecimal(stream);
             case 'a' -> _activeDisplayPane.eraseUnprotectedData();
             case 'b' -> _activeDisplayPane.eraseToEndOfLine();
             case 'c' -> _activeDisplayPane.deleteInLine();
@@ -969,132 +941,33 @@ public class Terminal extends Pane {
         }
     }
 
-    // Ingests UTS stream which defines the O (optionally), M and N attribute bytes,
-    // creates a Field representing those bytes at the cursor position, and establishes the field
-    // in the display at the top of the display stack.
-    private void ingestFCC(final StreamBuffer strm) throws FCCSequenceException, CoordinateException {
-        // EM [ O ... ] M N -- We've already ingested EM
-        if (strm.atEnd()) {
-            throw new FCCIncompleteSequenceException();
-        }
-
-        var field = new ExplicitField(_activeDisplayPane.getCursorPosition());
-        var ch = strm.get();
-        byte m;
-        byte n;
-        if ((ch >= 0x20) && (ch <= 0x2F)) {
-            // This is an 'O'
-            if (ch == 0x20) {
-                // next char is 0b01gggttt ggg=background color, ttt=text color
-                if (strm.atEnd()) {
-                    throw new FCCIncompleteSequenceException();
-                }
-                byte ch2 = strm.get();
-                field.setTextColor(UTSColor.fromByte((byte)(ch2 & 0x07)));
-                field.setBackgroundColor(UTSColor.fromByte((byte)((ch2 >> 3) & 0x07)));
-            } else if (ch == 0x21) {
-                // next char is text color in lower 3 bits
-                if (strm.atEnd()) {
-                    throw new FCCIncompleteSequenceException();
-                }
-                byte ch2 = strm.get();
-                field.setTextColor(UTSColor.fromByte((byte)(ch2 & 0x07)));
-            } else if (ch == 0x22) {
-                // next char is bg color in lower 3 bits
-                if (strm.atEnd()) {
-                    throw new FCCIncompleteSequenceException();
-                }
-                byte ch2 = strm.get();
-                field.setBackgroundColor(UTSColor.fromByte((byte)(ch2 & 0x07)));
-            } else if (ch == 0x23) {
-                // next chars are text color in lower 3 bits, then bg color in lower 3 bits
-                if (strm.atEnd()) {
-                    throw new FCCIncompleteSequenceException();
-                }
-                byte ch2 = strm.get();
-                field.setTextColor(UTSColor.fromByte((byte)(ch2 & 0x07)));
-
-                if (strm.atEnd()) {
-                    throw new FCCIncompleteSequenceException();
-                }
-                byte ch3 = strm.get();
-                field.setBackgroundColor(UTSColor.fromByte((byte)(ch3 & 0x07)));
-            } else {
-                // reserved color code - error for now
-                throw new FCCSequenceException("Invalid O byte", ch);
-            }
-
-            if (strm.atEnd()) {
-                throw new FCCIncompleteSequenceException();
-            }
-            m = strm.get();
-        } else {
-            m = ch;
-        }
-
-        if (strm.atEnd()) {
-            throw new FCCIncompleteSequenceException();
-        }
-        n = strm.get();
-
-        if ((m >= 0x30) && (m <= 0x3f) && (n >= 0x30) && (n <= 0x3f)) {
-            // UTS400 compatible FCC sequence
-            switch (m & 0x03) {
-                case 0x00 -> field.setIntensity(Intensity.NORMAL);
-                case 0x01 -> field.setIntensity(Intensity.NONE);
-                case 0x02 -> field.setIntensity(Intensity.LOW);
-                case 0x03 -> field.setBlinking(true);
-            }
-            field.setChanged((m & 0x04) == 0x00);
-            field.setTabStop((m & 0x08) == 0x00);
-            switch (n & 0x03) {
-                case 0x00 -> {}
-                case 0x01 -> field.setAlphabeticOnly(true);
-                case 0x02 -> field.setNumericOnly(true);
-                case 0x03 -> field.setProtected(true);
-            }
-            field.setRightJustified((n & 0x04) == 0x04);
-        } else if ((m >= 0x40) && (n >= 0x40)) {
-            // Expanded FCC sequence
-            if ((m & 0x01) == 0x01) { field.setIntensity(Intensity.NONE); }
-            if ((m & 0x02) == 0x02) { field.setIntensity(Intensity.LOW); }
-            field.setChanged((m & 0x04) == 0x00);
-            field.setTabStop((m & 0x08) == 0x00);
-            field.setProtectedEmphasis((m & 0x20) == 0x20);
-            switch (n & 0x03) {
-                case 0x00 -> {}
-                case 0x01 -> field.setAlphabeticOnly(true);
-                case 0x02 -> field.setNumericOnly(true);
-                case 0x03 -> field.setProtected(true);
-            }
-            field.setRightJustified((n & 0x04) == 0x04);
-            field.setBlinking((n & 0x08) == 0x08);
-            field.setReverseVideo((n & 0x10) == 0x10);
-        } else {
-            throw new FCCSequenceException(m, n);
-        }
-
-        _activeDisplayPane.putFCC(field);
-    }
-
-    private void ingestFCCWithPosition(final StreamBuffer strm) throws FCCSequenceException, CoordinateException {
-        // US row col [ O ... ] M N -- We've already ingested US
-        int row = ingestCoordinate(strm);
-        int column = ingestCoordinate(strm);
-        _activeDisplayPane.setCursorPosition(row, column);
-        ingestFCC(strm);
-    }
-
     /**
      * Ingests a message from a UTS stream - the portion between STX and ETX.
      */
-    private void ingestMessage(final StreamBuffer strm) throws StreamException {
+    private void ingestMessage(final UTSInputStream stream) throws StreamException {
         _emphasis.clear();
         _emphasisAction = EmphasisAction.NONE;
 
         try {
-            while (!strm.atEnd()) {
-                var ch = strm.get();
+            while (stream.available() > 0) {
+                var coord = stream.readCursorPosition();
+                if (coord != null) {
+                    _activeDisplayPane.setCursorPosition(coord);
+                    continue;
+                }
+
+                var field = stream.readFCC();
+                if (field != null) {
+                    if (field.getCoordinates() == null) {
+                        field.setCoordinates(_activeDisplayPane.getCursorPosition());
+                    } else {
+                        _activeDisplayPane.setCursorPosition(field.getCoordinates());
+                    }
+                    _activeDisplayPane.putFCC(field);
+                    continue;
+                }
+
+                var ch = (byte) stream.read();
                 switch (ch) {
                     case ASCII_HT -> _activeDisplayPane.tabForward();
                     case ASCII_CR -> _activeDisplayPane.cursorReturn();
@@ -1103,10 +976,8 @@ public class Terminal extends Pane {
                     case ASCII_DC4 -> { // lock keyboard (same as ESC DC4)
                         _statusPane.setKeyboardLocked(true);
                     }
-                    case ASCII_EM -> ingestFCC(strm);
                     case ASCII_SUB -> _activeDisplayPane.putCharacter(ASCII_SUB, _emphasisAction, _emphasis);
-                    case ASCII_ESC -> ingestEscape(strm);
-                    case ASCII_US -> ingestFCCWithPosition(strm);
+                    case ASCII_ESC -> ingestEscape(stream);
                     case ASCII_FS -> _activeDisplayPane.putCharacter(ASCII_FS, _emphasisAction, _emphasis);
                     case ASCII_GS -> _activeDisplayPane.putCharacter(ASCII_GS, _emphasisAction, _emphasis);
                     case ASCII_SOE -> _activeDisplayPane.putCharacter(ASCII_SOE, _emphasisAction, _emphasis);
@@ -1126,14 +997,14 @@ public class Terminal extends Pane {
 
     // Wrapper around putCharacter(), but we have to get the character from the stream as decimal digits
     // representing a value from 0 to 127 inclusive, followed by a '}' character
-    private void ingestPutCharacterDecimal(final StreamBuffer strm)
+    private void ingestPutCharacterDecimal(final UTSInputStream stream)
         throws IncompleteEscapeSequenceException,
                InvalidEscapeSequenceException {
         var value = 0;
         boolean digits = false;
         boolean done = false;
-        while (!strm.atEnd()) {
-            var ch = strm.get();
+        while (!stream.atEnd()) {
+            var ch = (byte) stream.read();
             if (ch == '}') {
                 done = true;
                 break;
@@ -1159,18 +1030,18 @@ public class Terminal extends Pane {
 
     // As above, but we have to get the character from the stream as exactly two hex digits
     // representing a value from 0 to 255 inclusive.
-    private void ingestPutCharacterHex(final StreamBuffer strm)
+    private void ingestPutCharacterHex(final UTSInputStream stream)
         throws IncompleteEscapeSequenceException,
                InvalidEscapeSequenceException {
-        if (strm.atEnd()) {
+        if (stream.atEnd()) {
             throw new IncompleteEscapeSequenceException();
         }
-        var hex1 = (char)strm.get();
+        var hex1 = (char)stream.read();
 
-        if (strm.atEnd()) {
+        if (stream.atEnd()) {
             throw new IncompleteEscapeSequenceException();
         }
-        var hex2 = (char)strm.get();
+        var hex2 = (char)stream.read();
 
         var hexStr = String.format("%c%c", hex1, hex2);
         var value = 0;
@@ -1190,15 +1061,15 @@ public class Terminal extends Pane {
         _activeDisplayPane.putCharacter((byte)value, _emphasisAction, _emphasis);
     }
 
-    private void ingestRemoveEmphasis(final StreamBuffer strm)
+    private void ingestRemoveEmphasis(final UTSInputStream stream)
         throws InvalidEscapeSequenceException,
                IncompleteEscapeSequenceException {
         // ESC Z code - we've already ingested ESC and Y
-        if (strm.atEnd()) {
+        if (stream.atEnd()) {
             throw new IncompleteEscapeSequenceException();
         }
 
-        var code = strm.get();
+        var code = (byte) stream.read();
         if ((code < 0x20) || (code > 0x2F)) {
             throw new InvalidEscapeSequenceException("Invalid emphasis code");
         }
@@ -1210,14 +1081,11 @@ public class Terminal extends Pane {
     /**
      * Handles UTS traffic from socket.
      */
-    public void ingestTraffic(
-        final byte[] data,
-        final int length
-    ) {
+    @Override
+    public void trafficReceived(final byte[] data) {
         // Conventional messages from the host follow this pattern:
         //  SOH RID SID DID * ETX BCC
         // We have no need for RID/SID/DID, nor for BCC. The Komodo host does not send RID/SID/DID, nor BCC.
-        // The calling routine strips SOH and ETX, so we are left with the '*' portion of the message.
 
         // Messages we can get from the host:
         //  SOH ETX             - message poll: requests any message the terminal has queued
@@ -1228,37 +1096,40 @@ public class Terminal extends Pane {
 
         // If the message is empty, this is a poll for any messages which the terminal has queued up for us
         // NOTE THAT WE DO NOT DO POLLING FOR TERMINAL INPUT - Communications partner should not do this.
-        if (length == 0) {
+        if (data.length == 0) {
             return;
         }
 
-        // If the message has a single ENQ byte, this is a poll for non-text messages.
-        if ((length == 1) && (data[0] == ASCII_ENQ)) {
+        if (Arrays.equals(data, STATUS_POLL)) {
+            IO.println("Ignoring status poll");
             return;
         }
 
-        // If the message begins with STX, it is a text message to the terminal
-        if ((length > 0) && (data[0] == ASCII_STX)) {
-            var strm = new StreamBuffer(data, 1, length - 1);
-            try {
-                ingestMessage(strm);
-            } catch (StreamException se) {
-                System.out.printf("Error at byte %d\n", strm.getPosition());
-                _statusPane.setErrorIndicator(true);
-            }
+        if (Arrays.equals(data, MESSAGE_POLL)) {
+            IO.println("Ignoring message poll");
             return;
         }
 
-        // If the content is BEL STX, set message waiting
-        if ((length == 2) && (data[0] == ASCII_BEL) && (data[1] == ASCII_STX)) {
+        if (Arrays.equals(data, MESSAGE_WAITING_NOTIFICATION)) {
             _statusPane.setMessageWaiting(true);
             return;
         }
 
-        // If the content is DLE EOT STX then the host is asking us to drop the session
-        if ((length == 3) && (data[0] == ASCII_DLE) && (data[1] == ASCII_EOT) && (data[2] == ASCII_STX)) {
+        if (Arrays.equals(data, DISCONNECT_REQUEST)) {
             disconnect();
+            return;
+        }
 
+        // If the message begins with SOH-STX, it is a text message to the terminal
+        if ((data[0] == ASCII_SOH) && (data[1] == ASCII_STX)) {
+            var len = data.length - 3;
+            var stream = new UTSInputStream(data, 2, len);
+            try {
+                ingestMessage(stream);
+            } catch (StreamException se) {
+                System.out.printf("Error at byte %d\n", len - stream.available() + 1);
+                _statusPane.setErrorIndicator(true);
+            }
             return;
         }
 

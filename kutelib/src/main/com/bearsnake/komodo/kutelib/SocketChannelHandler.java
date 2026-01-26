@@ -31,6 +31,7 @@ public class SocketChannelHandler
     private static final byte[] SEND_MSG_WAIT = {ASCII_SOH, ASCII_BEL, ASCII_STX, ASCII_ETX};
 
     private final SocketChannel _channel;
+    private SocketChannelListener _listener;
     private boolean _terminate = false;
     private final Thread _thread = new Thread(this);
 
@@ -56,6 +57,10 @@ public class SocketChannelHandler
         }
     }
 
+    public void setListener(final SocketChannelListener listener) {
+        _listener = listener;
+    }
+
     public void writeMessage(final Message message) throws IOException {
         message.write(_channel);
     }
@@ -72,17 +77,18 @@ public class SocketChannelHandler
             ++px;
         }
         if (px == buffer.position()) {
+            IO.println("Channel Handler discarding " + px + " pre-SOH bytes");//TODO remove later
             buffer.clear();
             return;
         }
 
-        var oldPos = buffer.position();
+        IO.println("Channel Handler discarding " + px + " pre-SOH bytes");//TODO remove later
         buffer.position(px);
         buffer.compact();
     }
 
     public void run() {
-        IO.println("Session started:" + _channel.socket().getRemoteSocketAddress());
+        IO.println("Channel Handler started:" + _channel.socket().getRemoteSocketAddress());
 
         try {
             _channel.configureBlocking(false);
@@ -90,7 +96,7 @@ public class SocketChannelHandler
             _channel.socket().setReuseAddress(true);
             _channel.socket().setTcpNoDelay(true);
         } catch (IOException e) {
-            IO.println("Session failed to configure channel");
+            IO.println("Channel Handler failed to configure channel");
             return;
         }
 
@@ -98,12 +104,11 @@ public class SocketChannelHandler
         while (!_terminate) {
             try {
                 if (inputBuffer.remaining() == 0) {
-                    IO.println("Session input buffer full - discarding message");
+                    IO.println("Channel Handler input buffer full - discarding message");
                     inputBuffer.clear();
                     continue;
                 }
 
-                discardBytesBeforeSOH(inputBuffer);
                 var oldPos = inputBuffer.position();
                 var bytesRead = _channel.read(inputBuffer);
                 if (bytesRead == 0) {
@@ -112,17 +117,24 @@ public class SocketChannelHandler
                 }
 
                 if (bytesRead > 0) {
+                    discardBytesBeforeSOH(inputBuffer);
+                    dumpBuffer("Received:", inputBuffer, 0, inputBuffer.position());//TODO remove
                     for (int ex = oldPos; ex < inputBuffer.position(); ++ex) {
                         if (inputBuffer.get(ex) == ASCII_ETX) {
                             var newBuffer = new byte[ex + 1];
+                            inputBuffer.position(0);
                             inputBuffer.get(newBuffer);
                             var message = Message.create(newBuffer);
                             if (message == null) {
-                                IO.println("Session failed to parse message - discarding");
+                                IO.println("Channel Handler failed to parse message - discarding");
                             } else {
-                                synchronized (_messageQueue) {
-                                    IO.println("Session received message: " + message);
-                                    _messageQueue.addLast(message);
+                                if (_listener != null) {
+                                    _listener.trafficReceived(newBuffer);
+                                } else {
+                                    synchronized (_messageQueue) {
+                                        IO.println("Channel Handler received message: " + message);
+                                        _messageQueue.addLast(message);
+                                    }
                                 }
                             }
                             inputBuffer.compact();
@@ -130,9 +142,9 @@ public class SocketChannelHandler
                     }
                 }
             } catch (InterruptedException ex) {
-                IO.println("Session sleep interrupted");
+                IO.println("Channel Handler sleep interrupted");
             } catch (IOException ex) {
-                IO.println("Session failed to read from channel");
+                IO.println("Channel Handler failed to read from channel");
                 _terminate = true;
             }
         }
@@ -140,9 +152,45 @@ public class SocketChannelHandler
         try {
             _channel.close();
         } catch (IOException ex) {
-            IO.println("Session failed to close channel");
+            IO.println("Channel Handler failed to close channel");
         }
 
-        IO.println("Session ended:" + _channel.socket().getRemoteSocketAddress());
+        IO.println("Channel Handler ended:" + _channel.socket().getRemoteSocketAddress());
+    }
+
+    // TODO remove this
+    public static void dumpBuffer(final String caption,
+                                  final ByteBuffer buffer,
+                                  final int offset,
+                                  final int count) {
+        System.out.printf(caption);
+        for (int i = 0; i < count; i++) {
+            byte b = buffer.get(i + offset);
+            System.out.printf("%02X ", b);
+        }
+        System.out.println();
+    }
+
+    // TODO remove this
+    public static void dumpBuffer(final String caption,
+                                  final byte[] buffer,
+                                  final int offset,
+                                  final int count) {
+        System.out.printf(caption);
+        for (int i = 0; i < count; i++) {
+            byte b = buffer[i + offset];
+            System.out.printf("%02X ", b);
+        }
+        System.out.println();
+    }
+
+    // TODO remove this
+    public static void dumpBuffer(final String caption,
+                                  final byte[] buffer) {
+        System.out.printf(caption);
+        for (byte b : buffer) {
+            System.out.printf("%02X ", b);
+        }
+        System.out.println();
     }
 }

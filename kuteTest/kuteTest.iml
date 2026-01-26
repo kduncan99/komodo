@@ -7,6 +7,28 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="kutelib" />
+    <orderEntry type="module" module-name="kutelib" exported="" />
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../lib/javafx/javafx-swt.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/javafx/javafx.web.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/javafx/javafx.base.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/javafx/javafx.fxml.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/javafx/javafx.media.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/javafx/javafx.swing.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/javafx/jdk.jsobject.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/javafx/javafx.controls.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/javafx/javafx.graphics.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/javafx/jfx.incubator.input.jar!/" />
+          <root url="jar://$MODULE_DIR$/../lib/javafx/jfx.incubator.richtext.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <NATIVE>
+          <root url="file://$MODULE_DIR$/../lib/javafx" />
+        </NATIVE>
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

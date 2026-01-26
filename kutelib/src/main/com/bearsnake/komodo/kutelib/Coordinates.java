@@ -4,8 +4,6 @@
 
 package com.bearsnake.komodo.kutelib;
 
-import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
-
 import java.io.ByteArrayOutputStream;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
@@ -63,37 +61,6 @@ public class Coordinates implements Comparable<Coordinates> {
         emitCoordinateTo(strm, _column);
         strm.write(ASCII_NUL);
         strm.write(ASCII_SI);
-    }
-
-    /**
-     * Reads the next one or two bytes from the given StreamBuffer, converting it to a
-     * row or column coordinate ranging from 1 to 256 (see emitCoordinateTo()).
-     */
-    private static int ingestCoordinateFrom(final StreamBuffer strm) throws CoordinateException {
-        if (strm.atEnd()) {
-            throw new CoordinateException("Incomplete or missing coordinate");
-        }
-        var ch = strm.get();
-        if ((ch >= 0x20) && (ch <= 0x6f)) {
-            return (ch - 0x20 + 1);
-        } else if (ch >= 0x75) {
-            if (strm.atEnd()) {
-                throw new CoordinateException("Incomplete or missing coordinate");
-            }
-            var ch2 = strm.get();
-            if (ch2 >= 70) {
-                return 81 + ((ch - 0x75) << 4) + (ch2 & 0x0F);
-            }
-        }
-        throw new CoordinateException("Invalid coordinate");
-    }
-
-    /**
-     * Reads the next two, three, or four bytes from the given StreamBuffer, converting them to
-     * a Coordinates object according to convention (see emitTo()).
-     */
-    public static Coordinates ingestFrom(final StreamBuffer strm) throws CoordinateException {
-        return new Coordinates(ingestCoordinateFrom(strm), ingestCoordinateFrom(strm));
     }
 
     public int getRow() { return _row; }

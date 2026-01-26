@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kutelib;
 
 public abstract class Field {
 
-    private final Coordinates _coordinates;
+    protected Coordinates _coordinates;
 
     protected Field(final Coordinates coordinates) {
         _coordinates = coordinates;
@@ -38,6 +38,7 @@ public abstract class Field {
     public abstract Field setBackgroundColor(UTSColor backgroundColor);
     public abstract Field setBlinking(boolean blinking);
     public abstract Field setChanged(boolean isChanged);
+    public abstract Field setCoordinates(Coordinates cursorPosition);
     public abstract Field setEnabled(final boolean flag);
     public abstract Field setIntensity(Intensity intensity);
     public abstract Field setNumericOnly(boolean isNumericOnly);

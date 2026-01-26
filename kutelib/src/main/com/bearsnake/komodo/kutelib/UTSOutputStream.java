@@ -30,13 +30,6 @@ public class UTSOutputStream extends ByteArrayOutputStream {
         return Arrays.copyOf(this.buf, this.count);
     }
 
-    public UTSOutputStream write(final String string) {
-        for (var b : string.getBytes()) {
-            write(b);
-        }
-        return this;
-    }
-
     public UTSOutputStream write(final byte b) {
         super.write(b);
         return this;
@@ -96,6 +89,21 @@ public class UTSOutputStream extends ByteArrayOutputStream {
         writeFCCCodes(attributes, format);
         return this;
     }
+
+    public UTSOutputStream writeString(final String string) {
+        for (var b : string.getBytes()) {
+            write(b);
+        }
+        return this;
+    }
+
+    public UTSOutputStream writeUnlockKeyboard() {
+        write(Constants.ASCII_ESC);
+        write('L');
+        return this;
+    }
+
+    // ---------------------------------------------------------------------------------------------
 
     private void writeFCCCodes(final FieldAttributes attributes,
                                final FCCFormat format) {

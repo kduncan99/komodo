@@ -64,6 +64,7 @@ public class ExplicitField extends Field {
     @Override public Field setBackgroundColor(final UTSColor backgroundColor) { _backgroundColor = backgroundColor; return this; }
     @Override public Field setBlinking(final boolean blinking) { _blinking = blinking; return this; }
     @Override public Field setChanged(final boolean isChanged) { _changed = isChanged; return this; }
+    @Override public Field setCoordinates(Coordinates cursorPosition) { _coordinates = cursorPosition; return this; }
     @Override public Field setEnabled(final boolean enabled) { _isEnabled = enabled; return this; }
     @Override public Field setIntensity(final Intensity intensity) { _intensity = intensity; return this; }
     @Override public Field setNumericOnly(final boolean isNumericOnly) { _numericOnly = isNumericOnly; return this; }

@@ -55,18 +55,18 @@ public class FieldAttributes {
     public UTSColor getBackgroundColor() { return _backgroundColor; }
     public UTSColor getTextColor() { return _textColor; }
 
-    public void setIntensity(Intensity intensity) { _intensity = intensity; }
-    public void setBlinking(boolean blinking) { _blinking = blinking; }
-    public void setReverseVideo(boolean reverseVideo) { _reverseVideo = reverseVideo; }
-    public void setProtected(boolean isProtected) { _protected = isProtected; }
-    public void setProtectedEmphasis(boolean isProtected) { _protectedEmphasis = isProtected; }
-    public void setTabStop(boolean tabStop) { _tabStop = tabStop; }
-    public void setAlphabeticOnly(boolean isAlphabeticOnly) { _alphabeticOnly = isAlphabeticOnly; }
-    public void setNumericOnly(boolean isNumericOnly) { _numericOnly = isNumericOnly; }
-    public void setRightJustified(boolean isRightJustified) { _rightJustified = isRightJustified; }
-    public void setChanged(boolean isChanged) { _changed = isChanged; }
-    public void setBackgroundColor(UTSColor backgroundColor) { _backgroundColor = backgroundColor; }
-    public void setTextColor(UTSColor textColor) { _textColor = textColor; }
+    public FieldAttributes setIntensity(Intensity intensity) { _intensity = intensity; return this; }
+    public FieldAttributes setBlinking(boolean blinking) { _blinking = blinking; return this; }
+    public FieldAttributes setReverseVideo(boolean reverseVideo) { _reverseVideo = reverseVideo; return this; }
+    public FieldAttributes setProtected(boolean isProtected) { _protected = isProtected; return this; }
+    public FieldAttributes setProtectedEmphasis(boolean isProtected) { _protectedEmphasis = isProtected; return this; }
+    public FieldAttributes setTabStop(boolean tabStop) { _tabStop = tabStop; return this; }
+    public FieldAttributes setAlphabeticOnly(boolean isAlphabeticOnly) { _alphabeticOnly = isAlphabeticOnly; return this; }
+    public FieldAttributes setNumericOnly(boolean isNumericOnly) { _numericOnly = isNumericOnly; return this; }
+    public FieldAttributes setRightJustified(boolean isRightJustified) { _rightJustified = isRightJustified; return this; }
+    public FieldAttributes setChanged(boolean isChanged) { _changed = isChanged; return this; }
+    public FieldAttributes setBackgroundColor(UTSColor backgroundColor) { _backgroundColor = backgroundColor; return this; }
+    public FieldAttributes setTextColor(UTSColor textColor) { _textColor = textColor; return this; }
 
     public void setDisabled(){ _isEnabled = false; };
     public void setEnabled(){ _isEnabled = true; };

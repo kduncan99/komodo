@@ -4,6 +4,8 @@
 
 package com.bearsnake.komodo.kutelib.messages;
 
+import com.bearsnake.komodo.kutelib.SocketChannelHandler;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
@@ -45,6 +47,7 @@ public class TextMessage implements Message {
         bb.put(ASCII_STX);
         bb.put(_text);
         bb.put(ASCII_ETX);
+        SocketChannelHandler.dumpBuffer("Sending: ", bb.array(), 0, bb.position());//TODO remove
         bb.flip();
         channel.write(bb);
     }

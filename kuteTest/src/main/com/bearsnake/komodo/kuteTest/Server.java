@@ -4,6 +4,8 @@
 
 package com.bearsnake.komodo.kuteTest;
 
+import com.bearsnake.komodo.kutelib.SocketChannelHandler;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -13,7 +15,7 @@ import java.util.List;
 public class Server
     implements Runnable {
 
-    private final List<Session> _clients = new LinkedList<>();
+    private final List<Application> _clients = new LinkedList<>();
     private final int _port;
     private final Thread _thread = new Thread(this);
     private boolean _terminate = false;
@@ -47,7 +49,8 @@ public class Server
                         break;
                     }
                 } else {
-                    _clients.add(new Session(socketChannel));
+                    var menuApp = new MenuApp(new SocketChannelHandler(socketChannel));
+                    _clients.add(menuApp);
                 }
             } catch (IOException ex) {
                 IO.println("Server failed to accept connection");
@@ -57,7 +60,7 @@ public class Server
 
         try {
             for (var client : _clients) {
-                client.terminate();
+                client.close();
             }
             _clients.clear();
             channel.close();

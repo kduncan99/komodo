@@ -35,6 +35,7 @@ public final class ImplicitField extends Field {
     @Override public Field setBackgroundColor(UTSColor backgroundColor) { return this; }
     @Override public Field setBlinking(boolean blinking) { return this; }
     @Override public Field setChanged(boolean isChanged) { return this; }
+    @Override public Field setCoordinates(Coordinates cursorPosition) { return this; }
     @Override public Field setEnabled(final boolean flag) { return this; }
     @Override public Field setIntensity(Intensity intensity) { return this; }
     @Override public Field setNumericOnly(boolean isNumericOnly) { return this; }
