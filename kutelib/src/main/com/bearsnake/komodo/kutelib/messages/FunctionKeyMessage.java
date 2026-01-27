@@ -29,7 +29,7 @@ public class FunctionKeyMessage implements Message {
     }
 
     static FunctionKeyMessage create(final byte[] data) {
-        if ((data.length == 4) && (data[0] == ASCII_SOH) && (data[2] == ASCII_ETX)) {
+        if ((data.length == 3) && (data[0] == ASCII_SOH) && (data[2] == ASCII_ETX)) {
             switch (data[1]) {
                 case 0x37 -> { return new FunctionKeyMessage(1); }
                 case 0x47 -> { return new FunctionKeyMessage(2); }

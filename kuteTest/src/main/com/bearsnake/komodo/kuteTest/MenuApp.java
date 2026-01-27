@@ -4,89 +4,124 @@
 
 package com.bearsnake.komodo.kuteTest;
 
-import com.bearsnake.komodo.kutelib.FieldAttributes;
-import com.bearsnake.komodo.kutelib.SocketChannelHandler;
-import com.bearsnake.komodo.kutelib.UTSColor;
-import com.bearsnake.komodo.kutelib.UTSOutputStream;
+import com.bearsnake.komodo.kutelib.*;
+import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
+import com.bearsnake.komodo.kutelib.messages.Message;
 import com.bearsnake.komodo.kutelib.messages.TextMessage;
 
 import java.io.IOException;
-import java.time.Instant;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
+import java.util.LinkedList;
 
-import static com.bearsnake.komodo.kutelib.Constants.ASCII_CR;
+import static com.bearsnake.komodo.kutelib.Constants.*;
 
-public class MenuApp extends Application {
+public class MenuApp extends Application implements SocketChannelListener {
 
-    private static final FieldAttributes FKEY_ATTRIBUTES =
-        new FieldAttributes().setTextColor(UTSColor.YELLOW)
-                             .setBackgroundColor(UTSColor.BLACK)
-                             .setTabStop(true);
+    private static class ApplicationInfo {
 
-    private static final FieldAttributes NAME_ATTRIBUTES =
-        new FieldAttributes().setTextColor(UTSColor.CYAN)
-                             .setBackgroundColor(UTSColor.BLACK)
-                             .setTabStop(false);
+        private final Class<?> _clazz;
+        private final String _name;
+        private final String _description;
 
-    private static final FieldAttributes NORMAL_ATTRIBUTES =
-        new FieldAttributes().setTextColor(UTSColor.GREEN)
-                             .setBackgroundColor(UTSColor.BLACK)
-                             .setTabStop(false);
+        public ApplicationInfo(final Class<?> clazz,
+                               final String name,
+                               final String description) {
+            _clazz = clazz;
+            _name = name;
+            _description = description;
+        }
+
+        public String getName() { return _name; }
+        public String getDescription() { return _description; }
+    }
+
+    private static final LinkedList<ApplicationInfo> APPLICATIONS = new LinkedList<>();
+    static {
+        APPLICATIONS.add(new ApplicationInfo(ClockApp.class, "Clock", "Displays the current time"));
+    }
 
     private final Thread _thread = new Thread(this);
 
-    public MenuApp(final SocketChannelHandler session) {
-        super(session);
+    public MenuApp(final SocketChannel channel) {
+        super(channel);
         _thread.start();
     }
 
     private void displayMenu() {
-        var strm = new UTSOutputStream(2048);
-        strm.writeCursorToHome()
-            .writeEraseDisplay()
-            .writeFCC(3, 3, FKEY_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeString("F1")
-            .writeFCC(3, 6, NORMAL_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeFCC(3, 8, NAME_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeString("Clock")
-            .writeFCC(3, 20, NORMAL_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeFCC(4, 3, FKEY_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeString("F2")
-            .writeFCC(4, 6, NORMAL_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeFCC(4, 8, NAME_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeString("Snake")
-            .writeFCC(4, 20, NORMAL_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeFCC(6, 3, FKEY_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeString("F22")
-            .writeFCC(6, 6, NORMAL_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeFCC(6, 8, NAME_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .writeString("Exit")
-            .writeFCC(6, 20, NORMAL_ATTRIBUTES, UTSOutputStream.FCCFormat.FCC_COLOR_FG_BG_ONE_BYTE)
-            .write(ASCII_CR)
-            .writeUnlockKeyboard();
-        var msg = new TextMessage(strm.getBuffer(), 0, strm.size());
         try {
-            _channel.writeMessage(msg);
-        } catch (IOException ex) {
+            var strm = new UTSByteBuffer(2048);
+            strm.put(ASCII_SOH)
+                .put(ASCII_STX)
+                .putCursorToHome()
+                .putEraseDisplay();
+            var nextRow = 3;
+            var fkNumber = 1;
+            for (var app : APPLICATIONS) {
+                var fkField = new ExplicitField(new Coordinates(nextRow, 10)).setTextColor(UTSColor.YELLOW);
+                var nameField = new ExplicitField(new Coordinates(nextRow, 15)).setTextColor(UTSColor.CYAN);
+                var descField = new ExplicitField(new Coordinates(nextRow, 25)).setTextColor(UTSColor.GREEN);
+                strm.putFCCSequence(fkField, false, true, true)
+                    .putString("F" + fkNumber);
+                strm.putFCCSequence(nameField, false, true, true)
+                    .putString(app.getName());
+                strm.putFCCSequence(descField, false, true, true)
+                    .putString(app.getDescription());
+
+                nextRow++;
+                fkNumber++;
+            }
+
+            nextRow++;
+            fkNumber = 22;
+            var fkField = new ExplicitField(new Coordinates(nextRow, 10)).setTextColor(UTSColor.YELLOW);
+            var nameField = new ExplicitField(new Coordinates(nextRow, 15)).setTextColor(UTSColor.CYAN);
+            var descField = new ExplicitField(new Coordinates(nextRow, 25)).setTextColor(UTSColor.GREEN);
+            strm.putFCCSequence(fkField, false, true, true)
+                .putString("F" + fkNumber);
+            strm.putFCCSequence(nameField, false, true, true)
+                .putString("EXIT");
+            strm.putFCCSequence(descField, false, true, true)
+                .putString("Terminate Session");
+
+            strm.putCursorToHome().put(ASCII_ETX);
+            strm.setPointer(0);
+            var msg = new TextMessage(strm.getBuffer());
+            _channel.send(msg);
+        } catch (IOException | CoordinateException ex) {
             // TODO do something here
             IO.println("MenuApp failed to send message");
         }
     }
 
+    @Override
+    public void trafficReceived(UTSByteBuffer data) {
+        sendUnlockKeyboard();
+        data.setPointer(0);
+        var message = Message.create(data.getBuffer());
+        IO.println("Received message: " + message);// TODO remove
+        if (message instanceof FunctionKeyMessage fkm) {
+            switch (fkm.getKey()) {
+                case 1 -> {}
+                case 22 -> _terminate = true;
+                default -> {}//TODO complain about bad FKey
+            }
+        } else {
+            // TODO complain about bad message
+        }
+    }
+
     public void run() {
         displayMenu();
-        var lastInstant = Instant.now();
         while (!_terminate) {
-            var msg = _channel.readNextMessage();
-            if (msg instanceof FunctionKeyMessage fkm) {
-                switch (fkm.getKey()) {
-                    case 1 -> {}
-                    case 2 -> {}
-                    case 22 -> _terminate = true;
-                }
-            } else if (msg != null) {
-                displayMenu();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                // TODO nothing really to do here
             }
         }
+
+        // TODO should send an au revoir message
     }
 }

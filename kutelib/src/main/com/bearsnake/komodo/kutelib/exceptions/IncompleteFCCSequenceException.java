@@ -4,9 +4,10 @@
 
 package com.bearsnake.komodo.kutelib.exceptions;
 
-public class FCCIncompleteSequenceException extends FCCSequenceException {
+public class IncompleteFCCSequenceException
+    extends FCCSequenceException {
 
-    public FCCIncompleteSequenceException() {
+    public IncompleteFCCSequenceException() {
         super("Incomplete Sequence");
     }
 }

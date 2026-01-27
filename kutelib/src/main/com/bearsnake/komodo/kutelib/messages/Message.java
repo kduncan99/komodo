@@ -4,10 +4,7 @@
 
 package com.bearsnake.komodo.kutelib.messages;
 
-import com.bearsnake.komodo.kutelib.SocketChannelHandler;
-
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public interface Message {

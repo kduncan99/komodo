@@ -12,8 +12,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Server
-    implements Runnable {
+public class Server implements Runnable {
 
     private final List<Application> _clients = new LinkedList<>();
     private final int _port;
@@ -49,7 +48,7 @@ public class Server
                         break;
                     }
                 } else {
-                    var menuApp = new MenuApp(new SocketChannelHandler(socketChannel));
+                    var menuApp = new MenuApp(socketChannel);
                     _clients.add(menuApp);
                 }
             } catch (IOException ex) {

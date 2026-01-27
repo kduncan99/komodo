@@ -36,6 +36,7 @@ public class DisplayPane extends Canvas {
     private int _blinkCounter;
     private boolean _blinkCursorFlag;
     private boolean _blinkCharacterFlag;
+    private boolean _deferred;
 
     public DisplayPane(final DisplayGeometry initialGeometry,
                        final FontInfo initialFontInfo,
@@ -156,7 +157,7 @@ public class DisplayPane extends Canvas {
 
     /*
      * Draws the character display.
-     * Do not invoke this directly - use scheduleDrawStatusAction() instead.
+     * Do not invoke this directly - use scheduleDrawDisplay) instead.
      */
     private void drawDisplay() {
         var gcDisplay = getGraphicsContext2D();
@@ -377,7 +378,9 @@ public class DisplayPane extends Canvas {
      * Notifies the platform that it should schedule drawDisplay() to run in the graphics thread.
      */
     public void scheduleDrawDisplay() {
-        Platform.runLater(this::drawDisplay);
+        if (!_deferred) {
+            Platform.runLater(this::drawDisplay);
+        }
     }
 
     /**
@@ -391,6 +394,15 @@ public class DisplayPane extends Canvas {
         _cursorPosition.setColumn(column);
         _statusPane.notifyCursorPositionChange(row, column);
         scheduleDrawDisplay();
+    }
+
+    public void setDeferred(final boolean deferred) {
+        if (_deferred != deferred) {
+            _deferred = deferred;
+            if (!_deferred) {
+                scheduleDrawDisplay();
+            }
+        }
     }
 
     // -----------------------------------------------------------------------------------------------------------------

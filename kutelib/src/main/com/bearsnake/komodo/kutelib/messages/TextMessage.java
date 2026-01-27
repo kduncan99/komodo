@@ -33,7 +33,7 @@ public class TextMessage implements Message {
 
     public static TextMessage create(final byte[] data) {
         if ((data.length >= 3) && (data[0] == ASCII_SOH) && (data[1] == ASCII_STX) && (data[data.length - 1] == ASCII_ETX)) {
-            return new TextMessage(Arrays.copyOfRange(data, 2, data.length - 1));
+            return new TextMessage(data);
         } else {
             return null;
         }
@@ -42,13 +42,8 @@ public class TextMessage implements Message {
     @Override
     public void write(SocketChannel channel)
         throws IOException {
-        var bb = ByteBuffer.allocate(3 + _text.length);
-        bb.put(ASCII_SOH);
-        bb.put(ASCII_STX);
-        bb.put(_text);
-        bb.put(ASCII_ETX);
-        SocketChannelHandler.dumpBuffer("Sending: ", bb.array(), 0, bb.position());//TODO remove
-        bb.flip();
+        var bb = ByteBuffer.wrap(_text);
+        SocketChannelHandler.dumpBuffer("Sending: ", _text);//TODO remove
         channel.write(bb);
     }
 
