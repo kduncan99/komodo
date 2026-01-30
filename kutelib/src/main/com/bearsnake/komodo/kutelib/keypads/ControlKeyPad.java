@@ -14,11 +14,11 @@ import javafx.scene.layout.StackPane;
 /**
  * Two rows across the top of the display
  *
- *  Erase  Erase  Delete  Insert  Insert  Line
- * Display  EOD   InDisp  InDisp   Line   Dup                                XFER   PRINT   XMIT
+ *  Erase  Erase  Delete  Insert  Insert  Line        Connect  Drop
+ * Display  EOD   InDisp  InDisp   Line   Dup         Session Session          XFER   PRINT   XMIT
  *
- *  Erase  Erase  Delete  Insert  Delete  FCC   FCC     FCC    FCC   Clear   Ctl            Msg
- * To EOF   EOL   InLine  InLine   Line   Gen  Enable  Clear  Locate Change  Page   Unlock  Wait
+ *  Erase  Erase  Delete  Insert  Delete  FCC   FCC     FCC     FCC    Clear   Ctl            Msg
+ * To EOF   EOL   InLine  InLine   Line   Gen  Enable  Clear   Locate  Change  Page   Unlock  Wait
  */
 public class ControlKeyPad extends StackPane implements KeyPad {
 
@@ -48,6 +48,12 @@ public class ControlKeyPad extends StackPane implements KeyPad {
 
         _buttons[0][5] = new Button("Line\nDup");
         _buttons[0][5].setOnAction(e -> _activeTerminal.kbDuplicateLine());
+
+        _buttons[0][7] = new Button("Connect\nSession");
+        _buttons[0][7].setOnAction(e -> _activeTerminal.connect());
+
+        _buttons[0][8] = new Button("Drop\nSession");
+        _buttons[0][8].setOnAction(e -> _activeTerminal.disconnect());
 
         _buttons[0][10] = new Button("XFER");
         _buttons[0][10].setOnAction(e -> _activeTerminal.kbTransfer());

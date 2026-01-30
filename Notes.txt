@@ -3,7 +3,6 @@ TODO InProgress
 
 Kute
     Need some kind of poll mechanism to force Kute to go disconnected when the server socket closes
-    [Connect] and [Disconnect] buttons
     Applications for testing Kute
     Uppercase-Only mode (We can catch CAPS keypress and adjust accordingly)
     Less than 80-columns needs to prevent control page toggle
