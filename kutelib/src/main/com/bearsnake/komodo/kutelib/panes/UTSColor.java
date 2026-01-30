@@ -2,7 +2,7 @@
  * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kutelib;
+package com.bearsnake.komodo.kutelib.panes;
 
 import javafx.scene.paint.Color;
 
@@ -28,7 +28,7 @@ public enum UTSColor {
         return _byteValue;
     }
 
-    static UTSColor fromByte(byte b) {
+    public static UTSColor fromByte(byte b) {
         return switch(b) {
             case 0 -> BLACK;
             case 1 -> RED;

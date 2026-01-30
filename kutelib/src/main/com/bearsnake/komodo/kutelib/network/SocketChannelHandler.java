@@ -2,7 +2,7 @@
  * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kutelib;
+package com.bearsnake.komodo.kutelib.network;
 
 import com.bearsnake.komodo.kutelib.messages.Message;
 
@@ -12,6 +12,7 @@ import java.nio.channels.SocketChannel;
 
 /**
  * Wraps a SocketChannel for simplifying the processing of handling UTS-style communication.
+ * TODO seriously consider using Message objects instead of byte arrays for client read/write
  */
 public class SocketChannelHandler
     extends Thread {
@@ -20,7 +21,7 @@ public class SocketChannelHandler
     private static final int INPUT_BUFFER_SIZE = 8192;
 
     private final SocketChannel _channel;
-    private final SocketChannelListener _listener;
+    private SocketChannelListener _listener;
     private boolean _terminate = false;
     private final Thread _thread = new Thread(this);
 
@@ -49,6 +50,10 @@ public class SocketChannelHandler
         message.write(_channel);
     }
 
+    public void setListener(final SocketChannelListener listener) {
+        _listener = listener;
+    }
+
     public void run() {
         IO.println("Channel Handler started:" + _channel.socket().getRemoteSocketAddress());
 
@@ -66,7 +71,7 @@ public class SocketChannelHandler
             try {
                 inputBuffer.readFromChannel(_channel);
                 dumpBuffer("Received:", inputBuffer.getBuffer());//TODO remove
-                _listener.trafficReceived(inputBuffer);
+                _listener.trafficReceived(this, inputBuffer);
             } catch (IOException ex) {
                 IO.println("Channel Handler failed to read from channel");
                 _terminate = true;

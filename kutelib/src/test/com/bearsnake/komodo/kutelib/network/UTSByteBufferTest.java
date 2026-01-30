@@ -1,4 +1,4 @@
-package com.bearsnake.komodo.kutelib;
+package com.bearsnake.komodo.kutelib.network;
 
 import org.junit.jupiter.api.Test;
 

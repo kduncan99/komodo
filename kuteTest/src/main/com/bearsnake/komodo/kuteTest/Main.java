@@ -10,6 +10,7 @@ public class Main {
 
     static void main() throws IOException {
         var main = new Main();
-        var s = new Server(2200);
+        var s = new KuteTestServer(2200);
+        s.run();
     }
 }

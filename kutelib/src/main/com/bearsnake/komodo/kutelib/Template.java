@@ -4,6 +4,8 @@
 
 package com.bearsnake.komodo.kutelib;
 
+import com.bearsnake.komodo.kutelib.panes.UTSColor;
+
 public class Template {
 
     private String _templateName;

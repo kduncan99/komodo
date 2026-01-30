@@ -7,7 +7,10 @@ package com.bearsnake.komodo.kutelib;
 import com.bearsnake.komodo.kutelib.exceptions.*;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.kutelib.messages.MessageWaitMessage;
-import com.bearsnake.komodo.kutelib.messages.TextMessage;
+import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
+import com.bearsnake.komodo.kutelib.network.SocketChannelListener;
+import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.panes.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 
@@ -596,7 +599,7 @@ public class Terminal extends Pane implements SocketChannelListener {
             _socketHandler.send(new MessageWaitMessage());
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
-            // TODO what do do?
+            disconnect();
             IO.println("Cannot send message wait: " + ex.getMessage());
         }
     }
@@ -665,7 +668,7 @@ public class Terminal extends Pane implements SocketChannelListener {
             _socketHandler.send(msg);
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
-            // TODO what do do?
+            disconnect();
             IO.println("Cannot send function key: " + ex.getMessage());
         }
     }
@@ -1086,7 +1089,8 @@ public class Terminal extends Pane implements SocketChannelListener {
      * Handles UTS traffic from socket.
      */
     @Override
-    public void trafficReceived(final UTSByteBuffer input) {
+    public void trafficReceived(final SocketChannelHandler handler,
+                                final UTSByteBuffer input) {
         // Conventional messages from the host follow this pattern:
         //  SOH RID SID DID * ETX BCC
         // We have no need for RID/SID/DID, nor for BCC. The Komodo host does not send RID/SID/DID, nor BCC.
@@ -1246,7 +1250,7 @@ public class Terminal extends Pane implements SocketChannelListener {
             _socketHandler.send(output);
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
-            // TODO do something here... not sure what though
+            disconnect();
             IO.println("Failed to send message: " + ex.getMessage());
         }
     }

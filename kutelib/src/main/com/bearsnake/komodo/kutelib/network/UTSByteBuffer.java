@@ -1,8 +1,10 @@
-package com.bearsnake.komodo.kutelib;
+package com.bearsnake.komodo.kutelib.network;
 
+import com.bearsnake.komodo.kutelib.Constants;
 import com.bearsnake.komodo.kutelib.exceptions.BufferOverflowException;
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.exceptions.FCCSequenceException;
+import com.bearsnake.komodo.kutelib.panes.*;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -427,6 +429,26 @@ public class UTSByteBuffer {
             put(ASCII_NUL);
         }
         put(ASCII_SI);
+        return this;
+    }
+
+    public UTSByteBuffer putCursorScanDown() {
+        put(Constants.ASCII_ESC).put((byte) 'i');
+        return this;
+    }
+
+    public UTSByteBuffer putCursorScanLeft() {
+        put(Constants.ASCII_ESC).put((byte) 'g');
+        return this;
+    }
+
+    public UTSByteBuffer putCursorScanRight() {
+        put(Constants.ASCII_ESC).put((byte) 'h');
+        return this;
+    }
+
+    public UTSByteBuffer putCursorScanUp() {
+        put(Constants.ASCII_ESC).put((byte) 'f');
         return this;
     }
 

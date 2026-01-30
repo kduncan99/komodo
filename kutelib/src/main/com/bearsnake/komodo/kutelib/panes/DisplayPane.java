@@ -2,8 +2,9 @@
  * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kutelib;
+package com.bearsnake.komodo.kutelib.panes;
 
+import com.bearsnake.komodo.kutelib.*;
 import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 
@@ -238,7 +239,7 @@ public class DisplayPane extends Canvas {
     /*
      * Retrieves a reference to the character cell indicated by the given coordinates
      */
-    protected CharacterCell getCharacterCell(final Coordinates coordinates) {
+    public CharacterCell getCharacterCell(final Coordinates coordinates) {
         return _characterCells[getIndex(coordinates)];
     }
 
@@ -1308,32 +1309,6 @@ public class DisplayPane extends Canvas {
                 strm.write(_characterCells[cx].getCharacter());
             }
         }
-        return strm.toByteArray();
-    }
-
-    public byte[] getTransmitStream(final TransmitMode mode) {
-        return switch (mode) {
-            case ALL -> getTransmitStreamAll();
-            case CHANGED -> getTransmitStreamChanged();
-            case VARIABLE -> getTransmitStreamVariable();
-        };
-    }
-
-    private byte[] getTransmitStreamAll() {
-        var strm = new ByteArrayOutputStream(2048);
-        // TODO
-        return strm.toByteArray();
-    }
-
-    private byte[] getTransmitStreamChanged() {
-        var strm = new ByteArrayOutputStream(1024);
-        // TODO
-        return strm.toByteArray();
-    }
-
-    private byte[] getTransmitStreamVariable() {
-        var strm = new ByteArrayOutputStream(1024);
-        // TODO
         return strm.toByteArray();
     }
 

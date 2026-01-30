@@ -4,20 +4,20 @@
 
 package com.bearsnake.komodo.kuteTest;
 
-import com.bearsnake.komodo.kutelib.*;
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.kutelib.messages.Message;
-import com.bearsnake.komodo.kutelib.messages.TextMessage;
+import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.panes.Coordinates;
+import com.bearsnake.komodo.kutelib.panes.ExplicitField;
+import com.bearsnake.komodo.kutelib.panes.UTSColor;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
-public class MenuApp extends Application implements SocketChannelListener {
+public class MenuApp extends Application implements Runnable {
 
     private static class ApplicationInfo {
 
@@ -42,11 +42,30 @@ public class MenuApp extends Application implements SocketChannelListener {
         APPLICATIONS.add(new ApplicationInfo(ClockApp.class, "Clock", "Displays the current time"));
     }
 
-    private final Thread _thread = new Thread(this);
+    private Thread _thread = null;
 
-    public MenuApp(final SocketChannel channel) {
-        super(channel);
-        _thread.start();
+    public MenuApp(final KuteTestServer server) {
+        super(server);
+    }
+
+    private void displayMessage(final String message) {
+        try {
+            var msgField = new ExplicitField(null).setBackgroundColor(UTSColor.RED).setTextColor(UTSColor.WHITE).setBlinking(true);
+            var strm = new UTSByteBuffer(2048);
+            strm.put(ASCII_SOH)
+                .put(ASCII_STX)
+                .putCursorToHome()
+                .putCursorScanUp()
+                .putEraseDisplay();
+            strm.putFCCSequence(msgField, true, true, true)
+                .putString(message)
+                .putCursorToHome()
+                .put(ASCII_ETX);
+            strm.setPointer(0);
+            _server.sendMessage(this, strm);
+        } catch (IOException | CoordinateException ex) {
+            IO.println("MenuApp failed to send message");
+        }
     }
 
     private void displayMenu() {
@@ -87,16 +106,14 @@ public class MenuApp extends Application implements SocketChannelListener {
 
             strm.putCursorToHome().put(ASCII_ETX);
             strm.setPointer(0);
-            var msg = new TextMessage(strm.getBuffer());
-            _channel.send(msg);
+            _server.sendMessage(this, strm);
         } catch (IOException | CoordinateException ex) {
-            // TODO do something here
             IO.println("MenuApp failed to send message");
         }
     }
 
     @Override
-    public void trafficReceived(UTSByteBuffer data) {
+    public void handleInput(UTSByteBuffer data) {
         sendUnlockKeyboard();
         data.setPointer(0);
         var message = Message.create(data.getBuffer());
@@ -104,11 +121,11 @@ public class MenuApp extends Application implements SocketChannelListener {
         if (message instanceof FunctionKeyMessage fkm) {
             switch (fkm.getKey()) {
                 case 1 -> {}
-                case 22 -> _terminate = true;
-                default -> {}//TODO complain about bad FKey
+                case 22 -> close();
+                default -> displayMessage("Invalid Function Key");
             }
         } else {
-            // TODO complain about bad message
+            displayMessage("Invalid Input");
         }
     }
 
@@ -121,7 +138,7 @@ public class MenuApp extends Application implements SocketChannelListener {
                 // TODO nothing really to do here
             }
         }
-
-        // TODO should send an au revoir message
+        close();
+        IO.println("MenuApp terminated");
     }
 }

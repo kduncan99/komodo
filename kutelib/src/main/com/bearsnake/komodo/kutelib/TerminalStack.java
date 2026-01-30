@@ -5,6 +5,10 @@
 package com.bearsnake.komodo.kutelib;
 
 import com.bearsnake.komodo.kutelib.keypads.KeyPad;
+import com.bearsnake.komodo.kutelib.panes.DisplayGeometry;
+import com.bearsnake.komodo.kutelib.panes.FontInfo;
+import com.bearsnake.komodo.kutelib.panes.UTSColor;
+import com.bearsnake.komodo.kutelib.panes.UTSColorSet;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.SingleSelectionModel;

@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.kutelib.messages;
 
-import com.bearsnake.komodo.kutelib.SocketChannelHandler;
+import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
 import com.bearsnake.komodo.kutelib.exceptions.InternalException;
 
 import java.io.IOException;
