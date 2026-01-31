@@ -4,6 +4,8 @@
 
 package com.bearsnake.komodo.kuteTest;
 
+import com.bearsnake.komodo.kutelib.messages.Message;
+import com.bearsnake.komodo.kutelib.messages.TextMessage;
 import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
 import com.bearsnake.komodo.kutelib.network.SocketChannelListener;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
@@ -38,7 +40,7 @@ public class KuteTestServer implements SocketChannelListener {
         synchronized (_sessions) {
             for (var session : _sessions) {
                 if (session._applications.contains(application)) {
-                    session._handler.send(buffer);
+                    session._handler.send(new TextMessage(buffer.setPointer(0).getBuffer()));
                     return;
                 }
             }
@@ -46,20 +48,32 @@ public class KuteTestServer implements SocketChannelListener {
         IO.println("Internal error - cannot find application for sendMessage()");
     }
 
+    @Override
+    public void socketClosed(final SocketChannelHandler source) {
+        synchronized (_sessions) {
+            for (SessionInfo session : _sessions) {
+                if (session._handler == source) {
+                    session._handler.close();
+                    return;
+                }
+            }
+        }
+    }
+
     /**
      * Receives input from the users via the various SocketChannelHandlers.
      * We find the session that the SocketChannelHandler belongs to and send the message
      * to the most recent application for that session.
      * @param source SocketChannelHandler that sent the data
-     * @param data data to be processed by the listener
+     * @param message the message to be processed by the listener
      */
     @Override
-    public void trafficReceived(final SocketChannelHandler source,
-                                final UTSByteBuffer data) {
+    public void socketTrafficReceived(final SocketChannelHandler source,
+                                      final Message message) {
         synchronized (_sessions) {
             for (var session : _sessions) {
                 if (session._handler == source) {
-                    session._applications.getLast().handleInput(data);
+                    session._applications.getLast().handleInput(message);
                     return;
                 }
             }

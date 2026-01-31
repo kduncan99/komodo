@@ -654,8 +654,9 @@ public class UTSByteBuffer {
      * removing any NUL bytes encountered and shifting the remainder of the content
      * downward as necessary. Optionally shifts limit down by the number of NUL bytes removed.
      * @param preserveLimit if true, the limit is not modified
+     * @return this buffer
      */
-    public void removeNulBytes(final boolean preserveLimit) {
+    public UTSByteBuffer removeNulBytes(final boolean preserveLimit) {
         // Set dx to the first NUL byte, then move all subsequent non-NUL bytes downward.
         int dx = _pointer;
         while ((dx < _limit) && (_buffer[dx] != ASCII_NUL)) {
@@ -674,6 +675,8 @@ public class UTSByteBuffer {
         if (!preserveLimit) {
             _limit = dx;
         }
+
+        return this;
     }
 
     /**
@@ -703,11 +706,13 @@ public class UTSByteBuffer {
     /**
      * Sets the pointer to the given position.
      * @param position a value from zero to the limit
+     * @return this buffer
      */
-    public void setPointer(final int position) {
+    public UTSByteBuffer setPointer(final int position) {
         if (position >= 0 && position <= _limit) {
             _pointer = position;
         }
+        return this;
     }
 
     /**

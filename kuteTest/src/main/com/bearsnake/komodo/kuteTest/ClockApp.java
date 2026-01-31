@@ -4,18 +4,9 @@
 
 package com.bearsnake.komodo.kuteTest;
 
-import com.bearsnake.komodo.kutelib.panes.Coordinates;
-import com.bearsnake.komodo.kutelib.network.SocketChannelListener;
-import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
-import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
-import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.kutelib.messages.Message;
 
-import java.io.IOException;
-import java.nio.channels.SocketChannel;
 import java.time.Instant;
-
-import static com.bearsnake.komodo.kutelib.Constants.*;
 
 public class ClockApp extends Application implements Runnable {
 
@@ -34,7 +25,7 @@ public class ClockApp extends Application implements Runnable {
     }
 
     @Override
-    public void handleInput(UTSByteBuffer data) {
+    public void handleInput(final Message message) {
         sendUnlockKeyboard();
         // F1-F8 set text color (and complementary bg color)
         // F9 toggles 12hr/24hr mode

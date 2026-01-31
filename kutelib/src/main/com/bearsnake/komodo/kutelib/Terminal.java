@@ -6,7 +6,9 @@ package com.bearsnake.komodo.kutelib;
 
 import com.bearsnake.komodo.kutelib.exceptions.*;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
+import com.bearsnake.komodo.kutelib.messages.Message;
 import com.bearsnake.komodo.kutelib.messages.MessageWaitMessage;
+import com.bearsnake.komodo.kutelib.messages.TextMessage;
 import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
 import com.bearsnake.komodo.kutelib.network.SocketChannelListener;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
@@ -917,7 +919,7 @@ public class Terminal extends Pane implements SocketChannelListener {
                                 .put(ASCII_STX)
                                 .putCursorPositionSequence(_activeDisplayPane.getCursorPosition(), true)
                                 .put(ASCII_ETX);
-                        _socketHandler.send(output);
+                        _socketHandler.send(new TextMessage(output.setPointer(0).getBuffer()));
                         _statusPane.setKeyboardLocked(true);
                     } catch (IOException ex) {
                         // TODO what to do?
@@ -1086,70 +1088,35 @@ public class Terminal extends Pane implements SocketChannelListener {
     }
 
     /**
-     * Handles UTS traffic from socket.
+     * Socket handler notifies us that the socket has been closed.
+     * @param handler SocketChannelHandler that sent the notification
      */
     @Override
-    public void trafficReceived(final SocketChannelHandler handler,
-                                final UTSByteBuffer input) {
-        // Conventional messages from the host follow this pattern:
-        //  SOH RID SID DID * ETX BCC
-        // We have no need for RID/SID/DID, nor for BCC. The Komodo host does not send RID/SID/DID, nor BCC.
+    public void socketClosed(final SocketChannelHandler handler) {
+        disconnect();
+    }
 
-        // Messages we can get from the host:
-        //  SOH ETX             - message poll: requests any message the terminal has queued
-        //  SOH ENQ ETX         - status poll: requests any non-text message the terminal has queued
-        //  SOH STX message ETX - message to terminal
-        //  SOH BEL STX ETX     - set message waiting on terminal
-        //  SOH DLE EOT STX ETX - causes terminal to drop the session (host could just drop the TCP session anyway...)
-
-        // If the message is empty, this is a poll for any messages which the terminal has queued up for us
-        // NOTE THAT WE DO NOT DO POLLING FOR TERMINAL INPUT - Communications partner should not do this.
-        input.reset();
-        if (input.getSize() == 0) {
-            return;
-        }
-
-        if (input.equalsBuffer(STATUS_POLL)) {
-            IO.println("Ignoring status poll");
-            return;
-        }
-
-        if (input.equalsBuffer(MESSAGE_POLL)) {
-            IO.println("Ignoring message poll");
-            return;
-        }
-
-        if (input.equalsBuffer(MESSAGE_WAITING_NOTIFICATION)) {
+    /**
+     * Handles UTS traffic from socket, wrapped in a particular subclass of Message.
+     * The only subclasses we expect are MessageWaitMessage and TextMessage.
+     */
+    @Override
+    public void socketTrafficReceived(final SocketChannelHandler handler,
+                                      final Message message) {
+        if (message instanceof MessageWaitMessage) {
             _statusPane.setMessageWaiting(true);
-            return;
-        }
-
-        if (input.equalsBuffer(DISCONNECT_REQUEST)) {
-            disconnect();
-            return;
-        }
-
-        // If the message begins with SOH-STX, it is a text message to the terminal
-        if ((input.getSize() > 2) && (input.get(0) == ASCII_SOH) && (input.get(1) == ASCII_STX)) {
-            var subLength = input.getLimit() - 2;
-            if (input.get(input.getSize() - 1) == ASCII_ETX) {
-                subLength--;
-            }
-
-            var strippedInput = new UTSByteBuffer(input.getBackingBuffer(), 2, subLength);
-            strippedInput.removeNulBytes(false);
+        } else if (message instanceof TextMessage tm) {
             try {
-                ingestMessage(strippedInput);
+                ingestMessage(tm.unwrap());
             } catch (StreamException | CoordinateException | BufferOverflowException se) {
                 System.out.println("Error in input stream");
                 _statusPane.setErrorIndicator(true);
             }
-            return;
+        } else {
+            // Anything else is an error. Handle it.
+            System.out.println("Rejectded message from host:" + message);
+            _statusPane.setErrorIndicator(true);
         }
-
-        // Anything else is an error. Handle it.
-        System.out.println("Invalid stream from host");
-        _statusPane.setErrorIndicator(true);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -1247,7 +1214,7 @@ public class Terminal extends Pane implements SocketChannelListener {
         }
 
         try {
-            _socketHandler.send(output);
+            _socketHandler.send(new TextMessage(output.setPointer(0).getBuffer()));
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
             disconnect();

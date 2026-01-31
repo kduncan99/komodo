@@ -2,24 +2,7 @@
 TODO InProgress
 
 Kute
-    Need some kind of poll mechanism to force Kute to go disconnected when the server socket closes
     Applications for testing Kute
-    Uppercase-Only mode (We can catch CAPS keypress and adjust accordingly)
-    Less than 80-columns needs to prevent control page toggle
-    Need terminal attribute enable/disable for
-        color, emphasis, half-intensity, blinking, graphics(?)
-    Menu items for adjusting all terminal attributes
-        (including colorset, geometry, font size, etc)
-    Menu items for reset, capture enable/disable
-    When we scan cursor backward into protected field, it moves back to the next unprotected field...
-        should it move backward to the previous unprotected field?
-    Tab backward
-    Backspace
-    Need to load and save templates
-    Traffic capture mechanism - Raw/ASCII/Interpreted modes, save file, etc
-    Print - configure up to 9 print destinations P1-P9 (files, actual print queues, local printers...?)
-    Transfer - configure up to 9 virtual disks D1-D9 (files)
-    Graphics - this is a major undertaking, and we must support color disabled option
 
 Networking
     Need to think about this some more
@@ -63,6 +46,24 @@ TODO BUGS
 
 --------------------
 TODO To be implemented
+
+Kute
+    Uppercase-Only mode (We can catch CAPS keypress and adjust accordingly)
+    Less than 80-columns needs to prevent control page toggle
+    Need terminal attribute enable/disable for
+        color, emphasis, half-intensity, blinking, graphics(?)
+    Menu items for adjusting all terminal attributes
+        (including colorset, geometry, font size, etc)
+    Menu items for reset, capture enable/disable - maybe a button for [Reset]
+    When we scan cursor backward into protected field, it moves back to the next unprotected field...
+        should it move backward to the previous unprotected field?
+    Tab backward
+    Backspace
+    Need to load and save templates
+    Traffic capture mechanism - Raw/ASCII/Interpreted modes, save file, etc
+    Print - configure up to 9 print destinations P1-P9 (files, actual print queues, local printers...?)
+    Transfer - configure up to 9 virtual disks D1-D9 (files)
+    Graphics - this is a major undertaking, and we must support color disabled option
 
 Kons (A GUI console)
 

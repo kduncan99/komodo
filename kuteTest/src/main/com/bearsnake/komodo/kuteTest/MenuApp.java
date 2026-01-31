@@ -113,10 +113,8 @@ public class MenuApp extends Application implements Runnable {
     }
 
     @Override
-    public void handleInput(UTSByteBuffer data) {
+    public void handleInput(final Message message) {
         sendUnlockKeyboard();
-        data.setPointer(0);
-        var message = Message.create(data.getBuffer());
         IO.println("Received message: " + message);// TODO remove
         if (message instanceof FunctionKeyMessage fkm) {
             switch (fkm.getKey()) {

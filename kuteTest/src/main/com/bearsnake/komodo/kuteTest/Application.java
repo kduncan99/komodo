@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kuteTest;
 
+import com.bearsnake.komodo.kutelib.messages.Message;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ public abstract class Application implements Runnable {
         }
     }
 
-    public abstract void handleInput(final UTSByteBuffer data);
+    public abstract void handleInput(final Message message);
 
     public boolean isTerminated() {
         return !_thread.isAlive();
