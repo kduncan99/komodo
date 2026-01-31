@@ -92,7 +92,7 @@ public class SocketChannelHandler extends Thread {
             try {
                 inputBuffer.readFromChannel(_channel);
                 var message = Message.create(inputBuffer);
-                dumpBuffer("Received:", inputBuffer.getBuffer());//TODO remove
+//                dumpBuffer("Received:", inputBuffer.getBuffer());//TODO remove
                 if (message instanceof StatusPollMessage) {
                     // Send a StatusMessage in response
                     _listener.socketTrafficReceived(this, message);

@@ -70,7 +70,6 @@ public class KuteTestServer implements SocketChannelListener {
     @Override
     public void socketTrafficReceived(final SocketChannelHandler source,
                                       final Message message) {
-        IO.println("Received message from " + source + ": " + message);//TODO remove
         synchronized (_sessions) {
             for (var session : _sessions) {
                 if (session._handler == source) {

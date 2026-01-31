@@ -116,7 +116,6 @@ public class MenuApp extends Application implements Runnable {
     @Override
     public void handleInput(final Message message) {
         sendUnlockKeyboard();
-        IO.println("MenuApp Received message: " + message);// TODO remove
         try {
             if (message instanceof FunctionKeyMessage fkm) {
                 var appInfo = APPLICATION_INFO_TABLE.get(fkm.getKey());
@@ -161,7 +160,7 @@ public class MenuApp extends Application implements Runnable {
             strm.setPointer(0);
             _server.sendMessage(this, strm);
         } catch (IOException ex) {
-            // TODO nothing really to do here
+            // nothing really to do here
         }
     }
 
@@ -172,7 +171,7 @@ public class MenuApp extends Application implements Runnable {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ex) {
-                // TODO nothing really to do here
+                // nothing really to do here
             }
         }
         IO.println("MenuApp terminated");
