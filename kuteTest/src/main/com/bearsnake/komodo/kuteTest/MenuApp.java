@@ -7,6 +7,7 @@ package com.bearsnake.komodo.kuteTest;
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.kutelib.messages.Message;
+import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 import com.bearsnake.komodo.kutelib.panes.Coordinates;
 import com.bearsnake.komodo.kutelib.panes.ExplicitField;
@@ -120,7 +121,8 @@ public class MenuApp extends Application implements Runnable {
             if (message instanceof FunctionKeyMessage fkm) {
                 var appInfo = APPLICATION_INFO_TABLE.get(fkm.getKey());
                 if (appInfo != null) {
-                    var newApp = (Application) appInfo._clazz.getConstructor(new Class[]{KuteTestServer.class}).newInstance(_server);
+                    var newApp = (Application) appInfo._clazz.getConstructor(new Class[]{KuteTestServer.class})
+                                                             .newInstance(_server);
                     _server.transferApplication(this, newApp);
                 } else if (fkm.getKey() == 22) {
                     sendTerminateMessage();
@@ -128,6 +130,8 @@ public class MenuApp extends Application implements Runnable {
                 } else {
                     displayMessage("Invalid Function Key");
                 }
+            } else if (message instanceof StatusPollMessage) {
+                // ignore this
             } else {
                 displayMessage("Invalid Input");
             }

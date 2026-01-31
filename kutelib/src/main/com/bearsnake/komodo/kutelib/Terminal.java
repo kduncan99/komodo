@@ -5,10 +5,7 @@
 package com.bearsnake.komodo.kutelib;
 
 import com.bearsnake.komodo.kutelib.exceptions.*;
-import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
-import com.bearsnake.komodo.kutelib.messages.Message;
-import com.bearsnake.komodo.kutelib.messages.MessageWaitMessage;
-import com.bearsnake.komodo.kutelib.messages.TextMessage;
+import com.bearsnake.komodo.kutelib.messages.*;
 import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
 import com.bearsnake.komodo.kutelib.network.SocketChannelListener;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
@@ -93,6 +90,10 @@ public class Terminal extends Pane implements SocketChannelListener {
      * Closes the terminal and cleans up resources
      */
     public void close() {
+        if (_socketHandler != null) {
+            _socketHandler.close();
+        }
+
         _activeDisplayPane = null;
 
         getChildren().remove(_displayPane);
@@ -107,10 +108,6 @@ public class Terminal extends Pane implements SocketChannelListener {
             getChildren().remove(_controlPagePane);
             _controlPagePane.close();
             _controlPagePane = null;
-        }
-
-        if (_socketHandler != null) {
-            _socketHandler.close();
         }
     }
 
@@ -1103,19 +1100,25 @@ public class Terminal extends Pane implements SocketChannelListener {
     @Override
     public void socketTrafficReceived(final SocketChannelHandler handler,
                                       final Message message) {
-        if (message instanceof MessageWaitMessage) {
-            _statusPane.setMessageWaiting(true);
-        } else if (message instanceof TextMessage tm) {
-            try {
-                ingestMessage(tm.unwrap());
-            } catch (StreamException | CoordinateException | BufferOverflowException se) {
-                System.out.println("Error in input stream");
+        switch (message) {
+            case MessageWaitMessage messageWaitMessage -> _statusPane.setMessageWaiting(true);
+            case StatusPollMessage statusPollMessage -> _statusPane.setPollIndicator();
+            case StatusMessage statusMessage -> {
+                // ignore this
+            }
+            case TextMessage tm -> {
+                try {
+                    ingestMessage(tm.unwrap());
+                } catch (StreamException | CoordinateException | BufferOverflowException se) {
+                    System.out.println("Error in input stream");
+                    _statusPane.setErrorIndicator(true);
+                }
+            }
+            case null, default -> {
+                // Anything else is an error. Handle it.
+                System.out.println("Rejected message from host:" + message);
                 _statusPane.setErrorIndicator(true);
             }
-        } else {
-            // Anything else is an error. Handle it.
-            System.out.println("Rejectded message from host:" + message);
-            _statusPane.setErrorIndicator(true);
         }
     }
 

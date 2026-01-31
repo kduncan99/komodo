@@ -95,6 +95,7 @@ public class SocketChannelHandler extends Thread {
                 dumpBuffer("Received:", inputBuffer.getBuffer());//TODO remove
                 if (message instanceof StatusPollMessage) {
                     // Send a StatusMessage in response
+                    _listener.socketTrafficReceived(this, message);
                     new StatusMessage().write(_channel);
                 } else if (message instanceof StatusMessage) {
                     // TODO at some point we might check these against a timer to detect a dropped session

@@ -6,6 +6,7 @@ package com.bearsnake.komodo.kuteTest;
 
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.messages.Message;
+import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 import com.bearsnake.komodo.kutelib.panes.Coordinates;
 
@@ -30,11 +31,13 @@ public class ClockApp extends Application implements Runnable {
 
     @Override
     public void handleInput(final Message message) {
-        sendUnlockKeyboard();
         IO.println("ClockApp Received message: " + message);// TODO remove
-        // F1-F8 set text color (and complementary bg color)
-        // F9 toggles 12hr/24hr mode
-        // F22 terminates the app
+        if (message instanceof StatusPollMessage) {
+            // ignore this
+        } else {
+            // F1-F8 set text color (and complementary bg color)
+            // F9 toggles 12hr/24hr mode
+            // F22 terminates the app
 //        data.setPointer(0);
 //        var message = Message.create(data.getBuffer());
 //        IO.println("Received message: " + message);// TODO remove
@@ -47,7 +50,9 @@ public class ClockApp extends Application implements Runnable {
 //        } else {
 //            // TODO complain about bad message
 //        }
-        close();//TODO remove
+            sendUnlockKeyboard();
+            close();//TODO remove
+        }
     }
 
     @Override
@@ -59,7 +64,7 @@ public class ClockApp extends Application implements Runnable {
     public void run() {
         createFCCs();
         displayHints();
-        var lastInstant = Instant.now();
+        var lastInstant = Instant.now().minusMillis(1000);
         while (!_terminate) {
             try {
                 var thisInstant = Instant.now();
