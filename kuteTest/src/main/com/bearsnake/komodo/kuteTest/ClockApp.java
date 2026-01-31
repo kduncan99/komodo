@@ -4,13 +4,17 @@
 
 package com.bearsnake.komodo.kuteTest;
 
+import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.messages.Message;
+import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.panes.Coordinates;
 
+import java.io.IOException;
 import java.time.Instant;
 
-public class ClockApp extends Application implements Runnable {
+import static com.bearsnake.komodo.kutelib.Constants.*;
 
-    private final Thread _thread = new Thread(this);
+public class ClockApp extends Application implements Runnable {
 
     public ClockApp(final KuteTestServer server) {
         super(server);
@@ -27,6 +31,7 @@ public class ClockApp extends Application implements Runnable {
     @Override
     public void handleInput(final Message message) {
         sendUnlockKeyboard();
+        IO.println("ClockApp Received message: " + message);// TODO remove
         // F1-F8 set text color (and complementary bg color)
         // F9 toggles 12hr/24hr mode
         // F22 terminates the app
@@ -42,37 +47,47 @@ public class ClockApp extends Application implements Runnable {
 //        } else {
 //            // TODO complain about bad message
 //        }
+        close();//TODO remove
     }
 
+    @Override
+    public void returnFromTransfer() {
+        // nothing to do
+    }
+
+    private int counter = 5;//TODO remove
     public void run() {
         createFCCs();
         displayHints();
-        // display all digits of time - from now on, we only redraw the digit(s) that change
-        //   (although F9 will redraw them all)
         var lastInstant = Instant.now();
         while (!_terminate) {
             try {
                 var thisInstant = Instant.now();
                 var elapsed = thisInstant.toEpochMilli() - lastInstant.toEpochMilli();
                 if (elapsed > 1000) {
-//                    var strm = new UTSByteBuffer(100);
-//                    strm.put(ASCII_SOH)
-//                        .put(ASCII_STX)
-//                        .putCursorToHome()
-//                        .putEraseDisplay()
-//                        .putCursorPositionSequence(new Coordinates(3, 3), false);
-//                    _channel.send(strm);
+                    var strm = new UTSByteBuffer(100);
+                    strm.put(ASCII_SOH)
+                        .put(ASCII_STX)
+                        .putCursorToHome()
+                        .putEraseDisplay()
+                        .putCursorPositionSequence(new Coordinates(3, 3), false)
+                        .putString(thisInstant.toString())
+                        .put(ASCII_ETX);
+                    _server.sendMessage(this, strm);
                     lastInstant = thisInstant;
                 }
-                Thread.sleep(25);
+                Thread.sleep(100);
             } catch (InterruptedException ex) {
-                // TODO
-//            } catch (IOException ex) {
-//                IO.println("ClockApp failed to send message");
-//                _terminate = true;
-//            } catch (CoordinateException e) {
-//                throw new RuntimeException(e);
+                // TODO nothing really to do here
+            } catch (CoordinateException ex) {
+                IO.println("FOO!");//TODO something here
+            } catch (IOException ex) {
+                IO.println("FEE!");//TODO something here
+                if (counter-- <= 0) {
+                    break;
+                }
             }
         }
+        IO.println("MenuApp terminated");
     }
 }

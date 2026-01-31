@@ -18,7 +18,7 @@ public abstract class Application implements Runnable {
 
     protected KuteTestServer _server;
     protected volatile boolean _terminate = false;
-    private Thread _thread = null;
+    private Thread _thread = new Thread(this);
 
     // For invoking as stand-alone
     protected Application(final KuteTestServer server) {
@@ -28,31 +28,15 @@ public abstract class Application implements Runnable {
     public void close() {
         if (!_terminate) {
             _terminate = true;
-            sendTerminateMessage();
+            IO.println("Setting _terminate to true");//TODO remove
         }
     }
 
     public abstract void handleInput(final Message message);
+    public abstract void returnFromTransfer();
 
     public boolean isTerminated() {
-        return !_thread.isAlive();
-    }
-
-    private void sendTerminateMessage() {
-        try {
-            var strm = new UTSByteBuffer(100);
-            strm.put(ASCII_SOH)
-                .put(ASCII_STX)
-                .putCursorToHome()
-                .putEraseDisplay()
-                .putString("Goodbye")
-                .put(ASCII_CR)
-                .put(ASCII_ETX);
-            strm.setPointer(0);
-            _server.sendMessage(this, strm);
-        } catch (IOException ex) {
-            // TODO nothing really to do here
-        }
+        return !_thread.isAlive() && _terminate;
     }
 
     protected void sendUnlockKeyboard() {
@@ -70,7 +54,6 @@ public abstract class Application implements Runnable {
     }
 
     public void start() {
-        _thread = new Thread(this);
         _thread.start();
     }
 }

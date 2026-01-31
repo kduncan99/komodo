@@ -70,10 +70,14 @@ public class KuteTestServer implements SocketChannelListener {
     @Override
     public void socketTrafficReceived(final SocketChannelHandler source,
                                       final Message message) {
+        IO.println("Received message from " + source + ": " + message);//TODO remove
         synchronized (_sessions) {
             for (var session : _sessions) {
                 if (session._handler == source) {
-                    session._applications.getLast().handleInput(message);
+                    var app = session._applications.peek();
+                    if (app != null) {
+                        app.handleInput(message);
+                    }
                     return;
                 }
             }
@@ -81,6 +85,25 @@ public class KuteTestServer implements SocketChannelListener {
         IO.println("Internal error - cannot find application for trafficReceived()");
     }
 
+    /**
+     * One application can transfer control to another application (expecting to regain control when it terminates).
+     * @param fromApplication application that is requesting the transfer
+     * @param toApplication new application to be run
+     */
+    protected void transferApplication(final Application fromApplication,
+                                       final Application toApplication) {
+        synchronized (_sessions) {
+            for (var session : _sessions) {
+                if (session._applications.contains(fromApplication)) {
+                    session._applications.push(toApplication);
+                    toApplication.start();
+                    return;
+                }
+            }
+        }
+    }
+
+    // Main loop
     public void run() {
         IO.println("Server started");
 
@@ -103,8 +126,8 @@ public class KuteTestServer implements SocketChannelListener {
                         var handler = new SocketChannelHandler(socketChannel, this);
                         var session = new SessionInfo(handler);
                         var app = new MenuApp(this);
-                        session._applications.addLast(app);
-                        _sessions.addLast(session);
+                        session._applications.push(app);
+                        _sessions.push(session);
                         app.start();
                         didSomething = true;
                     }
@@ -114,12 +137,18 @@ public class KuteTestServer implements SocketChannelListener {
                         var iter = _sessions.iterator();
                         while (iter.hasNext()) {
                             var session = iter.next();
-                            var app = session._applications.getLast();
-                            if (app.isTerminated()) {
-                                IO.println("Application " + app.getClass()
-                                                               .getSimpleName() + " terminated");
-                                session._applications.removeLast();
-                                didSomething = true;
+                            var app = session._applications.peek();
+                            if (app != null) {
+                                if (app.isTerminated()) {
+                                    IO.println("Application " + app.getClass()
+                                                                   .getSimpleName() + " terminated");
+                                    session._applications.pop();
+                                    var prevApp = session._applications.peek();
+                                    if (prevApp != null) {
+                                        prevApp.returnFromTransfer();
+                                    }
+                                    didSomething = true;
+                                }
                             }
                             if (session._applications.isEmpty()) {
                                 IO.println("No applications left for session " + session._handler);

@@ -13,7 +13,8 @@ import com.bearsnake.komodo.kutelib.panes.ExplicitField;
 import com.bearsnake.komodo.kutelib.panes.UTSColor;
 
 import java.io.IOException;
-import java.util.LinkedList;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
@@ -37,12 +38,11 @@ public class MenuApp extends Application implements Runnable {
         public String getDescription() { return _description; }
     }
 
-    private static final LinkedList<ApplicationInfo> APPLICATIONS = new LinkedList<>();
+    // key is fkey number (i.e., 1 for F1, 2 for F2, etc.)
+    private static final HashMap<Integer, ApplicationInfo> APPLICATION_INFO_TABLE = new HashMap<>();
     static {
-        APPLICATIONS.add(new ApplicationInfo(ClockApp.class, "Clock", "Displays the current time"));
+        APPLICATION_INFO_TABLE.put(1, new ApplicationInfo(ClockApp.class, "Clock", "Displays the current time"));
     }
-
-    private Thread _thread = null;
 
     public MenuApp(final KuteTestServer server) {
         super(server);
@@ -76,8 +76,9 @@ public class MenuApp extends Application implements Runnable {
                 .putCursorToHome()
                 .putEraseDisplay();
             var nextRow = 3;
-            var fkNumber = 1;
-            for (var app : APPLICATIONS) {
+            for (var appInfo : APPLICATION_INFO_TABLE.entrySet()) {
+                var fkNumber = appInfo.getKey();
+                var app = appInfo.getValue();
                 var fkField = new ExplicitField(new Coordinates(nextRow, 10)).setTextColor(UTSColor.YELLOW);
                 var nameField = new ExplicitField(new Coordinates(nextRow, 15)).setTextColor(UTSColor.CYAN);
                 var descField = new ExplicitField(new Coordinates(nextRow, 25)).setTextColor(UTSColor.GREEN);
@@ -89,11 +90,10 @@ public class MenuApp extends Application implements Runnable {
                     .putString(app.getDescription());
 
                 nextRow++;
-                fkNumber++;
             }
 
             nextRow++;
-            fkNumber = 22;
+            var fkNumber = 22;
             var fkField = new ExplicitField(new Coordinates(nextRow, 10)).setTextColor(UTSColor.YELLOW);
             var nameField = new ExplicitField(new Coordinates(nextRow, 15)).setTextColor(UTSColor.CYAN);
             var descField = new ExplicitField(new Coordinates(nextRow, 25)).setTextColor(UTSColor.GREEN);
@@ -115,18 +115,53 @@ public class MenuApp extends Application implements Runnable {
     @Override
     public void handleInput(final Message message) {
         sendUnlockKeyboard();
-        IO.println("Received message: " + message);// TODO remove
-        if (message instanceof FunctionKeyMessage fkm) {
-            switch (fkm.getKey()) {
-                case 1 -> {}
-                case 22 -> close();
-                default -> displayMessage("Invalid Function Key");
+        IO.println("MenuApp Received message: " + message);// TODO remove
+        try {
+            if (message instanceof FunctionKeyMessage fkm) {
+                var appInfo = APPLICATION_INFO_TABLE.get(fkm.getKey());
+                if (appInfo != null) {
+                    var newApp = (Application) appInfo._clazz.getConstructor(new Class[]{KuteTestServer.class}).newInstance(_server);
+                    _server.transferApplication(this, newApp);
+                } else if (fkm.getKey() == 22) {
+                    sendTerminateMessage();
+                    close();
+                } else {
+                    displayMessage("Invalid Function Key");
+                }
+            } else {
+                displayMessage("Invalid Input");
             }
-        } else {
-            displayMessage("Invalid Input");
+        } catch (NoSuchMethodException
+                 | InvocationTargetException
+                 | InstantiationException
+                 | IllegalAccessException ex) {
+            displayMessage("Caught Exception:" + ex.getMessage());
         }
     }
 
+    @Override
+    public void returnFromTransfer() {
+        displayMenu();
+    }
+
+    private void sendTerminateMessage() {
+        try {
+            var strm = new UTSByteBuffer(100);
+            strm.put(ASCII_SOH)
+                .put(ASCII_STX)
+                .putCursorToHome()
+                .putEraseDisplay()
+                .putString("Goodbye")
+                .put(ASCII_CR)
+                .put(ASCII_ETX);
+            strm.setPointer(0);
+            _server.sendMessage(this, strm);
+        } catch (IOException ex) {
+            // TODO nothing really to do here
+        }
+    }
+
+    @Override
     public void run() {
         displayMenu();
         while (!_terminate) {
@@ -136,7 +171,6 @@ public class MenuApp extends Application implements Runnable {
                 // TODO nothing really to do here
             }
         }
-        close();
         IO.println("MenuApp terminated");
     }
 }
