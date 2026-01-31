@@ -133,7 +133,7 @@ public class MenuApp extends Application implements Runnable {
             } else if (message instanceof StatusPollMessage) {
                 // ignore this
             } else {
-                displayMessage("Invalid Input");
+                displayMessage("Invalid Input:" + message);
             }
         } catch (NoSuchMethodException
                  | InvocationTargetException

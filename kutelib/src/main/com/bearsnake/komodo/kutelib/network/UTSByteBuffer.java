@@ -1,9 +1,11 @@
 package com.bearsnake.komodo.kutelib.network;
 
 import com.bearsnake.komodo.kutelib.Constants;
+import com.bearsnake.komodo.kutelib.TransmitMode;
 import com.bearsnake.komodo.kutelib.exceptions.BufferOverflowException;
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.exceptions.FCCSequenceException;
+import com.bearsnake.komodo.kutelib.exceptions.FunctionKeyException;
 import com.bearsnake.komodo.kutelib.panes.*;
 
 import java.io.EOFException;
@@ -166,8 +168,13 @@ public class UTSByteBuffer {
         // we are now committed to a good return or an exception
         int row = getCoordinate();
         int column = getCoordinate();
-        var si = getNext();
-        if (si != ASCII_SI) {
+        var ch = getNext();
+        // some code does not remove NUL bytes before calling here,
+        // and it is not uncommon to get one at this point in a valid ESC VT sequence.
+        while (ch == ASCII_NUL) {
+            ch = getNext();
+        }
+        if (ch != ASCII_SI) {
             throw new CoordinateException("Missing SI at end of ESC VT sequence");
         }
 
@@ -564,6 +571,37 @@ public class UTSByteBuffer {
                     case 0x22 -> put((byte) (0x80 | field.getBackgroundColor().getByteValue()));
                 }
             }
+        }
+
+        return this;
+    }
+
+    public UTSByteBuffer putSendCursorPosition(final TransmitMode mode) {
+        put(ASCII_ESC).put((byte) 'T');
+        return this;
+    }
+
+    public UTSByteBuffer putForceTransmit(final TransmitMode mode) {
+        switch (mode) {
+            case ALL -> { put(ASCII_ESC); put(ASCII_DC1); }
+            case VARIABLE -> put(ASCII_DC1);
+            case CHANGED -> { put(ASCII_ESC); put((byte) 't'); }
+        }
+
+        return this;
+    }
+
+    public UTSByteBuffer putFunctionKeyCode(final int fkey) throws FunctionKeyException {
+        if ((fkey < 0) || (fkey > 22)) {
+            throw new FunctionKeyException(fkey);
+        }
+
+        switch (fkey) {
+            case 1 -> put((byte) 0x37);
+            case 2 -> put((byte) 0x47);
+            case 3 -> put((byte) 0x57);
+            case 4 -> put((byte) 0x67);
+            default -> put((byte) (fkey - 5 + 0x20));
         }
 
         return this;

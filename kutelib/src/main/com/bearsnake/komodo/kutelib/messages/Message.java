@@ -38,6 +38,9 @@ public interface Message {
     static Message create(final byte[] data) {
         Message message = MessageWaitMessage.create(data);
         if (message == null) {
+            message = CursorPositionMessage.create(data);
+        }
+        if (message == null) {
             message = FunctionKeyMessage.create(data);
         }
         if (message == null) {

@@ -4,8 +4,10 @@
 
 package com.bearsnake.komodo.kutelib.messages;
 
+import com.bearsnake.komodo.kutelib.exceptions.FunctionKeyException;
 import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
 import com.bearsnake.komodo.kutelib.exceptions.InternalException;
+import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -46,21 +48,18 @@ public class FunctionKeyMessage implements Message {
     }
 
     @Override
-    public void write(SocketChannel channel)
-        throws IOException {
-        var bb = ByteBuffer.allocate(3);
-        bb.put(ASCII_SOH);
-        switch (_key) {
-            case 1 -> bb.put((byte) 0x37);
-            case 2 -> bb.put((byte) 0x47);
-            case 3 -> bb.put((byte) 0x57);
-            case 4 -> bb.put((byte) 0x67);
-            default -> bb.put((byte) (_key - 5 + 0x20));
+    public void write(SocketChannel channel) throws IOException {
+        try {
+            var bb = new UTSByteBuffer(16);
+            bb.put(ASCII_SOH)
+              .putFunctionKeyCode(_key)
+              .put(ASCII_ETX);
+            bb.setPointer(0);
+            SocketChannelHandler.dumpBuffer("Sending: ", bb.getBuffer());//TODO remove
+            channel.write(ByteBuffer.wrap(bb.getBuffer()));
+        } catch (FunctionKeyException ex) {
+            // program logic prevents this
         }
-        bb.put(ASCII_ETX);
-        SocketChannelHandler.dumpBuffer("Sending: ", bb.array(), 0, bb.position());//TODO remove
-        bb.flip();
-        channel.write(bb);
     }
 
     @Override

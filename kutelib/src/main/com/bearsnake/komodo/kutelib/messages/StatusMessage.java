@@ -1,6 +1,8 @@
-package com.bearsnake.komodo.kutelib.messages;
+/*
+ * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
+ */
 
-import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
+package com.bearsnake.komodo.kutelib.messages;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,9 +28,7 @@ public class StatusMessage implements Message {
     }
 
     @Override
-    public void write(final SocketChannel channel)
-        throws IOException {
-        SocketChannelHandler.dumpBuffer("Sending: ", PATTERN);//TODO remove
+    public void write(final SocketChannel channel) throws IOException {
         channel.write(ByteBuffer.wrap(PATTERN));
     }
 

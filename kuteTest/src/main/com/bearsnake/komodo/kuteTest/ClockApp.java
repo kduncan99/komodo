@@ -4,7 +4,10 @@
 
 package com.bearsnake.komodo.kuteTest;
 
+import com.bearsnake.komodo.kutelib.TransmitMode;
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
+import com.bearsnake.komodo.kutelib.messages.CursorPositionMessage;
+import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.kutelib.messages.Message;
 import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
@@ -12,10 +15,13 @@ import com.bearsnake.komodo.kutelib.panes.Coordinates;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.LinkedList;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
 public class ClockApp extends Application implements Runnable {
+
+    private final LinkedList<Message> _inputMessages = new LinkedList<>();
 
     public ClockApp(final KuteTestServer server) {
         super(server);
@@ -29,29 +35,23 @@ public class ClockApp extends Application implements Runnable {
         // Display usage hints somewhere on the screen (top, bottom?)
     }
 
+    private Message getNextInput() {
+        synchronized (_inputMessages) {
+            return _inputMessages.pollFirst();
+        }
+    }
+
     @Override
     public void handleInput(final Message message) {
         IO.println("ClockApp Received message: " + message);// TODO remove
         if (message instanceof StatusPollMessage) {
             // ignore this
         } else {
-            // F1-F8 set text color (and complementary bg color)
-            // F9 toggles 12hr/24hr mode
-            // F22 terminates the app
-//        data.setPointer(0);
-//        var message = Message.create(data.getBuffer());
-//        IO.println("Received message: " + message);// TODO remove
-//        if (message instanceof FunctionKeyMessage fkm) {
-//            switch (fkm.getKey()) {
-//                case 1 -> {}
-//                case 22 -> _terminate = true;
-//                default -> {}//TODO complain about bad FKey
-//            }
-//        } else {
-//            // TODO complain about bad message
-//        }
+            // anything else gets queued
+            synchronized (_inputMessages) {
+                _inputMessages.addLast(message);
+            }
             sendUnlockKeyboard();
-            close();//TODO remove
         }
     }
 
@@ -60,8 +60,45 @@ public class ClockApp extends Application implements Runnable {
         // nothing to do
     }
 
-    private int counter = 5;//TODO remove
     public void run() {
+        // send text to cause an auto-transmit to determine size of screen
+        try {
+            UTSByteBuffer stream = new UTSByteBuffer(1024);
+            stream.put(ASCII_SOH)
+                  .put(ASCII_STX)
+                  .putCursorToHome()
+                  .putEraseDisplay()
+                  .putCursorScanLeft()
+                  .putSendCursorPosition(TransmitMode.ALL)
+                  .put(ASCII_ETX);
+            _server.sendMessage(this, stream);
+        } catch (IOException ex) {
+            IO.println("Cannot send initial message: " + ex.getMessage());
+            return;
+        }
+
+        // Wait for response to the above
+        Coordinates coord = null;
+        while ((coord == null) && !_terminate) {
+            try {
+                var msg = getNextInput();
+                if (msg == null) {
+                    Thread.sleep(25);
+                } else {
+                    // F22 terminates, otherwise grab the first cursor position message
+                    if (msg instanceof CursorPositionMessage cpm) {
+                        coord = cpm.getCoordinates();
+                    } else if (msg instanceof FunctionKeyMessage fkm) {
+                        close();
+                    }
+                }
+            } catch (InterruptedException ex) {
+                // do nothing
+            }
+        }
+
+        IO.println("FOO Coords:" + coord);//TODO remove
+
         createFCCs();
         displayHints();
         var lastInstant = Instant.now().minusMillis(1000);
@@ -83,14 +120,12 @@ public class ClockApp extends Application implements Runnable {
                 }
                 Thread.sleep(100);
             } catch (InterruptedException ex) {
-                // TODO nothing really to do here
+                // nothing really to do here
             } catch (CoordinateException ex) {
-                IO.println("FOO!");//TODO something here
+                // this should never happen
             } catch (IOException ex) {
-                IO.println("FEE!");//TODO something here
-                if (counter-- <= 0) {
-                    break;
-                }
+                IO.println("Cannot send message: " + ex.getMessage());
+                close();
             }
         }
         IO.println("MenuApp terminated");

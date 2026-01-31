@@ -25,11 +25,6 @@ import static com.bearsnake.komodo.kutelib.Constants.*;
  */
 public class Terminal extends Pane implements SocketChannelListener {
 
-    private static final byte[] MESSAGE_POLL = {ASCII_SOH, ASCII_ETX};
-    private static final byte[] STATUS_POLL = {ASCII_SOH, ASCII_ENQ, ASCII_ETX};
-    private static final byte[] MESSAGE_WAITING_NOTIFICATION = {ASCII_SOH, ASCII_BEL, ASCII_STX, ASCII_ETX};
-    private static final byte[] DISCONNECT_REQUEST = {ASCII_SOH, ASCII_DLE, ASCII_EOT, ASCII_STX, ASCII_ETX};
-
     private DisplayPane _displayPane;
     private StatusPane _statusPane;
     private ControlPagePane _controlPagePane;
@@ -910,17 +905,12 @@ public class Terminal extends Pane implements SocketChannelListener {
             case 'T' -> { // Tell the terminal to respond with the cursor position
                 if (!controlPageIsActive()) {
                     try {
-                        var output =
-                            new UTSByteBuffer(16)
-                                .put(ASCII_SOH)
-                                .put(ASCII_STX)
-                                .putCursorPositionSequence(_activeDisplayPane.getCursorPosition(), true)
-                                .put(ASCII_ETX);
-                        _socketHandler.send(new TextMessage(output.setPointer(0).getBuffer()));
+                        var msg = new CursorPositionMessage(_activeDisplayPane.getCursorPosition());
+                        _socketHandler.send(msg);
                         _statusPane.setKeyboardLocked(true);
                     } catch (IOException ex) {
                         // TODO what to do?
-                        IO.println("Error sending cursor position request: " + ex.getMessage());
+                        IO.println("Error sending cursor position message: " + ex.getMessage());
                     }
                 }
             }
@@ -1154,7 +1144,6 @@ public class Terminal extends Pane implements SocketChannelListener {
      * @param transmitMode mode which controls the data to be transmitted
      */
     private void transmit(final TransmitMode transmitMode) {
-        IO.println("Transmitting...");//TODO remove
         var output = new UTSByteBuffer(4096);
 
         try {
