@@ -4,15 +4,11 @@
 
 package com.bearsnake.komodo.kuteTest;
 
-import com.bearsnake.komodo.kutelib.TransmitMode;
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
-import com.bearsnake.komodo.kutelib.messages.CursorPositionMessage;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.kutelib.messages.Message;
-import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 import com.bearsnake.komodo.kutelib.panes.Coordinates;
-import com.bearsnake.komodo.kutelib.panes.DisplayGeometry;
 import com.bearsnake.komodo.kutelib.panes.ExplicitField;
 import com.bearsnake.komodo.kutelib.panes.UTSColor;
 
@@ -20,7 +16,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.LinkedList;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
@@ -126,7 +121,7 @@ public class ClockApp extends Application implements Runnable {
                                            "  X  ",
                                            "     "};
 
-    private static HashMap<Character, String[]> CHARACTER_MAPS = new HashMap<>();
+    private static final HashMap<Character, String[]> CHARACTER_MAPS = new HashMap<>();
     static {
         CHARACTER_MAPS.put('0', ZERO);
         CHARACTER_MAPS.put('1', ONE);
@@ -165,9 +160,7 @@ public class ClockApp extends Application implements Runnable {
         new ColorScheme(UTSColor.BLACK, UTSColor.MAGENTA),
     };
 
-    private DisplayGeometry _geometry;
-    private final LinkedList<Message> _inputMessages = new LinkedList<>();
-    private Coordinates[] _digitCoordinates = new Coordinates[8];
+    private final Coordinates[] _digitCoordinates = new Coordinates[8];
     private Coordinates _hintCoordinates;
     private int _colorSchemeIndex;
     private boolean mode24Hour = true;
@@ -206,10 +199,9 @@ public class ClockApp extends Application implements Runnable {
         var leftMargin = (_geometry.getColumns() - digitMarqueeWidth) / 2;
         var topMargin = (_geometry.getRows() - DIGIT_HEIGHT) / 2;
 
-        var row = topMargin;
         var column = leftMargin + 1;
         for (int dx = 0; dx < 8; dx++) {
-            _digitCoordinates[dx] = new Coordinates(row, column);
+            _digitCoordinates[dx] = new Coordinates(topMargin, column);
             column += DIGIT_WIDTH + INTER_DIGIT_MARGIN;
         }
 
@@ -281,11 +273,11 @@ public class ClockApp extends Application implements Runnable {
                 var row = _hintCoordinates.getRow();
                 var column = _hintCoordinates.getColumn();
                 stream.putCursorPositionSequence(new Coordinates(row++, column), false)
-                      .putString("F1 - Cycle Colors");
+                      .putString("F1  - Cycle Colors");
                 stream.putCursorPositionSequence(new Coordinates(row++, column), false)
-                      .putString("F2 - Toggle Mode");
+                      .putString("F2  - Toggle Mode");
                 stream.putCursorPositionSequence(new Coordinates(row, column), false)
-                      .putString("F9 - Return to Menu");
+                      .putString("F22 - Return to Menu");
                 stream.putCursorToHome();
                 stream.put(ASCII_ETX);
                 _server.sendMessage(this, stream);
@@ -295,35 +287,16 @@ public class ClockApp extends Application implements Runnable {
         }
     }
 
-    private Message getNextInput() {
-        synchronized (_inputMessages) {
-            return _inputMessages.pollFirst();
-        }
-    }
-
-    @Override
-    public void handleInput(final Message message) {
-        if (message instanceof StatusPollMessage) {
-            // ignore this
-        } else {
-            // anything else gets queued
-            synchronized (_inputMessages) {
-                _inputMessages.addLast(message);
-            }
-            sendUnlockKeyboard();
-        }
-    }
-
     private void putCharacter(final UTSByteBuffer stream, final int position, final char character) {
         try {
             var topRow = _digitCoordinates[position].getRow();
             var leftColumn = _digitCoordinates[position].getColumn();
             var map = CHARACTER_MAPS.get(character);
             if (map != null) {
-                for (int mx = 0; mx < map.length; mx++) {
+                for (String s : map) {
                     var coord = new Coordinates(topRow++, leftColumn);
                     stream.putCursorPositionSequence(coord, false);
-                    stream.putString(map[mx]);
+                    stream.putString(s);
                 }
             }
         } catch (CoordinateException ex) {
@@ -337,44 +310,10 @@ public class ClockApp extends Application implements Runnable {
     }
 
     public void run() {
-        // send text to cause an auto-transmit to determine size of screen
-        try {
-            UTSByteBuffer stream = new UTSByteBuffer(1024);
-            stream.put(ASCII_SOH)
-                  .put(ASCII_STX)
-                  .putCursorToHome()
-                  .putEraseDisplay()
-                  .putCursorScanLeft()
-                  .putSendCursorPosition(TransmitMode.ALL)
-                  .put(ASCII_ETX);
-            _server.sendMessage(this, stream);
-        } catch (IOException ex) {
-            IO.println("Cannot send initial message: " + ex.getMessage());
+        if (!determineGeometry()) {
+            IO.println("Cannot determine geometry");
             return;
         }
-
-        // Wait for response to the above
-        Coordinates coord = null;
-        while ((coord == null) && !_terminate) {
-            try {
-                var msg = getNextInput();
-                if (msg == null) {
-                    Thread.sleep(25);
-                } else {
-                    if (msg instanceof CursorPositionMessage cpm) {
-                        coord = cpm.getCoordinates();
-                    } else if (msg instanceof FunctionKeyMessage fkm) {
-                        if (fkm.getKey() == 9) {
-                            close();
-                        }
-                    }
-                }
-            } catch (InterruptedException ex) {
-                // do nothing
-            }
-        }
-
-        _geometry = new DisplayGeometry(coord.getRow(), coord.getColumn());
 
         try {
             determineCoordinates();
@@ -383,6 +322,7 @@ public class ClockApp extends Application implements Runnable {
         } catch (IOException ex) {
             IO.println("Cannot perform initial display: " + ex.getMessage());
             close();
+            return;
         }
 
         var lastInstant = Instant.now().minusMillis(1000);
@@ -396,19 +336,20 @@ public class ClockApp extends Application implements Runnable {
                         lastInstant = thisInstant;
                     }
                 }
-                synchronized (_inputMessages) {
-                    while (!_inputMessages.isEmpty()) {
-                        var msg = _inputMessages.pollFirst();
-                        if (msg instanceof FunctionKeyMessage fkm) {
-                            switch (fkm.getKey()) {
-                                case 1 -> cycleColorScheme();
-                                case 2 -> cycleMode();
-                                case 9 -> close();
-                            }
+
+                Message message = getNextInput();
+                while (message != null) {
+                    if (message instanceof FunctionKeyMessage fkm) {
+                        switch (fkm.getKey()) {
+                            case 1 -> cycleColorScheme();
+                            case 2 -> cycleMode();
+                            case 22 -> close();
                         }
                     }
-                    Thread.sleep(100);
+                    message = getNextInput();
                 }
+
+                Thread.sleep(100);
             } catch (InterruptedException ex) {
                 // nothing really to do here
             } catch (IOException ex) {

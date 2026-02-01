@@ -6,7 +6,6 @@ package com.bearsnake.komodo.kuteTest;
 
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
-import com.bearsnake.komodo.kutelib.messages.Message;
 import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 import com.bearsnake.komodo.kutelib.panes.Coordinates;
@@ -114,35 +113,6 @@ public class MenuApp extends Application implements Runnable {
     }
 
     @Override
-    public void handleInput(final Message message) {
-        sendUnlockKeyboard();
-        try {
-            if (message instanceof FunctionKeyMessage fkm) {
-                var appInfo = APPLICATION_INFO_TABLE.get(fkm.getKey());
-                if (appInfo != null) {
-                    var newApp = (Application) appInfo._clazz.getConstructor(new Class[]{KuteTestServer.class})
-                                                             .newInstance(_server);
-                    _server.transferApplication(this, newApp);
-                } else if (fkm.getKey() == 22) {
-                    sendTerminateMessage();
-                    close();
-                } else {
-                    displayMessage("Invalid Function Key");
-                }
-            } else if (message instanceof StatusPollMessage) {
-                // ignore this
-            } else {
-                displayMessage("Invalid Input:" + message);
-            }
-        } catch (NoSuchMethodException
-                 | InvocationTargetException
-                 | InstantiationException
-                 | IllegalAccessException ex) {
-            displayMessage("Caught Exception:" + ex.getMessage());
-        }
-    }
-
-    @Override
     public void returnFromTransfer() {
         displayMenu();
     }
@@ -169,9 +139,35 @@ public class MenuApp extends Application implements Runnable {
         displayMenu();
         while (!_terminate) {
             try {
-                Thread.sleep(1000);
+                var message = getNextInput();
+                if (message != null) {
+                    if (message instanceof FunctionKeyMessage fkm) {
+                        var appInfo = APPLICATION_INFO_TABLE.get(fkm.getKey());
+                        if (appInfo != null) {
+                            var newApp = (Application) appInfo._clazz.getConstructor(new Class[]{KuteTestServer.class})
+                                                                     .newInstance(_server);
+                            _server.transferApplication(this, newApp);
+                        } else if (fkm.getKey() == 22) {
+                            sendTerminateMessage();
+                            close();
+                        } else {
+                            displayMessage("Invalid Function Key");
+                        }
+                    } else if (message instanceof StatusPollMessage) {
+                        // ignore this
+                    } else {
+                        displayMessage("Invalid Input:" + message);
+                    }
+                } else {
+                    Thread.sleep(1000);
+                }
             } catch (InterruptedException ex) {
                 // nothing really to do here
+            } catch (NoSuchMethodException
+                     | InvocationTargetException
+                     | InstantiationException
+                     | IllegalAccessException ex) {
+                displayMessage("Caught Exception:" + ex.getMessage());
             }
         }
         IO.println("MenuApp terminated");
