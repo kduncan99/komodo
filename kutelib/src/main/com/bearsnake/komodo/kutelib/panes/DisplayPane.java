@@ -558,7 +558,7 @@ public class DisplayPane extends Canvas {
     public boolean deleteLine() {
         // Shift character cells up by one row, from the bottom of the display to the cursor row
         for (int row = _cursorPosition.getRow(); row < _geometry.getRows(); row++) {
-            for (int column = 1; column < _geometry.getColumns(); column++) {
+            for (int column = 1; column <= _geometry.getColumns(); column++) {
                 _characterCells[getIndex(row, column)] = _characterCells[getIndex(row + 1, column)];
             }
         }
@@ -585,6 +585,11 @@ public class DisplayPane extends Canvas {
         for (var field : temp) {
             field.getCoordinates().setRow(field.getCoordinates().getRow() - 1);
             _fields.put(field.getCoordinates(), field);
+        }
+
+        // If we are on the first row make sure there is a field at 1,1.
+        if (_cursorPosition.getRow() == 1 && _fields.get(Coordinates.HOME_POSITION) == null) {
+            _fields.put(Coordinates.HOME_POSITION, new ImplicitField());
         }
 
         repairFieldReferences();
