@@ -25,17 +25,13 @@ import static com.bearsnake.komodo.kutelib.Constants.*;
  */
 public class Terminal extends Pane implements SocketChannelListener {
 
+    private final TerminalSettings _settings;
+
     private DisplayPane _displayPane;
     private StatusPane _statusPane;
     private ControlPagePane _controlPagePane;
     private DisplayPane _activeDisplayPane;
 
-    private boolean _returnKeyIsTransmit;
-    private boolean _sendExpandedFCCs;
-    private boolean _sendColorFCCs;
-
-    private String _hostName;
-    private int _hostPort;
     private SocketChannelHandler _socketHandler;
 
     private PrintMode _printMode;
@@ -45,14 +41,12 @@ public class Terminal extends Pane implements SocketChannelListener {
     private Emphasis _emphasis;
     private EmphasisAction _emphasisAction;
 
-    public Terminal(final DisplayGeometry initialGeometry,
-                    final FontInfo initialFontInfo,
-                    final UTSColorSet colorSet,
-                    final boolean returnKeyIsTransmit,
-                    final boolean sendExpandedFCCs,
-                    final boolean sendColorFCCs) {
-        _statusPane = new StatusPane(initialGeometry, initialFontInfo, colorSet);
-        _displayPane = new DisplayPane(initialGeometry, initialFontInfo, colorSet, _statusPane);
+    public Terminal(final TerminalSettings terminalSettings,
+                    final FontInfo initialFontInfo) {
+        _settings = terminalSettings;
+
+        _statusPane = new StatusPane(_settings.getDisplayGeometry(), initialFontInfo, _settings.getColorSet());
+        _displayPane = new DisplayPane(_settings.getDisplayGeometry(), initialFontInfo, _settings.getColorSet(), _statusPane);
         _controlPagePane = null;
         _activeDisplayPane = _displayPane;
         _emphasis = new Emphasis();
@@ -66,19 +60,12 @@ public class Terminal extends Pane implements SocketChannelListener {
         _transferMode = TransferMode.ALL;
         _transmitMode = TransmitMode.ALL;
 
-        _returnKeyIsTransmit = returnKeyIsTransmit;
-        _sendExpandedFCCs = sendExpandedFCCs;
-        _sendColorFCCs = sendColorFCCs;
-
         getChildren().addAll(_displayPane, _statusPane);
         setMinHeight(_displayPane.getHeight() + _statusPane.getHeight());
         setMinWidth(_displayPane.getWidth());
         setPrefHeight(_displayPane.getHeight() + _statusPane.getHeight());
         setPrefWidth(_displayPane.getWidth());
         reset();
-
-        _hostName = "127.0.0.1";//TODO remove
-        _hostPort = 2200;//TODO remove
     }
 
     /**
@@ -112,7 +99,7 @@ public class Terminal extends Pane implements SocketChannelListener {
     public void connect() {
         if (_socketHandler == null) {
             try {
-                InetSocketAddress address = new InetSocketAddress(_hostName, _hostPort);
+                InetSocketAddress address = new InetSocketAddress(_settings.getHostName(), _settings.getHostPort());
                 SocketChannel channel = SocketChannel.open(address);
                 _socketHandler = new SocketChannelHandler(channel, this);
                 _statusPane.setConnected(true);
@@ -151,6 +138,11 @@ public class Terminal extends Pane implements SocketChannelListener {
         }
 
         switch (keyCode) {
+            case ESCAPE -> {
+                if (!controlPageIsActive() && _settings.getEscapeKeyIsMessageWait()) {
+                    kbMessageWait();
+                }
+            }
             case DELETE -> kbDeleteInLine();
             case INSERT -> kbInsertInLine();
             case BACK_SPACE -> kbBackSpace();
@@ -160,7 +152,7 @@ public class Terminal extends Pane implements SocketChannelListener {
             case RIGHT -> kbScanRight();
             case UP -> kbScanUp();
             case ENTER -> {
-                if (_returnKeyIsTransmit) {
+                if (_settings.getReturnKeyIsTransmit()) {
                     kbTransmit();
                 } else {
                     kbCursorReturn();
@@ -1162,7 +1154,7 @@ public class Terminal extends Pane implements SocketChannelListener {
 
                     // Serialize FCC sequence if we're at the first character of a field
                     if (coord.equals(field.getCoordinates())) {
-                        output.putFCCSequence(field, false, _sendExpandedFCCs, _sendColorFCCs);
+                        output.putFCCSequence(field, false, _settings.getSendExpandedFCCs(), _settings.getSendColorFCCs());
                     }
 
                     // Grab the character - if it's a blank, just increment the blank counter so we can

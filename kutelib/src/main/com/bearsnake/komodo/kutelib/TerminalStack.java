@@ -24,20 +24,13 @@ public class TerminalStack extends TabPane {
 
     public TerminalStack() {
         // TODO temporary hard-coded terminals
-        var terminal1 = new Terminal(new DisplayGeometry(24, 80),
-                                     new FontInfo(16),
-                                     new UTSColorSet(UTSColor.GREEN, UTSColor.BLACK),
-                                     false,
-                                     true,
-                                     true);
+        var settings = new TerminalSettings();
+        var fontInfo = new FontInfo(16);
+
+        var terminal1 = new Terminal(settings, fontInfo);
         var tab1 = new Tab("DEMAND", terminal1);
 
-        var terminal2 = new Terminal(new DisplayGeometry(24, 80),
-                                     new FontInfo(16),
-                                     new UTSColorSet(UTSColor.YELLOW, UTSColor.BLACK),
-                                     false,
-                                     true,
-                                     true);
+        var terminal2 = new Terminal(settings, fontInfo);
         var tab2 = new Tab("TIP", terminal2);
 
         getTabs().addAll(tab1, tab2);
