@@ -2,7 +2,58 @@
 TODO InProgress
 
 Kute
+    Console test app - need to finish this up
+    Tab forward is maybe broken
+    Tab backward
+    Some other basic stuff which is currently TODO
+    Backspace
+    msg-waiting indicator produces a beep at 1Hz until acknowledged
+    File menu
+        Reset
+        Trace Start
+        Trace Pause
+        Trace Stop
+    Traffic capture within SocketChannelHandler
+        start-capture, pause-capture, stop-capture
+        capture will store a time-ordered list of entries, one per packet
+            time-stamp
+            source (local, remote)
+            data (raw bytes)
+        The list is limited to a configurable number of packets - oldest ages out first.
+        Upon stop-capture, we copy the list to an array and return it, then clear the list.
+        Traffic capture limit is configured via menu option, global to all sessions.
+    Traffic capture viewer which pops up with the captured packets
+        raw mode - shows only hex
+        snap mode - shows hex on left, ascii on right
+        primitive mode - interprets escape and fcc sequences
+        can this be a subset of DisplayPane? then maybe it's easier to do file-save, file-load, file-print
     Applications for testing Kute
+        Demand Simulator
+            login with username/password
+            @@RLU, @@RLD
+            @@TERM
+            @@X which cancels long lists
+            message-wait to pause lists
+            accepts msg-waiting which we have to acknoledge manually
+        TIP Simulator (maybe a simple KEdit?)
+        Yahtzee (just for fun?)
+        Qubic (just for fun?)
+    Seems to be a bug in ingesting $0A (should we just ignore control characters?)
+    Less than 80-columns needs to prevent control page toggle
+    Indicator for FCC enabled/disabled
+    Settings need to be adjusted a bit:
+        send, accept expanded FCC (as opposed to basic)
+        enable/disable color mode (implied sending color FCC if appropriate, accepts color FCC)
+        enable/disable emphasis mode
+        font family, size
+        host name, port number
+        enter is xmit
+        escape is msg-wait
+    Load/Save templates from the settings page
+    File open selects a template which then opens a new terminal and connects
+    New utility panel for connect/disconnect/reset/start-trace/pause-trace/stop-trace
+    When we scan cursor backward into protected field, it moves back to the next unprotected field...
+        should it move backward to the previous unprotected field?
 
 Networking
     Need to think about this some more
@@ -48,22 +99,11 @@ TODO BUGS
 TODO To be implemented
 
 Kute
-    Uppercase-Only mode (We can catch CAPS keypress and adjust accordingly)
-    Less than 80-columns needs to prevent control page toggle
-    Need terminal attribute enable/disable for
-        color, emphasis, half-intensity, blinking, graphics(?)
-    Menu items for adjusting all terminal attributes
-        (including colorset, geometry, font size, etc)
-    Menu items for reset, capture enable/disable - maybe a button for [Reset]
-    When we scan cursor backward into protected field, it moves back to the next unprotected field...
-        should it move backward to the previous unprotected field?
-    Tab backward
-    Backspace
-    Need to load and save templates
-    Traffic capture mechanism - Raw/ASCII/Interpreted modes, save file, etc
     Print - configure up to 9 print destinations P1-P9 (files, actual print queues, local printers...?)
     Transfer - configure up to 9 virtual disks D1-D9 (files)
-    Graphics - this is a major undertaking, and we must support color disabled option
+    special raster font which uses our own character specification (requires reworking display panes)
+    Once the font selection is supported, we *could* support downloadable fonts
+    enable/disable graphics - this is a major undertaking, and we must support color disabled option
 
 Kons (A GUI console)
 
