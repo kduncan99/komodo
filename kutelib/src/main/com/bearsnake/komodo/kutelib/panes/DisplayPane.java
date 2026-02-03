@@ -571,13 +571,14 @@ public class DisplayPane extends Canvas {
 
         // Delete the fields on the cursor row and shift those on subsequent rows upward by one row.
         var temp = new HashSet<Field>();
-        var iter = _fields.keySet().iterator();
+        var iter = _fields.entrySet().iterator();
         while (iter.hasNext()) {
-            var coord = iter.next();
+            var entry = iter.next();
+            var coord = entry.getKey();
             if (coord.getRow() == _cursorPosition.getRow()) {
                 iter.remove();
             } else if (coord.getRow() > _cursorPosition.getRow()) {
-                temp.add(_fields.get(coord));
+                temp.add(entry.getValue());
                 iter.remove();
             }
         }
@@ -594,7 +595,7 @@ public class DisplayPane extends Canvas {
 
         repairFieldReferences();
         _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
-        _blinkCursorFlag= true;
+        _blinkCursorFlag = true;
         scheduleDrawDisplay();
         return true;
     }
