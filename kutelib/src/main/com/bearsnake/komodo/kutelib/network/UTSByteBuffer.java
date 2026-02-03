@@ -428,10 +428,24 @@ public class UTSByteBuffer {
      */
     public UTSByteBuffer putCursorPositionSequence(final Coordinates coordinates,
                                                    final boolean includeNulByte) throws CoordinateException {
+        return putCursorPositionSequence(coordinates.getRow(), coordinates.getColumn(), includeNulByte);
+    }
+
+    /**
+     * Puts a UTS cursor positioning sequence into the buffer.
+     * @param row row coordinates
+     * @param column column coordinates
+     * @param includeNulByte includes a NUL byte toward the end of the sequence in the manner in which a terminal would do
+     * @return this buffer
+     * @throws CoordinateException if the row or column are out of range
+     */
+    public UTSByteBuffer putCursorPositionSequence(final int row,
+                                                   final int column,
+                                                   final boolean includeNulByte) throws CoordinateException {
         put(ASCII_ESC)
             .put(ASCII_VT)
-            .putCoordinate(coordinates.getRow())
-            .putCoordinate(coordinates.getColumn());
+            .putCoordinate(row)
+            .putCoordinate(column);
         if (includeNulByte) {
             put(ASCII_NUL);
         }
@@ -465,6 +479,11 @@ public class UTSByteBuffer {
      */
     public UTSByteBuffer putCursorToHome() {
         put(Constants.ASCII_ESC).put((byte) 'e');
+        return this;
+    }
+
+    public UTSByteBuffer putDeleteLine() {
+        put(ASCII_ESC).put((byte) 'k');
         return this;
     }
 
@@ -576,11 +595,6 @@ public class UTSByteBuffer {
         return this;
     }
 
-    public UTSByteBuffer putSendCursorPosition(final TransmitMode mode) {
-        put(ASCII_ESC).put((byte) 'T');
-        return this;
-    }
-
     public UTSByteBuffer putForceTransmit(final TransmitMode mode) {
         switch (mode) {
             case ALL -> { put(ASCII_ESC); put(ASCII_DC1); }
@@ -604,6 +618,11 @@ public class UTSByteBuffer {
             default -> put((byte) (fkey - 5 + 0x20));
         }
 
+        return this;
+    }
+
+    public UTSByteBuffer putSendCursorPosition(final TransmitMode mode) {
+        put(ASCII_ESC).put((byte) 'T');
         return this;
     }
 
