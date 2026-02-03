@@ -42,6 +42,7 @@ public class MenuApp extends Application implements Runnable {
     private static final HashMap<Integer, ApplicationInfo> APPLICATION_INFO_TABLE = new HashMap<>();
     static {
         APPLICATION_INFO_TABLE.put(1, new ApplicationInfo(ClockApp.class, "Clock", "Displays the current time"));
+        APPLICATION_INFO_TABLE.put(2, new ApplicationInfo(ConsoleApp.class, "Console", "Displays a console simulation"));
     }
 
     public MenuApp(final KuteTestServer server) {

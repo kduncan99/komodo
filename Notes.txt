@@ -3,9 +3,16 @@ TODO InProgress
 
 Kute
     Console test app - need to finish this up
+        Handle text input
+        lock keyboard at all times except when we are waiting for input
+        INPUT TIMEOUT message should overwrite the SOE, but NOT the FCC behind it
+        Make T/D message show up on 6 minute intervals
+        Set up pseudo-random read-only and read-reply messages
     Tab forward is maybe broken
     Tab backward
     Some other basic stuff which is currently TODO
+    Capture CapsLock and implement it internally (and maybe put it in the status pane)
+        (not sure I can capture that - what can I do as an alternative?)
     Backspace
     msg-waiting indicator produces a beep at 1Hz until acknowledged
     File menu
