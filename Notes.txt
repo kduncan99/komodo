@@ -2,17 +2,18 @@
 TODO InProgress
 
 Kute
+    Console app - should detect whether color is supported via placing FCC and forcing XMIT.
+    Bug: At startup, console app should set FCCs for all rows to protected, Readonly colors
+    Bug: While keyboard is locked, ctrl-b and ctrl-c work, but still beep (should not beep)
+    How to handle ctrl-t properly in the new kutelib paradigm? (and see above)
     Console test app - need to finish this up
         Handle text input
-        lock keyboard at all times except when we are waiting for input
-        INPUT TIMEOUT message should overwrite the SOE, but NOT the FCC behind it
         Make T/D message show up on 6 minute intervals
         Set up pseudo-random read-only and read-reply messages
     Tab forward is maybe broken
     Tab backward
-    Some other basic stuff which is currently TODO
-    Capture CapsLock and implement it internally (and maybe put it in the status pane)
-        (not sure I can capture that - what can I do as an alternative?)
+    Lots of other basic stuff which is currently TODO in the code
+        (but not print or transfer)
     Backspace
     msg-waiting indicator produces a beep at 1Hz until acknowledged
     File menu
@@ -49,6 +50,7 @@ Kute
     Less than 80-columns needs to prevent control page toggle
     Indicator for FCC enabled/disabled
     Settings need to be adjusted a bit:
+        rows, columns
         send, accept expanded FCC (as opposed to basic)
         enable/disable color mode (implied sending color FCC if appropriate, accepts color FCC)
         enable/disable emphasis mode
@@ -58,7 +60,17 @@ Kute
         escape is msg-wait
     Load/Save templates from the settings page
     File open selects a template which then opens a new terminal and connects
-    New utility panel for connect/disconnect/reset/start-trace/pause-trace/stop-trace
+    New utility panel for
+        connect (can we have a connect indicator on the connect/disconnect buttons? or maybe just one button?)
+            (remove connect/disconnect buttons from the control pad)
+        disconnect
+        reset
+        start-trace
+        pause-trace
+        stop-trace
+        software-caps-lock (with indicator on either status, or the button itself)
+
+
     When we scan cursor backward into protected field, it moves back to the next unprotected field...
         should it move backward to the previous unprotected field?
 

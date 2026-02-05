@@ -10,7 +10,7 @@ public class ExplicitField extends Field {
     private UTSColor _backgroundColor;
     private boolean _blinking;
     private boolean _changed;
-    private Intensity _intensity;
+    private Intensity _intensity = Intensity.NORMAL;
     private boolean _numericOnly;
     private boolean _protected;
     private boolean _protectedEmphasis;
@@ -74,4 +74,23 @@ public class ExplicitField extends Field {
     @Override public Field setRightJustified(final boolean isRightJustified) { _rightJustified = isRightJustified; return this; }
     @Override public Field setTabStop(final boolean tabStop) { _tabStop = tabStop; return this; }
     @Override public Field setTextColor(final UTSColor textColor) { _textColor = textColor; return this; }
+
+    @Override
+    public String toString() {
+        var sb = new StringBuilder();
+        sb.append(String.format("Expl[%03d:%03d]", getCoordinates().getRow(), getCoordinates().getColumn()));
+        sb.append(":").append(_intensity);
+        if (_blinking) { sb.append(":").append("BLNK"); }
+        if (_alphabeticOnly) { sb.append(":").append("ALPH"); }
+        if (_numericOnly) { sb.append(":").append("NUM"); }
+        if (_protectedEmphasis) { sb.append(":").append("PROT"); }
+        if (_reverseVideo) { sb.append(":").append("REV"); }
+        if (_rightJustified) { sb.append(":").append("RJST"); }
+        if (_tabStop) { sb.append(":").append("TAB"); }
+        if (_changed) { sb.append(":").append("CHG"); }
+        if (_textColor != null) { sb.append(":FG-").append(_textColor); }
+        if (_backgroundColor != null) { sb.append(":BG-").append(_backgroundColor); }
+
+        return sb.toString();
+    }
 }

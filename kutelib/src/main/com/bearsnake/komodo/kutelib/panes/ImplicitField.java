@@ -45,4 +45,9 @@ public final class ImplicitField extends Field {
     @Override public Field setRightJustified(boolean isRightJustified) { return this; }
     @Override public Field setTabStop(boolean tabStop) { return this; }
     @Override public Field setTextColor(UTSColor textColor) { return this; }
+
+    @Override
+    public String toString() {
+        return String.format("Impl[%03d:%03d]", getCoordinates().getRow(), getCoordinates().getColumn());
+    }
 }

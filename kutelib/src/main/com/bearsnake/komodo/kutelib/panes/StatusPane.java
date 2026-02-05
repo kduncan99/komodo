@@ -95,7 +95,7 @@ public class StatusPane extends Canvas {
         gfContext.fillText("CONN", (_columns - 19) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
 
         gfContext.setFill(_keyboardLocked ? jfxTextColor : jfxTextDimColor);
-        gfContext.fillText("WAIT", (_columns - 14) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
+        gfContext.fillText("LOCK", (_columns - 14) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
 
         gfContext.setFill(_messageWaiting ? jfxTextColor : jfxTextDimColor);
         gfContext.fillText("MSGW", (_columns - 9) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);

@@ -89,12 +89,13 @@ public class ConsoleApp extends Application implements Runnable {
 
                 var stream = new UTSByteBuffer(256);
                 stream.put(ASCII_SOH)
-                      .put(ASCII_STX);
-                stream.putFCCSequence(field1, false, true, true)
-                      .putString(str1);
-                stream.putFCCSequence(field2, false, true, true)
-                      .putString(str2);
-                stream.put(ASCII_ETX);
+                      .put(ASCII_STX)
+                      .putFCCSequence(field1, false, true, true)
+                      .putString(str1)
+                      .putFCCSequence(field2, false, true, true)
+                      .putString(str2)
+                      .putLockKeyboard()
+                      .put(ASCII_ETX);
 
                 _server.sendMessage(this, stream);
             } catch (CoordinateException ex) {
@@ -178,6 +179,7 @@ public class ConsoleApp extends Application implements Runnable {
                     stream.putFCCSequence(field, false, true, true);
                     stream.putString(choppedText)
                           .putCursorToHome()
+                          .putLockKeyboard()
                           .put(ASCII_ETX);
 
                     _server.sendMessage(this, stream);
@@ -216,6 +218,7 @@ public class ConsoleApp extends Application implements Runnable {
                         scrollDisplay(stream);
                         stream.putFCCSequence(field, false, true, true)
                               .putString(str)
+                              .putLockKeyboard()
                               .put(ASCII_ETX);
 
                         _server.sendMessage(this, stream);
@@ -298,8 +301,8 @@ public class ConsoleApp extends Application implements Runnable {
                             var elapsed = now.toEpochMilli() - _messageWaitStartTime.toEpochMilli();
                             if (elapsed >= MILLIS_PER_MINUTE) {
                                 var field = new ExplicitField(new Coordinates(_geometry.getRows(), 1))
-                                    .setTextColor(READ_ONLY_FG_COLOR)
-                                    .setBackgroundColor(READ_ONLY_BG_COLOR)
+                                    .setTextColor(INPUT_FG_COLOR)
+                                    .setBackgroundColor(INPUT_BG_COLOR)
                                     .setProtected(true);
 
                                 var stream = new UTSByteBuffer(100);
@@ -310,6 +313,7 @@ public class ConsoleApp extends Application implements Runnable {
                                       .putEraseDisplay()
                                       .putString("INPUT TIMEOUT")
                                       .putCursorToHome()
+                                      .putLockKeyboard()
                                       .put(ASCII_ETX);
                                 _server.sendMessage(this, stream);
                                 _messageWaitStartTime = null;
@@ -335,7 +339,7 @@ public class ConsoleApp extends Application implements Runnable {
                     if (elapsed > 10 * 1000) { // TODO should be 60 * 1000 (or even 6 * 60 * 1000)
                         var localTime = LocalDateTime.now();
                         StringBuilder str = new StringBuilder(String.format("T/D %d/%d/%d %02d:%02d:%02d",
-                                                                            localTime.getDayOfMonth(), localTime.getMonthValue(), localTime.getYear(),
+                                                                            localTime.getMonthValue(), localTime.getDayOfMonth(), localTime.getYear(),
                                                                             localTime.getHour(), localTime.getMinute(), localTime.getSecond()));
                         while (str.length() < _geometry.getColumns() - 2) {
                             str.insert(0, " ");

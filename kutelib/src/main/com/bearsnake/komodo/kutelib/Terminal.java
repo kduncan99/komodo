@@ -132,17 +132,17 @@ public class Terminal extends Pane implements SocketChannelListener {
      * @param keyCode keycode representing the key which was pressed
      */
     public void handleKeyPressed(final KeyCode keyCode) {
+        if (keyCode == KeyCode.ESCAPE && _settings.getEscapeKeyIsMessageWait()) {
+            kbMessageWait();
+            return;
+        }
+
         if (_statusPane.isKeyboardLocked()) {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
 
         switch (keyCode) {
-            case ESCAPE -> {
-                if (!controlPageIsActive() && _settings.getEscapeKeyIsMessageWait()) {
-                    kbMessageWait();
-                }
-            }
             case DELETE -> kbDeleteInLine();
             case INSERT -> kbInsertInLine();
             case BACK_SPACE -> kbBackSpace();
@@ -576,7 +576,7 @@ public class Terminal extends Pane implements SocketChannelListener {
      * MessageWait key was pressed
      */
     public void kbMessageWait() {
-        if ((_socketHandler == null) || _statusPane.isKeyboardLocked() || controlPageIsActive()) {
+        if ((_socketHandler == null) || controlPageIsActive()) {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
@@ -1080,8 +1080,9 @@ public class Terminal extends Pane implements SocketChannelListener {
      * The only subclasses we expect are MessageWaitMessage and TextMessage.
      */
     @Override
-    public void socketTrafficReceived(final SocketChannelHandler handler,
-                                      final Message message) {
+    public synchronized void socketTrafficReceived(final SocketChannelHandler handler,
+                                                   final Message message) {
+        // TODO we may need to synchronize every possible path from the keyboard as well
         switch (message) {
             case MessageWaitMessage messageWaitMessage -> _statusPane.setMessageWaiting(true);
             case StatusPollMessage statusPollMessage -> _statusPane.setPollIndicator();

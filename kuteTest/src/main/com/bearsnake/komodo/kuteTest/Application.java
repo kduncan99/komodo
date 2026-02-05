@@ -59,7 +59,7 @@ public abstract class Application implements Runnable {
             synchronized (_inputMessages) {
                 _inputMessages.addLast(message);
             }
-            sendUnlockKeyboard();
+            sendUnlockKeyboard();//TODO remove this, and add appropriate logic in subclasses
         }
     }
 

@@ -48,4 +48,6 @@ public abstract class Field {
     public abstract Field setRightJustified(boolean isRightJustified);
     public abstract Field setTabStop(boolean tabStop);
     public abstract Field setTextColor(UTSColor textColor);
+
+    public abstract String toString();
 }

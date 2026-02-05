@@ -621,6 +621,15 @@ public class UTSByteBuffer {
         return this;
     }
 
+    /**
+     * Puts a lock-keyboard sequence into the buffer.
+     * @return this buffer
+     */
+    public UTSByteBuffer putLockKeyboard() {
+        put(Constants.ASCII_ESC).put(ASCII_DC4);
+        return this;
+    }
+
     public UTSByteBuffer putSendCursorPosition(final TransmitMode mode) {
         put(ASCII_ESC).put((byte) 'T');
         return this;
