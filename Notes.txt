@@ -8,7 +8,7 @@ Kute
         Maybe even basing Terminal on a lower level base class (so we can implement net viewer display, for one thing)
         And this will also let us handle ctrl-t properly, providing we properly layer keyboard event routing
             through TerminalStack
-    Console app - should detect whether color is supported via placing FCC and forcing XMIT.
+    Console test app - should detect whether color is supported via placing FCC and forcing XMIT.
     Console test app - need to finish this up
         Handle text input
         Make T/D message show up on 6 minute intervals
@@ -18,7 +18,7 @@ Kute
     Lots of other basic stuff which is currently TODO in the code
         (but not print or transfer)
     Backspace
-    msg-waiting indicator produces a beep at 1Hz until acknowledged
+    msg-waiting indicator should produce a beep at 1Hz until acknowledged
     File menu
         Reset
         Trace Start

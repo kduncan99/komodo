@@ -17,61 +17,66 @@ import javafx.scene.layout.GridPane;
  */
 public class CursorKeyPad extends GridPane implements KeyPad {
 
-    private static final float MIN_WIDTH = 40.0f;
+    private static final float MIN_WIDTH = 50.0f;
     private static final float MIN_HEIGHT = 20.0f;
 
+    private static final String DEFAULT_STYLE = "-fx-background-color: linear-gradient(to bottom, #888888, #444444); -fx-text-fill: white; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
+    private static final String PRESSED_STYLE = "-fx-background-color: linear-gradient(to bottom, #444444, #222222); -fx-text-fill: white; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
+
     private Terminal _activeTerminal;
+
+    private void setButtonStyle(Button button) {
+        button.setStyle(DEFAULT_STYLE);
+        button.setOnMousePressed(e -> button.setStyle(PRESSED_STYLE));
+        button.setOnMouseReleased(e -> button.setStyle(DEFAULT_STYLE));
+    }
 
     public CursorKeyPad() {
         setFocusTraversable(false);
 
         var homeButton = new Button("↖");
         homeButton.setOnAction(_ -> _activeTerminal.kbCursorToHome());
-        homeButton.setMinWidth(MIN_WIDTH);
-        homeButton.setMinHeight(MIN_HEIGHT);
         add(homeButton, 0, 0);
 
         var returnButton = new Button("↲");
-        returnButton.setMinWidth(MIN_WIDTH);
-        returnButton.setMinHeight(MIN_HEIGHT);
         returnButton.setOnAction(_ -> _activeTerminal.kbSOE());
         add(returnButton, 1, 0);
 
         var upButton = new Button("↑");
         upButton.setOnAction(_ -> _activeTerminal.kbScanUp());
-        upButton.setMinWidth(MIN_WIDTH * 2.0);
-        upButton.setMinHeight(MIN_HEIGHT);
         add(upButton, 0, 1, 2, 1);
 
         var leftButton = new Button("←");
         leftButton.setOnAction(_ -> _activeTerminal.kbScanLeft());
-        leftButton.setMinWidth(MIN_WIDTH);
-        leftButton.setMinHeight(MIN_HEIGHT);
         add(leftButton, 0, 2);
 
         var rightButton = new Button("→");
         rightButton.setOnAction(_ -> _activeTerminal.kbScanRight());
-        rightButton.setMinWidth(MIN_WIDTH);
-        rightButton.setMinHeight(MIN_HEIGHT);
         add(rightButton, 1, 2);
 
         var downButton = new Button("↓");
         downButton.setOnAction(_ -> _activeTerminal.kbScanDown());
-        downButton.setMinWidth(MIN_WIDTH * 2.0);
-        downButton.setMinHeight(MIN_HEIGHT);
         add(downButton, 0, 3, 2, 1);
 
         var backwardTabButton = new Button("⇤");
-        backwardTabButton.setMinWidth(MIN_WIDTH);
-        backwardTabButton.setMinHeight(MIN_HEIGHT);
         backwardTabButton.setOnAction(_ -> _activeTerminal.kbTabBackward());
         add(backwardTabButton, 0, 4);
 
         var forwardTabButton = new Button("⇥");
-        forwardTabButton.setMinWidth(MIN_WIDTH);
-        forwardTabButton.setMinHeight(MIN_HEIGHT);
         forwardTabButton.setOnAction(_ -> _activeTerminal.kbTabForward());
         add(forwardTabButton, 1, 4);
+
+        for (var node : getChildren()) {
+            if (node instanceof Button button) {
+                if (GridPane.getColumnSpan(button) != null && GridPane.getColumnSpan(button) > 1) {
+                    button.setMinWidth(MIN_WIDTH * 2.0);
+                } else {
+                    button.setMinWidth(MIN_WIDTH);
+                }
+                button.setMinHeight(MIN_HEIGHT);
+                setButtonStyle(button);
+            }
+        }
     }
 
     @Override

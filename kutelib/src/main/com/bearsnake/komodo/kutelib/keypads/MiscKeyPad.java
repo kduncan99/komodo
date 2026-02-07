@@ -19,10 +19,19 @@ import static com.bearsnake.komodo.kutelib.Constants.*;
  */
 public class MiscKeyPad extends GridPane implements KeyPad {
 
-    private static final float MIN_WIDTH = 40.0f;
+    private static final float MIN_WIDTH = 50.0f;
     private static final float MIN_HEIGHT = 44.0f;
 
+    private static final String DEFAULT_STYLE = "-fx-background-color: linear-gradient(to bottom, #4a90e2, #1e5799); -fx-text-fill: white; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
+    private static final String PRESSED_STYLE = "-fx-background-color: linear-gradient(to bottom, #1e5799, #103d6d); -fx-text-fill: white; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
+
     private Terminal _activeTerminal;
+
+    private void setButtonStyle(Button button) {
+        button.setStyle(DEFAULT_STYLE);
+        button.setOnMousePressed(e -> button.setStyle(PRESSED_STYLE));
+        button.setOnMouseReleased(e -> button.setStyle(DEFAULT_STYLE));
+    }
 
     public MiscKeyPad() {
         setFocusTraversable(false);
@@ -67,9 +76,12 @@ public class MiscKeyPad extends GridPane implements KeyPad {
         underScore.setOnAction(e -> _activeTerminal.kbToggleUnderScore());
         add(underScore, 1, 4);
 
-        for (var button : getChildren()) {
-            ((Button)button).setMinWidth(MIN_WIDTH);
-            ((Button)button).setMinHeight(MIN_HEIGHT);
+        for (var node : getChildren()) {
+            if (node instanceof Button button) {
+                button.setMinWidth(MIN_WIDTH);
+                button.setMinHeight(MIN_HEIGHT);
+                setButtonStyle(button);
+            }
         }
     }
 
