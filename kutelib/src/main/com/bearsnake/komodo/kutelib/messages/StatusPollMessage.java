@@ -4,9 +4,7 @@
 
 package com.bearsnake.komodo.kutelib.messages;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
@@ -18,6 +16,7 @@ import static com.bearsnake.komodo.kutelib.Constants.*;
 public class StatusPollMessage implements Message {
 
     private static final byte[] PATTERN = {ASCII_SOH, ASCII_ENQ, ASCII_ETX};
+    private static final ByteBuffer BUFFER = ByteBuffer.wrap(PATTERN);
 
     static StatusPollMessage create(final byte[] data) {
         if (Arrays.equals(data, PATTERN)) {
@@ -28,8 +27,8 @@ public class StatusPollMessage implements Message {
     }
 
     @Override
-    public void write(final SocketChannel channel) throws IOException {
-        channel.write(ByteBuffer.wrap(PATTERN));
+    public ByteBuffer getBuffer() {
+        return BUFFER.duplicate();
     }
 
     @Override

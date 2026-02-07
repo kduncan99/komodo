@@ -2,10 +2,13 @@
 TODO InProgress
 
 Kute
-    Console app - should detect whether color is supported via placing FCC and forcing XMIT.
     Bug: At startup, console app should set FCCs for all rows to protected, Readonly colors
     Bug: While keyboard is locked, ctrl-b and ctrl-c work, but still beep (should not beep)
-    How to handle ctrl-t properly in the new kutelib paradigm? (and see above)
+        Part of this needs to include moving all keyboard handling to Terminal.
+        Maybe even basing Terminal on a lower level base class (so we can implement net viewer display, for one thing)
+        And this will also let us handle ctrl-t properly, providing we properly layer keyboard event routing
+            through TerminalStack
+    Console app - should detect whether color is supported via placing FCC and forcing XMIT.
     Console test app - need to finish this up
         Handle text input
         Make T/D message show up on 6 minute intervals

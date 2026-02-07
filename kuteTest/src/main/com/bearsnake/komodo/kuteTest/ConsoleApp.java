@@ -146,6 +146,7 @@ public class ConsoleApp extends Application implements Runnable {
                     scrollDisplay(stream);
                     stream.putFCCSequence(field, false, true, true)
                           .put(ASCII_SOE)
+                          .putUnlockKeyboard()
                           .put(ASCII_ETX);
                     _server.sendMessage(this, stream);
                     return true;

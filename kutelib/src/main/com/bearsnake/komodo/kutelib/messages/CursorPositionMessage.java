@@ -6,13 +6,10 @@ package com.bearsnake.komodo.kutelib.messages;
 
 import com.bearsnake.komodo.kutelib.exceptions.BufferOverflowException;
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
-import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 import com.bearsnake.komodo.kutelib.panes.Coordinates;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 
 import static com.bearsnake.komodo.kutelib.Constants.ASCII_ETX;
 import static com.bearsnake.komodo.kutelib.Constants.ASCII_SOH;
@@ -49,21 +46,21 @@ public class CursorPositionMessage implements Message {
         }
     }
 
-    public Coordinates getCoordinates() {
-        return _coordinates;
-    }
-
     @Override
-    public void write(final SocketChannel channel) throws IOException {
+    public ByteBuffer getBuffer() {
         try {
             var bb = new UTSByteBuffer(16);
             bb.put(ASCII_SOH).putCursorPositionSequence(_coordinates, true).put(ASCII_ETX);
             bb.setPointer(0);
-            SocketChannelHandler.dumpBuffer("Sending: ", bb.getBuffer());//TODO remove
-            channel.write(ByteBuffer.wrap(bb.getBuffer()));
+            return ByteBuffer.wrap(bb.getBuffer());
         } catch (CoordinateException ex) {
             // should not be possible at this point
+            return null;
         }
+    }
+
+    public Coordinates getCoordinates() {
+        return _coordinates;
     }
 
     @Override

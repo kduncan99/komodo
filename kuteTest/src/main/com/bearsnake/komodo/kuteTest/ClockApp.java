@@ -338,7 +338,9 @@ public class ClockApp extends Application implements Runnable {
                 }
 
                 Message message = getNextInput();
+                var unlock = false;
                 while (message != null) {
+                    unlock = true;
                     if (message instanceof FunctionKeyMessage fkm) {
                         switch (fkm.getKey()) {
                             case 1 -> cycleColorScheme();
@@ -347,6 +349,10 @@ public class ClockApp extends Application implements Runnable {
                         }
                     }
                     message = getNextInput();
+                }
+
+                if (unlock) {
+                    sendUnlockKeyboard();
                 }
 
                 Thread.sleep(100);

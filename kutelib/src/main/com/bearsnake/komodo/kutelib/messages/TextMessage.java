@@ -4,12 +4,9 @@
 
 package com.bearsnake.komodo.kutelib.messages;
 
-import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
@@ -40,6 +37,11 @@ public class TextMessage implements Message {
         }
     }
 
+    @Override
+    public ByteBuffer getBuffer() {
+        return ByteBuffer.wrap(_text);
+    }
+
     /**
      * Excises the message from between the SOH-STX and ETX, wraps it into a UTSByteBuffer, removes NUL bytes, and returns it.
      * @return UTSByteBuffer containing the message
@@ -47,14 +49,6 @@ public class TextMessage implements Message {
     public UTSByteBuffer unwrap() {
         var bb = new UTSByteBuffer(Arrays.copyOfRange(_text, 2, _text.length - 1));
         return bb.removeNulBytes(false);
-    }
-
-    @Override
-    public void write(SocketChannel channel)
-        throws IOException {
-        var bb = ByteBuffer.wrap(_text);
-        SocketChannelHandler.dumpBuffer("Sending: ", _text);//TODO remove
-        channel.write(bb);
     }
 
     @Override

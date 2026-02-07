@@ -182,7 +182,6 @@ public class Terminal extends Pane implements SocketChannelListener {
             case F20 -> kbSendFunctionKey(20);
             case F21 -> kbSendFunctionKey(21);
             case F22 -> kbSendFunctionKey(22);
-            default -> System.out.println(keyCode); // TODO remove, this is for development only
         }
     }
 
@@ -190,8 +189,9 @@ public class Terminal extends Pane implements SocketChannelListener {
      * Special handling for certain keystrokes.
      * We translate them to desired actions.
      * @param str the character sequence represented by the keystroke.
+     * @return true if we handled the keystroke, false otherwise
      */
-    public void handleKeyTyped(final String str) {
+    public boolean handleKeyTyped(final String str) {
         if (!str.isEmpty()) {
             var ch = str.charAt(0);
             switch (ch) {
@@ -199,24 +199,39 @@ public class Terminal extends Pane implements SocketChannelListener {
                     // affects the display pane even if control page is active...
                     // control page fields have fixed colors, so they don't react to this anyway.
                     _displayPane.cycleBackgroundColor();
+                    return true;
                 }
                 case 0x03 -> /* ctrl c */ {
                     // affects the display pane even if control page is active...
                     // control page fields have fixed colors, so they don't react to this anyway.
                     _displayPane.cycleTextColor();
+                    return true;
                 }
-                case 0x08 -> /* ctrl h */ kbBackSpace();
+                case 0x08 -> /* ctrl h */ {
+                    kbBackSpace();
+                    return true;
+                }
+
                 //TODO requires reference back to TerminalStack or hosting application
                 // case 0x14 -> /* ctrl t */ com.bearsnake.komodo.kute.Kute.getInstance().cycleTabs();
-                case ASCII_LF -> kbPutCharacter(ASCII_LF);
-                case ASCII_FF -> kbPutCharacter(ASCII_FF);
+
+                case ASCII_LF -> {
+                    kbPutCharacter(ASCII_LF);
+                    return true;
+                }
+                case ASCII_FF -> {
+                    kbPutCharacter(ASCII_FF);
+                    return true;
+                }
                 default -> {
                     if ((ch >= ASCII_SP) && (ch <= ASCII_DEL)) {
                         kbPutCharacter((byte) (ch & 0xFF));
+                        return true;
                     }
                 }
             }
         }
+        return false;
     }
 
     /**
@@ -582,7 +597,7 @@ public class Terminal extends Pane implements SocketChannelListener {
         }
 
         try {
-            _socketHandler.send(new MessageWaitMessage());
+            _socketHandler.write(new MessageWaitMessage());
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
             disconnect();
@@ -651,7 +666,7 @@ public class Terminal extends Pane implements SocketChannelListener {
 
         try {
             var msg = new FunctionKeyMessage(fKey);
-            _socketHandler.send(msg);
+            _socketHandler.write(msg);
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
             disconnect();
@@ -895,15 +910,15 @@ public class Terminal extends Pane implements SocketChannelListener {
             case 'L' -> _statusPane.setKeyboardLocked(false);
             case 'M' -> _activeDisplayPane.eraseDisplay();
             case 'T' -> { // Tell the terminal to respond with the cursor position
-                if (!controlPageIsActive()) {
-                    try {
+                try {
+                    if (!controlPageIsActive()) {
                         var msg = new CursorPositionMessage(_activeDisplayPane.getCursorPosition());
-                        _socketHandler.send(msg);
+                        _socketHandler.write(msg);
                         _statusPane.setKeyboardLocked(true);
-                    } catch (IOException ex) {
-                        // TODO what to do?
-                        IO.println("Error sending cursor position message: " + ex.getMessage());
                     }
+                } catch (IOException ex) {
+                    disconnect();
+                    IO.println("Cannot send cursor position: " + ex.getMessage());
                 }
             }
             case 'X' -> ingestPutCharacterHex(input);
@@ -974,7 +989,7 @@ public class Terminal extends Pane implements SocketChannelListener {
                 case ASCII_CR -> _activeDisplayPane.cursorReturn();
                 case ASCII_DC1 -> transmit(TransmitMode.VARIABLE);
                 case ASCII_DC2 -> printAll();
-                case ASCII_DC4 -> { // lock keyboard (same as ESC DC4)
+                case ASCII_DC4 -> {// lock keyboard (same as ESC DC4)
                     _statusPane.setKeyboardLocked(true);
                 }
                 case ASCII_SUB -> _activeDisplayPane.putCharacter(ASCII_SUB, _emphasisAction, _emphasis);
@@ -1199,11 +1214,12 @@ public class Terminal extends Pane implements SocketChannelListener {
         }
 
         try {
-            _socketHandler.send(new TextMessage(output.setPointer(0).getBuffer()));
+            _socketHandler.write(new TextMessage(output.getBuffer()));
+            IO.println("***** LOCK KB TRANSMIT *****");//TODO remove
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
             disconnect();
-            IO.println("Failed to send message: " + ex.getMessage());
+            IO.println("Cannot send data: " + ex.getMessage());
         }
     }
 }

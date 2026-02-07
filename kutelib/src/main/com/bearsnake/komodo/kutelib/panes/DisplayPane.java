@@ -37,7 +37,7 @@ public class DisplayPane extends Canvas {
     private int _blinkCounter;
     private boolean _blinkCursorFlag;
     private boolean _blinkCharacterFlag;
-    private boolean _deferred;
+    private boolean _drawDisplayDeferred;
 
     public DisplayPane(final DisplayGeometry initialGeometry,
                        final FontInfo initialFontInfo,
@@ -329,6 +329,10 @@ public class DisplayPane extends Canvas {
         }
     }
 
+    public boolean isDrawDisplayDeferred() {
+        return _drawDisplayDeferred;
+    }
+
     /**
      * Reconfigures our base class to the appropriate size
      */
@@ -402,7 +406,7 @@ public class DisplayPane extends Canvas {
      * Notifies the platform that it should schedule drawDisplay() to run in the graphics thread.
      */
     public void scheduleDrawDisplay() {
-        if (!_deferred) {
+        if (!isDrawDisplayDeferred()) {
             Platform.runLater(this::drawDisplay);
         }
     }
@@ -421,9 +425,9 @@ public class DisplayPane extends Canvas {
     }
 
     public void setDeferred(final boolean deferred) {
-        if (_deferred != deferred) {
-            _deferred = deferred;
-            if (!_deferred) {
+        if (_drawDisplayDeferred != deferred) {
+            _drawDisplayDeferred = deferred;
+            if (!_drawDisplayDeferred) {
                 scheduleDrawDisplay();
             }
         }

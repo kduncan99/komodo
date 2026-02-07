@@ -10,7 +10,6 @@ import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.kutelib.messages.Message;
 import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
-import com.bearsnake.komodo.kutelib.panes.Coordinates;
 import com.bearsnake.komodo.kutelib.panes.DisplayGeometry;
 
 import java.io.IOException;
@@ -37,7 +36,6 @@ public abstract class Application implements Runnable {
     public void close() {
         if (!_terminate) {
             _terminate = true;
-            IO.println("Setting _terminate to true");//TODO remove
         }
     }
 
@@ -59,7 +57,6 @@ public abstract class Application implements Runnable {
             synchronized (_inputMessages) {
                 _inputMessages.addLast(message);
             }
-            sendUnlockKeyboard();//TODO remove this, and add appropriate logic in subclasses
         }
     }
 
@@ -111,6 +108,10 @@ public abstract class Application implements Runnable {
             }
         }
 
+        if (!_terminate) {
+            sendUnlockKeyboard();
+        }
+
         return !_terminate;
     }
 
@@ -120,12 +121,11 @@ public abstract class Application implements Runnable {
 
     protected void sendUnlockKeyboard() {
         try {
-            var strm = new UTSByteBuffer(100);
+            var strm = new UTSByteBuffer(16);
             strm.put(ASCII_SOH)
                 .put(ASCII_STX)
                 .putUnlockKeyboard()
                 .put(ASCII_ETX);
-            strm.setPointer(0);
             _server.sendMessage(this, strm);
         } catch (IOException ex) {
             // TODO nothing really to do here

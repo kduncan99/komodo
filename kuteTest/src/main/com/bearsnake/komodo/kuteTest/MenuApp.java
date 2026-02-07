@@ -138,10 +138,12 @@ public class MenuApp extends Application implements Runnable {
     @Override
     public void run() {
         displayMenu();
+        sendUnlockKeyboard();
         while (!_terminate) {
             try {
                 var message = getNextInput();
                 if (message != null) {
+                    sendUnlockKeyboard();
                     if (message instanceof FunctionKeyMessage fkm) {
                         var appInfo = APPLICATION_INFO_TABLE.get(fkm.getKey());
                         if (appInfo != null) {

@@ -10,6 +10,7 @@ import com.bearsnake.komodo.kutelib.messages.StatusMessage;
 import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -42,10 +43,10 @@ public class SocketChannelHandler extends Thread {
             @Override
             public void run() {
                 try {
-                    new StatusPollMessage().write(_channel);
+                    write(new StatusPollMessage());
                 } catch (IOException e) {
-                    IO.println("Failed to send status poll message");
                     close();
+                    IO.println("Cannot send status poll: " + e.getMessage());
                 }
             }
         }, POLL_TIMER_PERIODICITY_MSEC, POLL_TIMER_PERIODICITY_MSEC);
@@ -66,12 +67,25 @@ public class SocketChannelHandler extends Thread {
         }
     }
 
-    public void send(final Message message) throws IOException {
-        message.write(_channel);
-    }
-
     public void setListener(final SocketChannelListener listener) {
         _listener = listener;
+    }
+
+    public void write(final Message message) throws IOException {
+        write(message.getBuffer());
+    }
+
+    public synchronized void write(final ByteBuffer buffer) throws IOException {
+        buffer.position(0);
+        while (buffer.hasRemaining()) {
+            try {
+                if (_channel.write(buffer) == 0) {
+                    Thread.sleep(10);
+                }
+            } catch (InterruptedException e) {
+                // do nothing
+            }
+        }
     }
 
     public void run() {
@@ -92,11 +106,10 @@ public class SocketChannelHandler extends Thread {
             try {
                 inputBuffer.readFromChannel(_channel);
                 var message = Message.create(inputBuffer);
-//                dumpBuffer("Received:", inputBuffer.getBuffer());//TODO remove
                 if (message instanceof StatusPollMessage) {
                     // Send a StatusMessage in response
                     _listener.socketTrafficReceived(this, message);
-                    new StatusMessage().write(_channel);
+                    write(new StatusMessage().getBuffer());
                 } else if (message instanceof StatusMessage) {
                     // TODO at some point we might check these against a timer to detect a dropped session
                 } else if (message instanceof DisconnectMessage) {

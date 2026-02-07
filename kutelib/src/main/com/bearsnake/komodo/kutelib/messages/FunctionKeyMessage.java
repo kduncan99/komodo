@@ -5,13 +5,10 @@
 package com.bearsnake.komodo.kutelib.messages;
 
 import com.bearsnake.komodo.kutelib.exceptions.FunctionKeyException;
-import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
 import com.bearsnake.komodo.kutelib.exceptions.InternalException;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
@@ -48,17 +45,17 @@ public class FunctionKeyMessage implements Message {
     }
 
     @Override
-    public void write(SocketChannel channel) throws IOException {
+    public ByteBuffer getBuffer() {
         try {
             var bb = new UTSByteBuffer(16);
             bb.put(ASCII_SOH)
               .putFunctionKeyCode(_key)
               .put(ASCII_ETX);
             bb.setPointer(0);
-            SocketChannelHandler.dumpBuffer("Sending: ", bb.getBuffer());//TODO remove
-            channel.write(ByteBuffer.wrap(bb.getBuffer()));
+            return ByteBuffer.wrap(bb.getBuffer());
         } catch (FunctionKeyException ex) {
             // program logic prevents this
+            return null;
         }
     }
 

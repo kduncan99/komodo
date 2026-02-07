@@ -6,17 +6,15 @@ package com.bearsnake.komodo.kutelib.messages;
 
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 
-import java.io.IOException;
-import java.nio.channels.SocketChannel;
+import java.nio.ByteBuffer;
 
 public interface Message {
 
     /**
-     * Writes the message to the provided SocketChannel.
-     * @param channel the SocketChannel to write the message to
-     * @throws IOException if an I/O error occurs
+     * Retrieves a ByteBuffer representation of the message.
+     * @return ByteBuffer containing the message data
      */
-    void write(final SocketChannel channel) throws IOException;
+    ByteBuffer getBuffer();
 
     @Override
     String toString();

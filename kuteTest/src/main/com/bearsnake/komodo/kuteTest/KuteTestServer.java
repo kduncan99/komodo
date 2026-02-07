@@ -37,10 +37,11 @@ public class KuteTestServer implements SocketChannelListener {
 
     protected void sendMessage(final Application application,
                                final UTSByteBuffer buffer) throws IOException {
+        buffer.setPointer(0);
         synchronized (_sessions) {
             for (var session : _sessions) {
                 if (session._applications.contains(application)) {
-                    session._handler.send(new TextMessage(buffer.setPointer(0).getBuffer()));
+                    session._handler.write(new TextMessage(buffer.getBuffer()));
                     return;
                 }
             }
