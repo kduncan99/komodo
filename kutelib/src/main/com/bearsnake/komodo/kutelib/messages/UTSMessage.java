@@ -8,7 +8,7 @@ import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 
 import java.nio.ByteBuffer;
 
-public interface Message {
+public interface UTSMessage {
 
     /**
      * Retrieves a ByteBuffer representation of the message.
@@ -24,7 +24,7 @@ public interface Message {
      * @param buffer wrapper for buffer to be re-wrapped into a Message object
      * @return Message object created from the buffer
      */
-    static Message create(final UTSByteBuffer buffer) {
+    static UTSMessage create(final UTSByteBuffer buffer) {
         return create(buffer.setPointer(0).getBuffer());
     }
 
@@ -33,8 +33,8 @@ public interface Message {
      * @param data must begin with SOH and end with ETX
      * @return Message object, or null if the data is not recognized as a valid message
      */
-    static Message create(final byte[] data) {
-        Message message = MessageWaitMessage.create(data);
+    static UTSMessage create(final byte[] data) {
+        UTSMessage message = MessageWaitMessage.create(data);
         if (message == null) {
             message = CursorPositionMessage.create(data);
         }

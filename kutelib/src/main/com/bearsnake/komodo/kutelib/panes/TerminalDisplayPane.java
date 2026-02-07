@@ -19,30 +19,32 @@ import static com.bearsnake.komodo.kutelib.Constants.*;
  * It contains enough information to render a terminal display,
  * but most of the logic for manipulating the display belongs to the containing Terminal.
  */
-public class DisplayPane extends Canvas {
+public class TerminalDisplayPane
+    extends Canvas {
 
     protected final Coordinates _cursorPosition = Coordinates.HOME_POSITION.copy();
     protected final StatusPane _statusPane;
-    private UTSColor _bgColor;
-    private UTSColor _textColor;
-    private boolean _dimDisplay;
-    private final FontInfo _fontInfo;
+    protected UTSColor _bgColor;
+    protected UTSColor _textColor;
+    protected boolean _dimDisplay;
+    protected final FontInfo _fontInfo;
     protected DisplayGeometry _geometry;
 
     protected CharacterCell[] _characterCells;
     protected final TreeMap<Coordinates, Field> _fields = new TreeMap<>();
+
+    protected boolean _drawDisplayDeferred;
 
     // flashing assistance
     private Timer _blinkTimer;
     private int _blinkCounter;
     private boolean _blinkCursorFlag;
     private boolean _blinkCharacterFlag;
-    private boolean _drawDisplayDeferred;
 
-    public DisplayPane(final DisplayGeometry initialGeometry,
-                       final FontInfo initialFontInfo,
-                       final UTSColorSet initialDefaultColors,
-                       final StatusPane statusPane) {
+    public TerminalDisplayPane(final DisplayGeometry initialGeometry,
+                               final FontInfo initialFontInfo,
+                               final UTSColorSet initialDefaultColors,
+                               final StatusPane statusPane) {
         _fontInfo = initialFontInfo;
         _bgColor = initialDefaultColors.getBGColor();
         _textColor = initialDefaultColors.getFGColor();
@@ -78,12 +80,106 @@ public class DisplayPane extends Canvas {
         coordinates.set(row, column);
     }
 
-    /**
-     * Cancels the blink timer and performs any other necessary cleanup
-     */
+    public boolean coordinatesAtEndOfDisplay(final Coordinates coordinates) {
+        return (coordinates.getRow() == _geometry.getRows())
+               && (coordinates.getColumn() == _geometry.getColumns());
+    }
+
+    public boolean coordinatesAtEndOfField(final Coordinates coordinates) {
+        var ix = getIndex(coordinates);
+        return (ix == _geometry.getCellCount() - 1)
+            || (_characterCells[ix].getField() != _characterCells[ix + 1].getField());
+    }
+
+    public boolean coordinatesAtEndOfLine(final Coordinates coordinates) {
+        return (coordinates.getColumn() == _geometry.getColumns());
+    }
+
+    public CharacterCell getCharacterCell(final Coordinates coordinates) {
+        return _characterCells[getIndex(coordinates)];
+    }
+
+    public UTSColorSet getColorSet() {
+        return new UTSColorSet(_textColor, _bgColor);
+    }
+
+    public Coordinates getCursorPosition() {
+        return _cursorPosition;
+    }
+
+    public FontInfo getFontInfo() {
+        return _fontInfo;
+    }
+
+    public DisplayGeometry getGeometry() {
+        return _geometry;
+    }
+
+    protected int getIndex(final Coordinates coordinates) {
+        return getIndex(coordinates.getRow(), coordinates.getColumn());
+    }
+
+    protected int getIndex(final int row, final int column) {
+        return ((row - 1) * _geometry.getColumns()) + (column - 1);
+    }
+
+    public Field getNextField(final Field baseField) {
+        if (baseField == _fields.lastEntry().getValue()) {
+            return _fields.firstEntry().getValue();
+        } else {
+            return _fields.higherEntry(baseField.getCoordinates()).getValue();
+        }
+    }
+
+    public boolean isDrawDisplayDeferred() {
+        return _drawDisplayDeferred;
+    }
+
+    public void setDeferred(final boolean deferred) {
+        if (_drawDisplayDeferred != deferred) {
+            _drawDisplayDeferred = deferred;
+            if (!_drawDisplayDeferred) {
+                scheduleDrawDisplay();
+            }
+        }
+    }
+
+    public void scheduleDrawDisplay() {
+        if (!isDrawDisplayDeferred()) {
+            Platform.runLater(this::drawDisplay);
+        }
+    }
+
+    protected void repairFieldReferences() {
+        var fIter = _fields.values().iterator();
+        var field = fIter.next();
+        var nextField = fIter.hasNext() ? fIter.next() : null;
+        var coord = Coordinates.HOME_POSITION.copy();
+        var cx = 0;
+        while (cx < _geometry.getCellCount()) {
+            if ((nextField != null) && coord.equals(nextField.getCoordinates())) {
+                field = nextField;
+                nextField = fIter.hasNext() ? fIter.next() : null;
+            }
+            _characterCells[cx++].setField(field);
+            advanceCoordinates(coord);
+        }
+    }
+
+
+    public void setCursorPosition(final int row,
+                                  final int column) {
+        _cursorPosition.setRow(row);
+        _cursorPosition.setColumn(column);
+        _statusPane.notifyCursorPositionChange(row, column);
+        scheduleDrawDisplay();
+    }
+
     public void close() {
-        _blinkTimer.cancel();
-        _blinkTimer = null;
+        if (_blinkTimer != null) {
+            _blinkTimer.cancel();
+            _blinkTimer = null;
+        }
     }
 
     /*
@@ -119,20 +215,6 @@ public class DisplayPane extends Canvas {
         return ch;
     }
 
-    public boolean coordinatesAtEndOfDisplay(final Coordinates coordinates) {
-        return (coordinates.getRow() == _geometry.getRows())
-               && (coordinates.getColumn() == _geometry.getColumns());
-    }
-
-    public boolean coordinatesAtEndOfField(final Coordinates coordinates) {
-        var ix = getIndex(coordinates);
-        return (ix == _geometry.getCellCount())
-            || (_characterCells[ix].getField() != _characterCells[ix + 1].getField());
-    }
-
-    public boolean coordinatesAtEndOfLine(final Coordinates coordinates) {
-        return (coordinates.getColumn() == _geometry.getColumns());
-    }
 
     public final void cycleBackgroundColor() {
         _bgColor = _bgColor.nextColor();
@@ -160,7 +242,7 @@ public class DisplayPane extends Canvas {
      * Draws the character display.
      * Do not invoke this directly - use scheduleDrawDisplay) instead.
      */
-    private synchronized void drawDisplay() {
+    protected synchronized void drawDisplay() {
         var gcDisplay = getGraphicsContext2D();
         gcDisplay.setFont(_fontInfo.getFont());
 
@@ -259,83 +341,7 @@ public class DisplayPane extends Canvas {
         }
     }
 
-    /*
-     * Retrieves a reference to the character cell indicated by the given coordinates
-     */
-    public CharacterCell getCharacterCell(final Coordinates coordinates) {
-        return _characterCells[getIndex(coordinates)];
-    }
 
-    /**
-     * Retrieves the color set for this display.
-     * Intended only for use by Terminal, which must NOT update the object
-     * @return UTSColorSet containing current default colors for this Display
-     */
-    public UTSColorSet getColorSet() {
-        return new UTSColorSet(_textColor, _bgColor);
-    }
-
-    /**
-     * Retrieves the cursor position from this display.
-     * Intended only for the containing Terminal, which it can, but should not, update manually.
-     * @return reference to our cursor position object
-     */
-    public Coordinates getCursorPosition() {
-        return _cursorPosition;
-    }
-
-    /**
-     * Retrieves the font information for this display.
-     * Intended only for use by Terminal, which must NOT update the object
-     * @return FontInfo
-     */
-    public FontInfo getFontInfo() {
-        return _fontInfo;
-    }
-
-    /**
-     * Retrieves the geometry this display is currently using.
-     * Intended only for use by Terminal, which must NOT update the object
-     * @return DisplayGeometry
-     */
-    public DisplayGeometry getGeometry() {
-        return _geometry;
-    }
-
-    /*
-     * Calculates the character cell index indicated by the given coordinates
-     */
-    protected int getIndex(final Coordinates coordinates) {
-        return getIndex(coordinates.getRow(), coordinates.getColumn());
-    }
-
-    /*
-     * Calculates the character cell index indicated by the given row and column
-     */
-    private int getIndex(final int row,
-                         final int column) {
-        return ((row - 1) * _geometry.getColumns()) + (column - 1);
-    }
-
-    /*
-     * Finds the field which follows the given field.
-     * If the given field is the end of the display, we return the home field.
-     */
-    public Field getNextField(final Field baseField) {
-        if (baseField == _fields.lastEntry().getValue()) {
-            return _fields.firstEntry().getValue();
-        } else {
-            return _fields.higherEntry(baseField.getCoordinates()).getValue();
-        }
-    }
-
-    public boolean isDrawDisplayDeferred() {
-        return _drawDisplayDeferred;
-    }
-
-    /**
-     * Reconfigures our base class to the appropriate size
-     */
     public void reconfigure(final DisplayGeometry geometry) {
         _geometry = geometry;
         _characterCells = new CharacterCell[_geometry.getCellCount()];
@@ -344,26 +350,6 @@ public class DisplayPane extends Canvas {
         reset();
     }
 
-    /*
-     * Iterate over fields and character cells, rebuilding the field references in the
-     * character cells according to the existing fields. This is used in cases where it
-     * is difficult to fix up the references during line insertion, deletion, duplication,etc.
-     */
-    protected void repairFieldReferences() {
-        var fIter = _fields.values().iterator();
-        var field = fIter.next();
-        var nextField = fIter.hasNext() ? fIter.next() : null;
-        var coord = Coordinates.HOME_POSITION.copy();
-        var cx = 0;
-        while (cx < _geometry.getCellCount()) {
-            if ((nextField != null) && coord.equals(nextField.getCoordinates())) {
-                field = nextField;
-                nextField = fIter.hasNext() ? fIter.next() : null;
-            }
-            _characterCells[cx++].setField(field);
-            advanceCoordinates(coord);
-        }
-    }
 
     /**
      * Resets the display to its initial state, clearing all content and restoring default settings.
@@ -402,36 +388,6 @@ public class DisplayPane extends Canvas {
         }
     }
 
-    /*
-     * Notifies the platform that it should schedule drawDisplay() to run in the graphics thread.
-     */
-    public void scheduleDrawDisplay() {
-        if (!isDrawDisplayDeferred()) {
-            Platform.runLater(this::drawDisplay);
-        }
-    }
-
-    /**
-     * Updates the cursor position so the display can draw it properly
-     * @param row row to be set
-     * @param column column to be set
-     */
-    public void setCursorPosition(final int row,
-                                  final int column) {
-        _cursorPosition.setRow(row);
-        _cursorPosition.setColumn(column);
-        _statusPane.notifyCursorPositionChange(row, column);
-        scheduleDrawDisplay();
-    }
-
-    public void setDeferred(final boolean deferred) {
-        if (_drawDisplayDeferred != deferred) {
-            _drawDisplayDeferred = deferred;
-            if (!_drawDisplayDeferred) {
-                scheduleDrawDisplay();
-            }
-        }
-    }
 
     // -----------------------------------------------------------------------------------------------------------------
 

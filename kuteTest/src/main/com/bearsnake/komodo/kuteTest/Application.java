@@ -7,7 +7,7 @@ package com.bearsnake.komodo.kuteTest;
 import com.bearsnake.komodo.kutelib.TransmitMode;
 import com.bearsnake.komodo.kutelib.messages.CursorPositionMessage;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
-import com.bearsnake.komodo.kutelib.messages.Message;
+import com.bearsnake.komodo.kutelib.messages.UTSMessage;
 import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 import com.bearsnake.komodo.kutelib.panes.DisplayGeometry;
@@ -23,10 +23,10 @@ import static com.bearsnake.komodo.kutelib.Constants.*;
 public abstract class Application implements Runnable {
 
     protected DisplayGeometry _geometry;
-    private final LinkedList<Message> _inputMessages = new LinkedList<>();
+    private final LinkedList<UTSMessage> _inputMessages = new LinkedList<>();
     protected KuteTestServer _server;
     protected volatile boolean _terminate = false;
-    private Thread _thread = new Thread(this);
+    private final Thread _thread = new Thread(this);
 
     // For invoking as stand-alone
     protected Application(final KuteTestServer server) {
@@ -43,13 +43,13 @@ public abstract class Application implements Runnable {
      * Retrieves the next queued input for the subclassed application.
      * @return input Message if one exists, else null
      */
-    protected Message getNextInput() {
+    protected UTSMessage getNextInput() {
         synchronized (_inputMessages) {
             return _inputMessages.pollFirst();
         }
     }
 
-    public void handleInput(final Message message) {
+    public void handleInput(final UTSMessage message) {
         if (message instanceof StatusPollMessage) {
             // ignore this
         } else {

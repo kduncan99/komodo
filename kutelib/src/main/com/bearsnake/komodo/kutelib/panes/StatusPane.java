@@ -29,6 +29,7 @@ public class StatusPane extends Canvas {
     private boolean _keyboardLocked;
     private boolean _messageWaiting;
     private boolean _pollIndicator;
+    private boolean _traceIndicator;
     private Timer _timer = new Timer();
 
     public StatusPane(final DisplayGeometry initialGeometry,
@@ -45,6 +46,7 @@ public class StatusPane extends Canvas {
             @Override
             public void run() {
                 _pollIndicator = false;
+                _traceIndicator = false;
                 scheduleDrawStatus();
             }
         }, 250, 250);
@@ -89,19 +91,22 @@ public class StatusPane extends Canvas {
 
         // draw indicators - we have to do these separately since some may be dimmed
         gfContext.setFill(_errorIndicator ? jfxTextColor : jfxTextDimColor);
-        gfContext.fillText("ERR ", (_columns - 24) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
+        gfContext.fillText("ERR ", (_columns - 29) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
 
         gfContext.setFill(_isConnected ? jfxTextColor : jfxTextDimColor);
-        gfContext.fillText("CONN", (_columns - 19) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
+        gfContext.fillText("CONN", (_columns - 24) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
 
         gfContext.setFill(_keyboardLocked ? jfxTextColor : jfxTextDimColor);
-        gfContext.fillText("LOCK", (_columns - 14) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
+        gfContext.fillText("LOCK", (_columns - 19) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
 
         gfContext.setFill(_messageWaiting ? jfxTextColor : jfxTextDimColor);
-        gfContext.fillText("MSGW", (_columns - 9) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
+        gfContext.fillText("MSGW", (_columns - 14) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
 
         gfContext.setFill(_pollIndicator ? jfxTextColor : jfxTextDimColor);
-        gfContext.fillText("POLL", (_columns - 4) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
+        gfContext.fillText("POLL", (_columns - 9) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
+
+        gfContext.setFill(_traceIndicator ? jfxTextColor : jfxTextDimColor);
+        gfContext.fillText("TRCE", (_columns - 4) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
     }
 
     /**
@@ -223,6 +228,24 @@ public class StatusPane extends Canvas {
      */
     public void setPollIndicator() {
         _pollIndicator = true;
+        scheduleDrawStatus();
+    }
+
+    /**
+     * Flash the trace indicator - basically just turn it on.
+     * We'll turn it off automatically some fraction of a second later.
+     */
+    public void notifyTrace() {
+        _traceIndicator = true;
+        scheduleDrawStatus();
+    }
+
+    /**
+     * Flash the trace indicator - basically just turn it on.
+     * We'll turn it off automatically some fraction of a second later.
+     */
+    public void setTraceIndicator() {
+        _traceIndicator = true;
         scheduleDrawStatus();
     }
 }

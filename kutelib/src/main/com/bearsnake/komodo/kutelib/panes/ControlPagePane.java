@@ -11,8 +11,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * This is a special overlay to which Terminal directs host and keyboard traffic when it exists.
  */
-public class ControlPagePane
-    extends DisplayPane {
+public class ControlPagePane extends TerminalDisplayPane {
 
     // (**PRNT**)STA-dd nnn(**XFER**)PRNT(....)XFER(....)XMIT(....)MM..(PARAM)
     // (../../..)ADR-nnnn  (../../..)SEARCH(.......................)   (../..)

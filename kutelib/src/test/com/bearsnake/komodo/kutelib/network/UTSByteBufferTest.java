@@ -75,27 +75,6 @@ public class UTSByteBufferTest {
     }
 
     @Test
-    void testRemoveNulBytes() {
-        UTSByteBuffer buffer = new UTSByteBuffer(20);
-        buffer.put((byte) 0x01);
-        buffer.put((byte) 0x01);
-        buffer.put((byte) 0x00);
-        buffer.put((byte) 0x01);
-        buffer.put((byte) 0x02);
-        buffer.put((byte) 0x00);
-        buffer.put((byte) 0x00);
-        buffer.put((byte) 0x00);
-        buffer.put((byte) 0x03);
-        buffer.put((byte) 0x00);
-        buffer.setPointer(2);
-        buffer.removeNulBytes(false);
-        System.out.println(Arrays.toString(buffer.getBuffer()));
-        assertArrayEquals(new byte[]{0x01, 0x02, 0x03}, buffer.getBuffer());
-        assertEquals(2, buffer.getPointer());
-        assertEquals(5, buffer.getLimit());
-    }
-
-    @Test
     void testEquals() {
         UTSByteBuffer buffer = new UTSByteBuffer(50);
         buffer.putBuffer(new byte[]{0x01, 0x02});

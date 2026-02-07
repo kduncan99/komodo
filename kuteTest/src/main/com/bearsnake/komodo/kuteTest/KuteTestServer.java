@@ -4,25 +4,23 @@
 
 package com.bearsnake.komodo.kuteTest;
 
-import com.bearsnake.komodo.kutelib.messages.Message;
+import com.bearsnake.komodo.kutelib.messages.UTSMessage;
 import com.bearsnake.komodo.kutelib.messages.TextMessage;
-import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
-import com.bearsnake.komodo.kutelib.network.SocketChannelListener;
-import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.network.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.LinkedList;
 
-public class KuteTestServer implements SocketChannelListener {
+public class KuteTestServer implements UTSSocketListener {
 
     private static class SessionInfo {
 
-        private final SocketChannelHandler _handler;
+        private final UTSSocketHandler _handler;
         private final LinkedList<Application> _applications = new LinkedList<>();
 
-        public SessionInfo(final SocketChannelHandler handler) {
+        public SessionInfo(final UTSSocketHandler handler) {
             _handler = handler;
         }
     }
@@ -50,7 +48,7 @@ public class KuteTestServer implements SocketChannelListener {
     }
 
     @Override
-    public void socketClosed(final SocketChannelHandler source) {
+    public void socketClosed(final UTSSocketHandler source) {
         synchronized (_sessions) {
             for (SessionInfo session : _sessions) {
                 if (session._handler == source) {
@@ -62,15 +60,15 @@ public class KuteTestServer implements SocketChannelListener {
     }
 
     /**
-     * Receives input from the users via the various SocketChannelHandlers.
-     * We find the session that the SocketChannelHandler belongs to and send the message
+     * Receives input from the users via the various UTSSocketHandlers.
+     * We find the session that the UTSSocketHandler belongs to and send the message
      * to the most recent application for that session.
-     * @param source SocketChannelHandler that sent the data
+     * @param source UTSSocketHandler that sent the data
      * @param message the message to be processed by the listener
      */
     @Override
-    public void socketTrafficReceived(final SocketChannelHandler source,
-                                      final Message message) {
+    public void socketTrafficReceived(final UTSSocketHandler source,
+                                      final UTSMessage message) {
         synchronized (_sessions) {
             for (var session : _sessions) {
                 if (session._handler == source) {
@@ -123,7 +121,8 @@ public class KuteTestServer implements SocketChannelListener {
                 var socketChannel = channel.accept();
                 if (socketChannel != null) {
                     synchronized (_sessions) {
-                        var handler = new SocketChannelHandler(socketChannel, this);
+                        IO.println("New connection from " + socketChannel.socket().getRemoteSocketAddress());
+                        var handler = new UTSSocketHandler(socketChannel, this);
                         var session = new SessionInfo(handler);
                         var app = new MenuApp(this);
                         session._applications.push(app);
@@ -132,7 +131,7 @@ public class KuteTestServer implements SocketChannelListener {
                         didSomething = true;
                     }
                 } else {
-                    // TODO check for dead applications
+                    // check for dead applications
                     synchronized (_sessions) {
                         var iter = _sessions.iterator();
                         while (iter.hasNext()) {

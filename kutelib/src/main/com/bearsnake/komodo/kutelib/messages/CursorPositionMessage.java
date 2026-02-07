@@ -19,7 +19,7 @@ import static com.bearsnake.komodo.kutelib.Constants.ASCII_SOH;
  * The convention states that this message does NOT contain SOH or ETX, but we insert those anyway
  * to make life simpler for reading messages.
  */
-public class CursorPositionMessage implements Message {
+public class CursorPositionMessage implements UTSMessage {
 
     private final Coordinates _coordinates;
 

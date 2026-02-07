@@ -13,7 +13,7 @@ import static com.bearsnake.komodo.kutelib.Constants.*;
  * A StatusPollMssage is sent periodically by both ends of a UTS session to check if the connection is still alive.
  * The receiving end should respond with a valid StatusMessage.
  */
-public class StatusPollMessage implements Message {
+public class StatusPollMessage implements UTSMessage {
 
     private static final byte[] PATTERN = {ASCII_SOH, ASCII_ENQ, ASCII_ETX};
     private static final ByteBuffer BUFFER = ByteBuffer.wrap(PATTERN);

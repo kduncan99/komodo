@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kuteTest;
 
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
-import com.bearsnake.komodo.kutelib.messages.Message;
+import com.bearsnake.komodo.kutelib.messages.UTSMessage;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
 import com.bearsnake.komodo.kutelib.panes.Coordinates;
 import com.bearsnake.komodo.kutelib.panes.ExplicitField;
@@ -337,7 +337,7 @@ public class ClockApp extends Application implements Runnable {
                     }
                 }
 
-                Message message = getNextInput();
+                UTSMessage message = getNextInput();
                 var unlock = false;
                 while (message != null) {
                     unlock = true;

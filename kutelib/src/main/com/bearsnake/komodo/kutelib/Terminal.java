@@ -6,10 +6,9 @@ package com.bearsnake.komodo.kutelib;
 
 import com.bearsnake.komodo.kutelib.exceptions.*;
 import com.bearsnake.komodo.kutelib.messages.*;
-import com.bearsnake.komodo.kutelib.network.SocketChannelHandler;
-import com.bearsnake.komodo.kutelib.network.SocketChannelListener;
-import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.network.*;
 import com.bearsnake.komodo.kutelib.panes.*;
+import com.bearsnake.komodo.netlib.SocketTrace;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 
@@ -23,16 +22,16 @@ import static com.bearsnake.komodo.kutelib.Constants.*;
 /**
  * Implements a display with backing memory, cursor and protocol handling, and a status line.
  */
-public class Terminal extends Pane implements SocketChannelListener {
+public class Terminal extends Pane implements UTSSocketListener {
 
     private final TerminalSettings _settings;
 
-    private DisplayPane _displayPane;
+    private TerminalDisplayPane _displayPane;
     private StatusPane _statusPane;
     private ControlPagePane _controlPagePane;
-    private DisplayPane _activeDisplayPane;
+    private TerminalDisplayPane _activeDisplayPane;
 
-    private SocketChannelHandler _socketHandler;
+    private UTSSocketHandler _socketHandler;
 
     private PrintMode _printMode;
     private TransferMode _transferMode;
@@ -46,7 +45,7 @@ public class Terminal extends Pane implements SocketChannelListener {
         _settings = terminalSettings;
 
         _statusPane = new StatusPane(_settings.getDisplayGeometry(), initialFontInfo, _settings.getColorSet());
-        _displayPane = new DisplayPane(_settings.getDisplayGeometry(), initialFontInfo, _settings.getColorSet(), _statusPane);
+        _displayPane = new TerminalDisplayPane(_settings.getDisplayGeometry(), initialFontInfo, _settings.getColorSet(), _statusPane);
         _controlPagePane = null;
         _activeDisplayPane = _displayPane;
         _emphasis = new Emphasis();
@@ -101,7 +100,7 @@ public class Terminal extends Pane implements SocketChannelListener {
             try {
                 InetSocketAddress address = new InetSocketAddress(_settings.getHostName(), _settings.getHostPort());
                 SocketChannel channel = SocketChannel.open(address);
-                _socketHandler = new SocketChannelHandler(channel, this);
+                _socketHandler = new UTSSocketHandler(channel, this);
                 _statusPane.setConnected(true);
                 reset();
             } catch (IOException ex) {
@@ -275,6 +274,28 @@ public class Terminal extends Pane implements SocketChannelListener {
 //        } catch (Exception ex) {
 //            System.err.println(ex.getMessage());
 //        }
+    }
+
+    public boolean startNetworkTrace() {
+        if (_socketHandler == null) {
+            return false;
+        }
+        return _socketHandler.traceStart();
+    }
+
+    public boolean pauseNetworkTrace() {
+        if (_socketHandler == null) {
+            return false;
+        }
+        _socketHandler.tracePause();
+        return true;
+    }
+
+    public SocketTrace stopNetworkTrace() {
+        if (_socketHandler == null) {
+            return null;
+        }
+        return _socketHandler.traceStop();
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -1086,7 +1107,7 @@ public class Terminal extends Pane implements SocketChannelListener {
      * @param handler SocketChannelHandler that sent the notification
      */
     @Override
-    public void socketClosed(final SocketChannelHandler handler) {
+    public void socketClosed(final UTSSocketHandler handler) {
         disconnect();
     }
 
@@ -1095,8 +1116,8 @@ public class Terminal extends Pane implements SocketChannelListener {
      * The only subclasses we expect are MessageWaitMessage and TextMessage.
      */
     @Override
-    public synchronized void socketTrafficReceived(final SocketChannelHandler handler,
-                                                   final Message message) {
+    public synchronized void socketTrafficReceived(final UTSSocketHandler handler,
+                                                   final UTSMessage message) {
         // TODO we may need to synchronize every possible path from the keyboard as well
         switch (message) {
             case MessageWaitMessage messageWaitMessage -> _statusPane.setMessageWaiting(true);
@@ -1118,6 +1139,11 @@ public class Terminal extends Pane implements SocketChannelListener {
                 _statusPane.setErrorIndicator(true);
             }
         }
+    }
+
+    @Override
+    public void socketTrafficTraced(final UTSSocketHandler source) {
+        _statusPane.notifyTrace();
     }
 
     // ---------------------------------------------------------------------------------------------

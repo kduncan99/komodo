@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
+ */
+
 package com.bearsnake.komodo.kutelib.network;
 
 import com.bearsnake.komodo.kutelib.Constants;
@@ -676,74 +680,45 @@ public class UTSByteBuffer {
      * @param channel the channel from which to read
      * @throws IOException if an I/O error occurs
      */
-    public void readFromChannel(final SocketChannel channel) throws IOException {
-        channel.configureBlocking(true);
-        _pointer = 0;
-        boolean haveSOH = false;
-        boolean haveETX = false;
-        while (!haveETX) {
-            if (!haveSOH) {
-                // we are looking for an SOH character - discard anything else
-                var bb = ByteBuffer.wrap(_buffer, 0, 1);
-                channel.read(bb);
-                if (bb.get(0) == ASCII_SOH) {
-                    haveSOH = true;
-                    _pointer++;
-                }
-            } else {
-                // We have an SOH character - now read until ETX. If buffer is full, expand it
-                if (_pointer >= _buffer.length) {
-                    expand();
-                }
-
-                var bb = ByteBuffer.wrap(_buffer, _pointer, _buffer.length - _pointer);
-                var readResult = channel.read(bb);
-                if (readResult == -1) {
-                    throw new EOFException();
-                }
-
-                while (readResult > 0 && !haveETX) {
-                    if (_buffer[_pointer++] == ASCII_ETX) {
-                        haveETX = true;
-                    }
-                    readResult--;
-                }
-            }
-        }
-
-        _limit = _pointer;
-        _pointer = 0;
-    }
-
-    /**
-     * Scans the buffer from the current position to the current limit,
-     * removing any NUL bytes encountered and shifting the remainder of the content
-     * downward as necessary. Optionally shifts limit down by the number of NUL bytes removed.
-     * @param preserveLimit if true, the limit is not modified
-     * @return this buffer
-     */
-    public UTSByteBuffer removeNulBytes(final boolean preserveLimit) {
-        // Set dx to the first NUL byte, then move all subsequent non-NUL bytes downward.
-        int dx = _pointer;
-        while ((dx < _limit) && (_buffer[dx] != ASCII_NUL)) {
-            dx++;
-        }
-        if (dx < _limit) {
-            int sx = dx + 1;
-            while (sx < _limit) {
-                if (_buffer[sx] != ASCII_NUL) {
-                    _buffer[dx++] = _buffer[sx];
-                }
-                sx++;
-            }
-        }
-
-        if (!preserveLimit) {
-            _limit = dx;
-        }
-
-        return this;
-    }
+    // TODO very remove
+//    public void readFromChannel(final SocketChannel channel) throws IOException {
+//        channel.configureBlocking(true);
+//        _pointer = 0;
+//        boolean haveSOH = false;
+//        boolean haveETX = false;
+//        while (!haveETX) {
+//            if (!haveSOH) {
+//                // we are looking for an SOH character - discard anything else
+//                var bb = ByteBuffer.wrap(_buffer, 0, 1);
+//                channel.read(bb);
+//                if (bb.get(0) == ASCII_SOH) {
+//                    haveSOH = true;
+//                    _pointer++;
+//                }
+//            } else {
+//                // We have an SOH character - now read until ETX. If buffer is full, expand it
+//                if (_pointer >= _buffer.length) {
+//                    expand();
+//                }
+//
+//                var bb = ByteBuffer.wrap(_buffer, _pointer, _buffer.length - _pointer);
+//                var readResult = channel.read(bb);
+//                if (readResult == -1) {
+//                    throw new EOFException();
+//                }
+//
+//                while (readResult > 0 && !haveETX) {
+//                    if (_buffer[_pointer++] == ASCII_ETX) {
+//                        haveETX = true;
+//                    }
+//                    readResult--;
+//                }
+//            }
+//        }
+//
+//        _limit = _pointer;
+//        _pointer = 0;
+//    }
 
     /**
      * Resets the pointer to zero - does nothing with the limit.

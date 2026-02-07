@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
-public class TextMessage implements Message {
+public class TextMessage implements UTSMessage {
 
     private final byte[] _text;
 
@@ -43,12 +43,11 @@ public class TextMessage implements Message {
     }
 
     /**
-     * Excises the message from between the SOH-STX and ETX, wraps it into a UTSByteBuffer, removes NUL bytes, and returns it.
+     * Excises the message from between the SOH-STX and ETX (exclusive), wraps it into a UTSByteBuffer, and returns it.
      * @return UTSByteBuffer containing the message
      */
     public UTSByteBuffer unwrap() {
-        var bb = new UTSByteBuffer(Arrays.copyOfRange(_text, 2, _text.length - 1));
-        return bb.removeNulBytes(false);
+        return new UTSByteBuffer(Arrays.copyOfRange(_text, 2, _text.length - 1));
     }
 
     @Override

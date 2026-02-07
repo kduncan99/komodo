@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
-public class FunctionKeyMessage implements Message {
+public class FunctionKeyMessage implements UTSMessage {
 
     private final int _key;
 

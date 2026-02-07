@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
-public class MessageWaitMessage implements Message {
+public class MessageWaitMessage implements UTSMessage {
 
     private static final byte[] PATTERN = {ASCII_SOH, ASCII_BEL, ASCII_ETX};
     private static final ByteBuffer BUFFER = ByteBuffer.wrap(PATTERN);

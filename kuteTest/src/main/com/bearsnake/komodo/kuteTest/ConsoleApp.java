@@ -5,7 +5,7 @@
 package com.bearsnake.komodo.kuteTest;
 
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
-import com.bearsnake.komodo.kutelib.messages.Message;
+import com.bearsnake.komodo.kutelib.messages.UTSMessage;
 import com.bearsnake.komodo.kutelib.messages.MessageWaitMessage;
 import com.bearsnake.komodo.kutelib.messages.TextMessage;
 import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
@@ -129,7 +129,7 @@ public class ConsoleApp extends Application implements Runnable {
         _readReplyMessages.add(new ReadReplyMessage(text));
     }
 
-    public synchronized boolean processInput(final Message msg) throws IOException {
+    public synchronized boolean processInput(final UTSMessage msg) throws IOException {
         if (msg instanceof MessageWaitMessage) {
             if (!waitingOnInput()) {
                 try {
