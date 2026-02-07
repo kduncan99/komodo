@@ -27,10 +27,10 @@ public class TerminalStack extends TabPane {
         var settings = new TerminalSettings();
         var fontInfo = new FontInfo(16);
 
-        var terminal1 = new Terminal(settings, fontInfo);
+        var terminal1 = new Terminal("DEMAND", settings, fontInfo);
         var tab1 = new Tab("DEMAND", terminal1);
 
-        var terminal2 = new Terminal(settings, fontInfo);
+        var terminal2 = new Terminal("TIP", settings, fontInfo);
         var tab2 = new Tab("TIP", terminal2);
 
         getTabs().addAll(tab1, tab2);

@@ -10,6 +10,7 @@ import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 import com.bearsnake.komodo.kutelib.messages.UTSMessage;
 import com.bearsnake.komodo.netlib.SocketHandler;
 import com.bearsnake.komodo.netlib.SocketListener;
+import com.bearsnake.komodo.netlib.SocketTrace;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -133,6 +134,11 @@ public class UTSSocketHandler extends SocketHandler implements SocketListener {
                 }
             }
         }
+    }
+
+    @Override
+    public void socketTrafficTraced(final SocketHandler source) {
+        _utsListener.socketTrafficTraced(this);
     }
 
     /**

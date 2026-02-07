@@ -24,6 +24,7 @@ import static com.bearsnake.komodo.kutelib.Constants.*;
  */
 public class Terminal extends Pane implements UTSSocketListener {
 
+    private final String _name;
     private final TerminalSettings _settings;
 
     private TerminalDisplayPane _displayPane;
@@ -40,8 +41,10 @@ public class Terminal extends Pane implements UTSSocketListener {
     private Emphasis _emphasis;
     private EmphasisAction _emphasisAction;
 
-    public Terminal(final TerminalSettings terminalSettings,
+    public Terminal(final String name,
+                    final TerminalSettings terminalSettings,
                     final FontInfo initialFontInfo) {
+        _name = name;
         _settings = terminalSettings;
 
         _statusPane = new StatusPane(_settings.getDisplayGeometry(), initialFontInfo, _settings.getColorSet());
@@ -295,7 +298,11 @@ public class Terminal extends Pane implements UTSSocketListener {
         if (_socketHandler == null) {
             return null;
         }
-        return _socketHandler.traceStop();
+
+        var trace = _socketHandler.traceStop();
+        var viewer = new TraceViewer(trace, _name);
+        viewer.show();
+        return trace;
     }
 
     // ---------------------------------------------------------------------------------------------
