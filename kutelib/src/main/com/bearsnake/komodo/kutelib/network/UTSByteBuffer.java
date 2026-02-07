@@ -12,25 +12,12 @@ import com.bearsnake.komodo.kutelib.exceptions.FCCSequenceException;
 import com.bearsnake.komodo.kutelib.exceptions.FunctionKeyException;
 import com.bearsnake.komodo.kutelib.panes.*;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
 public class UTSByteBuffer {
-
-    public enum FCCFormat {
-        FCC_BASIC,
-        FCC_EXTENDED,
-        FCC_COLOR_FG,
-        FCC_COLOR_BG,
-        FCC_COLOR_FG_BG_ONE_BYTE,
-        FCC_COLOR_FG_BG_TWO_BYTES,
-    }
 
     private byte[] _buffer;
     private int _limit;
@@ -673,52 +660,6 @@ public class UTSByteBuffer {
         put(Constants.ASCII_ESC).put((byte) 'L');
         return this;
     }
-
-    /**
-     * Reads a message from SOH to ETX inclusive, from the given channel. Blocks until a complete message has been received.
-     * When finished, _pointer will be set to zero and _limit will be set to the end of the message (one byte beyond ETX).
-     * @param channel the channel from which to read
-     * @throws IOException if an I/O error occurs
-     */
-    // TODO very remove
-//    public void readFromChannel(final SocketChannel channel) throws IOException {
-//        channel.configureBlocking(true);
-//        _pointer = 0;
-//        boolean haveSOH = false;
-//        boolean haveETX = false;
-//        while (!haveETX) {
-//            if (!haveSOH) {
-//                // we are looking for an SOH character - discard anything else
-//                var bb = ByteBuffer.wrap(_buffer, 0, 1);
-//                channel.read(bb);
-//                if (bb.get(0) == ASCII_SOH) {
-//                    haveSOH = true;
-//                    _pointer++;
-//                }
-//            } else {
-//                // We have an SOH character - now read until ETX. If buffer is full, expand it
-//                if (_pointer >= _buffer.length) {
-//                    expand();
-//                }
-//
-//                var bb = ByteBuffer.wrap(_buffer, _pointer, _buffer.length - _pointer);
-//                var readResult = channel.read(bb);
-//                if (readResult == -1) {
-//                    throw new EOFException();
-//                }
-//
-//                while (readResult > 0 && !haveETX) {
-//                    if (_buffer[_pointer++] == ASCII_ETX) {
-//                        haveETX = true;
-//                    }
-//                    readResult--;
-//                }
-//            }
-//        }
-//
-//        _limit = _pointer;
-//        _pointer = 0;
-//    }
 
     /**
      * Resets the pointer to zero - does nothing with the limit.
