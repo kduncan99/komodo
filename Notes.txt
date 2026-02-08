@@ -2,6 +2,9 @@
 TODO InProgress
 
 Kute
+    Bug: See below - does this trigger some other bug which makes cell field to be null?
+    Bug: Still, we miss one row when console app starts up, once in a while
+        because both messages get sent in one packet.
     Bug: At startup, console app should set FCCs for all rows to protected, Readonly colors
     Bug: While keyboard is locked, ctrl-b and ctrl-c work, but still beep (should not beep)
         Part of this needs to include moving all keyboard handling to Terminal.
@@ -24,20 +27,6 @@ Kute
         Trace Start
         Trace Pause
         Trace Stop
-    Traffic capture within SocketChannelHandler
-        start-capture, pause-capture, stop-capture
-        capture will store a time-ordered list of entries, one per packet
-            time-stamp
-            source (local, remote)
-            data (raw bytes)
-        The list is limited to a configurable number of packets - oldest ages out first.
-        Upon stop-capture, we copy the list to an array and return it, then clear the list.
-        Traffic capture limit is configured via menu option, global to all sessions.
-    Traffic capture viewer which pops up with the captured packets
-        raw mode - shows only hex
-        snap mode - shows hex on left, ascii on right
-        primitive mode - interprets escape and fcc sequences
-        can this be a subset of DisplayPane? then maybe it's easier to do file-save, file-load, file-print
     Applications for testing Kute
         Demand Simulator
             login with username/password
@@ -63,17 +52,6 @@ Kute
         escape is msg-wait
     Load/Save templates from the settings page
     File open selects a template which then opens a new terminal and connects
-    New utility panel for
-        connect (can we have a connect indicator on the connect/disconnect buttons? or maybe just one button?)
-            (remove connect/disconnect buttons from the control pad)
-        disconnect
-        reset
-        start-trace
-        pause-trace
-        stop-trace
-        software-caps-lock (with indicator on either status, or the button itself)
-
-
     When we scan cursor backward into protected field, it moves back to the next unprotected field...
         should it move backward to the previous unprotected field?
 

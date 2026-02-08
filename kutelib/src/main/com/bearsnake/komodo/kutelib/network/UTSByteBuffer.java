@@ -304,6 +304,36 @@ public class UTSByteBuffer {
         return _pointer;
     }
 
+    private UTSPrimitive getEscapePrimitive() {
+        if (atEnd()) {
+            return null;
+        }
+
+        return switch (_buffer[_pointer++]) {
+            case 'M' -> UTSPrimitive.ERASE_DISPLAY;
+            case '[' -> UTSPrimitive.PUT_ESCAPE;
+            case 'e' -> UTSPrimitive.CURSOR_TO_HOME;
+            default -> null;
+        };
+    }
+
+    public UTSPrimitive getPrimitive() {
+        if (atEnd()) {
+            return null;
+        }
+
+        var ptr = _pointer;
+        var prim = switch (_buffer[_pointer++]) {
+            case ASCII_ESC -> getEscapePrimitive();
+            default -> null;
+        };
+
+        if (prim == null) {
+            _pointer = ptr;
+        }
+        return prim;
+    }
+
     /**
      * Returns the number of bytes remaining in the buffer, constrained by the limit.
      */
