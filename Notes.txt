@@ -2,13 +2,14 @@
 TODO InProgress
 
 Kute
+    Seems to be a bug in ingesting $0A (should we just ignore control characters?)
     Bug: Trace Viewer needs to die when the main window is closed
-    Bug: At startup, console app should set FCCs for all rows to protected, Readonly colors
     Bug: While keyboard is locked, ctrl-b and ctrl-c work, but still beep (should not beep)
         Part of this needs to include moving all keyboard handling to Terminal.
         Maybe even basing Terminal on a lower level base class (so we can implement net viewer display, for one thing)
         And this will also let us handle ctrl-t properly, providing we properly layer keyboard event routing
             through TerminalStack
+    At startup, console app should set FCCs for all rows to protected, Readonly colors
     Console test app - should detect whether color is supported via placing FCC and forcing XMIT.
     Console test app - need to finish this up
         Handle text input
@@ -38,7 +39,6 @@ Kute
         TIP Simulator (maybe a simple KEdit?)
         Yahtzee (just for fun?)
         Qubic (just for fun?)
-    Seems to be a bug in ingesting $0A (should we just ignore control characters?)
     Less than 80-columns needs to prevent control page toggle
     Indicator for FCC enabled/disabled
     Settings need to be adjusted a bit:

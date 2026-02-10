@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.kutelib.uts;
 
 import com.bearsnake.komodo.kutelib.exceptions.*;
+import com.bearsnake.komodo.kutelib.messages.*;
 import com.bearsnake.komodo.netlib.SocketTrace;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Scene;
@@ -186,22 +187,22 @@ public class TraceViewer extends Stage {
 
         Scene scene = new Scene(root, 800, 600);
         setScene(scene);
-
-        // Shutdown when parent program terminates is handled by being a Stage
-        // but if we want it to close when the main application closes,
-        // we usually depend on how it's launched.
-        // The requirement says "shuts down when the parent program terminates".
-        // In JavaFX, if we don't call Platform.setImplicitExit(false),
-        // the app exits when the last stage is closed.
-        // If the main app exits, all stages are closed by the JVM.
     }
 
-    private void populateTextFlow(TextFlow textFlow, byte[] bytes) {
+    private void populateTextFlow(final TextFlow textFlow,
+                                  final byte[] bytes) {
         var buffer = new UTSByteBuffer(bytes);
 
         if (_primitives.isSelected()) {
             // Can we decode an entire packet?
-            // TODO
+            var msg = UTSMessage.create(buffer);
+            if ((msg != null) && !(msg instanceof TextMessage)) {
+                var text = new Text(msg.toString());
+                text.setFont(MONOSPACED_FONT);
+                text.setFill(PACKET_COLOR);
+                textFlow.getChildren().add(text);
+                return;
+            }
         }
 
         var prevChar = false;
