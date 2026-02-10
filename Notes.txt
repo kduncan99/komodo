@@ -2,9 +2,7 @@
 TODO InProgress
 
 Kute
-    Bug: See below - does this trigger some other bug which makes cell field to be null?
-    Bug: Still, we miss one row when console app starts up, once in a while
-        because both messages get sent in one packet.
+    Bug: Trace Viewer needs to die when the main window is closed
     Bug: At startup, console app should set FCCs for all rows to protected, Readonly colors
     Bug: While keyboard is locked, ctrl-b and ctrl-c work, but still beep (should not beep)
         Part of this needs to include moving all keyboard handling to Terminal.
@@ -16,6 +14,8 @@ Kute
         Handle text input
         Make T/D message show up on 6 minute intervals
         Set up pseudo-random read-only and read-reply messages
+    Blinking Start (ASCII_FS) and Blinking End (ASCII_GS) characters need to be implemented like SOE is implemented
+        (also in trace viewer)
     Tab forward is maybe broken
     Tab backward
     Lots of other basic stuff which is currently TODO in the code
@@ -98,12 +98,16 @@ TODO BUGS
 --------------------
 TODO To be implemented
 
+ALL
+    Just use Log4J for logging
+
 Kute
     Print - configure up to 9 print destinations P1-P9 (files, actual print queues, local printers...?)
     Transfer - configure up to 9 virtual disks D1-D9 (files)
     special raster font which uses our own character specification (requires reworking display panes)
     Once the font selection is supported, we *could* support downloadable fonts
     enable/disable graphics - this is a major undertaking, and we must support color disabled option
+        See Chapter 5 of UTS 30 Single Station System Reference
 
 Kons (A GUI console)
 

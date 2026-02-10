@@ -9,7 +9,7 @@ import com.bearsnake.komodo.kutelib.messages.CursorPositionMessage;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.kutelib.messages.UTSMessage;
 import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
-import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.uts.UTSByteBuffer;
 import com.bearsnake.komodo.kutelib.panes.DisplayGeometry;
 
 import java.io.IOException;

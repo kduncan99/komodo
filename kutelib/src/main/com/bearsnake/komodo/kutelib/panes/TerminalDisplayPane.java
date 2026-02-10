@@ -56,7 +56,7 @@ public class TerminalDisplayPane
         _blinkTimer.schedule(new BlinkTask(), 250, 250);
     }
 
-    public void advanceCoordinates(final Coordinates coordinates) {
+    public synchronized void advanceCoordinates(final Coordinates coordinates) {
         int row = coordinates.getRow();
         int column = coordinates.getColumn();
         if (++column > _geometry.getColumns()) {
@@ -68,7 +68,7 @@ public class TerminalDisplayPane
         coordinates.set(row, column);
     }
 
-    public void backupCoordinates(final Coordinates coordinates) {
+    public synchronized void backupCoordinates(final Coordinates coordinates) {
         int row = coordinates.getRow();
         int column = coordinates.getColumn();
         if (--column == 0) {
@@ -80,18 +80,18 @@ public class TerminalDisplayPane
         coordinates.set(row, column);
     }
 
-    public boolean coordinatesAtEndOfDisplay(final Coordinates coordinates) {
+    public synchronized boolean coordinatesAtEndOfDisplay(final Coordinates coordinates) {
         return (coordinates.getRow() == _geometry.getRows())
                && (coordinates.getColumn() == _geometry.getColumns());
     }
 
-    public boolean coordinatesAtEndOfField(final Coordinates coordinates) {
+    public synchronized boolean coordinatesAtEndOfField(final Coordinates coordinates) {
         var ix = getIndex(coordinates);
         return (ix == _geometry.getCellCount() - 1)
             || (_characterCells[ix].getField() != _characterCells[ix + 1].getField());
     }
 
-    public boolean coordinatesAtEndOfLine(final Coordinates coordinates) {
+    public synchronized boolean coordinatesAtEndOfLine(final Coordinates coordinates) {
         return (coordinates.getColumn() == _geometry.getColumns());
     }
 
@@ -123,7 +123,7 @@ public class TerminalDisplayPane
         return ((row - 1) * _geometry.getColumns()) + (column - 1);
     }
 
-    public Field getNextField(final Field baseField) {
+    public synchronized Field getNextField(final Field baseField) {
         if (baseField == _fields.lastEntry().getValue()) {
             return _fields.firstEntry().getValue();
         } else {
@@ -135,7 +135,7 @@ public class TerminalDisplayPane
         return _drawDisplayDeferred;
     }
 
-    public void setDeferred(final boolean deferred) {
+    public synchronized void setDeferred(final boolean deferred) {
         if (_drawDisplayDeferred != deferred) {
             _drawDisplayDeferred = deferred;
             if (!_drawDisplayDeferred) {
@@ -166,9 +166,8 @@ public class TerminalDisplayPane
         }
     }
 
-
-    public void setCursorPosition(final int row,
-                                  final int column) {
+    public synchronized void setCursorPosition(final int row,
+                                               final int column) {
         _cursorPosition.setRow(row);
         _cursorPosition.setColumn(column);
         _statusPane.notifyCursorPositionChange(row, column);
@@ -215,14 +214,13 @@ public class TerminalDisplayPane
         return ch;
     }
 
-
-    public final void cycleBackgroundColor() {
+    public final synchronized void cycleBackgroundColor() {
         _bgColor = _bgColor.nextColor();
         _statusPane.notifyColorChange(new UTSColorSet(_textColor, _bgColor));
         scheduleDrawDisplay();
     }
 
-    public final void cycleTextColor() {
+    public final synchronized void cycleTextColor() {
         _textColor = _textColor.nextColor();
         _statusPane.notifyColorChange(new UTSColorSet(_textColor, _bgColor));
         scheduleDrawDisplay();
@@ -233,7 +231,7 @@ public class TerminalDisplayPane
      * This is useful for main displays when they are overlaid with a control page pane
      * @param flag true to hide the cursor, false to show it
      */
-    public void dimDisplay(final boolean flag) {
+    public synchronized void dimDisplay(final boolean flag) {
         _dimDisplay = flag;
         scheduleDrawDisplay();
     }
@@ -342,7 +340,7 @@ public class TerminalDisplayPane
     }
 
 
-    public void reconfigure(final DisplayGeometry geometry) {
+    public synchronized void reconfigure(final DisplayGeometry geometry) {
         _geometry = geometry;
         _characterCells = new CharacterCell[_geometry.getCellCount()];
         setHeight(_geometry.getRows() * _fontInfo.getCharacterHeight());
@@ -354,7 +352,7 @@ public class TerminalDisplayPane
     /**
      * Resets the display to its initial state, clearing all content and restoring default settings.
      */
-    public void reset() {
+    public synchronized void reset() {
         IntStream.range(0, _geometry.getCellCount())
                  .forEach(cx -> _characterCells[cx] = new CharacterCell());
         _fields.clear();
@@ -370,7 +368,7 @@ public class TerminalDisplayPane
      * If there are no unprotected cells, the cursor is moved to the home position.
      * We do redraw the display.
      */
-    public void resolveProtectedCell() {
+    public synchronized void resolveProtectedCell() {
         var baseField = getCharacterCell(_cursorPosition).getField();
         if (baseField.isProtected()) {
             var field = getNextField(baseField);
@@ -398,7 +396,7 @@ public class TerminalDisplayPane
      * Only for keyboard activation - returns false if the space behind the cursor is protected.
      * Does nothing if the cursor is at the home position (but returns true).
      */
-    public boolean backSpace() {
+    public synchronized boolean backSpace() {
         if (!_cursorPosition.atHome()) {
             var cx = getIndex(_cursorPosition) - 1;
             if (!_characterCells[cx].getField()
@@ -420,7 +418,7 @@ public class TerminalDisplayPane
      * Clears changed status of all FCCs on the display.
      * @return always true
      */
-    public boolean clearChangedBits() {
+    public synchronized boolean clearChangedBits() {
         for (var field : _fields.values()) {
             field.setChanged(false);
         }
@@ -431,7 +429,7 @@ public class TerminalDisplayPane
      * Moves the cursor to the first column of the next line, wrapping to row one if necessary.
      * @return always true
      */
-    public boolean cursorReturn() {
+    public synchronized boolean cursorReturn() {
         _cursorPosition.setColumn(1);
         _cursorPosition.setRow(_cursorPosition.getRow() + 1);
         if (_cursorPosition.getRow() > _geometry.getRows()) {
@@ -447,7 +445,7 @@ public class TerminalDisplayPane
      * Moves the cursor to the home position
      * @return always true
      */
-    public boolean cursorToHome() {
+    public synchronized boolean cursorToHome() {
         _cursorPosition.set(Coordinates.HOME_POSITION.copy());
         _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         _blinkCursorFlag= true;
@@ -462,7 +460,7 @@ public class TerminalDisplayPane
      * So we can achieve our goal by simply deleting to the end of the field.
      * @return true if successful, false if the field is protected
      */
-    public boolean deleteInDisplay() {
+    public synchronized boolean deleteInDisplay() {
         var coord = _cursorPosition.copy();
         var cell = getCharacterCell(_cursorPosition);
         var baseField = cell.getField();
@@ -499,7 +497,7 @@ public class TerminalDisplayPane
      * and shift subsequent characters left, up to the end of the field or the end of the line.
      * @return always true
      */
-    public boolean deleteInLine() {
+    public synchronized boolean deleteInLine() {
         var coord = _cursorPosition.copy();
         var cell = getCharacterCell(_cursorPosition);
         var baseField = cell.getField();
@@ -538,7 +536,7 @@ public class TerminalDisplayPane
      * The bottom row is initialized with blanks and no FCCs
      * @return always true
      */
-    public boolean deleteLine() {
+    public synchronized boolean deleteLine() {
         // Shift character cells up by one row, from the bottom of the display to the cursor row
         for (int row = _cursorPosition.getRow(); row < _geometry.getRows(); row++) {
             for (int column = 1; column <= _geometry.getColumns(); column++) {
@@ -588,7 +586,7 @@ public class TerminalDisplayPane
      * Ineffective if the cursor is already on the last line.
      * @return true if effective
      */
-    public boolean duplicateLine() {
+    public synchronized boolean duplicateLine() {
         if (_cursorPosition.getRow() < _geometry.getRows()) {
             var index = getIndex(_cursorPosition.getRow(), 0);
             for (int cx = 0; cx < _geometry.getColumns(); cx++) {
@@ -622,7 +620,7 @@ public class TerminalDisplayPane
      * This is NOT the same as the host-initiated function.
      * @return always true
      */
-    public boolean eraseDisplay() {
+    public synchronized boolean eraseDisplay() {
         var baseCoord = _cursorPosition.copy();
         var baseCell = getCharacterCell(baseCoord);
         var baseField = baseCell.getField();
@@ -651,7 +649,7 @@ public class TerminalDisplayPane
      * No host-initiated action here, only keyboard.
      * @return always true
      */
-    public boolean eraseToEndOfDisplay() {
+    public synchronized boolean eraseToEndOfDisplay() {
         var cx = getIndex(_cursorPosition);
         while (cx < _geometry.getCellCount()) {
             var cell = _characterCells[cx];
@@ -672,7 +670,7 @@ public class TerminalDisplayPane
      * Erases all characters to the end of the field, or to the end of the display.
      * @return true if allowed, else false
      */
-    public boolean eraseToEndOfField() {
+    public synchronized boolean eraseToEndOfField() {
         var baseField = getCharacterCell(_cursorPosition).getField();
         if (!baseField.isProtected()) {
             var coord = _cursorPosition.copy();
@@ -698,7 +696,7 @@ public class TerminalDisplayPane
      * Erases all characters to the end of the field, or to the end of the line
      * @return true if allowed, else false
      */
-    public boolean eraseToEndOfLine() {
+    public synchronized boolean eraseToEndOfLine() {
         var baseField = getCharacterCell(_cursorPosition).getField();
         if (!baseField.isProtected()) {
             var coord = _cursorPosition.copy();
@@ -727,7 +725,7 @@ public class TerminalDisplayPane
      * Moves across multiple FCCs (does not stop at the end of the current field).
      * @return always true
      */
-    public boolean eraseUnprotectedData() {
+    public synchronized boolean eraseUnprotectedData() {
         var cx = getIndex(_cursorPosition);
         do {
             var cell = _characterCells[cx];
@@ -747,7 +745,7 @@ public class TerminalDisplayPane
      * Erases the FCC controlling the cursor position, if any
      * @return true if successful, else false
      */
-    public boolean fccClear() {
+    public synchronized boolean fccClear() {
         var field = _fields.floorEntry(_cursorPosition).getValue();
         if (field.isExplicit()) {
             if (field.getCoordinates().atHome()) {
@@ -773,7 +771,7 @@ public class TerminalDisplayPane
      * Enables the FCCs on the display - initiated by keyboard only
      * @return always true
      */
-    public boolean fccEnable() {
+    public synchronized boolean fccEnable() {
         _fields.values().forEach(f -> f.setEnabled(true));
         return true;
     }
@@ -782,7 +780,7 @@ public class TerminalDisplayPane
      * Moves the cursor to the next field, and disables all FCCs in the display.
      * @return always true
      */
-    public boolean fccLocate() {
+    public synchronized boolean fccLocate() {
         var nextField = getNextField(getCharacterCell(_cursorPosition).getField());
         _cursorPosition.set(nextField.getCoordinates());
         _fields.values().forEach(f -> f.setEnabled(false));
@@ -800,7 +798,7 @@ public class TerminalDisplayPane
      * FCCs are not affected, and the cursor does not move.
      * @return true if we are not in a protected field, else false
      */
-    public boolean insertInDisplay() {
+    public synchronized boolean insertInDisplay() {
         var baseIndex = getIndex(_cursorPosition.copy());
         var baseField = _characterCells[baseIndex].getField();
         if (!baseField.isProtected()) {
@@ -843,7 +841,7 @@ public class TerminalDisplayPane
      * FCCs are not affected, and the cursor does not move.
      * @return true if we are not in a protected field, else false
      */
-    public boolean insertInLine() {
+    public synchronized boolean insertInLine() {
         var baseIndex = getIndex(_cursorPosition.copy());
         var baseField = _characterCells[baseIndex].getField();
         if (!baseField.isProtected()) {
@@ -884,7 +882,7 @@ public class TerminalDisplayPane
      * The line under the cursor is then overwritten with blanks.
      * @return always true
      */
-    public boolean insertLine() {
+    public synchronized boolean insertLine() {
         // handle character cells
         if (_cursorPosition.getRow() < _geometry.getRows()) {
             var lastRowIndex = getIndex(_geometry.getRows(), 0);
@@ -925,7 +923,7 @@ public class TerminalDisplayPane
      * We also observe right-justification.
      * @return true if not prohibited, else false
      */
-    public boolean kbPutCharacter(final byte ch) {
+    public synchronized boolean kbPutCharacter(final byte ch) {
         // Check prohibitions
         var cell = getCharacterCell(_cursorPosition);
         var field = cell.getField();
@@ -1007,9 +1005,9 @@ public class TerminalDisplayPane
      * @param emphasis emphasis character for the emphasis action
      * @return always true
      */
-    public boolean putCharacter(final byte ch,
-                                final EmphasisAction emphasisAction,
-                                final Emphasis emphasis) {
+    public synchronized boolean putCharacter(final byte ch,
+                                             final EmphasisAction emphasisAction,
+                                             final Emphasis emphasis) {
         var cell = getCharacterCell(_cursorPosition);
         if (ch != ASCII_SUB) {
             cell.setCharacter(ch);
@@ -1031,11 +1029,13 @@ public class TerminalDisplayPane
     }
 
     /**
-     * Places an FCC based on the provided Field
+     * Places an (explicit) FCC based on the provided FieldAttributes at the current cursor position
+     * @param attributes attributes to be applied to the FCC
      * @return always true
      */
-    public boolean putFCC(final Field field) {
-        _fields.put(field.getCoordinates(), field);
+    public synchronized boolean putFCC(final FieldAttributes attributes) {
+        var newCoord = _cursorPosition.copy();
+        _fields.put(newCoord, new ExplicitField(newCoord, attributes));
         repairFieldReferences();
         return true;
     }
@@ -1044,7 +1044,7 @@ public class TerminalDisplayPane
      * Moves the cursor down by one line, wrapping around to the first line if necessary
      * @return always true
      */
-    public boolean scanDown() {
+    public synchronized boolean scanDown() {
         _cursorPosition.setRow(_cursorPosition.getRow() + 1);
         if (_cursorPosition.getRow() > _geometry.getRows()) {
             _cursorPosition.setRow(1);
@@ -1059,7 +1059,7 @@ public class TerminalDisplayPane
      * Moves the cursor left by one character, wrapping to the previous row if necessary.
      * @return always true
      */
-    public boolean scanLeft() {
+    public synchronized boolean scanLeft() {
         _cursorPosition.setColumn(_cursorPosition.getColumn() - 1);
         if (_cursorPosition.getColumn() == 0) {
             _cursorPosition.setColumn(_geometry.getColumns());
@@ -1078,7 +1078,7 @@ public class TerminalDisplayPane
      * Moves the cursor right by one character, wrapping to the next row if necessary.
      * @return always true
      */
-    public boolean scanRight() {
+    public synchronized boolean scanRight() {
         _cursorPosition.setColumn(_cursorPosition.getColumn() + 1);
         if (_cursorPosition.getColumn() > _geometry.getColumns()) {
             _cursorPosition.setColumn(1);
@@ -1097,7 +1097,7 @@ public class TerminalDisplayPane
      * Moves the cursor up by one line, wrapping around to the last line if necessary
      * @return always true
      */
-    public boolean scanUp() {
+    public synchronized boolean scanUp() {
         _cursorPosition.setRow(_cursorPosition.getRow() - 1);
         if (_cursorPosition.getRow() == 0) {
             _cursorPosition.setRow(_geometry.getRows());
@@ -1112,7 +1112,7 @@ public class TerminalDisplayPane
      * Sets the cursor position
      * @return always true
      */
-    public boolean setCursorPosition(final Coordinates coordinates) {
+    public synchronized boolean setCursorPosition(final Coordinates coordinates) {
         _cursorPosition.setRow(Math.min(coordinates.getRow(), _geometry.getRows()));
         _cursorPosition.setColumn(Math.min(coordinates.getColumn(), _geometry.getColumns()));
         _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
@@ -1132,7 +1132,7 @@ public class TerminalDisplayPane
      * are protected, the cursor is placed at the home position.
      * @return always true
      */
-     public boolean tabBackward() {
+     public synchronized boolean tabBackward() {
         // TODO
         return true;
     }
@@ -1147,7 +1147,7 @@ public class TerminalDisplayPane
      * the cursor is placed at the home position.
      * @return always true
      */
-    public boolean tabForward() {
+    public synchronized boolean tabForward() {
         var startingPoint = _cursorPosition.copy();
         var foundTabSet = false;
         do {
@@ -1194,7 +1194,7 @@ public class TerminalDisplayPane
      * @param emphasis the emphasis to toggle
      * @return true if the emphasis was toggled, false if the field is protected
      */
-    public boolean toggleEmphasis(final Emphasis emphasis) {
+    public synchronized boolean toggleEmphasis(final Emphasis emphasis) {
         var cell = getCharacterCell(_cursorPosition);
         if (!cell.getField().isProtectedEmphasis()) {
             var ce = cell.getEmphasis();
@@ -1218,7 +1218,7 @@ public class TerminalDisplayPane
     /**
      * Invokes the appropriate submethod based on the provided PrintMode
      */
-    public byte[] getPrintStream(final PrintMode mode) {
+    public synchronized byte[] getPrintStream(final PrintMode mode) {
         return switch (mode) {
             case PRINT -> getPrintStreamAll();
             case FORM -> getPrintStreamForm();
@@ -1232,7 +1232,7 @@ public class TerminalDisplayPane
      * excepting the row with the cursor.
      * @return the print stream
      */
-    private byte[] getPrintStreamAll() {
+    private synchronized byte[] getPrintStreamAll() {
         var strm = new ByteArrayOutputStream(2048);
         /* TODO
         var region = determinePrintRegion();
@@ -1279,7 +1279,7 @@ public class TerminalDisplayPane
      * excepting the row with the cursor.
      * @return the print stream
      */
-    private byte[] getPrintStreamForm() {
+    private synchronized byte[] getPrintStreamForm() {
         var strm = new ByteArrayOutputStream(2048);
         // TODO
         return strm.toByteArray();
@@ -1288,7 +1288,7 @@ public class TerminalDisplayPane
     // Print everything from the SOE most-previous to the cursor (non-inclusive)
     // up to the cursor (inclusive) - do not translate anything, do not send CRs at the end
     // of display lines. Ignore FCCs.
-    private byte[] getPrintStreamTransparent() {
+    private synchronized byte[] getPrintStreamTransparent() {
         var strm = new ByteArrayOutputStream(2048);
         var cursorIndex = getIndex(_cursorPosition);
         for (int cx = 0; cx <= cursorIndex; cx++) {

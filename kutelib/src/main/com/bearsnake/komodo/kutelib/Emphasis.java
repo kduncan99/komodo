@@ -2,7 +2,7 @@
  * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kutelib.panes;
+package com.bearsnake.komodo.kutelib;
 
 public class Emphasis {
 
@@ -63,6 +63,7 @@ public class Emphasis {
     public boolean isColumnSeparator() { return _columnSeparator; }
     public boolean isStrikeThrough() { return _strikeThrough; }
     public boolean isUnderscore() { return _underscore; }
+    public boolean allFlagsClear() { return !_columnSeparator && !_strikeThrough && !_underscore; }
 
     public void set(final Emphasis emphasis) {
         _columnSeparator = emphasis._columnSeparator;
@@ -73,4 +74,11 @@ public class Emphasis {
     public void setColumnSeparator(final boolean flag) { _columnSeparator = flag; }
     public void setStrikeThrough(final boolean flag) { _strikeThrough = flag; }
     public void setUnderscore(final boolean flag) { _underscore = flag; }
+
+    @Override
+    public String toString() {
+        return String.format("{Col%c:Stk%c:Und%c}",
+                             _columnSeparator ? '+' : '-',
+                             _strikeThrough ? '+' : '-',
+                             _underscore ? '+' : '-'); }
 }

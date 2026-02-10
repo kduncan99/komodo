@@ -4,12 +4,14 @@
 
 package com.bearsnake.komodo.kuteTest;
 
+import com.bearsnake.komodo.kutelib.FieldAttributes;
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
-import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
-import com.bearsnake.komodo.kutelib.panes.Coordinates;
-import com.bearsnake.komodo.kutelib.panes.ExplicitField;
+import com.bearsnake.komodo.kutelib.uts.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.uts.UTSFCCSequencePrimitive;
+import com.bearsnake.komodo.kutelib.uts.UTSImmediateFCCSequencePrimitive;
+import com.bearsnake.komodo.kutelib.uts.UTSPrimitiveType;
 import com.bearsnake.komodo.kutelib.panes.UTSColor;
 
 import java.io.IOException;
@@ -51,19 +53,20 @@ public class MenuApp extends Application implements Runnable {
 
     private void displayMessage(final String message) {
         try {
-            var msgField = new ExplicitField(null).setBackgroundColor(UTSColor.RED).setTextColor(UTSColor.WHITE).setBlinking(true);
-            var strm = new UTSByteBuffer(2048);
-            strm.put(ASCII_SOH)
-                .put(ASCII_STX)
-                .putCursorToHome()
-                .putCursorScanUp()
-                .putEraseDisplay();
-            strm.putFCCSequence(msgField, true, true, true)
-                .putString(message)
-                .putCursorToHome()
-                .put(ASCII_ETX);
-            strm.setPointer(0);
-            _server.sendMessage(this, strm);
+            var attr = new FieldAttributes().setBackgroundColor(UTSColor.RED).setTextColor(UTSColor.WHITE).setBlinking(true);
+            var stream = new UTSByteBuffer(2048);
+            stream.put(ASCII_SOH)
+                  .put(ASCII_STX)
+                  .putCursorToHome()
+                  .putCursorScanUp()
+                  .putEraseDisplay();
+            new UTSImmediateFCCSequencePrimitive(attr).serialize(stream);
+            stream.putString(message)
+                  .putCursorToHome()
+                  .put(ASCII_ETX);
+
+            stream.setPointer(0);
+            _server.sendMessage(this, stream);
         } catch (IOException | CoordinateException ex) {
             IO.println("MenuApp failed to send message");
         }
@@ -71,43 +74,49 @@ public class MenuApp extends Application implements Runnable {
 
     private void displayMenu() {
         try {
-            var strm = new UTSByteBuffer(2048);
-            strm.put(ASCII_SOH)
-                .put(ASCII_STX)
-                .putCursorToHome()
-                .putEraseDisplay();
+            var stream = new UTSByteBuffer(2048);
+            stream.put(ASCII_SOH)
+                  .put(ASCII_STX)
+                  .putCursorToHome()
+                  .putEraseDisplay();
             var nextRow = 3;
             for (var appInfo : APPLICATION_INFO_TABLE.entrySet()) {
                 var fkNumber = appInfo.getKey();
                 var app = appInfo.getValue();
-                var fkField = new ExplicitField(new Coordinates(nextRow, 10)).setTextColor(UTSColor.YELLOW);
-                var nameField = new ExplicitField(new Coordinates(nextRow, 15)).setTextColor(UTSColor.CYAN);
-                var descField = new ExplicitField(new Coordinates(nextRow, 25)).setTextColor(UTSColor.GREEN);
-                strm.putFCCSequence(fkField, false, true, true)
-                    .putString("F" + fkNumber);
-                strm.putFCCSequence(nameField, false, true, true)
-                    .putString(app.getName());
-                strm.putFCCSequence(descField, false, true, true)
-                    .putString(app.getDescription());
+
+                var fkAttr = new FieldAttributes().setTextColor(UTSColor.YELLOW);
+                new UTSFCCSequencePrimitive(nextRow, 10, fkAttr).serialize(stream);
+                stream.putString("F" + fkNumber);
+
+                var nameAttr = new FieldAttributes().setTextColor(UTSColor.CYAN);
+                new UTSFCCSequencePrimitive(nextRow, 15, nameAttr).serialize(stream);
+                stream.putString(app.getName());
+
+                var descAttr = new FieldAttributes().setTextColor(UTSColor.GREEN);
+                new UTSFCCSequencePrimitive(nextRow, 25, descAttr).serialize(stream);
+                stream.putString(app.getDescription());
 
                 nextRow++;
             }
 
             nextRow++;
-            var fkNumber = 22;
-            var fkField = new ExplicitField(new Coordinates(nextRow, 10)).setTextColor(UTSColor.YELLOW);
-            var nameField = new ExplicitField(new Coordinates(nextRow, 15)).setTextColor(UTSColor.CYAN);
-            var descField = new ExplicitField(new Coordinates(nextRow, 25)).setTextColor(UTSColor.GREEN);
-            strm.putFCCSequence(fkField, false, true, true)
-                .putString("F" + fkNumber);
-            strm.putFCCSequence(nameField, false, true, true)
-                .putString("EXIT");
-            strm.putFCCSequence(descField, false, true, true)
-                .putString("Terminate Session");
+            var fkAttr = new FieldAttributes().setTextColor(UTSColor.YELLOW);
+            new UTSFCCSequencePrimitive(nextRow, 10, fkAttr).serialize(stream);
+            stream.putString("F22");
 
-            strm.putCursorToHome().put(ASCII_ETX);
-            strm.setPointer(0);
-            _server.sendMessage(this, strm);
+            var nameAttr = new FieldAttributes().setTextColor(UTSColor.CYAN);
+            new UTSFCCSequencePrimitive(nextRow, 15, nameAttr).serialize(stream);
+            stream.putString("EXIT");
+
+            var descAttr = new FieldAttributes().setTextColor(UTSColor.GREEN);
+            new UTSFCCSequencePrimitive(nextRow, 25, descAttr).serialize(stream);
+            stream.putString("Terminate Session");
+
+            stream.put(UTSPrimitiveType.CURSOR_TO_HOME.getPattern());
+            stream.putCursorToHome().put(ASCII_ETX);
+            stream.setPointer(0);
+
+            _server.sendMessage(this, stream);
         } catch (IOException | CoordinateException ex) {
             IO.println("MenuApp failed to send message");
         }

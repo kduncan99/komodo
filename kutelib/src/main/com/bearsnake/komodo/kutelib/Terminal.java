@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kutelib;
 
 import com.bearsnake.komodo.kutelib.exceptions.*;
 import com.bearsnake.komodo.kutelib.messages.*;
-import com.bearsnake.komodo.kutelib.network.*;
+import com.bearsnake.komodo.kutelib.uts.*;
 import com.bearsnake.komodo.kutelib.panes.*;
 import com.bearsnake.komodo.netlib.SocketTrace;
 import javafx.scene.input.KeyCode;
@@ -895,140 +895,214 @@ public class Terminal extends Pane implements UTSSocketListener {
         _emphasisAction = EmphasisAction.ADD;
     }
 
-    private boolean ingestEscapeSequence(final UTSByteBuffer input)
-        throws InvalidEscapeSequenceException,
-               BufferOverflowException,
-               CoordinateException,
-               IncompleteEscapeSequenceException {
-        if (input.peekNext() != ASCII_ESC) {
-            return false;
-        }
-
-        // cursor position?
-        var coord = input.getCursorPosition();
-        if (coord != null) {
-            _activeDisplayPane.setCursorPosition(coord);
-            return true;
-        }
-
-        input.skipNext();// skip ESC character
-        var ch2 = input.getNext();
-        if ((ch2 == 0x20) && (_emphasisAction != EmphasisAction.NONE)) {
-            _emphasis = null;
-            _emphasisAction = EmphasisAction.NONE;
-            return true;
-        } else if ((ch2 >= 0x20) && (ch2 <= 0x2F)) {
-            _emphasis = new Emphasis(ch2);
-            _emphasisAction = EmphasisAction.SET;
-            return true;
-        }
-
-        switch (ch2) {
-            case ASCII_HT -> _activeDisplayPane.putCharacter(ASCII_HT, _emphasisAction, _emphasis);
-            case ASCII_DC1 -> transmit(TransmitMode.ALL);
-            case ASCII_DC2 -> printTransparent();
-            case ASCII_DC4 -> _statusPane.setKeyboardLocked(true);
-            case 'C' -> _activeDisplayPane.deleteInDisplay();
-            case 'D' -> _activeDisplayPane.insertInDisplay();
-            case 'E' -> {} // transfer changed fields - not implemented
-            case 'F' -> {} // transfer variable fields - not implemented
-            case 'G' -> {} // transfer all fields - not implemented
-            case 'H' -> printForm();
-            case 'K' -> _activeDisplayPane.eraseToEndOfField();
-            case 'L' -> _statusPane.setKeyboardLocked(false);
-            case 'M' -> _activeDisplayPane.eraseDisplay();
-            case 'T' -> { // Tell the terminal to respond with the cursor position
-                try {
-                    if (!controlPageIsActive()) {
-                        var msg = new CursorPositionMessage(_activeDisplayPane.getCursorPosition());
-                        _socketHandler.write(msg);
-                        _statusPane.setKeyboardLocked(true);
-                    }
-                } catch (IOException ex) {
-                    disconnect();
-                    IO.println("Cannot send cursor position: " + ex.getMessage());
-                }
-            }
-            case 'X' -> ingestPutCharacterHex(input);
-            case 'Y' -> ingestAddEmphasis(input);
-            case 'Z' -> ingestRemoveEmphasis(input);
-            case '[' -> _activeDisplayPane.putCharacter(ASCII_ESC, _emphasisAction, _emphasis);
-            case '{' -> ingestPutCharacterDecimal(input);
-            case 'a' -> _activeDisplayPane.eraseUnprotectedData();
-            case 'b' -> _activeDisplayPane.eraseToEndOfLine();
-            case 'c' -> _activeDisplayPane.deleteInLine();
-            case 'd' -> _activeDisplayPane.insertInLine();
-            case 'e' -> _activeDisplayPane.cursorToHome();
-            case 'f' -> _activeDisplayPane.scanUp();
-            case 'g' -> _activeDisplayPane.scanLeft();
-            case 'h' -> _activeDisplayPane.scanRight();
-            case 'i' -> _activeDisplayPane.scanDown();
-            case 'j' -> _activeDisplayPane.insertLine();
-            case 'k' -> _activeDisplayPane.deleteLine();
-            case 'o' -> toggleControlPage();
-            case 't' -> transmit(TransmitMode.CHANGED);
-            case 'u' -> _activeDisplayPane.clearChangedBits();
-            case 'w' -> _activeDisplayPane.fccClear();
-            case 'y' -> _activeDisplayPane.duplicateLine();
-            case 'z' -> _activeDisplayPane.tabBackward();
-            default -> throw new InvalidEscapeSequenceException(ch2);
-        }
-
-        // TODO there are a couple of special things that have to be the last thing before ETX - impose that.
-        return true;
-    }
+    // TODO remove
+//    private boolean ingestEscapeSequence(final UTSByteBuffer input)
+//        throws InvalidEscapeSequenceException,
+//               BufferOverflowException,
+//               CoordinateException,
+//               IncompleteEscapeSequenceException {
+//        if (input.peekNext() != ASCII_ESC) {
+//            return false;
+//        }
+//
+//        // cursor position?
+//        var coord = input.getCursorPosition();
+//        if (coord != null) {
+//            _activeDisplayPane.setCursorPosition(coord);
+//            return true;
+//        }
+//
+//        input.skipNext();// skip ESC character
+//        var ch2 = input.getNext();
+//        if ((ch2 == 0x20) && (_emphasisAction != EmphasisAction.NONE)) {
+//            _emphasis = null;
+//            _emphasisAction = EmphasisAction.NONE;
+//            return true;
+//        } else if ((ch2 >= 0x20) && (ch2 <= 0x2F)) {
+//            _emphasis = new Emphasis(ch2);
+//            _emphasisAction = EmphasisAction.SET;
+//            return true;
+//        }
+//
+//        switch (ch2) {
+//            case ASCII_HT -> _activeDisplayPane.putCharacter(ASCII_HT, _emphasisAction, _emphasis);
+//            case ASCII_DC1 -> transmit(TransmitMode.ALL);
+//            case ASCII_DC2 -> printTransparent();
+//            case ASCII_DC4 -> _statusPane.setKeyboardLocked(true);
+//            case 'C' -> _activeDisplayPane.deleteInDisplay();
+//            case 'D' -> _activeDisplayPane.insertInDisplay();
+//            case 'E' -> {} // transfer changed fields - not implemented
+//            case 'F' -> {} // transfer variable fields - not implemented
+//            case 'G' -> {} // transfer all fields - not implemented
+//            case 'H' -> printForm();
+//            case 'K' -> _activeDisplayPane.eraseToEndOfField();
+//            case 'L' -> _statusPane.setKeyboardLocked(false);
+//            case 'M' -> _activeDisplayPane.eraseDisplay();
+//            case 'T' -> { // Tell the terminal to respond with the cursor position
+//                try {
+//                    if (!controlPageIsActive()) {
+//                        var msg = new CursorPositionMessage(_activeDisplayPane.getCursorPosition());
+//                        _socketHandler.write(msg);
+//                        _statusPane.setKeyboardLocked(true);
+//                    }
+//                } catch (IOException ex) {
+//                    disconnect();
+//                    IO.println("Cannot send cursor position: " + ex.getMessage());
+//                }
+//            }
+//            case 'X' -> ingestPutCharacterHex(input);
+//            case 'Y' -> ingestAddEmphasis(input);
+//            case 'Z' -> ingestRemoveEmphasis(input);
+//            case '[' -> _activeDisplayPane.putCharacter(ASCII_ESC, _emphasisAction, _emphasis);
+//            case '{' -> ingestPutCharacterDecimal(input);
+//            case 'a' -> _activeDisplayPane.eraseUnprotectedData();
+//            case 'b' -> _activeDisplayPane.eraseToEndOfLine();
+//            case 'c' -> _activeDisplayPane.deleteInLine();
+//            case 'd' -> _activeDisplayPane.insertInLine();
+//            case 'e' -> _activeDisplayPane.cursorToHome();
+//            case 'f' -> _activeDisplayPane.scanUp();
+//            case 'g' -> _activeDisplayPane.scanLeft();
+//            case 'h' -> _activeDisplayPane.scanRight();
+//            case 'i' -> _activeDisplayPane.scanDown();
+//            case 'j' -> _activeDisplayPane.insertLine();
+//            case 'k' -> _activeDisplayPane.deleteLine();
+//            case 'o' -> toggleControlPage();
+//            case 't' -> transmit(TransmitMode.CHANGED);
+//            case 'u' -> _activeDisplayPane.clearChangedBits();
+//            case 'w' -> _activeDisplayPane.fccClear();
+//            case 'y' -> _activeDisplayPane.duplicateLine();
+//            case 'z' -> _activeDisplayPane.tabBackward();
+//            default -> throw new InvalidEscapeSequenceException(ch2);
+//        }
+//
+//        // TODO there are a couple of special things that have to be the last thing before ETX - impose that.
+//        return true;
+//    }
 
     /**
      * Ingests a message from a UTS stream.
      * Calling code strips leading SOH - STX and ending ETX before calling us.
+     * There will be no NUL or SYN characters.
      */
     private void ingestMessage(final UTSByteBuffer input) throws StreamException, CoordinateException, BufferOverflowException {
         _emphasis.clear();
         _emphasisAction = EmphasisAction.NONE;
         _displayPane.setDeferred(true);
 
-        var foundETX = false;
-        while (!input.atEnd() && !foundETX) {
-            var field = input.getField();
-            if (field != null) {
-                if (field.getCoordinates() == null) {
-                    field.setCoordinates(_activeDisplayPane.getCursorPosition());
-                } else {
-                    _activeDisplayPane.setCursorPosition(field.getCoordinates());
-                }
-                _activeDisplayPane.putFCC(field);
-                continue;
+        var forceDone = false;
+        while (!input.atEnd()) {
+            // look for ETX here - we don't expect one, but just in case...
+            if (input.peekNext() == ASCII_ETX) {
+                break;
             }
 
-            // Have we found an escape sequence?
-            if (ingestEscapeSequence(input)) {
-                continue;
+            if (forceDone) {
+                // do not accept any more input
+                _statusPane.setErrorIndicator(true);
+                break;
             }
 
-            // Keep looking...
-            var ch = input.getNext();
-            switch (ch) {
-                case ASCII_ETX -> {
-                    // This ETX is in the middle of the transmission which theoretically should not happen.
-                    // We'll just pretend that it marks the real end of the stream, and pass on the rest.
-                    foundETX = true;
+            // Look for a UTS primitive
+            var prim = UTSPrimitive.deserializePrimitive(input);
+            if (prim != null) {
+                switch (prim.getType()) {
+                    case ADD_EMPHASIS -> {}//TODO
+                    case BACKWARD_TAB -> _activeDisplayPane.tabBackward();
+                    case CLEAR_CHANGED_BITS -> _activeDisplayPane.clearChangedBits();
+                    case CLEAR_FCC -> _activeDisplayPane.fccClear();
+                    case CONTROL_PAGE_ACCESS -> toggleControlPage();
+                    case CREATE_REPLACE_EMPHASIS -> {
+                        var ePrim = (UTSCreateEmphasisPrimitive) prim;
+                        if (ePrim.allFlagsClear() && (_emphasisAction != EmphasisAction.NONE)) {
+                            _emphasis = null;
+                            _emphasisAction = EmphasisAction.NONE;
+                        } else {
+                            _emphasis = new Emphasis(ePrim.getColumnSeparator(), ePrim.getStrikeThrough(), ePrim.getUnderscore());
+                            _emphasisAction = EmphasisAction.SET;
+                        }
+                    }
+                    case CURSOR_POSITION -> {
+                        var cpPrim = (UTSCursorPositionPrimitive) prim;
+                        _activeDisplayPane.setCursorPosition(new Coordinates(cpPrim.getRow(), cpPrim.getColumn()));
+                    }
+                    case CURSOR_TO_HOME -> _activeDisplayPane.cursorToHome();
+                    case DELETE_EMPHASIS -> {}//TODO
+                    case DELETE_IN_DISPLAY -> _activeDisplayPane.deleteInDisplay();
+                    case DELETE_IN_LINE -> _activeDisplayPane.deleteInLine();
+                    case DELETE_LINE -> _activeDisplayPane.deleteLine();
+                    case ERASE_DISPLAY -> _activeDisplayPane.eraseDisplay();
+                    case ERASE_TO_END_OF_FIELD -> _activeDisplayPane.eraseToEndOfField();
+                    case ERASE_TO_END_OF_LINE -> _activeDisplayPane.eraseToEndOfLine();
+                    case ERASE_UNPROTECTED_DATA -> _activeDisplayPane.eraseUnprotectedData();
+                    case FCC_SEQUENCE -> {
+                        var fPrim = (UTSFCCSequencePrimitive) prim;
+                        var coord = new Coordinates(fPrim.getRow(), fPrim.getColumn());
+                        _activeDisplayPane.setCursorPosition(coord);
+                        _activeDisplayPane.putFCC(fPrim.getAttributes());
+                    }
+                    case IMMEDIATE_FCC_SEQUENCE -> {
+                        var fPrim = (UTSImmediateFCCSequencePrimitive) prim;
+                        _activeDisplayPane.putFCC(fPrim.getAttributes());
+                    }
+                    case INSERT_IN_DISPLAY -> _activeDisplayPane.insertInDisplay();
+                    case INSERT_IN_LINE -> _activeDisplayPane.insertInLine();
+                    case INSERT_LINE -> _activeDisplayPane.insertLine();
+                    case LINE_DUPLICATION -> _activeDisplayPane.duplicateLine();
+                    case LOCK_KEYBOARD -> _statusPane.setKeyboardLocked(true);
+                    case PRINT_ALL -> printAll();
+                    case PRINT_FORM -> printForm();
+                    case PRINT_TRANSPARENT -> printTransparent();
+                    case PUT_DECIMAL -> {}//TODO
+                    case PUT_ESCAPE -> _activeDisplayPane.putCharacter(ASCII_ESC, _emphasisAction, _emphasis);
+                    case PUT_HEXADECIMAL -> {}//TODO
+                    case SCAN_DOWN -> _activeDisplayPane.scanDown();
+                    case SCAN_LEFT -> _activeDisplayPane.scanLeft();
+                    case SCAN_RIGHT -> _activeDisplayPane.scanRight();
+                    case SCAN_UP -> _activeDisplayPane.scanUp();
+                    case SEND_CURSOR_ADDRESS -> {
+                        try {
+                            if (!controlPageIsActive()) {
+                                var msg = new CursorPositionMessage(_activeDisplayPane.getCursorPosition());
+                                _socketHandler.write(msg);
+                                _statusPane.setKeyboardLocked(true);
+                                forceDone = true;
+                            }
+                        } catch (IOException ex) {
+                            disconnect();
+                            IO.println("Cannot send cursor position: " + ex.getMessage());
+                        }
+                    }
+                    case TAB_SET -> _activeDisplayPane.putCharacter(ASCII_HT, _emphasisAction, _emphasis);
+                    case TRANSFER_CHANGED_FIELDS -> {}//TODO
+                    case TRANSFER_ALL_FIELDS -> {}//TODO
+                    case TRANSFER_VARIABLE_FIELDS -> {}//TODO
+                    case TRANSMIT_ALL_FIELDS -> transmit(TransmitMode.ALL);
+                    case TRANSMIT_CHANGED_FIELDS -> transmit(TransmitMode.CHANGED);
+                    case TRANSMIT_VARIABLE_FIELDS -> transmit(TransmitMode.VARIABLE);
+                    case UNLOCK_KEYBOARD -> _statusPane.setKeyboardLocked(false);
                 }
-                case ASCII_HT -> _activeDisplayPane.tabForward();
-                case ASCII_CR -> _activeDisplayPane.cursorReturn();
-                case ASCII_DC1 -> transmit(TransmitMode.VARIABLE);
-                case ASCII_DC2 -> printAll();
-                case ASCII_DC4 -> {// lock keyboard (same as ESC DC4)
-                    _statusPane.setKeyboardLocked(true);
-                }
-                case ASCII_SUB -> _activeDisplayPane.putCharacter(ASCII_SUB, _emphasisAction, _emphasis);
-                case ASCII_FS -> _activeDisplayPane.putCharacter(ASCII_FS, _emphasisAction, _emphasis);
-                case ASCII_GS -> _activeDisplayPane.putCharacter(ASCII_GS, _emphasisAction, _emphasis);
-                case ASCII_SOE -> _activeDisplayPane.putCharacter(ASCII_SOE, _emphasisAction, _emphasis);
-                default -> {
-                    if (ch >= ASCII_SP) {
-                        _activeDisplayPane.putCharacter(ch, _emphasisAction, _emphasis);
-                    } else {
-                        throw new InvalidCharacterException(ch);
+            } else {
+                // Not a primitive - it's probably some basic printable (or translatable) character
+                var ch = input.getNext();
+                switch (ch) {
+                    case ASCII_HT -> _activeDisplayPane.tabForward();
+                    case ASCII_CR -> _activeDisplayPane.cursorReturn();
+                    //TODO remove
+//                case ASCII_DC1 -> transmit(TransmitMode.VARIABLE);
+//                case ASCII_DC2 -> printAll();
+//                case ASCII_DC4 -> {// lock keyboard (same as ESC DC4)
+//                    _statusPane.setKeyboardLocked(true);
+//                }
+                    case ASCII_SUB -> _activeDisplayPane.putCharacter(ASCII_SUB, _emphasisAction, _emphasis);
+                    case ASCII_FS -> _activeDisplayPane.putCharacter(ASCII_FS, _emphasisAction, _emphasis);
+                    case ASCII_GS -> _activeDisplayPane.putCharacter(ASCII_GS, _emphasisAction, _emphasis);
+                    case ASCII_SOE -> _activeDisplayPane.putCharacter(ASCII_SOE, _emphasisAction, _emphasis);
+                    default -> {
+                        if (ch >= ASCII_SP) {
+                            _activeDisplayPane.putCharacter(ch, _emphasisAction, _emphasis);
+                        } else {
+                            throw new InvalidCharacterException(ch);
+                        }
                     }
                 }
             }
@@ -1127,16 +1201,16 @@ public class Terminal extends Pane implements UTSSocketListener {
                                                    final UTSMessage message) {
         // TODO we may need to synchronize every possible path from the keyboard as well
         switch (message) {
-            case MessageWaitMessage messageWaitMessage -> _statusPane.setMessageWaiting(true);
-            case StatusPollMessage statusPollMessage -> _statusPane.setPollIndicator();
+            case MessageWaitMessage _ -> _statusPane.setMessageWaiting(true);
+            case StatusPollMessage _ -> _statusPane.setPollIndicator();
             case StatusMessage statusMessage -> {
                 // ignore this
             }
             case TextMessage tm -> {
                 try {
                     ingestMessage(tm.unwrap());
-                } catch (StreamException | CoordinateException | BufferOverflowException se) {
-                    System.out.println("Error in input stream");
+                } catch (StreamException | CoordinateException | BufferOverflowException ex) {
+                    System.out.println("Error in input stream:" + ex.getMessage());
                     _statusPane.setErrorIndicator(true);
                 }
             }
@@ -1191,7 +1265,7 @@ public class Terminal extends Pane implements UTSSocketListener {
             output.put(ASCII_SOH).put(ASCII_STX);
             var region = determineTransmitRegion();
             var coord = region.getStartingPosition();
-            output.putCursorPositionSequence(coord, true);
+            new UTSCursorPositionPrimitive(coord.getRow(), coord.getColumn()).serialize(output);
 
             var field = _displayPane.getCharacterCell(coord)
                                     .getField();
@@ -1202,8 +1276,13 @@ public class Terminal extends Pane implements UTSSocketListener {
                     || (transmitMode == TransmitMode.CHANGED && field.isChanged())) {
 
                     // Serialize FCC sequence if we're at the first character of a field
-                    if (coord.equals(field.getCoordinates())) {
-                        output.putFCCSequence(field, false, _settings.getSendExpandedFCCs(), _settings.getSendColorFCCs());
+                    if (coord.equals(field.getCoordinates()) && field instanceof ExplicitField eField) {
+                        var prim = new UTSFCCSequencePrimitive(eField.getCoordinates().getRow(),
+                                                               eField.getCoordinates().getColumn(),
+                                                               eField.getAttributes());
+                        prim.setSendExpanded(_settings.getSendExpandedFCCs());
+                        prim.setSendExpandedColor(_settings.getSendColorFCCs());
+                        prim.serialize(output);
                     }
 
                     // Grab the character - if it's a blank, just increment the blank counter so we can
@@ -1248,7 +1327,6 @@ public class Terminal extends Pane implements UTSSocketListener {
 
         try {
             _socketHandler.write(new TextMessage(output.getBuffer()));
-            IO.println("***** LOCK KB TRANSMIT *****");//TODO remove
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
             disconnect();

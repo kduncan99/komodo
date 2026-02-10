@@ -1,9 +1,8 @@
-package com.bearsnake.komodo.kutelib.network;
+package com.bearsnake.komodo.kutelib.uts;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-
+import static com.bearsnake.komodo.kutelib.Constants.ASCII_SYN;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UTSByteBufferTest {
@@ -48,8 +47,8 @@ public class UTSByteBufferTest {
         UTSByteBuffer buffer = new UTSByteBuffer(30);
         byte[] buffer1 = {0x01, 0x02, 0x03};
         byte[] buffer2 = {0x04, 0x05, 0x06};
-        buffer.putBuffer(buffer1);
-        buffer.putBuffer(buffer2);
+        buffer.put(buffer1);
+        buffer.put(buffer2);
         buffer.setPointer(0);
         assertArrayEquals(new byte[]{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}, buffer.getBuffer());
     }
@@ -59,8 +58,8 @@ public class UTSByteBufferTest {
         UTSByteBuffer buffer = new UTSByteBuffer(30);
         byte[] buffer1 = {0x01, 0x02, 0x03, 0x04};
         byte[] buffer2 = {0x05, 0x06, 0x07, 0x08};
-        buffer.putBuffer(buffer1, 1, 2);
-        buffer.putBuffer(buffer2, 2, 1);
+        buffer.put(buffer1, 1, 2);
+        buffer.put(buffer2, 2, 1);
         buffer.setPointer(0);
         assertArrayEquals(new byte[]{0x02, 0x03, 0x07}, buffer.getBuffer());
     }
@@ -77,10 +76,34 @@ public class UTSByteBufferTest {
     @Test
     void testEquals() {
         UTSByteBuffer buffer = new UTSByteBuffer(50);
-        buffer.putBuffer(new byte[]{0x01, 0x02});
+        buffer.put(new byte[]{0x01, 0x02});
         var mainBuffer = new byte[]{0x03, 0x04, 0x05, 0x06, 0x30, 0x32, 0x7F};
-        buffer.putBuffer(mainBuffer);
+        buffer.put(mainBuffer);
         buffer.setPointer(2);
         assertTrue(buffer.equalsBuffer(mainBuffer));
+    }
+
+    @Test
+    void testRemoveNulAndSyn_1() {
+        UTSByteBuffer buffer = new UTSByteBuffer(new byte[]{});
+        byte[] expected = new byte[]{};
+        buffer.removeNulAndSyn();
+        assertArrayEquals(expected, buffer.getBuffer());
+    }
+
+    @Test
+    void testRemoveNulAndSyn_2() {
+        UTSByteBuffer buffer = new UTSByteBuffer(new byte[]{0x00, 0x00, 0x40, 0x41, 0x00, 0x42, 0x00});
+        byte[] expected = new byte[]{0x40, 0x41, 0x42};
+        buffer.removeNulAndSyn();
+        assertArrayEquals(expected, buffer.getBuffer());
+    }
+
+    @Test
+    void testRemoveNulAndSyn_3() {
+        UTSByteBuffer buffer = new UTSByteBuffer(new byte[]{0x40, ASCII_SYN, 0x41, 0x00, 0x42, ASCII_SYN, ASCII_SYN, 0x00, 0x43});
+        byte[] expected = new byte[]{0x40, 0x41, 0x42, 0x43};
+        buffer.removeNulAndSyn();
+        assertArrayEquals(expected, buffer.getBuffer());
     }
 }

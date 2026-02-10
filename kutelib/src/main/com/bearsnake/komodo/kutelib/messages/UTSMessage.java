@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.kutelib.messages;
 
-import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.uts.UTSByteBuffer;
 
 import java.nio.ByteBuffer;
 

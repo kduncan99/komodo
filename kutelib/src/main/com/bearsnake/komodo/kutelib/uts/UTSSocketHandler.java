@@ -2,7 +2,7 @@
  * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kutelib.network;
+package com.bearsnake.komodo.kutelib.uts;
 
 import com.bearsnake.komodo.kutelib.messages.DisconnectMessage;
 import com.bearsnake.komodo.kutelib.messages.StatusMessage;
@@ -10,7 +10,6 @@ import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 import com.bearsnake.komodo.kutelib.messages.UTSMessage;
 import com.bearsnake.komodo.netlib.SocketHandler;
 import com.bearsnake.komodo.netlib.SocketListener;
-import com.bearsnake.komodo.netlib.SocketTrace;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -97,7 +96,7 @@ public class UTSSocketHandler extends SocketHandler implements SocketListener {
 
             // If _inputBuffer position is zero, we have not yet received an ASCII_SOH.
             // Ignore input bytes until we do.
-            if ((_byteBuffer.position() > 0) || (dx == ASCII_SOH)) {
+            if ((_byteBuffer.position() > 0) || (ch == ASCII_SOH)) {
                 // If the byte buffer is full, discard the entire message
                 if (_byteBuffer.remaining() == 0) {
                     _byteBuffer.clear();

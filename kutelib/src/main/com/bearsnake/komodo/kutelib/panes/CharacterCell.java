@@ -4,6 +4,8 @@
 
 package com.bearsnake.komodo.kutelib.panes;
 
+import com.bearsnake.komodo.kutelib.Emphasis;
+
 import static com.bearsnake.komodo.kutelib.Constants.ASCII_SP;
 
 public class CharacterCell {

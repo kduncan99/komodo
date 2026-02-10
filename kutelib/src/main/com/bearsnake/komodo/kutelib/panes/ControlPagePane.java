@@ -13,6 +13,8 @@ import java.nio.charset.StandardCharsets;
  */
 public class ControlPagePane extends TerminalDisplayPane {
 
+    //TODO check protocol book 10.3 page 10-5 and verify # of tabs to get to the various fields
+
     // (**PRNT**)STA-dd nnn(**XFER**)PRNT(....)XFER(....)XMIT(....)MM..(PARAM)
     // (../../..)ADR-nnnn  (../../..)SEARCH(.......................)   (../..)
     //
@@ -151,23 +153,16 @@ public class ControlPagePane extends TerminalDisplayPane {
     static {
         int fx = 0;
         for (Coordinates coord : NON_DATA_FIELD_COORDINATES) {
-            FIELDS[fx++] = new ExplicitField(coord)
-                .setProtected(true)
-                .setTextColor(ND_FG)
-                .setBackgroundColor(ND_BG);
+            var attr = new FieldAttributes().setProtected(true).setTextColor(ND_FG).setBackgroundColor(ND_BG);
+            FIELDS[fx++] = new ExplicitField(coord, attr);
         }
         for (Coordinates coord : PROTECTED_DATA_FIELD_COORDINATES) {
-            FIELDS[fx++] = new ExplicitField(coord)
-                .setProtected(true)
-                .setTextColor(PD_FG)
-                .setBackgroundColor(PD_BG);
+            var attr = new FieldAttributes().setProtected(true).setTextColor(PD_FG).setBackgroundColor(PD_BG);
+            FIELDS[fx++] = new ExplicitField(coord, attr);
         }
         for (Coordinates coord : UNPROTECTED_DATA_FIELD_COORDINATES) {
-            FIELDS[fx++] = new ExplicitField(coord)
-                .setProtected(false)
-                .setTabStop(true)
-                .setTextColor(UD_FG)
-                .setBackgroundColor(UD_BG);
+            var attr = new FieldAttributes().setProtected(false).setTabStop(true).setTextColor(UD_FG).setBackgroundColor(UD_BG);
+            FIELDS[fx++] = new ExplicitField(coord, attr);
         }
     }
 
@@ -223,11 +218,11 @@ public class ControlPagePane extends TerminalDisplayPane {
     @Override public boolean fccEnable() { return false; }
     @Override public boolean fccLocate() { return false; }
     @Override public boolean insertLine() { return false; }
-    @Override public boolean putFCC(final Field field) { return false; }
+    @Override public boolean putFCC(final FieldAttributes attr) { return false; }
     @Override public boolean setCursorPosition(final Coordinates coordinates) { return false; }
     @Override public boolean toggleEmphasis(final Emphasis emphasis) { return false; }
 
-    public Settings evaluate() {
+    public synchronized Settings evaluate() {
         var printStr = getString(PRINT_COORDS, 4).trim();
         if (!printStr.isEmpty()) {
             _printMode = PrintMode.getPrintMode(printStr);
@@ -289,14 +284,14 @@ public class ControlPagePane extends TerminalDisplayPane {
     // this allows consistent tab operation for both the host and the keyboard.
     // Also also, we do not worry about emphasis - there is none in the control page.
     @Override
-    public boolean kbPutCharacter(final byte ch) {
+    public synchronized boolean kbPutCharacter(final byte ch) {
         return putCharacter(ch, EmphasisAction.NONE, null);
     }
 
     @Override
-    public boolean putCharacter(final byte ch,
-                                final EmphasisAction emphasisAction,
-                                final Emphasis emphasis) {
+    public synchronized boolean putCharacter(final byte ch,
+                                             final EmphasisAction emphasisAction,
+                                             final Emphasis emphasis) {
         byte ch2 = ch;
         if (Character.isLowerCase(ch2)) {
             ch2 = (byte)Character.toUpperCase(ch2);
@@ -317,7 +312,7 @@ public class ControlPagePane extends TerminalDisplayPane {
      * We have only protected and unprotected fields, no tab-set characters.
      */
     @Override
-    public boolean tabBackward() {
+    public synchronized boolean tabBackward() {
         // Find the previous unprotected field coordinates
         var field = fieldBefore(_cursorPosition);
         while (field.isProtected()) {
@@ -334,7 +329,7 @@ public class ControlPagePane extends TerminalDisplayPane {
      * We have only protected and unprotected fields, no tab-set characters.
      */
     @Override
-    public boolean tabForward() {
+    public synchronized boolean tabForward() {
         // Find the next unprotected field coordinates
         var field = fieldAfter(_cursorPosition);
         while (field.isProtected()) {

@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kutelib.messages;
 
 import com.bearsnake.komodo.kutelib.exceptions.FunctionKeyException;
 import com.bearsnake.komodo.kutelib.exceptions.InternalException;
-import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.uts.UTSByteBuffer;
 
 import java.nio.ByteBuffer;
 

@@ -4,14 +4,17 @@
 
 package com.bearsnake.komodo.kuteTest;
 
+import com.bearsnake.komodo.kutelib.FieldAttributes;
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.messages.UTSMessage;
 import com.bearsnake.komodo.kutelib.messages.MessageWaitMessage;
 import com.bearsnake.komodo.kutelib.messages.TextMessage;
-import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.uts.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.uts.UTSCursorPositionPrimitive;
+import com.bearsnake.komodo.kutelib.uts.UTSFCCSequencePrimitive;
 import com.bearsnake.komodo.kutelib.panes.Coordinates;
-import com.bearsnake.komodo.kutelib.panes.ExplicitField;
 import com.bearsnake.komodo.kutelib.panes.UTSColor;
+import com.bearsnake.komodo.kutelib.uts.UTSPrimitiveType;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -74,14 +77,9 @@ public class ConsoleApp extends Application implements Runnable {
                 var coord1 = Coordinates.HOME_POSITION;
                 var coord2 = new Coordinates(coord1.getRow() + 1, coord1.getColumn());
 
-                var field1 = new ExplicitField(coord1)
-                    .setTextColor(SYSTEM_FG_COLOR)
-                    .setBackgroundColor(SYSTEM_BG_COLOR)
-                    .setProtected(true);
-                var field2 = new ExplicitField(coord2)
-                    .setTextColor(SYSTEM_FG_COLOR)
-                    .setBackgroundColor(SYSTEM_BG_COLOR)
-                    .setProtected(true);
+                var attr = new FieldAttributes().setTextColor(SYSTEM_FG_COLOR).setBackgroundColor(SYSTEM_BG_COLOR).setProtected(true);
+                var prim1 = new UTSFCCSequencePrimitive(coord1.getRow(), coord1.getColumn(), attr);
+                var prim2 = new UTSFCCSequencePrimitive(coord2.getRow(), coord2.getColumn(), attr);
 
                 var fmtString = String.format("%%-%ds", _geometry.getColumns());
                 var str1 = String.format(fmtString, string1);
@@ -89,11 +87,11 @@ public class ConsoleApp extends Application implements Runnable {
 
                 var stream = new UTSByteBuffer(256);
                 stream.put(ASCII_SOH)
-                      .put(ASCII_STX)
-                      .putFCCSequence(field1, false, true, true)
-                      .putString(str1)
-                      .putFCCSequence(field2, false, true, true)
-                      .putString(str2)
+                      .put(ASCII_STX);
+                prim1.serialize(stream);
+                stream.putString(str1);
+                prim2.serialize(stream);
+                stream.putString(str2)
                       .putLockKeyboard()
                       .put(ASCII_ETX);
 
@@ -135,17 +133,16 @@ public class ConsoleApp extends Application implements Runnable {
                 try {
                     _messageWaitStartTime = Instant.now();
 
-                    var field = new ExplicitField(new Coordinates(_geometry.getRows(), 1))
-                        .setTextColor(INPUT_FG_COLOR)
-                        .setBackgroundColor(INPUT_BG_COLOR)
-                        .setProtected(false)
-                        .setTabStop(true);
-
+                    var attr = new FieldAttributes().setTextColor(INPUT_FG_COLOR)
+                                                    .setBackgroundColor(INPUT_BG_COLOR)
+                                                    .setProtected(true)
+                                                    .setTabStop(true);
+                    var prim = new UTSFCCSequencePrimitive(_geometry.getRows(), 1, attr);
                     var stream = new UTSByteBuffer(256);
                     stream.put(ASCII_SOH).put(ASCII_STX);
                     scrollDisplay(stream);
-                    stream.putFCCSequence(field, false, true, true)
-                          .put(ASCII_SOE)
+                    prim.serialize(stream);
+                    stream.put(ASCII_SOE)
                           .putUnlockKeyboard()
                           .put(ASCII_ETX);
                     _server.sendMessage(this, stream);
@@ -168,16 +165,16 @@ public class ConsoleApp extends Application implements Runnable {
                     var fmtString = String.format("  %%-%ds", _geometry.getColumns() - 2);
                     var choppedText = String.format(fmtString, msg);
 
-                    var field = new ExplicitField(new Coordinates(_geometry.getRows(), 1))
-                        .setBackgroundColor(READ_ONLY_BG_COLOR)
-                        .setTextColor(READ_ONLY_FG_COLOR)
-                        .setProtected(true);
+                    var attr = new FieldAttributes().setTextColor(READ_ONLY_FG_COLOR)
+                                                    .setBackgroundColor(READ_ONLY_BG_COLOR)
+                                                    .setProtected(true);
+                    var prim = new UTSFCCSequencePrimitive(_geometry.getRows(), 1, attr);
 
                     var stream = new UTSByteBuffer(256);
                     stream.put(ASCII_SOH)
                           .put(ASCII_STX);
                     scrollDisplay(stream);
-                    stream.putFCCSequence(field, false, true, true);
+                    prim.serialize(stream);
                     stream.putString(choppedText)
                           .putCursorToHome()
                           .putLockKeyboard()
@@ -205,10 +202,8 @@ public class ConsoleApp extends Application implements Runnable {
                     }
 
                     try {
-                        var field = new ExplicitField(new Coordinates(_geometry.getRows(), 1))
-                            .setTextColor(READ_REPLY_FG_COLOR)
-                            .setBackgroundColor(READ_REPLY_BG_COLOR)
-                            .setProtected(true);
+                        var attr = new FieldAttributes().setTextColor(READ_REPLY_FG_COLOR).setBackgroundColor(READ_REPLY_BG_COLOR).setProtected(true);
+                        var prim = new UTSFCCSequencePrimitive(_geometry.getRows(), 1, attr);
 
                         var fmtString = String.format("%%d-%%-%ds", _geometry.getColumns() - 2);
                         var str = String.format(fmtString, id, msg.getText());
@@ -217,8 +212,9 @@ public class ConsoleApp extends Application implements Runnable {
                         stream.put(ASCII_SOH)
                               .put(ASCII_STX);
                         scrollDisplay(stream);
-                        stream.putFCCSequence(field, false, true, true)
-                              .putString(str)
+                        prim.serialize(stream);
+                        stream.putString(str)
+                              .putCursorToHome()
                               .putLockKeyboard()
                               .put(ASCII_ETX);
 
@@ -262,8 +258,9 @@ public class ConsoleApp extends Application implements Runnable {
         }
 
         try {
-            stream.putCursorPositionSequence(new Coordinates(scrollBaseRow, 1), false);
-            stream.putDeleteLine();
+            var prim = new UTSCursorPositionPrimitive(scrollBaseRow, 1);
+            prim.serialize(stream);
+            stream.put(UTSPrimitiveType.DELETE_LINE.getPattern());
             for (var rrm : _readReplyMessages) {
                 if (rrm.hasRow() && (rrm.getRow() > scrollBaseRow)) {
                     rrm.setRow(rrm.getRow() - 1);
@@ -292,7 +289,6 @@ public class ConsoleApp extends Application implements Runnable {
         var lastStatus = Instant.now();
         var lastTimeOfDay = Instant.now();
 
-        // TODO need to lock keyboard most of the time...
         while (!_terminate) {
             try {
                 var now = Instant.now();
@@ -301,17 +297,15 @@ public class ConsoleApp extends Application implements Runnable {
                         if (waitingOnInput()) {
                             var elapsed = now.toEpochMilli() - _messageWaitStartTime.toEpochMilli();
                             if (elapsed >= MILLIS_PER_MINUTE) {
-                                var field = new ExplicitField(new Coordinates(_geometry.getRows(), 1))
-                                    .setTextColor(INPUT_FG_COLOR)
-                                    .setBackgroundColor(INPUT_BG_COLOR)
-                                    .setProtected(true);
+                                var attr = new FieldAttributes().setTextColor(INPUT_FG_COLOR).setBackgroundColor(INPUT_BG_COLOR).setProtected(true);
+                                var prim = new UTSFCCSequencePrimitive(_geometry.getRows(), 1, attr);
 
                                 var stream = new UTSByteBuffer(100);
                                 // field is no input field with protection and read-only color
                                 stream.put(ASCII_SOH)
-                                      .put(ASCII_STX)
-                                      .putFCCSequence(field, false, true, true)
-                                      .putEraseDisplay()
+                                      .put(ASCII_STX);
+                                prim.serialize(stream);
+                                stream.putEraseDisplay()
                                       .putString("INPUT TIMEOUT")
                                       .putCursorToHome()
                                       .putLockKeyboard()

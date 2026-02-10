@@ -4,12 +4,14 @@
 
 package com.bearsnake.komodo.kuteTest;
 
+import com.bearsnake.komodo.kutelib.FieldAttributes;
 import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
 import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.kutelib.messages.UTSMessage;
-import com.bearsnake.komodo.kutelib.network.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.uts.UTSByteBuffer;
+import com.bearsnake.komodo.kutelib.uts.UTSCursorPositionPrimitive;
+import com.bearsnake.komodo.kutelib.uts.UTSFCCSequencePrimitive;
 import com.bearsnake.komodo.kutelib.panes.Coordinates;
-import com.bearsnake.komodo.kutelib.panes.ExplicitField;
 import com.bearsnake.komodo.kutelib.panes.UTSColor;
 
 import java.io.IOException;
@@ -222,11 +224,10 @@ public class ClockApp extends Application implements Runnable {
                         var row = coord.getRow() + rx;
                         var startPos = new Coordinates(row, column);
                         var endPos = new Coordinates(row, column + DIGIT_WIDTH);
-                        var startField = new ExplicitField(startPos).setTextColor(fgColor)
-                                                                    .setBackgroundColor(bgColor);
-                        var endField = new ExplicitField(endPos);
-                        stream.putFCCSequence(startField, false, true, true);
-                        stream.putFCCSequence(endField, false, true, false);
+
+                        var startAttr = new FieldAttributes().setTextColor(fgColor).setBackgroundColor(bgColor);
+                        new UTSFCCSequencePrimitive(startPos.getRow(), startPos.getColumn(), startAttr).serialize(stream);
+                        new UTSFCCSequencePrimitive(endPos.getRow(), endPos.getColumn(), new FieldAttributes()).serialize(stream);
                     }
                 }
                 stream.put(ASCII_ETX);
@@ -256,7 +257,7 @@ public class ClockApp extends Application implements Runnable {
             stream.put(ASCII_SOH)
                   .put(ASCII_STX);
             for (var pos = 0; pos < 8; pos++) {
-                putCharacter(stream, pos, str.charAt(pos));
+                putDisplayCharacter(stream, pos, str.charAt(pos));
             }
             stream.putCursorToHome()
                   .put(ASCII_ETX);
@@ -272,12 +273,12 @@ public class ClockApp extends Application implements Runnable {
                       .put(ASCII_STX);
                 var row = _hintCoordinates.getRow();
                 var column = _hintCoordinates.getColumn();
-                stream.putCursorPositionSequence(new Coordinates(row++, column), false)
-                      .putString("F1  - Cycle Colors");
-                stream.putCursorPositionSequence(new Coordinates(row++, column), false)
-                      .putString("F2  - Toggle Mode");
-                stream.putCursorPositionSequence(new Coordinates(row, column), false)
-                      .putString("F22 - Return to Menu");
+                new UTSCursorPositionPrimitive(row++, column).serialize(stream);
+                stream.putString("F1  - Cycle Colors");
+                new UTSCursorPositionPrimitive(row++, column).serialize(stream);
+                stream.putString("F2  - Toggle Mode");
+                new UTSCursorPositionPrimitive(row++, column).serialize(stream);
+                stream.putString("F22 - Return to Menu");
                 stream.putCursorToHome();
                 stream.put(ASCII_ETX);
                 _server.sendMessage(this, stream);
@@ -287,15 +288,14 @@ public class ClockApp extends Application implements Runnable {
         }
     }
 
-    private void putCharacter(final UTSByteBuffer stream, final int position, final char character) {
+    private void putDisplayCharacter(final UTSByteBuffer stream, final int position, final char character) {
         try {
             var topRow = _digitCoordinates[position].getRow();
             var leftColumn = _digitCoordinates[position].getColumn();
             var map = CHARACTER_MAPS.get(character);
             if (map != null) {
                 for (String s : map) {
-                    var coord = new Coordinates(topRow++, leftColumn);
-                    stream.putCursorPositionSequence(coord, false);
+                    new UTSCursorPositionPrimitive(topRow++, leftColumn).serialize(stream);
                     stream.putString(s);
                 }
             }

@@ -6,7 +6,7 @@ package com.bearsnake.komodo.kuteTest;
 
 import com.bearsnake.komodo.kutelib.messages.UTSMessage;
 import com.bearsnake.komodo.kutelib.messages.TextMessage;
-import com.bearsnake.komodo.kutelib.network.*;
+import com.bearsnake.komodo.kutelib.uts.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

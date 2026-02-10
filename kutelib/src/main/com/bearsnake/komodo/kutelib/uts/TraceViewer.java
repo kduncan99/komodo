@@ -2,9 +2,9 @@
  * Copyright (c) 2025-2026 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.kutelib.network;
+package com.bearsnake.komodo.kutelib.uts;
 
-import com.bearsnake.komodo.kutelib.exceptions.BufferOverflowException;
+import com.bearsnake.komodo.kutelib.exceptions.*;
 import com.bearsnake.komodo.netlib.SocketTrace;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Scene;
@@ -35,6 +35,7 @@ public class TraceViewer extends Stage {
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
     private static final Font MONOSPACED_FONT = Font.font("Courier New", FontWeight.BOLD, 13);
     private static final Color HEX_COLOR = Color.BLACK;
+    private static final Color PACKET_COLOR = Color.ORANGE;
     private static final Color PRIMITIVE_COLOR = Color.RED;
     private static final Color TEXT_COLOR = Color.BLUE;
     private static final Color TOKEN_COLOR = Color.GREEN;
@@ -100,7 +101,7 @@ public class TraceViewer extends Stage {
         ToolBar toolBar = new ToolBar(_hex, _primitives, saveButton);
 
         _tableView = new TableView<>();
-        _tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        _tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         // Make column headers non-clickable by disabling sorting and ensuring sort order is empty
         _tableView.getSortOrder().clear();
@@ -197,19 +198,32 @@ public class TraceViewer extends Stage {
 
     private void populateTextFlow(TextFlow textFlow, byte[] bytes) {
         var buffer = new UTSByteBuffer(bytes);
+
+        if (_primitives.isSelected()) {
+            // Can we decode an entire packet?
+            // TODO
+        }
+
         var prevChar = false;
         while (!buffer.atEnd()) {
             try {
                 if (_primitives.isSelected()) {
-                    var prim = buffer.getPrimitive();
-                    if (prim != null) {
-                        var text = new Text((prevChar ? " " : "") + prim + " ");
-                        text.setFont(MONOSPACED_FONT);
-                        text.setFill(PRIMITIVE_COLOR);
-                        textFlow.getChildren()
-                                .add(text);
-                        prevChar = false;
-                        continue;
+                    try {
+                        var prim = UTSPrimitive.deserializePrimitive(buffer);
+                        if (prim != null) {
+                            var text = new Text((prevChar ? " " : "") + prim + " ");
+                            text.setFont(MONOSPACED_FONT);
+                            text.setFill(PRIMITIVE_COLOR);
+                            textFlow.getChildren().add(text);
+                            prevChar = false;
+                            continue;
+                        }
+                    } catch (CoordinateException
+                        | IncompleteEscapeSequenceException
+                        | InvalidEscapeSequenceException
+                        | IncompleteFCCSequenceException
+                        | InvalidFCCSequenceException ex) {
+                        // just drop through and pretend there is no primitive
                     }
                 }
 

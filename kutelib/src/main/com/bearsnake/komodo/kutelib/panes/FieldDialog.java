@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.kutelib.panes;
 
+import com.bearsnake.komodo.kutelib.FieldAttributes;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -26,7 +27,7 @@ public class FieldDialog {
     //TODO need to completely redesign this using Dialog<T>
     private final Stage _stage;
 
-    private Field field = null;
+    private FieldAttributes _attributes = null;
     private final Coordinates _coordinates;
 
     private final ChoiceBox<Intensity> _intensity;
@@ -106,7 +107,7 @@ public class FieldDialog {
 
         var okButton = new Button("Ok");
         okButton.setOnAction(event -> {
-            field = createField();
+            _attributes = createFieldAttributes();
             _stage.close();
         });
 
@@ -124,24 +125,24 @@ public class FieldDialog {
         _stage.setScene(scene);
     }
 
-    private Field createField() {
-        var field = new ExplicitField(_coordinates);
-        field.setIntensity(_intensity.getValue());
-        field.setTextColor(_textColor.getValue());
-        field.setBackgroundColor(_backgroundColor.getValue());
-        field.setTabStop(_tabStop.isSelected());
-        field.setBlinking(_blinking.isSelected());
-        field.setReverseVideo(_reverseVideo.isSelected());
-        field.setProtected(_protected.isSelected());
-        field.setProtectedEmphasis(_protectedEmphasis.isSelected());
-        field.setAlphabeticOnly(_alphaOnly.isSelected());
-        field.setNumericOnly(_numericOnly.isSelected());
-        field.setRightJustified(_rightJustified.isSelected());
-        return field;
+    private FieldAttributes createFieldAttributes() {
+        var attr = new FieldAttributes();
+        attr.setIntensity(_intensity.getValue());
+        attr.setTextColor(_textColor.getValue());
+        attr.setBackgroundColor(_backgroundColor.getValue());
+        attr.setTabStop(_tabStop.isSelected());
+        attr.setBlinking(_blinking.isSelected());
+        attr.setReverseVideo(_reverseVideo.isSelected());
+        attr.setProtected(_protected.isSelected());
+        attr.setProtectedEmphasis(_protectedEmphasis.isSelected());
+        attr.setAlphabeticOnly(_alphaOnly.isSelected());
+        attr.setNumericOnly(_numericOnly.isSelected());
+        attr.setRightJustified(_rightJustified.isSelected());
+        return attr;
     }
 
-    public Optional<Field> showDialog() {
+    public Optional<FieldAttributes> showDialog() {
         _stage.showAndWait();
-        return Optional.ofNullable(field);
+        return Optional.ofNullable(_attributes);
     }
 }
