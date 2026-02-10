@@ -281,6 +281,21 @@ public class ConsoleApp extends Application implements Runnable {
             return;
         }
 
+        try {
+            var stream = new UTSByteBuffer(1024);
+            stream.put(ASCII_SOH)
+                  .put(ASCII_STX);
+            var attr = new FieldAttributes().setProtected(true);
+            for (var row = 1; row <= _geometry.getRows(); row++) {
+                new UTSFCCSequencePrimitive(row, 1, attr).serialize(stream);
+            }
+            stream.put(UTSPrimitiveType.CURSOR_TO_HOME.getPattern());
+            stream.put(ASCII_ETX);
+            _server.sendMessage(this, stream);
+        } catch (CoordinateException | IOException ex) {
+            IO.println("Cannot send initial message: " + ex.getMessage());
+        }
+
         postReadOnlyMessage("KOMODO Console Simulation for kuteTest");
         postReadOnlyMessage("Used for testing conversational mode applications");
         postReadReplyMessage("Continue? Y/N");

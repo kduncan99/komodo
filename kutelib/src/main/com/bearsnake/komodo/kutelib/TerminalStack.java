@@ -5,10 +5,7 @@
 package com.bearsnake.komodo.kutelib;
 
 import com.bearsnake.komodo.kutelib.keypads.KeyPad;
-import com.bearsnake.komodo.kutelib.panes.DisplayGeometry;
 import com.bearsnake.komodo.kutelib.panes.FontInfo;
-import com.bearsnake.komodo.kutelib.panes.UTSColor;
-import com.bearsnake.komodo.kutelib.panes.UTSColorSet;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.SingleSelectionModel;
@@ -20,7 +17,7 @@ import java.util.Set;
 
 public class TerminalStack extends TabPane {
 
-    private static final Set<KeyPad> _keyPads = new HashSet<>();
+    private final Set<KeyPad> _keyPads = new HashSet<>();
 
     public TerminalStack() {
         // TODO temporary hard-coded terminals

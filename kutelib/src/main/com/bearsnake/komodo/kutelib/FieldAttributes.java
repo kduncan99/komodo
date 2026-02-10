@@ -237,7 +237,8 @@ public class FieldAttributes {
         if (_blinking) { sb.append(":").append("BLNK"); }
         if (_alphabeticOnly) { sb.append(":").append("ALPH"); }
         if (_numericOnly) { sb.append(":").append("NUM"); }
-        if (_protectedEmphasis) { sb.append(":").append("PROT"); }
+        if (_protected) { sb.append(":").append("PROT"); }
+        if (_protectedEmphasis) { sb.append(":").append("PROT-EMPH"); }
         if (_reverseVideo) { sb.append(":").append("REV"); }
         if (_rightJustified) { sb.append(":").append("RJST"); }
         if (_tabStop) { sb.append(":").append("TAB"); }
