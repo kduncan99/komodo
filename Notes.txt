@@ -2,7 +2,7 @@
 TODO InProgress
 
 Kute
-    Bug: Trace Viewer needs to die when the main window is closed
+    Bug: Trace Viewer needs to be a standalone application
     Bug: While keyboard is locked, ctrl-b and ctrl-c work, but still beep (should not beep)
         Part of this needs to include moving all keyboard handling to Terminal.
         Maybe even basing Terminal on a lower level base class (so we can implement net viewer display, for one thing)

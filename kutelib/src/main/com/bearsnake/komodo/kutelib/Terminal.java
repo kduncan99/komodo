@@ -9,6 +9,8 @@ import com.bearsnake.komodo.kutelib.messages.*;
 import com.bearsnake.komodo.kutelib.uts.*;
 import com.bearsnake.komodo.kutelib.panes.*;
 import com.bearsnake.komodo.netlib.SocketTrace;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 
@@ -115,12 +117,23 @@ public class Terminal extends Pane implements UTSSocketListener {
     /**
      * Disconnects from the host
      */
-    public void disconnect() {
+    public void disconnect(final boolean withAlert) {
         if (_socketHandler != null) {
-            _socketHandler.close();
-            _socketHandler = null;
-            // TODO display alert message box
-            _statusPane.setConnected(false);
+            var proceed = !withAlert;
+            if (withAlert) {
+                var alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Disconnect Session");
+                alert.setHeaderText("Disconnecting from " + _settings.getHostName());
+                alert.setContentText("Do you really want to disconnect the session?");
+                var result = alert.showAndWait();
+                proceed = result.isPresent() && (result.get() == ButtonType.OK);
+            }
+
+            if (proceed) {
+                _socketHandler.close();
+                _socketHandler = null;
+                _statusPane.setConnected(false);
+            }
         }
     }
 
@@ -628,7 +641,7 @@ public class Terminal extends Pane implements UTSSocketListener {
             _socketHandler.write(new MessageWaitMessage());
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
-            disconnect();
+            disconnect(false);
             IO.println("Cannot send message wait: " + ex.getMessage());
         }
     }
@@ -697,7 +710,7 @@ public class Terminal extends Pane implements UTSSocketListener {
             _socketHandler.write(msg);
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
-            disconnect();
+            disconnect(false);
             IO.println("Cannot send function key: " + ex.getMessage());
         }
     }
@@ -1068,7 +1081,7 @@ public class Terminal extends Pane implements UTSSocketListener {
                                 forceDone = true;
                             }
                         } catch (IOException ex) {
-                            disconnect();
+                            disconnect(false);
                             IO.println("Cannot send cursor position: " + ex.getMessage());
                         }
                     }
@@ -1087,12 +1100,6 @@ public class Terminal extends Pane implements UTSSocketListener {
                 switch (ch) {
                     case ASCII_HT -> _activeDisplayPane.tabForward();
                     case ASCII_CR -> _activeDisplayPane.cursorReturn();
-                    //TODO remove
-//                case ASCII_DC1 -> transmit(TransmitMode.VARIABLE);
-//                case ASCII_DC2 -> printAll();
-//                case ASCII_DC4 -> {// lock keyboard (same as ESC DC4)
-//                    _statusPane.setKeyboardLocked(true);
-//                }
                     case ASCII_SUB -> _activeDisplayPane.putCharacter(ASCII_SUB, _emphasisAction, _emphasis);
                     case ASCII_FS -> _activeDisplayPane.putCharacter(ASCII_FS, _emphasisAction, _emphasis);
                     case ASCII_GS -> _activeDisplayPane.putCharacter(ASCII_GS, _emphasisAction, _emphasis);
@@ -1189,7 +1196,7 @@ public class Terminal extends Pane implements UTSSocketListener {
      */
     @Override
     public void socketClosed(final UTSSocketHandler handler) {
-        disconnect();
+        disconnect(false);
     }
 
     /**
@@ -1329,7 +1336,7 @@ public class Terminal extends Pane implements UTSSocketListener {
             _socketHandler.write(new TextMessage(output.getBuffer()));
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
-            disconnect();
+            disconnect(false);
             IO.println("Cannot send data: " + ex.getMessage());
         }
     }

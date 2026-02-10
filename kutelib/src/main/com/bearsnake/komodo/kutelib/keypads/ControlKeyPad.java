@@ -129,7 +129,7 @@ public class ControlKeyPad extends StackPane implements KeyPad {
         setOrangeButtonStyle(_buttons[0][6]);
 
         _buttons[0][7] = new Button("Drop\nSession");
-        _buttons[0][7].setOnAction(e -> _activeTerminal.disconnect());
+        _buttons[0][7].setOnAction(e -> _activeTerminal.disconnect(true));
         setOrangeButtonStyle(_buttons[0][7]);
 
         _buttons[0][8] = new Button("Trace\nStop");

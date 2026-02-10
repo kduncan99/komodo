@@ -151,7 +151,7 @@ public class Kute extends Application {
         connectItem.setOnAction(e -> _terminalStack.getActiveTerminal().connect());
 
         var disconnectItem = new MenuItem("Disconnect");
-        disconnectItem.setOnAction(e -> _terminalStack.getActiveTerminal().disconnect());
+        disconnectItem.setOnAction(e -> _terminalStack.getActiveTerminal().disconnect(true));
 
         var exitItem = new MenuItem("Exit");
         exitItem.setOnAction(e -> Platform.exit());
