@@ -2,6 +2,7 @@
 TODO InProgress
 
 Kute
+    Bug: Command+Q is being intercepted by the TerminalStack - need to fix this
     Bug: Trace Viewer needs to be a standalone application
     Bug: While keyboard is locked, ctrl-b and ctrl-c work, but still beep (should not beep)
         Part of this needs to include moving all keyboard handling to Terminal.

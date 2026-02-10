@@ -13,6 +13,7 @@ import com.bearsnake.komodo.kutelib.keypads.MiscKeyPad;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.scene.control.*;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -41,6 +42,15 @@ public class Kute extends Application {
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    private boolean confirmExit() {
+        var alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Quit Kute");
+        alert.setHeaderText("Shutting down Kute");
+        alert.setContentText("Do you really want to close all sessions and shut down?");
+        var result = alert.showAndWait();
+        return result.isPresent() && (result.get() == ButtonType.OK);
     }
 
     @Override
@@ -79,6 +89,13 @@ public class Kute extends Application {
         primaryStage.setTitle("Kute - Komodo UTS Terminal Emulator");
         primaryStage.setScene(_scene);
         primaryStage.sizeToScene();
+
+        primaryStage.setOnCloseRequest(event -> {
+            if (!confirmExit()) {
+                event.consume();
+            }
+        });
+
         primaryStage.show();
 
         _instance = this;
@@ -102,7 +119,6 @@ public class Kute extends Application {
 
     @Override
     public void stop() throws Exception {
-        // TODO ask if the user is sure he wants to exit
         _terminalStack.closeAll();
     }
 
@@ -154,7 +170,11 @@ public class Kute extends Application {
         disconnectItem.setOnAction(e -> _terminalStack.getActiveTerminal().disconnect(true));
 
         var exitItem = new MenuItem("Exit");
-        exitItem.setOnAction(e -> Platform.exit());
+        exitItem.setOnAction(e -> {
+            if (confirmExit()) {
+                Platform.exit();
+            }
+        });
 
         menu.getItems().addAll(connectItem, disconnectItem, exitItem);
         return menu;
