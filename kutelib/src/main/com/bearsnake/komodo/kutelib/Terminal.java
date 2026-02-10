@@ -63,6 +63,7 @@ public class Terminal extends Pane implements UTSSocketListener {
         _printMode = PrintMode.PRINT;
         _transferMode = TransferMode.ALL;
         _transmitMode = TransmitMode.ALL;
+        setStyle("-fx-background-color: linear-gradient(to bottom, #6a5a7a, #3a2a4a);");
 
         getChildren().addAll(_displayPane, _statusPane);
         setMinHeight(_displayPane.getHeight() + _statusPane.getHeight());
@@ -70,6 +71,25 @@ public class Terminal extends Pane implements UTSSocketListener {
         setPrefHeight(_displayPane.getHeight() + _statusPane.getHeight());
         setPrefWidth(_displayPane.getWidth());
         reset();
+    }
+
+    public void adjustLayout() {
+        var hMargin = (getWidth() - _displayPane.getWidth()) / 2;
+        var vMargin = (getHeight() - _displayPane.getHeight() - _statusPane.getHeight()) / 2;
+
+        var dp = _displayPane;
+        dp.setLayoutX(hMargin);
+        dp.setLayoutY(vMargin);
+
+        var sp = _statusPane;
+        sp.setLayoutX(hMargin);
+        sp.setLayoutY(dp.getHeight() + vMargin);
+
+        if (_controlPagePane != null) {
+            var cp = _controlPagePane;
+            cp.setLayoutX(hMargin);
+            cp.setLayoutY(vMargin);
+        }
     }
 
     /**
