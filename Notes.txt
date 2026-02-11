@@ -2,12 +2,10 @@
 TODO InProgress
 
 Kute
-    Bug: Trace Viewer needs to be a standalone application
-    Console test app - should detect size and accommodate
-    Console test app - should detect whether color is supported via placing FCC and forcing XMIT.
+    Trace Viewer needs to be a standalone application
+    Console test app - should detect screen geometry and accommodate it
     Console test app - need to finish this up
         Set up pseudo-random read-only and read-reply messages
-    Blinking Start (ASCII_FS) and Blinking End (ASCII_GS) characters need to be implemented in trace viewer
     Tab forward is maybe broken
     Tab backward
     Lots of other basic stuff which is currently TODO in the code
@@ -89,17 +87,19 @@ TODO BUGS
 --------------------
 TODO To be implemented
 
+make files for CLI build (and then we can build GUI for linux and Windows and Mac aarch)
+
 ALL
     Just use Log4J for logging
 
 Kute
     Transfer - configure up to 9 virtual disks D1-D9 (files)
-    special raster font which uses our own character specification (requires reworking display panes)
-    Once the font selection is supported, we *could* support downloadable fonts
-    enable/disable graphics - this is a major undertaking, and we must support color disabled option
+    enable/disable graphics - this is a major undertaking,
+        and we must support color disabled & emphasis disabled options (I think?)
         See Chapter 5 of UTS 30 Single Station System Reference
 
 Kons (A GUI console)
+    implies konslib (?)
 
 Maybe a GUI version of kexec?
 
