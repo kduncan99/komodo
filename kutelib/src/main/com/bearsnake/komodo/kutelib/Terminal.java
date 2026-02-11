@@ -12,6 +12,7 @@ import com.bearsnake.komodo.netlib.SocketTrace;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 
 import java.awt.*;
@@ -64,13 +65,18 @@ public class Terminal extends Pane implements UTSSocketListener {
         _transferMode = TransferMode.ALL;
         _transmitMode = TransmitMode.ALL;
         setStyle("-fx-background-color: linear-gradient(to bottom, #6a5a7a, #3a2a4a);");
+        setFocusTraversable(true);
 
         getChildren().addAll(_displayPane, _statusPane);
         setMinHeight(_displayPane.getHeight() + _statusPane.getHeight());
         setMinWidth(_displayPane.getWidth());
         setPrefHeight(_displayPane.getHeight() + _statusPane.getHeight());
         setPrefWidth(_displayPane.getWidth());
+
         reset();
+
+        addEventFilter(KeyEvent.KEY_TYPED, this::handleKeyTyped);
+        addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
     }
 
     public void adjustLayout() {
@@ -135,6 +141,20 @@ public class Terminal extends Pane implements UTSSocketListener {
     }
 
     /**
+     * Redirects request to whichever pane is active.
+     */
+    public void cycleBackgroundColor() {
+        _displayPane.cycleBackgroundColor();
+    }
+
+    /**
+     * Redirects request to whichever pane is active.
+     */
+    public void cycleTextColor() {
+        _displayPane.cycleTextColor();
+    }
+
+    /**
      * Disconnects from the host
      */
     public void disconnect(final boolean withAlert) {
@@ -162,22 +182,25 @@ public class Terminal extends Pane implements UTSSocketListener {
     }
 
     /**
-     * Handles a keypress event, redirecting execution according to the key.
+     * Handles a KeyPressed event, redirecting execution according to the key.
      * This fires multiple times when the key is held down.
-     * @param keyCode keycode representing the key which was pressed
      */
-    public void handleKeyPressed(final KeyCode keyCode) {
-        if (keyCode == KeyCode.ESCAPE && _settings.getEscapeKeyIsMessageWait()) {
-            kbMessageWait();
+    private void handleKeyPressed(final KeyEvent event) {
+        if (event.isMetaDown() || event.isShortcutDown() || event.isAltDown()) {
             return;
         }
 
-        if (_statusPane.isKeyboardLocked()) {
-            Toolkit.getDefaultToolkit().beep();
-            return;
-        }
-
-        switch (keyCode) {
+        // If any of the switch cases trigger, then we handle the key event (or beep).
+        // This does NOT mean we engage the described function -
+        // if the keyboard is locked, we beep instead of engaging.
+        switch (event.getCode()) {
+            case ESCAPE -> {
+                if (_settings.getEscapeKeyIsMessageWait()) {
+                    kbMessageWait();
+                } else {
+                    return;
+                }
+            }
             case DELETE -> kbDeleteInLine();
             case INSERT -> kbInsertInLine();
             case BACK_SPACE -> kbBackSpace();
@@ -217,56 +240,50 @@ public class Terminal extends Pane implements UTSSocketListener {
             case F20 -> kbSendFunctionKey(20);
             case F21 -> kbSendFunctionKey(21);
             case F22 -> kbSendFunctionKey(22);
+            default -> {
+                return;
+            }
         }
+
+        event.consume();
     }
 
     /**
      * Special handling for certain keystrokes.
+     * This fires multiple times when the key is held down.
      * We translate them to desired actions.
-     * @param str the character sequence represented by the keystroke.
-     * @return true if we handled the keystroke, false otherwise
      */
-    public boolean handleKeyTyped(final String str) {
-        if (!str.isEmpty()) {
-            var ch = str.charAt(0);
+    private void handleKeyTyped(final KeyEvent event) {
+        if (event.isControlDown() || event.isMetaDown() || event.isShortcutDown() || event.isAltDown()) {
+            return;
+        }
+
+        if (!event.getCharacter().isEmpty()) {
+            var ch = event.getCharacter().charAt(0);
             switch (ch) {
-                case 0x02 -> /* ctrl b */ {
-                    // affects the display pane even if control page is active...
-                    // control page fields have fixed colors, so they don't react to this anyway.
-                    _displayPane.cycleBackgroundColor();
-                    return true;
-                }
-                case 0x03 -> /* ctrl c */ {
-                    // affects the display pane even if control page is active...
-                    // control page fields have fixed colors, so they don't react to this anyway.
-                    _displayPane.cycleTextColor();
-                    return true;
-                }
                 case 0x08 -> /* ctrl h */ {
                     kbBackSpace();
-                    return true;
+                    event.consume();
                 }
-
-                //TODO requires reference back to TerminalStack or hosting application
-                // case 0x14 -> /* ctrl t */ com.bearsnake.komodo.kute.Kute.getInstance().cycleTabs();
 
                 case ASCII_LF -> {
                     kbPutCharacter(ASCII_LF);
-                    return true;
+                    event.consume();
                 }
+
                 case ASCII_FF -> {
                     kbPutCharacter(ASCII_FF);
-                    return true;
+                    event.consume();
                 }
+
                 default -> {
                     if ((ch >= ASCII_SP) && (ch <= ASCII_DEL)) {
                         kbPutCharacter((byte) (ch & 0xFF));
-                        return true;
+                        event.consume();
                     }
                 }
             }
         }
-        return false;
     }
 
     /**

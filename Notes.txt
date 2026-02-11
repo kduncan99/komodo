@@ -3,36 +3,7 @@ TODO InProgress
 
 Kute
     Bug: Trace Viewer needs to be a standalone application
-    Bug: While keyboard is locked, ctrl-b and ctrl-c work, but still beep (should not beep)
-        Divide keyboard handling properly among components
-        Let's do CMD+B, CMD+C, CMD+T instead of CTRL+{} and let CMD+Q be handled by the OS
-        Shift+F
-            Pressed: Shift+SHIFT
-            Pressed: Shift+F
-            Typed:   Shitf+F
-            Released:F
-            Released:Shift
-        Ctrl+C
-            Pressed: Ctrl+CONTROL
-            Pressed: Ctrl+C
-            Typed:   Ctrl+
-            Released:C
-            Released:CONTROL
-        ESC (ENTER, TAB are same)
-            Pressed: ESCAPE
-            Typed:
-            Released:ESCAPE
-        Cmd+Q
-            Pressed: Meta+COMMAND
-            Pressed: Meta+Q
-            Typed:   Meta+q
-            Released:Q
-            Released:COMMAND
-        F3
-            Pressed: F3
-            Typed:
-            Released:F3
-    Console test app - should detect size and accomodate
+    Console test app - should detect size and accommodate
     Console test app - should detect whether color is supported via placing FCC and forcing XMIT.
     Console test app - need to finish this up
         Set up pseudo-random read-only and read-reply messages

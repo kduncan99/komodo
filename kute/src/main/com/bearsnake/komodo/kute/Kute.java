@@ -17,7 +17,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -61,40 +60,6 @@ public class Kute extends Application {
         var content = createContentPane();
         root.getChildren().addAll(menuBar, content);
         _scene = new Scene(root);
-
-        // TODO somehow this needs to go into Terminal instead of here
-        //   We get PRESSED then TYPED (not for modifier keys), then RELEASED
-        //   We need to deal with kb locked on both PRESSED and TYPED, and still allow certain things like
-        //      ctrl+B, ctrl+C, ctrl+5, escape (if it is msg wait) etc
-        _scene.addEventFilter(KeyEvent.KEY_TYPED, event -> {
-//            System.out.printf("Typed: %s%s%s%s%s\n",
-//                              event.isAltDown() ? "Alt+" : "",
-//                              event.isControlDown() ? "Ctrl+" : "",
-//                              event.isMetaDown() ? "Meta+" : "",
-//                              event.isShiftDown() ? "Shift+" : "",
-//                              event.getCharacter());
-            getActiveTerminal().handleKeyTyped(event.getCharacter());
-            event.consume();
-        });
-
-        //TODO what happens is we consume the keyPressed event, but it still generates a subsequent keyReleased event.
-        //  So... how do we NOT process the keyReleased event?
-        _scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-//            System.out.printf("Pressed: %s%s%s%s%s\n",
-//                              event.isAltDown() ? "Alt+" : "",
-//                              event.isControlDown() ? "Ctrl+" : "",
-//                              event.isMetaDown() ? "Meta+" : "",
-//                              event.isShiftDown() ? "Shift+" : "",
-//                              event.getCode());
-            getActiveTerminal().handleKeyPressed(event.getCode());
-            event.consume();
-        });
-
-        _scene.addEventFilter(KeyEvent.KEY_RELEASED, event -> {
-//            IO.println("Released: " + event.getCode());//TODO remove
-            getActiveTerminal().handleKeyReleased(event.getCode());
-            event.consume();
-        });
 
         primaryStage.setTitle("Kute - Komodo UTS Terminal Emulator");
         primaryStage.setScene(_scene);

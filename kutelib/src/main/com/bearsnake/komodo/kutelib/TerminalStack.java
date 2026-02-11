@@ -14,6 +14,7 @@ import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,15 +29,15 @@ public class TerminalStack extends TabPane {
 
         var settings1 = new TerminalSettings();
         var terminal1 = new Terminal("DEMAND", settings1, fontInfo);
-        var tab1 = new Tab("DEMAND", new StackPane(terminal1));
+        var tab1 = new Tab("DEMAND", terminal1);//new StackPane(terminal1));
 
         var settings2 = new TerminalSettings().setDisplayGeometry(new DisplayGeometry(36, 132));
         var terminal2 = new Terminal("TIP", settings2, fontInfo);
-        var tab2 = new Tab("TIP", new StackPane(terminal2));
+        var tab2 = new Tab("TIP", terminal2);
 
         var settings3 = new TerminalSettings().setDisplayGeometry(new DisplayGeometry(16, 64));
         var terminal3 = new Terminal("DORK", settings3, fontInfo);
-        var tab3 = new Tab("DORK", new StackPane(terminal3));
+        var tab3 = new Tab("DORK", terminal3);
 
         getTabs().addAll(tab1, tab2, tab3);
         getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
@@ -54,12 +55,22 @@ public class TerminalStack extends TabPane {
             }
         });
 
+        getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                Platform.runLater(() -> {
+                    newValue.getContent().requestFocus();
+                });
+            }
+        });
+
         // Initialize first tab style
         if (!getTabs().isEmpty()) {
             getTabs().getFirst().setStyle("-fx-background-color: lightyellow;");
             var term = getTerminal(getTabs().getFirst());
             Platform.runLater(term::adjustLayout);
         }
+
+        addEventFilter(KeyEvent.KEY_TYPED, this::handleKeyTyped);
     }
 
     private Terminal getTerminal(Tab tab) {
@@ -111,6 +122,29 @@ public class TerminalStack extends TabPane {
         }
 
         return null;
+    }
+
+    /**
+     * Handles certain command (meta) keystrokes
+     * @param event key typed event
+     */
+    private void handleKeyTyped(final KeyEvent event) {
+        if (event.isMetaDown()) {
+            switch (event.getCharacter().charAt(0)) {
+                case 'b' -> /* meta b */ {
+                    getActiveTerminal().cycleBackgroundColor();
+                    event.consume();
+                }
+                case 'c' -> /* meta c */ {
+                    getActiveTerminal().cycleTextColor();
+                    event.consume();
+                }
+                case 't' -> /* meta t */ {
+                    cycleTabs();
+                    event.consume();
+                }
+            }
+        }
     }
 
     public void registerKeyPad(final KeyPad keyPad) {
