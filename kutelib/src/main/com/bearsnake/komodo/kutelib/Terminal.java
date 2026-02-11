@@ -1353,7 +1353,7 @@ public class Terminal extends Pane implements UTSSocketListener {
         }
 
         try {
-            _socketHandler.write(new TextMessage(output.getBuffer()));
+            _socketHandler.write(new TextMessage(output.setPointer(0).getBuffer()));
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
             disconnect(false);

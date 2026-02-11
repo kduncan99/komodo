@@ -2,17 +2,39 @@
 TODO InProgress
 
 Kute
-    Bug: Command+Q is being intercepted by the TerminalStack - need to fix this
     Bug: Trace Viewer needs to be a standalone application
     Bug: While keyboard is locked, ctrl-b and ctrl-c work, but still beep (should not beep)
-        Part of this needs to include moving all keyboard handling to Terminal.
-        Maybe even basing Terminal on a lower level base class (so we can implement net viewer display, for one thing)
-        And this will also let us handle ctrl-t properly, providing we properly layer keyboard event routing
-            through TerminalStack
+        Divide keyboard handling properly among components
+        Let's do CMD+B, CMD+C, CMD+T instead of CTRL+{} and let CMD+Q be handled by the OS
+        Shift+F
+            Pressed: Shift+SHIFT
+            Pressed: Shift+F
+            Typed:   Shitf+F
+            Released:F
+            Released:Shift
+        Ctrl+C
+            Pressed: Ctrl+CONTROL
+            Pressed: Ctrl+C
+            Typed:   Ctrl+
+            Released:C
+            Released:CONTROL
+        ESC (ENTER, TAB are same)
+            Pressed: ESCAPE
+            Typed:
+            Released:ESCAPE
+        Cmd+Q
+            Pressed: Meta+COMMAND
+            Pressed: Meta+Q
+            Typed:   Meta+q
+            Released:Q
+            Released:COMMAND
+        F3
+            Pressed: F3
+            Typed:
+            Released:F3
+    Console = should detect size and accomodate
     Console test app - should detect whether color is supported via placing FCC and forcing XMIT.
     Console test app - need to finish this up
-        Handle text input
-        Make T/D message show up on 6 minute intervals
         Set up pseudo-random read-only and read-reply messages
     Blinking Start (ASCII_FS) and Blinking End (ASCII_GS) characters need to be implemented in trace viewer
     Tab forward is maybe broken

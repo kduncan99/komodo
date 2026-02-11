@@ -11,6 +11,7 @@ import com.bearsnake.komodo.kutelib.messages.UTSMessage;
 import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
 import com.bearsnake.komodo.kutelib.uts.UTSByteBuffer;
 import com.bearsnake.komodo.kutelib.panes.DisplayGeometry;
+import com.bearsnake.komodo.kutelib.uts.UTSPrimitive;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -37,6 +38,25 @@ public abstract class Application implements Runnable {
         if (!_terminate) {
             _terminate = true;
         }
+    }
+
+    public String extractText(final UTSByteBuffer stream) {
+        var sb = new StringBuilder();
+        stream.setPointer(0);
+        while (!stream.atEnd()) {
+            try {
+                var prim = UTSPrimitive.deserializePrimitive(stream);
+                if (prim == null) {
+                    var ch = stream.getNext();
+                    if ((ch >= 32) && (ch < 127)) {
+                        sb.append((char) (byte) ch);
+                    }
+                }
+            } catch (Exception ex) {
+                // nothing to do
+            }
+        }
+        return sb.toString().trim();
     }
 
     /**

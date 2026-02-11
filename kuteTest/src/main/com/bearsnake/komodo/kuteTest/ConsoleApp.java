@@ -34,6 +34,23 @@ public class ConsoleApp extends Application implements Runnable {
     private static final UTSColor SYSTEM_FG_COLOR = UTSColor.CYAN;
     private static final UTSColor SYSTEM_BG_COLOR = UTSColor.BLACK;
 
+    private static final FieldAttributes INPUT_ATTR = new FieldAttributes().setTextColor(INPUT_FG_COLOR)
+                                                                           .setBackgroundColor(INPUT_BG_COLOR)
+                                                                           .setProtected(false)
+                                                                           .setTabStop(true);
+
+    private static final FieldAttributes READ_ONLY_ATTR = new FieldAttributes().setTextColor(READ_ONLY_FG_COLOR)
+                                                                               .setBackgroundColor(READ_ONLY_BG_COLOR)
+                                                                               .setProtected(true);
+
+    private static final FieldAttributes READ_REPLY_ATTR = new FieldAttributes().setTextColor(READ_REPLY_FG_COLOR)
+                                                                                .setBackgroundColor(READ_REPLY_BG_COLOR)
+                                                                                .setProtected(true);
+
+    private static final FieldAttributes SYSTEM_ATTR = new FieldAttributes().setTextColor(SYSTEM_FG_COLOR)
+                                                                            .setBackgroundColor(SYSTEM_BG_COLOR)
+                                                                            .setProtected(true);
+
     private static final long MILLIS_PER_SECOND = 1000;
     private static final long MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND;
 
@@ -77,9 +94,8 @@ public class ConsoleApp extends Application implements Runnable {
                 var coord1 = Coordinates.HOME_POSITION;
                 var coord2 = new Coordinates(coord1.getRow() + 1, coord1.getColumn());
 
-                var attr = new FieldAttributes().setTextColor(SYSTEM_FG_COLOR).setBackgroundColor(SYSTEM_BG_COLOR).setProtected(true);
-                var prim1 = new UTSFCCSequencePrimitive(coord1.getRow(), coord1.getColumn(), attr);
-                var prim2 = new UTSFCCSequencePrimitive(coord2.getRow(), coord2.getColumn(), attr);
+                var prim1 = new UTSFCCSequencePrimitive(coord1.getRow(), coord1.getColumn(), SYSTEM_ATTR);
+                var prim2 = new UTSFCCSequencePrimitive(coord2.getRow(), coord2.getColumn(), SYSTEM_ATTR);
 
                 var fmtString = String.format("%%-%ds", _geometry.getColumns());
                 var str1 = String.format(fmtString, string1);
@@ -133,11 +149,7 @@ public class ConsoleApp extends Application implements Runnable {
                 try {
                     _messageWaitStartTime = Instant.now();
 
-                    var attr = new FieldAttributes().setTextColor(INPUT_FG_COLOR)
-                                                    .setBackgroundColor(INPUT_BG_COLOR)
-                                                    .setProtected(true)
-                                                    .setTabStop(true);
-                    var prim = new UTSFCCSequencePrimitive(_geometry.getRows(), 1, attr);
+                    var prim = new UTSFCCSequencePrimitive(_geometry.getRows(), 1, INPUT_ATTR);
                     var stream = new UTSByteBuffer(256);
                     stream.put(ASCII_SOH).put(ASCII_STX);
                     scrollDisplay(stream);
@@ -152,7 +164,50 @@ public class ConsoleApp extends Application implements Runnable {
                 }
             }
         } else if (msg instanceof TextMessage tm) {
-            // TODO
+            var input = extractText(tm.unwrap());
+            _messageWaitStartTime = null;
+            if (!input.isEmpty()) {
+                if (Character.isDigit(input.charAt(0)) && (input.length() == 1 || input.charAt(1) == ' ')) {
+                    // respond to read-reply
+                    for (var rrm : _readReplyMessages) {
+                        if (rrm.hasId() && (rrm.getId() == Integer.parseInt(input.substring(0, 1)))) {
+                            try {
+                                rrm.setResponse(input.substring(2));
+                                var prim = new UTSFCCSequencePrimitive(rrm.getRow(), 1, READ_ONLY_ATTR);
+                                var stream = new UTSByteBuffer(256);
+                                stream.put(ASCII_SOH)
+                                      .put(ASCII_STX);
+                                prim.serialize(stream);
+                                stream.put(ASCII_SP)
+                                      .put(ASCII_SP)
+                                      .put(UTSPrimitiveType.CURSOR_TO_HOME.getPattern())
+                                      .put(ASCII_ETX);
+                                _server.sendMessage(this, stream);
+                                return true;
+                            } catch (CoordinateException ex) {
+                                // cannot happen
+                            }
+                        }
+                    }
+                    postReadOnlyMessage("MESSAGE DOES NOT EXIST");
+                } else {
+                    switch (input.toUpperCase()) {
+                        case "T" -> {
+                            postReadOnlyMessage("  CMSA        MAPPER      ENG");
+                            postReadOnlyMessage("  FMS8A       ENGA        ENGB");
+                            postReadOnlyMessage("  MCB         IRU         FACCTG");
+                            postReadOnlyMessage("  SYSGEN");
+                        }
+                        case "BL" -> {
+                            postReadOnlyMessage("  REVENU      CMSGEN      PRTJK");
+                            postReadOnlyMessage("  DOCMNT");
+                        }
+                        case "$!" -> _terminate = true;
+                        default -> postReadOnlyMessage("INVALID KEYIN: " + input);
+                    }
+                }
+                return true;
+            }
         }
         return false;
     }
@@ -165,10 +220,7 @@ public class ConsoleApp extends Application implements Runnable {
                     var fmtString = String.format("  %%-%ds", _geometry.getColumns() - 2);
                     var choppedText = String.format(fmtString, msg);
 
-                    var attr = new FieldAttributes().setTextColor(READ_ONLY_FG_COLOR)
-                                                    .setBackgroundColor(READ_ONLY_BG_COLOR)
-                                                    .setProtected(true);
-                    var prim = new UTSFCCSequencePrimitive(_geometry.getRows(), 1, attr);
+                    var prim = new UTSFCCSequencePrimitive(_geometry.getRows(), 1, READ_ONLY_ATTR);
 
                     var stream = new UTSByteBuffer(256);
                     stream.put(ASCII_SOH)
@@ -202,9 +254,7 @@ public class ConsoleApp extends Application implements Runnable {
                     }
 
                     try {
-                        var attr = new FieldAttributes().setTextColor(READ_REPLY_FG_COLOR).setBackgroundColor(READ_REPLY_BG_COLOR).setProtected(true);
-                        var prim = new UTSFCCSequencePrimitive(_geometry.getRows(), 1, attr);
-
+                        var prim = new UTSFCCSequencePrimitive(_geometry.getRows(), 1, READ_REPLY_ATTR);
                         var fmtString = String.format("%%d-%%-%ds", _geometry.getColumns() - 2);
                         var str = String.format(fmtString, id, msg.getText());
 
@@ -346,7 +396,7 @@ public class ConsoleApp extends Application implements Runnable {
 
                 synchronized (this) {
                     var elapsed = now.toEpochMilli() - lastTimeOfDay.toEpochMilli();
-                    if (elapsed > 10 * 1000) { // TODO should be 60 * 1000 (or even 6 * 60 * 1000)
+                    if (elapsed > 6 * 60  * 1000) {
                         var localTime = LocalDateTime.now();
                         StringBuilder str = new StringBuilder(String.format("T/D %d/%d/%d %02d:%02d:%02d",
                                                                             localTime.getMonthValue(), localTime.getDayOfMonth(), localTime.getYear(),
