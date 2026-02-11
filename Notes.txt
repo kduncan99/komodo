@@ -32,7 +32,7 @@ Kute
             Pressed: F3
             Typed:
             Released:F3
-    Console = should detect size and accomodate
+    Console test app - should detect size and accomodate
     Console test app - should detect whether color is supported via placing FCC and forcing XMIT.
     Console test app - need to finish this up
         Set up pseudo-random read-only and read-reply messages
@@ -56,11 +56,10 @@ Kute
             @@TERM
             @@X which cancels long lists
             message-wait to pause lists
-            accepts msg-waiting which we have to acknoledge manually
+            accepts msg-waiting which we have to acknowledge manually
         TIP Simulator (maybe a simple KEdit?)
         Yahtzee (just for fun?)
         Qubic (just for fun?)
-    Less than 80-columns needs to prevent control page toggle
     Indicator for FCC enabled/disabled
     Settings need to be adjusted a bit:
         rows, columns

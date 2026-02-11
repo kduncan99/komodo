@@ -34,7 +34,11 @@ public class TerminalStack extends TabPane {
         var terminal2 = new Terminal("TIP", settings2, fontInfo);
         var tab2 = new Tab("TIP", new StackPane(terminal2));
 
-        getTabs().addAll(tab1, tab2);
+        var settings3 = new TerminalSettings().setDisplayGeometry(new DisplayGeometry(16, 64));
+        var terminal3 = new Terminal("DORK", settings3, fontInfo);
+        var tab3 = new Tab("DORK", new StackPane(terminal3));
+
+        getTabs().addAll(tab1, tab2, tab3);
         getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Tab>() {
             @Override
             public void changed(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {

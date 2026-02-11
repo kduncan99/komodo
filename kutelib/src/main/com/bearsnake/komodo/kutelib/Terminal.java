@@ -897,16 +897,21 @@ public class Terminal extends Pane implements UTSSocketListener {
             _displayPane.dimDisplay(false);
             _activeDisplayPane.scheduleDrawDisplay();
         } else {
-            var settings = new ControlPagePane.Settings(_printMode, _transferMode, _transmitMode);
-            _controlPagePane = new ControlPagePane(_displayPane.getGeometry(),
-                                                   _displayPane.getFontInfo(),
-                                                   _displayPane.getColorSet(),
-                                                   _statusPane,
-                                                   settings);
+            if (_settings.getDisplayGeometry().getColumns() < 80) {
+                Toolkit.getDefaultToolkit().beep();
+            } else {
+                var settings = new ControlPagePane.Settings(_printMode, _transferMode, _transmitMode);
+                _controlPagePane = new ControlPagePane(_displayPane.getGeometry(),
+                                                       _displayPane.getFontInfo(),
+                                                       _displayPane.getColorSet(),
+                                                       _statusPane,
+                                                       settings);
 
-            getChildren().add(_controlPagePane);
-            _activeDisplayPane = _controlPagePane;
-            _displayPane.dimDisplay(true);
+                getChildren().add(_controlPagePane);
+                _activeDisplayPane = _controlPagePane;
+                adjustLayout();
+                _displayPane.dimDisplay(true);
+            }
         }
 
         return result;
