@@ -44,12 +44,14 @@ public class TraceViewer extends Stage {
     private static final HashMap<Byte, Character> CHARACTER_LOOKUP = new HashMap<>();
     static {
         CHARACTER_LOOKUP.put(ASCII_SOE, '▷');
-        CHARACTER_LOOKUP.put(ASCII_HT, '⇥');
-        CHARACTER_LOOKUP.put(ASCII_LF, '↓');
-        CHARACTER_LOOKUP.put(ASCII_FF, '↖');
-        CHARACTER_LOOKUP.put(ASCII_CR, '↲');
+        CHARACTER_LOOKUP.put(ASCII_HT,  '⇥');
+        CHARACTER_LOOKUP.put(ASCII_LF,  '↓');
+        CHARACTER_LOOKUP.put(ASCII_FF,  '↖');
+        CHARACTER_LOOKUP.put(ASCII_CR,  '↲');
         CHARACTER_LOOKUP.put(ASCII_DEL, '░');
-        CHARACTER_LOOKUP.put(ASCII_SP, '∙');
+        CHARACTER_LOOKUP.put(ASCII_FS,  '«');
+        CHARACTER_LOOKUP.put(ASCII_GS,  '»');
+        CHARACTER_LOOKUP.put(ASCII_SP,  '∙');
     }
 
     private static final HashMap<Byte, String> CONTROL_TOKEN_LOOKUP = new HashMap<>();
@@ -62,14 +64,14 @@ public class TraceViewer extends Stage {
         CONTROL_TOKEN_LOOKUP.put(ASCII_ENQ, "ENQ");
         CONTROL_TOKEN_LOOKUP.put(ASCII_ACK, "ACK");
         CONTROL_TOKEN_LOOKUP.put(ASCII_BEL, "BEL");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_BS, "BS");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_HT, "HT");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_LF, "LF");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_VT, "VT");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_FF, "FF");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_CR, "CR");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_SO, "SO");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_SI, "SI");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_BS,  "BS");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_HT,  "HT");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_LF,  "LF");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_VT,  "VT");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_FF,  "FF");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_CR,  "CR");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_SO,  "SO");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_SI,  "SI");
         CONTROL_TOKEN_LOOKUP.put(ASCII_DLE, "DLE");
         CONTROL_TOKEN_LOOKUP.put(ASCII_DC1, "DC1");
         CONTROL_TOKEN_LOOKUP.put(ASCII_DC2, "DC2");
@@ -79,13 +81,13 @@ public class TraceViewer extends Stage {
         CONTROL_TOKEN_LOOKUP.put(ASCII_SYN, "SYN");
         CONTROL_TOKEN_LOOKUP.put(ASCII_ETB, "ETB");
         CONTROL_TOKEN_LOOKUP.put(ASCII_CAN, "CAN");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_EM, "EM");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_EM,  "EM");
         CONTROL_TOKEN_LOOKUP.put(ASCII_SUB, "SUB");
         CONTROL_TOKEN_LOOKUP.put(ASCII_ESC, "ESC");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_FS, "FS");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_GS, "GS");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_RS, "RS");
-        CONTROL_TOKEN_LOOKUP.put(ASCII_US, "US");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_FS,  "FS");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_GS,  "GS");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_RS,  "RS");
+        CONTROL_TOKEN_LOOKUP.put(ASCII_US,  "US");
         CONTROL_TOKEN_LOOKUP.put(ASCII_DEL, "DEL");
     }
 
