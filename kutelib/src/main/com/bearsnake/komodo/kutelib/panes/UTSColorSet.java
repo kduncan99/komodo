@@ -4,6 +4,8 @@
 
 package com.bearsnake.komodo.kutelib.panes;
 
+import com.bearsnake.komodo.utslib.fields.UTSColor;
+
 /*
  * Describes a color set containing FG and BG UTSColor values
  */

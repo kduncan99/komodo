@@ -4,11 +4,16 @@
 
 package com.bearsnake.komodo.kutelib;
 
-import com.bearsnake.komodo.kutelib.exceptions.*;
-import com.bearsnake.komodo.kutelib.messages.*;
-import com.bearsnake.komodo.kutelib.uts.*;
+import com.bearsnake.komodo.baselib.Constants.*;
+import com.bearsnake.komodo.kutelib.exceptions.InvalidCharacterException;
 import com.bearsnake.komodo.kutelib.panes.*;
 import com.bearsnake.komodo.netlib.SocketTrace;
+import com.bearsnake.komodo.utslib.*;
+import com.bearsnake.komodo.utslib.exceptions.*;
+import com.bearsnake.komodo.utslib.fields.ExplicitField;
+import com.bearsnake.komodo.utslib.messages.*;
+import com.bearsnake.komodo.utslib.primitives.*;
+
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
@@ -20,7 +25,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 
-import static com.bearsnake.komodo.kutelib.Constants.*;
+import static com.bearsnake.komodo.baselib.Constants.*;
+import static com.bearsnake.komodo.utslib.Constants.ASCII_SOE;
 
 /**
  * Implements a display with backing memory, cursor and protocol handling, and a status line.
@@ -743,9 +749,12 @@ public class Terminal extends Pane implements UTSSocketListener {
         }
 
         try {
-            var msg = new FunctionKeyMessage(fKey);
+            var msg = FunctionKeyMessage.create(fKey);
             _socketHandler.write(msg);
             _statusPane.setKeyboardLocked(true);
+        } catch (UTSFunctionKeyException ex) {
+            _statusPane.setErrorIndicator(true);
+            IO.println("Caught: " + ex.getMessage());
         } catch (IOException ex) {
             disconnect(false);
             IO.println("Cannot send function key: " + ex.getMessage());
@@ -938,17 +947,17 @@ public class Terminal extends Pane implements UTSSocketListener {
     // Methods which handle input from the host
     // ---------------------------------------------------------------------------------------------
 
-    private void ingestAddEmphasis(final UTSByteBuffer input)
-        throws InvalidEscapeSequenceException, BufferOverflowException {
-        // ESC Y code - we've already ingested ESC and Y
-        var code = input.getNext();
-        if ((code < 0x20) || (code > 0x2F)) {
-            throw new InvalidEscapeSequenceException("Invalid emphasis code");
-        }
-
-        _emphasis = new Emphasis(code);
-        _emphasisAction = EmphasisAction.ADD;
-    }
+//    private void ingestAddEmphasis(final UTSByteBuffer input)
+//        throws UTSInvalidEscapeSequenceException, UTSBufferOverflowException {
+//        // ESC Y code - we've already ingested ESC and Y
+//        var code = input.getNext();
+//        if ((code < 0x20) || (code > 0x2F)) {
+//            throw new UTSInvalidEscapeSequenceException("Invalid emphasis code");
+//        }
+//
+//        _emphasis = new Emphasis(code);
+//        _emphasisAction = EmphasisAction.ADD;
+//    }
 
     // TODO remove
 //    private boolean ingestEscapeSequence(final UTSByteBuffer input)
@@ -1039,7 +1048,8 @@ public class Terminal extends Pane implements UTSSocketListener {
      * Calling code strips leading SOH - STX and ending ETX before calling us.
      * There will be no NUL or SYN characters.
      */
-    private void ingestMessage(final UTSByteBuffer input) throws StreamException, CoordinateException, BufferOverflowException {
+    private void ingestMessage(final UTSByteBuffer input)
+        throws UTSException, InvalidCharacterException {
         _emphasis.clear();
         _emphasisAction = EmphasisAction.NONE;
         _displayPane.setDeferred(true);
@@ -1162,10 +1172,7 @@ public class Terminal extends Pane implements UTSSocketListener {
 
     // Wrapper around putCharacter(), but we have to get the character from the stream as decimal digits
     // representing a value from 0 to 127 inclusive, followed by a '}' character
-    private void ingestPutCharacterDecimal(final UTSByteBuffer input)
-        throws IncompleteEscapeSequenceException,
-               InvalidEscapeSequenceException,
-               BufferOverflowException {
+    private void ingestPutCharacterDecimal(final UTSByteBuffer input) throws UTSException {
         var value = 0;
         boolean digits = false;
         boolean done = false;
@@ -1177,18 +1184,18 @@ public class Terminal extends Pane implements UTSSocketListener {
             }
 
             if (!Character.isDigit(ch)) {
-                throw new InvalidEscapeSequenceException();
+                throw new UTSInvalidEscapeSequenceException();
             }
             value = value * 10 + (ch - '0');
             digits = true;
         }
 
         if (!done) {
-            throw new IncompleteEscapeSequenceException();
+            throw new UTSIncompleteEscapeSequenceException();
         }
 
         if (!digits || (value > 127)) {
-            throw new InvalidEscapeSequenceException();
+            throw new UTSInvalidEscapeSequenceException();
         }
 
         _activeDisplayPane.putCharacter((byte)value, _emphasisAction, _emphasis);
@@ -1196,9 +1203,7 @@ public class Terminal extends Pane implements UTSSocketListener {
 
     // As above, but we have to get the character from the stream as exactly two hex digits
     // representing a value from 0 to 255 inclusive.
-    private void ingestPutCharacterHex(final UTSByteBuffer input)
-        throws InvalidEscapeSequenceException,
-               BufferOverflowException {
+    private void ingestPutCharacterHex(final UTSByteBuffer input) throws UTSException {
         var hex1 = input.getNext();
         var hex2 = input.getNext();
         var hexStr = String.format("%c%c", hex1, hex2);
@@ -1212,20 +1217,18 @@ public class Terminal extends Pane implements UTSSocketListener {
             } else if (ch >= 'A' && ch <= 'F') {
                 value = value * 16 + (ch - 'A' + 10);
             } else {
-                throw new InvalidEscapeSequenceException((byte)ch);
+                throw new UTSInvalidEscapeSequenceException((byte)ch);
             }
         }
 
         _activeDisplayPane.putCharacter((byte)value, _emphasisAction, _emphasis);
     }
 
-    private void ingestRemoveEmphasis(final UTSByteBuffer input)
-        throws InvalidEscapeSequenceException,
-               BufferOverflowException {
+    private void ingestRemoveEmphasis(final UTSByteBuffer input) throws UTSException {
         // ESC Z code - we've already ingested ESC and Y
         var code = input.getNext();
         if ((code < 0x20) || (code > 0x2F)) {
-            throw new InvalidEscapeSequenceException("Invalid emphasis code");
+            throw new UTSInvalidEscapeSequenceException("Invalid emphasis code");
         }
 
         _emphasis = new Emphasis(code);
@@ -1258,7 +1261,7 @@ public class Terminal extends Pane implements UTSSocketListener {
             case TextMessage tm -> {
                 try {
                     ingestMessage(tm.unwrap());
-                } catch (StreamException | CoordinateException | BufferOverflowException ex) {
+                } catch (InvalidCharacterException | UTSException ex) {
                     System.out.println("Error in input stream:" + ex.getMessage());
                     _statusPane.setErrorIndicator(true);
                 }
@@ -1370,7 +1373,7 @@ public class Terminal extends Pane implements UTSSocketListener {
 
             // Serialize any remaining trailing blanks and ETX
             output.putSpaces(blankCounter).put(ASCII_ETX);
-        } catch (CoordinateException ex) {
+        } catch (UTSCoordinateException ex) {
             // This should never happen.
         }
 

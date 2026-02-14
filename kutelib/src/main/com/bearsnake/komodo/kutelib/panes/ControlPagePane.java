@@ -5,6 +5,12 @@
 package com.bearsnake.komodo.kutelib.panes;
 
 import com.bearsnake.komodo.kutelib.*;
+import com.bearsnake.komodo.utslib.Coordinates;
+import com.bearsnake.komodo.utslib.Emphasis;
+import com.bearsnake.komodo.utslib.fields.ExplicitField;
+import com.bearsnake.komodo.utslib.fields.Field;
+import com.bearsnake.komodo.utslib.fields.FieldAttributes;
+import com.bearsnake.komodo.utslib.fields.UTSColor;
 
 import java.nio.charset.StandardCharsets;
 
@@ -148,8 +154,8 @@ public class ControlPagePane extends TerminalDisplayPane {
 
     private static final Field[] FIELDS =
         new Field[NON_DATA_FIELD_COORDINATES.length
-            + PROTECTED_DATA_FIELD_COORDINATES.length
-            + UNPROTECTED_DATA_FIELD_COORDINATES.length];
+                  + PROTECTED_DATA_FIELD_COORDINATES.length
+                  + UNPROTECTED_DATA_FIELD_COORDINATES.length];
     static {
         int fx = 0;
         for (Coordinates coord : NON_DATA_FIELD_COORDINATES) {

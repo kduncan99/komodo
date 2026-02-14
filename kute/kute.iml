@@ -32,5 +32,6 @@
       </library>
     </orderEntry>
     <orderEntry type="module" module-name="netlib" exported="" />
+    <orderEntry type="module" module-name="utslib" />
   </component>
 </module>

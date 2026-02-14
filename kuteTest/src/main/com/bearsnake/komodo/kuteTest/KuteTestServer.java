@@ -4,9 +4,11 @@
 
 package com.bearsnake.komodo.kuteTest;
 
-import com.bearsnake.komodo.kutelib.messages.UTSMessage;
-import com.bearsnake.komodo.kutelib.messages.TextMessage;
-import com.bearsnake.komodo.kutelib.uts.*;
+import com.bearsnake.komodo.utslib.UTSByteBuffer;
+import com.bearsnake.komodo.utslib.UTSSocketHandler;
+import com.bearsnake.komodo.utslib.UTSSocketListener;
+import com.bearsnake.komodo.utslib.messages.TextMessage;
+import com.bearsnake.komodo.utslib.messages.UTSMessage;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

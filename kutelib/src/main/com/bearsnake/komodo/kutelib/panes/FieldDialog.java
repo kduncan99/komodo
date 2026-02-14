@@ -4,7 +4,10 @@
 
 package com.bearsnake.komodo.kutelib.panes;
 
-import com.bearsnake.komodo.kutelib.FieldAttributes;
+import com.bearsnake.komodo.utslib.Coordinates;
+import com.bearsnake.komodo.utslib.fields.FieldAttributes;
+import com.bearsnake.komodo.utslib.fields.Intensity;
+import com.bearsnake.komodo.utslib.fields.UTSColor;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

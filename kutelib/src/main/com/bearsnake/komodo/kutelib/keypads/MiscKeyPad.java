@@ -8,6 +8,7 @@ import com.bearsnake.komodo.kutelib.Terminal;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 
+import static com.bearsnake.komodo.baselib.Constants.*;
 import static com.bearsnake.komodo.kutelib.Constants.*;
 
 /**

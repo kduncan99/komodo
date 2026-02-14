@@ -4,21 +4,21 @@
 
 package com.bearsnake.komodo.kuteTest;
 
-import com.bearsnake.komodo.kutelib.FieldAttributes;
-import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
-import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
-import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
-import com.bearsnake.komodo.kutelib.uts.UTSByteBuffer;
-import com.bearsnake.komodo.kutelib.uts.UTSFCCSequencePrimitive;
-import com.bearsnake.komodo.kutelib.uts.UTSImmediateFCCSequencePrimitive;
-import com.bearsnake.komodo.kutelib.uts.UTSPrimitiveType;
-import com.bearsnake.komodo.kutelib.panes.UTSColor;
+import com.bearsnake.komodo.utslib.UTSByteBuffer;
+import com.bearsnake.komodo.utslib.exceptions.UTSCoordinateException;
+import com.bearsnake.komodo.utslib.fields.FieldAttributes;
+import com.bearsnake.komodo.utslib.fields.UTSColor;
+import com.bearsnake.komodo.utslib.messages.FunctionKeyMessage;
+import com.bearsnake.komodo.utslib.messages.StatusPollMessage;
+import com.bearsnake.komodo.utslib.primitives.UTSFCCSequencePrimitive;
+import com.bearsnake.komodo.utslib.primitives.UTSImmediateFCCSequencePrimitive;
+import com.bearsnake.komodo.utslib.primitives.UTSPrimitiveType;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
-import static com.bearsnake.komodo.kutelib.Constants.*;
+import static com.bearsnake.komodo.baselib.Constants.*;
 
 public class MenuApp extends Application implements Runnable {
 
@@ -67,7 +67,7 @@ public class MenuApp extends Application implements Runnable {
 
             stream.setPointer(0);
             _server.sendMessage(this, stream);
-        } catch (IOException | CoordinateException ex) {
+        } catch (IOException ex) {
             IO.println("MenuApp failed to send message");
         }
     }
@@ -117,7 +117,7 @@ public class MenuApp extends Application implements Runnable {
             stream.setPointer(0);
 
             _server.sendMessage(this, stream);
-        } catch (IOException | CoordinateException ex) {
+        } catch (IOException | UTSCoordinateException ex) {
             IO.println("MenuApp failed to send message");
         }
     }

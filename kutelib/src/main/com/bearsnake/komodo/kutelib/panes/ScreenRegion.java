@@ -4,6 +4,8 @@
 
 package com.bearsnake.komodo.kutelib.panes;
 
+import com.bearsnake.komodo.utslib.Coordinates;
+
 public class ScreenRegion {
 
     private final Coordinates _startingPosition;

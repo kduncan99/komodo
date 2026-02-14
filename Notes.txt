@@ -2,7 +2,6 @@
 TODO InProgress
 
 Kute
-    Trace Viewer needs to be a standalone application
     Console test app - should detect screen geometry and accommodate it
     Console test app - need to finish this up
         Set up pseudo-random read-only and read-reply messages

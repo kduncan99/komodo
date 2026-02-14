@@ -5,14 +5,20 @@
 package com.bearsnake.komodo.kutelib.panes;
 
 import com.bearsnake.komodo.kutelib.*;
+import com.bearsnake.komodo.utslib.Coordinates;
+import com.bearsnake.komodo.utslib.Emphasis;
+import com.bearsnake.komodo.utslib.fields.*;
+
 import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.paint.Color;
 
 import java.io.ByteArrayOutputStream;
 import java.util.*;
 import java.util.stream.IntStream;
 
-import static com.bearsnake.komodo.kutelib.Constants.*;
+import static com.bearsnake.komodo.baselib.Constants.*;
+import static com.bearsnake.komodo.utslib.Constants.ASCII_SOE;
 
 /*
  * A DisplayPane is the actual character display for a Terminal.
@@ -121,6 +127,19 @@ public class TerminalDisplayPane
 
     protected int getIndex(final int row, final int column) {
         return ((row - 1) * _geometry.getColumns()) + (column - 1);
+    }
+
+    public static Color getJavaFXColor(final UTSColor color) {
+        return switch (color) {
+            case BLACK -> Color.rgb(0, 0, 0);
+            case RED -> Color.rgb(255, 0, 0);
+            case GREEN -> Color.rgb(0, 255, 0);
+            case YELLOW -> Color.rgb(255, 255, 0);
+            case BLUE -> Color.rgb(0, 0, 255);
+            case MAGENTA -> Color.rgb(255, 0, 255);
+            case CYAN -> Color.rgb(0, 255, 255);
+            case WHITE -> Color.rgb(255, 255, 255);
+        };
     }
 
     public synchronized Field getNextField(final Field baseField) {
@@ -261,8 +280,8 @@ public class TerminalDisplayPane
                 var ch = convertByteToCharacter(byteChar, atCursor);
                 var effectiveBlink = blink || (byteChar == ASCII_FS) || (byteChar == ASCII_GS);
 
-                var jfxBgColor = utsBgColor.getFxTextColor();
-                var jfxTextColor = utsTextColor.getFxTextColor();
+                var jfxBgColor = getJavaFXColor(utsBgColor);
+                var jfxTextColor = getJavaFXColor(utsTextColor);
                 if (effectiveBlink && _blinkCharacterFlag) {
                     jfxTextColor = jfxBgColor;
                 }

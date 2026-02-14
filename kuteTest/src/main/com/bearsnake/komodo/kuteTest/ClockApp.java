@@ -4,22 +4,22 @@
 
 package com.bearsnake.komodo.kuteTest;
 
-import com.bearsnake.komodo.kutelib.FieldAttributes;
-import com.bearsnake.komodo.kutelib.exceptions.CoordinateException;
-import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
-import com.bearsnake.komodo.kutelib.messages.UTSMessage;
-import com.bearsnake.komodo.kutelib.uts.UTSByteBuffer;
-import com.bearsnake.komodo.kutelib.uts.UTSCursorPositionPrimitive;
-import com.bearsnake.komodo.kutelib.uts.UTSFCCSequencePrimitive;
-import com.bearsnake.komodo.kutelib.panes.Coordinates;
-import com.bearsnake.komodo.kutelib.panes.UTSColor;
+import com.bearsnake.komodo.utslib.Coordinates;
+import com.bearsnake.komodo.utslib.UTSByteBuffer;
+import com.bearsnake.komodo.utslib.exceptions.UTSCoordinateException;
+import com.bearsnake.komodo.utslib.fields.FieldAttributes;
+import com.bearsnake.komodo.utslib.fields.UTSColor;
+import com.bearsnake.komodo.utslib.messages.FunctionKeyMessage;
+import com.bearsnake.komodo.utslib.messages.UTSMessage;
+import com.bearsnake.komodo.utslib.primitives.UTSCursorPositionPrimitive;
+import com.bearsnake.komodo.utslib.primitives.UTSFCCSequencePrimitive;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 
-import static com.bearsnake.komodo.kutelib.Constants.*;
+import static com.bearsnake.komodo.baselib.Constants.*;
 
 public class ClockApp extends Application implements Runnable {
 
@@ -232,7 +232,7 @@ public class ClockApp extends Application implements Runnable {
                 }
                 stream.put(ASCII_ETX);
                 _server.sendMessage(this, stream);
-            } catch (CoordinateException ex) {
+            } catch (UTSCoordinateException ex) {
                 // should not happen
             }
         }
@@ -282,7 +282,7 @@ public class ClockApp extends Application implements Runnable {
                 stream.putCursorToHome();
                 stream.put(ASCII_ETX);
                 _server.sendMessage(this, stream);
-            } catch (CoordinateException ex) {
+            } catch (UTSCoordinateException ex) {
                 // cannot happen (I hope)
             }
         }
@@ -299,7 +299,7 @@ public class ClockApp extends Application implements Runnable {
                     stream.putString(s);
                 }
             }
-        } catch (CoordinateException ex) {
+        } catch (UTSCoordinateException ex) {
             // cannot happen
         }
     }

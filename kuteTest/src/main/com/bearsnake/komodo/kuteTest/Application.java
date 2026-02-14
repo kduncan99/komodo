@@ -4,19 +4,18 @@
 
 package com.bearsnake.komodo.kuteTest;
 
-import com.bearsnake.komodo.kutelib.TransmitMode;
-import com.bearsnake.komodo.kutelib.messages.CursorPositionMessage;
-import com.bearsnake.komodo.kutelib.messages.FunctionKeyMessage;
-import com.bearsnake.komodo.kutelib.messages.UTSMessage;
-import com.bearsnake.komodo.kutelib.messages.StatusPollMessage;
-import com.bearsnake.komodo.kutelib.uts.UTSByteBuffer;
 import com.bearsnake.komodo.kutelib.panes.DisplayGeometry;
-import com.bearsnake.komodo.kutelib.uts.UTSPrimitive;
+import com.bearsnake.komodo.utslib.UTSByteBuffer;
+import com.bearsnake.komodo.utslib.messages.CursorPositionMessage;
+import com.bearsnake.komodo.utslib.messages.FunctionKeyMessage;
+import com.bearsnake.komodo.utslib.messages.StatusPollMessage;
+import com.bearsnake.komodo.utslib.messages.UTSMessage;
+import com.bearsnake.komodo.utslib.primitives.UTSPrimitive;
 
 import java.io.IOException;
 import java.util.LinkedList;
 
-import static com.bearsnake.komodo.kutelib.Constants.*;
+import static com.bearsnake.komodo.baselib.Constants.*;
 
 /**
  * Base class for all test applications
@@ -97,7 +96,7 @@ public abstract class Application implements Runnable {
                   .putCursorToHome()
                   .putEraseDisplay()
                   .putCursorScanLeft()
-                  .putSendCursorPosition(TransmitMode.ALL)
+                  .putSendCursorPosition()
                   .put(ASCII_ETX);
             _server.sendMessage(this, stream);
         } catch (IOException ex) {

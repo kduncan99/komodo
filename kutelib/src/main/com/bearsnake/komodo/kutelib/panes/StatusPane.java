@@ -4,11 +4,15 @@
 
 package com.bearsnake.komodo.kutelib.panes;
 
+import com.bearsnake.komodo.utslib.Coordinates;
+import com.bearsnake.komodo.utslib.fields.UTSColor;
 import javafx.application.Platform;
 import javafx.scene.canvas.Canvas;
 
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static com.bearsnake.komodo.kutelib.panes.TerminalDisplayPane.getJavaFXColor;
 
 /*
  * Ths StatusPane is a text strip below the text display which indicates the current
@@ -70,8 +74,8 @@ public class StatusPane extends Canvas {
         var gfContext = getGraphicsContext2D();
         gfContext.setFont(_fontInfo.getFont());
 
-        var jfxBgColor = _bgColor.getFxTextColor();
-        var jfxTextColor = _textColor.getFxTextColor();
+        var jfxBgColor = getJavaFXColor(_bgColor);
+        var jfxTextColor = getJavaFXColor(_textColor);
         var jfxTextDimColor = jfxTextColor.darker()
                                           .darker();
 

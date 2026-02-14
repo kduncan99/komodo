@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.kutelib.exceptions;
 
-public class InvalidCharacterException extends StreamException {
+public class InvalidCharacterException extends KuteException {
 
     public InvalidCharacterException(final byte ch) {
         super(String.format("Invalid character [0x%02X]", ch));
