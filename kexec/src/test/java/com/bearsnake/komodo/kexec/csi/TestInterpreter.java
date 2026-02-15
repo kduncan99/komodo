@@ -1,0 +1,206 @@
+/*
+ * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ */
+
+package com.bearsnake.komodo.kexec.csi;
+
+import com.bearsnake.komodo.baselib.exceptions.SyntaxErrorParserException;
+import com.bearsnake.komodo.kexec.configuration.Configuration;
+import com.bearsnake.komodo.kexec.exec.Exec;
+import com.bearsnake.komodo.kexec.scheduleManager.BatchRun;
+import com.bearsnake.komodo.kexec.scheduleManager.Run;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class TestInterpreter {
+
+    private static Run _rce;
+
+    @BeforeAll
+    public static void setup() throws SyntaxErrorParserException {
+        var ex = new Exec(new boolean[36]);
+        ex.setConfiguration(new Configuration());
+        var rci = RunCardInfo.parse(ex, "@RUN TEST");
+        _rce = new BatchRun("RUNID", rci);
+    }
+
+    @Test
+    public void testEmpty() {
+        var text = "@ . comment";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertNull(ps._mnemonic);
+        assertNull(ps._label);
+        assertTrue(ps._optionsFields.isEmpty());
+        assertTrue(ps._operandFields.isEmpty());
+
+        assertFalse(ps._facStatusResult.hasErrorMessages());
+        assertFalse(ps._facStatusResult.hasInfoMessages());
+        assertFalse(ps._facStatusResult.hasWarningMessages());
+        assertEquals(0, ps._facStatusResult.getStatusWord());
+    }
+
+    @Test
+    public void testEmptyWithLabel() {
+        var text = "@label: . comment";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertNull(ps._mnemonic);
+        assertEquals("LABEL", ps._label);
+        assertTrue(ps._optionsFields.isEmpty());
+        assertTrue(ps._operandFields.isEmpty());
+
+        assertFalse(ps._facStatusResult.hasErrorMessages());
+        assertFalse(ps._facStatusResult.hasInfoMessages());
+        assertFalse(ps._facStatusResult.hasWarningMessages());
+        assertEquals(0, ps._facStatusResult.getStatusWord());
+    }
+
+    @Test
+    public void testEmptyWithInvalidLabel1() {
+        var text = "@labe$l: . comment";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertTrue(ps._facStatusResult.hasErrorMessages());
+        assertEquals(0_400000_000000L, ps._facStatusResult.getStatusWord());
+    }
+
+    @Test
+    public void testEmptyWithInvalidLabel2() {
+        var text = "@veryLongLabel: . comment";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertTrue(ps._facStatusResult.hasErrorMessages());
+        assertEquals(0_400000_000000L, ps._facStatusResult.getStatusWord());
+    }
+
+    @Test
+    public void testEmptyWithSimpleMnemonic() {
+        var text = "@test . comment";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertEquals("TEST", ps._mnemonic);
+        assertNull(ps._label);
+        assertTrue(ps._optionsFields.isEmpty());
+        assertTrue(ps._operandFields.isEmpty());
+
+        assertFalse(ps._facStatusResult.hasErrorMessages());
+        assertFalse(ps._facStatusResult.hasInfoMessages());
+        assertFalse(ps._facStatusResult.hasWarningMessages());
+        assertEquals(0, ps._facStatusResult.getStatusWord());
+    }
+
+    @Test
+    public void testEmptyWithInvalidMnemonic1() {
+        var text = "@labe$l . comment";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertTrue(ps._facStatusResult.hasErrorMessages());
+        assertEquals(0_400000_000000L, ps._facStatusResult.getStatusWord());
+    }
+
+    @Test
+    public void testEmptyWithInvalidMnemonic2() {
+        var text = "@veryLongMnemonic . comment";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertTrue(ps._facStatusResult.hasErrorMessages());
+        assertEquals(0_400000_000000L, ps._facStatusResult.getStatusWord());
+    }
+
+    @Test
+    public void testEmptyWithLabelAndMnemonic() {
+        var text = "@label: test . comment";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertEquals("TEST", ps._mnemonic);
+        assertEquals("LABEL", ps._label);
+        assertTrue(ps._optionsFields.isEmpty());
+        assertTrue(ps._operandFields.isEmpty());
+
+        assertFalse(ps._facStatusResult.hasErrorMessages());
+        assertFalse(ps._facStatusResult.hasInfoMessages());
+        assertFalse(ps._facStatusResult.hasWarningMessages());
+        assertEquals(0, ps._facStatusResult.getStatusWord());
+    }
+
+    @Test
+    public void testLog() {
+        var text = "@label: log   This is a funny frog . comment";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertEquals("LOG", ps._mnemonic);
+        assertEquals("LABEL", ps._label);
+        assertTrue(ps._optionsFields.isEmpty());
+        assertEquals(1, ps._operandFields.size());
+        assertEquals("This is a funny frog",
+                     ps._operandFields.get(new SubfieldSpecifier(0, 0)));
+
+        assertFalse(ps._facStatusResult.hasErrorMessages());
+        assertFalse(ps._facStatusResult.hasInfoMessages());
+        assertFalse(ps._facStatusResult.hasWarningMessages());
+        assertEquals(0, ps._facStatusResult.getStatusWord());
+    }
+
+    @Test
+    public void testOptions() {
+        var text = "@foo,opt1///opt2/opt3";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertEquals("FOO", ps._mnemonic);
+        assertNull(ps._label);
+        assertEquals(5, ps._optionsFields.size());
+        assertEquals("opt1", ps._optionsFields.get(0));
+        assertEquals("", ps._optionsFields.get(1));
+        assertEquals("", ps._optionsFields.get(2));
+        assertEquals("opt2", ps._optionsFields.get(3));
+        assertEquals("opt3", ps._optionsFields.get(4));
+        assertEquals(0, ps._operandFields.size());
+
+        assertFalse(ps._facStatusResult.hasErrorMessages());
+        assertFalse(ps._facStatusResult.hasInfoMessages());
+        assertFalse(ps._facStatusResult.hasWarningMessages());
+        assertEquals(0, ps._facStatusResult.getStatusWord());
+    }
+
+    @Test
+    public void testAsg() {
+        var text = "@asg qual*file(3)/read/write, , a/  bbb/  cat . comment";
+        var ps = Interpreter.parseControlStatement(_rce, text);
+        ps._facStatusResult.dump(System.out, "");
+
+        assertEquals("ASG", ps._mnemonic);
+        assertNull(ps._label);
+        assertEquals(0, ps._optionsFields.size());
+        assertEquals(5, ps._operandFields.size());
+
+        assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(0, 0)));
+        assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(1, 0)));
+        assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(2, 0)));
+        assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(2, 1)));
+        assertTrue(ps._operandFields.containsKey(new SubfieldSpecifier(2, 2)));
+
+        assertEquals("qual*file(3)/read/write", ps._operandFields.get(new SubfieldSpecifier(0, 0)));
+        assertEquals("", ps._operandFields.get(new SubfieldSpecifier(1, 0)));
+        assertEquals("a", ps._operandFields.get(new SubfieldSpecifier(2, 0)));
+        assertEquals("bbb", ps._operandFields.get(new SubfieldSpecifier(2, 1)));
+        assertEquals("cat", ps._operandFields.get(new SubfieldSpecifier(2, 2)));
+
+        assertFalse(ps._facStatusResult.hasErrorMessages());
+        assertFalse(ps._facStatusResult.hasInfoMessages());
+        assertFalse(ps._facStatusResult.hasWarningMessages());
+        assertEquals(0, ps._facStatusResult.getStatusWord());
+    }
+}

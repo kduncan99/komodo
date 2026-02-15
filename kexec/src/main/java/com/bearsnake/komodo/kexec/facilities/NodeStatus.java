@@ -1,0 +1,20 @@
+/*
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
+ */
+
+package com.bearsnake.komodo.kexec.facilities;
+
+public enum NodeStatus {
+    Down("DN"),
+    Reserved("RV"),
+    Suspended("SU"),
+    Up("UP");
+
+    private final String _displayString;
+
+    NodeStatus(final String displayString) {
+        _displayString = displayString;
+    }
+
+    public String getDisplayString() { return _displayString; }
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/baselib/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/baselib/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/diskutil/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/diskutil/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/engine/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/engine/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/hardwarelib/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/hardwarelib/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/kexec/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/kexec/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/kute/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/kute/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/kuteTest/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/kuteTest/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/kutelib/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/kutelib/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/netlib/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/netlib/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/utslib/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/utslib/src/main/resources" charset="UTF-8" />
+  </component>
+</project>

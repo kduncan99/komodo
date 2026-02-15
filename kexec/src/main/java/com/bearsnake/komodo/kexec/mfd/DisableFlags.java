@@ -1,0 +1,46 @@
+/*
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
+ */
+
+package com.bearsnake.komodo.kexec.mfd;
+
+public class DisableFlags {
+
+    private boolean _directoryError;
+    private boolean _assignedAndWrittenAtExecStop;
+    private boolean _inaccessibleBackup;
+    private boolean _cacheDrainFailure;
+
+    public int compose() {
+        int value = _directoryError ? 060 : 0;
+        value |= _assignedAndWrittenAtExecStop ? 050 : 0;
+        value |= _inaccessibleBackup ? 044 : 0;
+        value |= _cacheDrainFailure ? 042 : 0;
+        return value;
+    }
+
+    public DisableFlags extract(final long value) {
+        _directoryError = (value & 020) != 0;
+        _assignedAndWrittenAtExecStop = (value & 010) != 0;
+        _inaccessibleBackup = (value & 004) != 0;
+        _cacheDrainFailure = (value & 002) != 0;
+
+        return this;
+    }
+
+    public static DisableFlags extractFrom(final int value) {
+        var inf = new DisableFlags();
+        inf.extract(value);
+        return inf;
+    }
+
+    public boolean isDisabled() { return _directoryError || _assignedAndWrittenAtExecStop || _inaccessibleBackup || _cacheDrainFailure; }
+    public boolean directoryError() { return _directoryError; }
+    public boolean assignedAndWrittenAtExecStop()  { return _assignedAndWrittenAtExecStop; }
+    public boolean inaccessibleBackup() { return _inaccessibleBackup; }
+    public boolean cacheDrainFailure() { return _cacheDrainFailure; }
+    public DisableFlags setDirectoryError(final boolean value) { _directoryError = value; return this; }
+    public DisableFlags setAssignedAndWrittenAtExecStop(final boolean value) { _assignedAndWrittenAtExecStop = value; return this; }
+    public DisableFlags setInaccessibleBackup(final boolean value) { _inaccessibleBackup = value; return this; }
+    public DisableFlags setCacheDrainFailure(final boolean value) { _cacheDrainFailure = value; return this; }
+}
