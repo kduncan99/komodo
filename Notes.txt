@@ -1,5 +1,6 @@
 --------------------
 TODO InProgress
+Need to figure out how to extend jpackage to include all executables
 
 Kute
     Console test app - should detect screen geometry and accommodate it
@@ -82,6 +83,8 @@ Facilities
 
 --------------------
 TODO BUGS
+
+If you run diskutil with only an -i and no other command line switches or arguments, you get an NPE
 
 --------------------
 TODO To be implemented
