@@ -136,12 +136,6 @@ public class Kute extends Application {
     public Menu createFileMenu() {
         var menu = new Menu("File");
 
-        var connectItem = new MenuItem("Connect");
-        connectItem.setOnAction(e -> _terminalStack.getActiveTerminal().connect());
-
-        var disconnectItem = new MenuItem("Disconnect");
-        disconnectItem.setOnAction(e -> _terminalStack.getActiveTerminal().disconnect(true));
-
         var exitItem = new MenuItem("Exit");
         exitItem.setOnAction(e -> {
             if (confirmExit()) {
@@ -149,7 +143,54 @@ public class Kute extends Application {
             }
         });
 
-        menu.getItems().addAll(connectItem, disconnectItem, exitItem);
+        menu.getItems().addAll(exitItem);
+        return menu;
+    }
+
+    public Menu createSessionMenu() {
+        var menu = new Menu("Session");
+
+        var connectItem = new MenuItem("Connect");
+        connectItem.setOnAction(e -> _terminalStack.getActiveTerminal().connect());
+
+        var disconnectItem = new MenuItem("Disconnect");
+        disconnectItem.setOnAction(e -> _terminalStack.getActiveTerminal().disconnect(true));
+
+        menu.getItems().addAll(connectItem, disconnectItem);
+        menu.setOnShowing(e -> {
+            connectItem.setDisable(_terminalStack.getActiveTerminal().isConnected());
+            disconnectItem.setDisable(!_terminalStack.getActiveTerminal().isConnected());
+        });
+        return menu;
+    }
+
+    public Menu createTraceMenu() {
+        var menu = new Menu("Trace");
+
+        var startItem = new MenuItem("Start");
+        startItem.setOnAction(e -> _terminalStack.getActiveTerminal().startNetworkTrace());
+
+        var stopItem = new MenuItem("Stop");
+        stopItem.setOnAction(e -> _terminalStack.getActiveTerminal().stopNetworkTrace());
+
+        var pauseItem = new MenuItem("Pause");
+        pauseItem.setOnAction(e -> _terminalStack.getActiveTerminal().pauseNetworkTrace());
+
+        menu.getItems().addAll(startItem, stopItem, pauseItem);
+        menu.setOnShowing(e -> {
+            var term = _terminalStack.getActiveTerminal();
+            var canStart = false;
+            var canStop = false;
+            var canPause = false;
+            if (term.isConnected()) {
+                canStart = !term.isTraceActive();
+                canPause = term.isTraceActive();
+                canStop = term.isTraceActive() || term.isTracePaused();
+            }
+            startItem.setDisable(!canStart);
+            stopItem.setDisable(!canStop);
+            pauseItem.setDisable(!canPause);
+        });
         return menu;
     }
 
@@ -163,6 +204,8 @@ public class Kute extends Application {
 
         var menuBar = new MenuBar();
         menuBar.getMenus().add(createFileMenu());
+        menuBar.getMenus().add(createSessionMenu());
+        menuBar.getMenus().add(createTraceMenu());
         menuBar.getMenus().add(createHelpMenu());
         menuBar.setUseSystemMenuBar(true);
         return menuBar;

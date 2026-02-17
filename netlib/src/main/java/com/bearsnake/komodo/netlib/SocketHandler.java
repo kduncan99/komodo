@@ -64,28 +64,61 @@ public class SocketHandler extends Thread {
         _listener = listener;
     }
 
-    public boolean traceActive() {
+    /**
+     * Returns true if there is a trace - i.e., it exists, paused or not
+     */
+    public boolean isTraceActive() {
         return _currentTrace != null;
     }
 
-    public synchronized void tracePause() {
-        _isTracePaused = true;
+    /**
+     * Returns true if there is a trace and we are paused
+     */
+    public boolean isTracePaused() {
+        return _isTracePaused;
     }
 
+    /**
+     * Pauses the active trace, if any.
+     */
+    public synchronized void tracePause() {
+        if (_currentTrace != null) {
+            _isTracePaused = true;
+        }
+    }
+
+    /**
+     * Starts a new trace, or resumes a paused trace.
+     * @return true if we started or resumed a trace, false otherwise
+     */
     public synchronized boolean traceStart() {
         if (_currentTrace != null) {
-            return false;
+            if (_isTracePaused) {
+                _isTracePaused = false;
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            _currentTrace = new SocketTrace();
+            _isTracePaused = false;
+            return true;
         }
-        _currentTrace = new SocketTrace();
-        _isTracePaused = false;
-        return true;
     }
 
+    /**
+     * Stops the active trace, if any.
+     * @return reference to the trace if we did all that, null if there was no active trace
+     */
     public synchronized SocketTrace traceStop() {
-        var trace = _currentTrace;
-        _currentTrace = null;
-        _isTracePaused = false;
-        return trace;
+        if (_currentTrace == null) {
+            return null;
+        } else {
+            var trace = _currentTrace;
+            _currentTrace = null;
+            _isTracePaused = false;
+            return trace;
+        }
     }
 
     /**

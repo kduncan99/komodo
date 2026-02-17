@@ -1,5 +1,6 @@
 --------------------
 TODO InProgress
+BUG : No one is handling key released, which we should for certain keyboard actions.
 Need to figure out how to extend jpackage to include all executables
 
 Kute
@@ -13,11 +14,6 @@ Kute
     Implement Print - configure up to 9 print destinations P1-P9 (files, actual print queues, local printers...?)
     Backspace
     msg-waiting indicator should produce a beep at 1Hz until acknowledged
-    File menu
-        Reset
-        Trace Start
-        Trace Pause
-        Trace Stop
     Other Applications for testing Kute
         Demand Simulator
             login with username/password

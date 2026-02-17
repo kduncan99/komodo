@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.kutelib;
 
-import com.bearsnake.komodo.baselib.Constants.*;
 import com.bearsnake.komodo.kutelib.exceptions.InvalidCharacterException;
 import com.bearsnake.komodo.kutelib.panes.*;
 import com.bearsnake.komodo.netlib.SocketTrace;
@@ -299,7 +298,29 @@ public class Terminal extends Pane implements UTSSocketListener {
      * @param keyCode key which was released (which we currently don't need to know)
      */
     public void handleKeyReleased(final KeyCode keyCode) {
+        // TODO no one is invoking this... they should
         _activeDisplayPane.resolveProtectedCell();
+    }
+
+    /**
+     * Indicates whether this terminal has a connection to a host.
+     */
+    public boolean isConnected() {
+        return (_socketHandler != null);
+    }
+
+    /**
+     * Indicates whether a network trace is active (i.e., connected and not paused)
+     */
+    public boolean isTraceActive() {
+        return ((_socketHandler != null) && _socketHandler.isTraceActive() && !_socketHandler.isTracePaused());
+    }
+
+    /**
+     * Indicates whether a network trace is paused (implies it is active).
+     */
+    public boolean isTracePaused() {
+        return ((_socketHandler != null) && _socketHandler.isTracePaused());
     }
 
     /**
@@ -334,30 +355,55 @@ public class Terminal extends Pane implements UTSSocketListener {
 //        }
     }
 
+    /**
+     * Starts a new network trace.
+     * @return true if we started a trace, false otherwise
+     */
     public boolean startNetworkTrace() {
-        if (_socketHandler == null) {
-            return false;
+        if (_socketHandler != null) {
+            if (!_socketHandler.isTraceActive() || _socketHandler.isTracePaused()) {
+                return _socketHandler.traceStart();
+            }
         }
-        return _socketHandler.traceStart();
+
+        Toolkit.getDefaultToolkit().beep();
+        return false;
     }
 
+    /**
+     * Pauses the active network trace
+     * @return true if there was an active uh-paused trace in progress, false otherwise
+     */
     public boolean pauseNetworkTrace() {
-        if (_socketHandler == null) {
-            return false;
+        if (_socketHandler != null) {
+            if (_socketHandler.isTraceActive() && !_socketHandler.isTracePaused()) {
+                _socketHandler.tracePause();
+                return true;
+            }
         }
-        _socketHandler.tracePause();
-        return true;
+
+        Toolkit.getDefaultToolkit().beep();
+        return false;
     }
 
+    /**
+     * Stops the active (or paused) network trace, passing the trace to a viewer.
+     * @return reference to the trace if we did all that, null if there was no active trace
+     */
     public SocketTrace stopNetworkTrace() {
-        if (_socketHandler == null) {
-            return null;
+        if (_socketHandler != null) {
+            if (_socketHandler.isTraceActive()) {
+                var trace = _socketHandler.traceStop();
+                if (trace != null) {
+                    var viewer = new TraceViewer(trace, _name);
+                    viewer.show();
+                }
+                return trace;
+            }
         }
 
-        var trace = _socketHandler.traceStop();
-        var viewer = new TraceViewer(trace, _name);
-        viewer.show();
-        return trace;
+        Toolkit.getDefaultToolkit().beep();
+        return null;
     }
 
     // ---------------------------------------------------------------------------------------------
