@@ -31,6 +31,9 @@ public class TerminalStack extends TabPane {
     private final ChangeListener<Boolean> _traceStateListener = (observable, oldValue, newValue) -> {
         _keyPads.forEach(KeyPad::refreshButtons);
     };
+    private final ChangeListener<Boolean> _fccEnabledListener = (observable, oldValue, newValue) -> {
+        _keyPads.forEach(KeyPad::refreshButtons);
+    };
 
     public TerminalStack() {
         // TODO temporary hard-coded terminals
@@ -68,6 +71,10 @@ public class TerminalStack extends TabPane {
                         if (traceProp != null) {
                             traceProp.removeListener(_traceStateListener);
                         }
+                        var fccProp = oldTerminal.fccEnabledProperty();
+                        if (fccProp != null) {
+                            fccProp.removeListener(_fccEnabledListener);
+                        }
                     }
                 }
                 if (newValue != null) {
@@ -77,6 +84,7 @@ public class TerminalStack extends TabPane {
                     newActiveTerminal.keyboardLockedProperty().addListener(_keyboardLockedListener);
                     newActiveTerminal.connectedProperty().addListener(_connectedListener);
                     newActiveTerminal.traceStateProperty().addListener(_traceStateListener);
+                    newActiveTerminal.fccEnabledProperty().addListener(_fccEnabledListener);
                     _keyPads.forEach(keyPad -> keyPad.setActiveTerminal(newActiveTerminal));
                 }
             }
@@ -97,6 +105,7 @@ public class TerminalStack extends TabPane {
             term.keyboardLockedProperty().addListener(_keyboardLockedListener);
             term.connectedProperty().addListener(_connectedListener);
             term.traceStateProperty().addListener(_traceStateListener);
+            term.fccEnabledProperty().addListener(_fccEnabledListener);
             Platform.runLater(() -> {
                 term.adjustLayout();
                 term.requestFocus();

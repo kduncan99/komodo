@@ -9,7 +9,6 @@ import com.bearsnake.komodo.utslib.Coordinates;
 public class ExplicitField extends Field {
 
     private final FieldAttributes _attributes;
-    private boolean  _isEnabled = true;
 
     public ExplicitField(final Coordinates coordinates,
                          final FieldAttributes attributes) {
@@ -30,14 +29,14 @@ public class ExplicitField extends Field {
     @Override public UTSColor getBackgroundColor() { return _attributes.getBackgroundColor(); }
     @Override public Intensity getIntensity() { return _attributes.getIntensity(); }
     @Override public UTSColor getTextColor() { return _attributes.getTextColor(); }
-    @Override public boolean isAlphabeticOnly() { return _attributes.isAlphabeticOnly() && _isEnabled; }
+    @Override public boolean isAlphabeticOnly() { return _attributes.isAlphabeticOnly(); }
     @Override public boolean isBlinking() { return _attributes.isBlinking(); }
     @Override public boolean isChanged() { return _attributes.isChanged(); }
-    @Override public boolean isNumericOnly() { return _attributes.isNumericOnly() && _isEnabled; }
-    @Override public boolean isProtected() { return _attributes.isProtected() && _isEnabled; }
-    @Override public boolean isProtectedEmphasis() { return _attributes.isProtectedEmphasis() && _isEnabled; }
+    @Override public boolean isNumericOnly() { return _attributes.isNumericOnly(); }
+    @Override public boolean isProtected() { return _attributes.isProtected(); }
+    @Override public boolean isProtectedEmphasis() { return _attributes.isProtectedEmphasis(); }
     @Override public boolean isReverseVideo() { return _attributes.isReverseVideo(); }
-    @Override public boolean isRightJustified() { return _attributes.isRightJustified() && _isEnabled; }
+    @Override public boolean isRightJustified() { return _attributes.isRightJustified(); }
     @Override public boolean isTabStop() { return _attributes.isTabStop(); }
 
     @Override public Field setAlphabeticOnly(final boolean isAlphabeticOnly) { _attributes.setAlphabeticOnly(isAlphabeticOnly); return this;}
@@ -45,7 +44,6 @@ public class ExplicitField extends Field {
     @Override public Field setBlinking(final boolean blinking) { _attributes.setBlinking(blinking); return this;}
     @Override public Field setChanged(final boolean isChanged) { _attributes.setChanged(isChanged); return this; }
     @Override public Field setCoordinates(Coordinates cursorPosition) { _coordinates = cursorPosition; return this; }
-    @Override public Field setEnabled(final boolean enabled) { _isEnabled = enabled; return this; }
     @Override public Field setIntensity(final Intensity intensity) { _attributes.setIntensity(intensity); return this; }
     @Override public Field setNumericOnly(final boolean isNumericOnly) { _attributes.setNumericOnly(isNumericOnly); return this;}
     @Override public Field setProtected(final boolean isProtected) { _attributes.setProtected(isProtected); return this; }

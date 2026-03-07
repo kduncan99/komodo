@@ -12,7 +12,7 @@ import javafx.scene.canvas.Canvas;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static com.bearsnake.komodo.kutelib.panes.TerminalDisplayPane.getJavaFXColor;
+import static com.bearsnake.komodo.kutelib.panes.DisplayPane.getJavaFXColor;
 
 /*
  * Ths StatusPane is a text strip below the text display which indicates the current
@@ -28,6 +28,7 @@ public class StatusPane extends Canvas {
     private UTSColor _textColor;
 
     private final Coordinates _cursorPosition;
+    private boolean _fccIndicator;
     private boolean _errorIndicator;
     private boolean _isConnected;
     private final javafx.beans.property.BooleanProperty _connectedProperty = new javafx.beans.property.SimpleBooleanProperty(false);
@@ -97,6 +98,9 @@ public class StatusPane extends Canvas {
                            _fontInfo.getCharacterHeight() - 3);
 
         // draw indicators - we have to do these separately since some may be dimmed
+        gfContext.setFill(_fccIndicator ? jfxTextColor : jfxTextDimColor);
+        gfContext.fillText("FCC ", (_columns - 34) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
+
         gfContext.setFill(_errorIndicator ? jfxTextColor : jfxTextDimColor);
         gfContext.fillText("ERR ", (_columns - 29) * _fontInfo.getCharacterWidth(), _fontInfo.getCharacterHeight() - 3);
 
@@ -200,6 +204,15 @@ public class StatusPane extends Canvas {
      */
     public void setCursorPosition(final Coordinates coordinates) {
         _cursorPosition.set(coordinates);
+        scheduleDrawStatus();
+    }
+
+    /**
+     * Sets the FCC enabled indicator
+     * @param flag indicates the FCC enabled state
+     */
+    public void setFCCIndicator(final boolean flag) {
+        _fccIndicator = flag;
         scheduleDrawStatus();
     }
 

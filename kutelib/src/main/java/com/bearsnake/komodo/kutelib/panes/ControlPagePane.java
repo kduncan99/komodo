@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * This is a special overlay to which Terminal directs host and keyboard traffic when it exists.
  */
-public class ControlPagePane extends TerminalDisplayPane {
+public class ControlPagePane extends DisplayPane {
 
     //TODO check protocol book 10.3 page 10-5 and verify # of tabs to get to the various fields
 

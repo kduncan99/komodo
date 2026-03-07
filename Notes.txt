@@ -3,12 +3,27 @@ TODO InProgress
 Need to figure out how to extend jpackage to include all executables
 
 Kute
+    ESC Z d -- send color FCCs
+    ESC Z e -- do not send color FCCs
+    The following keypad keys should cycle
+        DeleteInLine, DeleteInDisplay, InsertInLine, InsertInDisplay,
+        TabSet, SOE, InsertLine, DeleteLine, CharErase, LineDup, Return, Tab, BackTab, BackSpace
+        CursorLeft, CursorRight, CursorUp, CursorDown
+    Tab forward is maybe broken
+    Tab backward needs implemented
+    Settings need to be adjusted a bit:
+        rows, columns
+        send, accept expanded FCC (as opposed to basic)
+        enable/disable color mode (implied sending color FCC if appropriate, accepts color FCC)
+        enable/disable graphics mode (mutex with emphasis)
+        enable/disable emphasis mode (mutex with graphics)
+        font family, size
+        host name, port number
+        enter is xmit
+        escape is msg-wait
     Console test app - should detect screen geometry and accommodate it
     Console test app - need to finish this up
         Set up pseudo-random read-only and read-reply messages
-    Disable almost all the keypad keys when keyboard is locked
-    Tab forward is maybe broken
-    Tab backward
     Lots of other basic stuff which is currently TODO in the code
         (but not transfer)
     Implement Print - configure up to 9 print destinations P1-P9 (files, actual print queues, local printers...?)
@@ -21,20 +36,10 @@ Kute
             @@TERM
             @@X which cancels long lists
             message-wait to pause lists
-            accepts msg-waiting which we have to acknowledge manually
+            upon some command, sends msg-waiting which we have to acknowledge manually
         TIP Simulator (maybe a simple KEdit?)
         Yahtzee (just for fun?)
         Qubic (just for fun?)
-    Indicator for FCC enabled/disabled
-    Settings need to be adjusted a bit:
-        rows, columns
-        send, accept expanded FCC (as opposed to basic)
-        enable/disable color mode (implied sending color FCC if appropriate, accepts color FCC)
-        enable/disable emphasis mode
-        font family, size
-        host name, port number
-        enter is xmit
-        escape is msg-wait
     Load/Save templates from the settings page
     File open selects a template which then opens a new terminal and connects
     When we scan cursor backward into protected field, it moves back to the next unprotected field...

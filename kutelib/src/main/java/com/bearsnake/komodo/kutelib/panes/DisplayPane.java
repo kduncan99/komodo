@@ -24,13 +24,14 @@ import static com.bearsnake.komodo.utslib.Constants.ASCII_SOE;
  * It contains enough information to render a terminal display,
  * but most of the logic for manipulating the display belongs to the containing Terminal.
  */
-public class TerminalDisplayPane extends Canvas {
+public class DisplayPane extends Canvas {
 
     protected final Coordinates _cursorPosition = Coordinates.HOME_POSITION.copy();
     protected final StatusPane _statusPane;
     protected UTSColor _bgColor;
     protected UTSColor _textColor;
     protected boolean _dimDisplay;
+    protected final javafx.beans.property.BooleanProperty _fccEnabledProperty = new javafx.beans.property.SimpleBooleanProperty(true);
     protected final FontInfo _fontInfo;
     protected DisplayGeometry _geometry;
 
@@ -45,10 +46,10 @@ public class TerminalDisplayPane extends Canvas {
     private boolean _blinkCursorFlag;
     private boolean _blinkCharacterFlag;
 
-    public TerminalDisplayPane(final DisplayGeometry initialGeometry,
-                               final FontInfo initialFontInfo,
-                               final UTSColorSet initialDefaultColors,
-                               final StatusPane statusPane) {
+    public DisplayPane(final DisplayGeometry initialGeometry,
+                       final FontInfo initialFontInfo,
+                       final UTSColorSet initialDefaultColors,
+                       final StatusPane statusPane) {
         _fontInfo = initialFontInfo;
         _bgColor = initialDefaultColors.getBGColor();
         _textColor = initialDefaultColors.getFGColor();
@@ -58,6 +59,10 @@ public class TerminalDisplayPane extends Canvas {
 
         _blinkTimer = new Timer(true);
         _blinkTimer.schedule(new BlinkTask(), 250, 250);
+    }
+
+    public javafx.beans.property.ReadOnlyBooleanProperty fccEnabledProperty() {
+        return _fccEnabledProperty;
     }
 
     public synchronized void advanceCoordinates(final Coordinates coordinates) {
@@ -357,7 +362,8 @@ public class TerminalDisplayPane extends Canvas {
     }
 
 
-    public synchronized void reconfigure(final DisplayGeometry geometry) {
+    public final synchronized void reconfigure(final DisplayGeometry geometry) {
+        _fccEnabledProperty.set(true);
         _geometry = geometry;
         _characterCells = new CharacterCell[_geometry.getCellCount()];
         setHeight(_geometry.getRows() * _fontInfo.getCharacterHeight());
@@ -369,7 +375,8 @@ public class TerminalDisplayPane extends Canvas {
     /**
      * Resets the display to its initial state, clearing all content and restoring default settings.
      */
-    public synchronized void reset() {
+    public final synchronized void reset() {
+        _fccEnabledProperty.set(true);
         IntStream.range(0, _geometry.getCellCount())
                  .forEach(cx -> _characterCells[cx] = new CharacterCell());
         _fields.clear();
@@ -685,9 +692,10 @@ public class TerminalDisplayPane extends Canvas {
     /**
      * Only allowed if the cursor is not in a protected field.
      * Erases all characters to the end of the field, or to the end of the display.
+     * @param clearChangedBit if true, clears the changed bit of the field containing the cursor.
      * @return true if allowed, else false
      */
-    public synchronized boolean eraseToEndOfField() {
+    public synchronized boolean eraseToEndOfField(final boolean clearChangedBit) {
         var baseField = getCharacterCell(_cursorPosition).getField();
         if (!baseField.isProtected()) {
             var coord = _cursorPosition.copy();
@@ -701,7 +709,10 @@ public class TerminalDisplayPane extends Canvas {
                 cx++;
             } while (!coord.atHome() && (_characterCells[cx].getField() == baseField));
 
-            baseField.setChanged(true);
+            if (clearChangedBit) {
+                baseField.setChanged(false);
+            }
+
             scheduleDrawDisplay();
             return true;
         }
@@ -711,9 +722,10 @@ public class TerminalDisplayPane extends Canvas {
     /**
      * Only allowed if the cursor is not in a protected field...
      * Erases all characters to the end of the field, or to the end of the line
+     * @param clearChangedBit if true, clears the changed bit of the field containing the cursor.
      * @return true if allowed, else false
      */
-    public synchronized boolean eraseToEndOfLine() {
+    public synchronized boolean eraseToEndOfLine(final boolean clearChangedBit) {
         var baseField = getCharacterCell(_cursorPosition).getField();
         if (!baseField.isProtected()) {
             var coord = _cursorPosition.copy();
@@ -730,10 +742,13 @@ public class TerminalDisplayPane extends Canvas {
                 cx++;
             } while (_characterCells[cx].getField() == baseField);
 
-            baseField.setChanged(true);
+            if (clearChangedBit) {
+                baseField.setChanged(false);
+            }
+
+            scheduleDrawDisplay();
             return true;
         }
-        scheduleDrawDisplay();
         return false;
     }
 
@@ -789,7 +804,8 @@ public class TerminalDisplayPane extends Canvas {
      * @return always true
      */
     public synchronized boolean fccEnable() {
-        _fields.values().forEach(f -> f.setEnabled(true));
+        _fccEnabledProperty.set(true);
+        scheduleDrawDisplay();
         return true;
     }
 
@@ -800,7 +816,7 @@ public class TerminalDisplayPane extends Canvas {
     public synchronized boolean fccLocate() {
         var nextField = getNextField(getCharacterCell(_cursorPosition).getField());
         _cursorPosition.set(nextField.getCoordinates());
-        _fields.values().forEach(f -> f.setEnabled(false));
+        _fccEnabledProperty.set(false);
         _statusPane.notifyCursorPositionChange(_cursorPosition.getRow(), _cursorPosition.getColumn());
         _blinkCursorFlag= true;
         scheduleDrawDisplay();
@@ -933,6 +949,35 @@ public class TerminalDisplayPane extends Canvas {
     }
 
     /**
+     * Determines if a byte is allowed in a numeric-only field.
+     * @param ch byte to be tested
+     * @return true if allowed, else false
+     */
+    private static boolean isNumeric(final byte ch) {
+        return (ch >= '0') && (ch <= '9');
+    }
+
+    /**
+     * Determines if a byte is allowed in an alpha-only field.
+     * Characters allowed in alpha-only fields are
+     *     Aa - Zz SOE \ | . - ~ , ^ @ ` SPACE [ {  ] }
+     * @param ch byte to be tested
+     * @return true if allowed, else false
+     */
+    private static boolean isAlpha(final byte ch) {
+        return ((ch >= 'A') && (ch <= 'Z'))
+               || ((ch >= 'a') && (ch <= 'z'))
+               || (ch == ASCII_SP) || (ch == ASCII_SOE)
+               || (ch == '\\') || (ch == '|')
+               || (ch == '.') || (ch == '-')
+               || (ch == '~') || (ch == ',')
+               || (ch == '^') || (ch == '@')
+               || (ch == '`')
+               || (ch == '[') || (ch == ']')
+               || (ch == '{') || (ch == '}');
+    }
+
+    /**
      * Initiated from keyboard.
      * If the area under the cursor is not protected, place the character on-screen at the cursor,
      * and advance the cursor to the next unprotected location.
@@ -945,8 +990,8 @@ public class TerminalDisplayPane extends Canvas {
         var cell = getCharacterCell(_cursorPosition);
         var field = cell.getField();
         if (field.isProtected()
-            || (field.isNumericOnly() && !Character.isDigit(ch))
-            || (field.isAlphabeticOnly() && !Character.isLetter(ch))) {
+            || (field.isNumericOnly() && !isNumeric(ch))
+            || (field.isAlphabeticOnly() && !isAlpha(ch))) {
             return false;
         }
 

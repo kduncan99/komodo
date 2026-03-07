@@ -102,10 +102,10 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
         _buttons[1][4] = new Key("Delete\nLine", this, ID_DELETE_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
         _buttons[1][5] = new Key("Line\nDup", this, ID_LINE_DUP, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
         _buttons[1][6] = new Key("FCC\nGen", this, ID_FCC_GEN, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
-        _buttons[1][7] = new Key("FCC\nEnable", this, ID_FCC_ENABLE, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][7] = new Key("FCC\nLocate", this, ID_FCC_LOCATE, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
         _buttons[1][8] = new Key("FCC\nClear", this, ID_FCC_CLEAR, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
-        _buttons[1][9] = new Key("FCC\nLocate", this, ID_FCC_LOCATE, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
-        _buttons[1][10] = new Key("Clear\nChange", this, ID_CLEAR_CHANGE, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][9] = new Key("FCC\nEnable", this, ID_FCC_ENABLE, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][10] = new Key("Clear\nChanged", this, ID_CLEAR_CHANGE, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
         _buttons[1][11] = new Key("Control\nPage", this, ID_CONTROL_PAGE, YELLOW_TOP, YELLOW_BOTTOM, TEXT_BLACK, this);
         _buttons[1][12] = new Key("KB\nUnlock", this, ID_KB_UNLOCK, YELLOW_TOP, YELLOW_BOTTOM, TEXT_BLACK, this);
         _buttons[1][13] = new Key("MSG\nWait", this, ID_MSG_WAIT, RED_TOP, RED_BOTTOM, TEXT_BLACK, this);
@@ -145,7 +145,7 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
             case ID_DELETE_IN_DISP -> _activeTerminal.kbDeleteInDisplay();
             case ID_INSERT_IN_DISP -> _activeTerminal.kbInsertInDisplay();
             case ID_INSERT_LINE -> _activeTerminal.kbInsertLine();
-            case ID_RESET -> _activeTerminal.reset();
+            case ID_RESET -> _activeTerminal.reset(true);
             case ID_CONNECT_SESSION -> _activeTerminal.connect();
             case ID_DROP_SESSION -> _activeTerminal.disconnect(true);
             case ID_TRACE_STOP -> _activeTerminal.stopNetworkTrace();
@@ -181,6 +181,7 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
         boolean connected = (_activeTerminal != null) && _activeTerminal.isConnected();
         boolean traceActive = (_activeTerminal != null) && _activeTerminal.isTraceActive();
         boolean tracePaused = (_activeTerminal != null) && _activeTerminal.isTracePaused();
+        boolean fccEnabled = (_activeTerminal != null) && _activeTerminal.isFCCEnabled();
 
         for (int rx = 0; rx < 2; rx++) {
             for (int cx = 0; cx < 14; cx++) {
@@ -216,6 +217,8 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
                             button.setDisable(!(connected && traceActive && !tracePaused));
                         } else if (id == ID_TRACE_START) {
                             button.setDisable(!(connected && (!traceActive || tracePaused)));
+                        } else if (id == ID_FCC_ENABLE) {
+                            button.setDisable(fccEnabled);
                         }
                     }
 

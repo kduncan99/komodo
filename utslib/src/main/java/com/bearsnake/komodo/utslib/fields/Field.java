@@ -41,7 +41,6 @@ public abstract class Field {
     public abstract Field setBlinking(boolean blinking);
     public abstract Field setChanged(boolean isChanged);
     public abstract Field setCoordinates(Coordinates cursorPosition);
-    public abstract Field setEnabled(final boolean flag);
     public abstract Field setIntensity(Intensity intensity);
     public abstract Field setNumericOnly(boolean isNumericOnly);
     public abstract Field setProtected(boolean isProtected);

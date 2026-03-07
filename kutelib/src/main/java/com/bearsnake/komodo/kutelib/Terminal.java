@@ -34,10 +34,10 @@ public class Terminal extends Pane implements UTSSocketListener {
     private final String _name;
     private final TerminalSettings _settings;
 
-    private TerminalDisplayPane _displayPane;
+    private DisplayPane _displayPane;
     private StatusPane _statusPane;
     private ControlPagePane _controlPagePane;
-    private TerminalDisplayPane _activeDisplayPane;
+    private DisplayPane _activeDisplayPane;
 
     private UTSSocketHandler _socketHandler;
 
@@ -55,7 +55,7 @@ public class Terminal extends Pane implements UTSSocketListener {
         _settings = terminalSettings;
 
         _statusPane = new StatusPane(_settings.getDisplayGeometry(), initialFontInfo, _settings.getColorSet());
-        _displayPane = new TerminalDisplayPane(_settings.getDisplayGeometry(), initialFontInfo, _settings.getColorSet(), _statusPane);
+        _displayPane = new DisplayPane(_settings.getDisplayGeometry(), initialFontInfo, _settings.getColorSet(), _statusPane);
         _controlPagePane = null;
         _activeDisplayPane = _displayPane;
         _emphasis = new Emphasis();
@@ -72,6 +72,8 @@ public class Terminal extends Pane implements UTSSocketListener {
         setFocusTraversable(true);
 
         getChildren().addAll(_displayPane, _statusPane);
+        _displayPane.fccEnabledProperty().addListener((observable, oldValue, newValue) -> _statusPane.setFCCIndicator(newValue));
+        _statusPane.setFCCIndicator(_displayPane.fccEnabledProperty().get());
         setMinHeight(_displayPane.getHeight() + _statusPane.getHeight());
         setMinWidth(_displayPane.getWidth());
         setPrefHeight(_displayPane.getHeight() + _statusPane.getHeight());
@@ -352,16 +354,43 @@ public class Terminal extends Pane implements UTSSocketListener {
         return _statusPane == null ? null : _statusPane.traceStateProperty();
     }
 
+    public javafx.beans.property.ReadOnlyBooleanProperty fccEnabledProperty() {
+        return _displayPane == null ? null : _displayPane.fccEnabledProperty();
+    }
+
+    public boolean isFCCEnabled() {
+        return _displayPane != null && _displayPane.fccEnabledProperty().get();
+    }
+
     /**
      * Resets the terminal - this can be invoked externally, but that is not a requirement of this project.
+     * @param withAlert if true, show a confirmation alert if we are connected
      */
-    public void reset() {
+    public void reset(final boolean withAlert) {
+        if (withAlert) {
+            if (isConnected()) {
+                var alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Reset Terminal");
+                alert.setHeaderText("Resetting terminal " + _name);
+                alert.setContentText("Do you really want to reset the terminal?");
+                var result = alert.showAndWait();
+                if (result.isEmpty() || (result.get() != ButtonType.OK)) {
+                    return;
+                }
+            }
+        }
+
         _activeDisplayPane = _displayPane;
         _controlPagePane = null;
         _displayPane.reset();
         _statusPane.setErrorIndicator(false);
+        _statusPane.setFCCIndicator(true);
         _statusPane.setKeyboardLocked(false);
         _statusPane.setMessageWaiting(false);
+    }
+
+    public void reset() {
+        reset(false);
     }
 
     /*
@@ -572,86 +601,30 @@ public class Terminal extends Pane implements UTSSocketListener {
 
     // Erases unprotected data from the cursor to the end of the field (or display),
     // setting (unprotected) changed field bits to false.
-    // NOT the same as host-initiated function. TODO Well, what's the difference?
+    // Same as host-initiated function with the addition of clearing changed field bit.
     public void kbEraseToEndOfField() {
         if (_statusPane.isKeyboardLocked()) {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
 
-        /* TODO
-        if (_controlPage != null) {
-            _controlPage.eraseToEndOfField();
-            return;
+        if (!_activeDisplayPane.eraseToEndOfField(true)) {
+            Toolkit.getDefaultToolkit().beep();
         }
-
-        var coord =  _cursorPosition.copy();
-        var cell = getCharacterCell(coord);
-        var attr = getControllingAttributes(coord);
-        do {
-            if (attr == null) {
-                cell.setCharacter(ASCII_SP);
-                cell.getEmphasis().clear();
-            } else {
-                if (!attr.isProtected()) {
-                    attr.setChanged(false);
-                    cell.setCharacter(ASCII_SP);
-                    if (!attr.isProtectedEmphasis()) {
-                        cell.getEmphasis().clear();
-                    }
-                }
-            }
-
-            advanceCoordinates(coord);
-            cell = getCharacterCell(coord);
-            if (cell.getAttributes() != null) {
-                break;
-            }
-        } while (!coord.equals(Coordinates.HOME_POSITION));
-        draw();
-         */
     }
 
     // Erases unprotected data from the cursor to the end of the field (or line),
     // setting (unprotected) changed field bits to false.
-    // NOT the same as host-initiated function. TODO what's the difference?
+    // Same as host-initiated function with the addition of clearing changed field bit.
     public void kbEraseToEndOfLine() {
         if (_statusPane.isKeyboardLocked()) {
             Toolkit.getDefaultToolkit().beep();
             return;
         }
 
-        /* TODO
-        if (_controlPage != null) {
-            _controlPage.eraseToEndOfField();
-            return;
+        if (!_activeDisplayPane.eraseToEndOfLine(true)) {
+            Toolkit.getDefaultToolkit().beep();
         }
-
-        var coord =  _cursorPosition.copy();
-        var cell = getCharacterCell(coord);
-        var attr = getControllingAttributes(coord);
-        do {
-            if (attr == null) {
-                cell.setCharacter(ASCII_SP);
-                cell.getEmphasis().clear();
-            } else {
-                if (!attr.isProtected()) {
-                    attr.setChanged(false);
-                    cell.setCharacter(ASCII_SP);
-                    if (!attr.isProtectedEmphasis()) {
-                        cell.getEmphasis().clear();
-                    }
-                }
-            }
-
-            advanceCoordinates(coord);
-            cell = getCharacterCell(coord);
-            if (cell.getAttributes() != null) {
-                break;
-            }
-        } while (coord.getColumn() != 1);
-        draw();
-         */
     }
 
 
@@ -1021,6 +994,7 @@ public class Terminal extends Pane implements UTSSocketListener {
     // Methods which handle input from the host
     // ---------------------------------------------------------------------------------------------
 
+    // TODO remove? or do we need this?
 //    private void ingestAddEmphasis(final UTSByteBuffer input)
 //        throws UTSInvalidEscapeSequenceException, UTSBufferOverflowException {
 //        // ESC Y code - we've already ingested ESC and Y
@@ -1031,90 +1005,6 @@ public class Terminal extends Pane implements UTSSocketListener {
 //
 //        _emphasis = new Emphasis(code);
 //        _emphasisAction = EmphasisAction.ADD;
-//    }
-
-    // TODO remove
-//    private boolean ingestEscapeSequence(final UTSByteBuffer input)
-//        throws InvalidEscapeSequenceException,
-//               BufferOverflowException,
-//               CoordinateException,
-//               IncompleteEscapeSequenceException {
-//        if (input.peekNext() != ASCII_ESC) {
-//            return false;
-//        }
-//
-//        // cursor position?
-//        var coord = input.getCursorPosition();
-//        if (coord != null) {
-//            _activeDisplayPane.setCursorPosition(coord);
-//            return true;
-//        }
-//
-//        input.skipNext();// skip ESC character
-//        var ch2 = input.getNext();
-//        if ((ch2 == 0x20) && (_emphasisAction != EmphasisAction.NONE)) {
-//            _emphasis = null;
-//            _emphasisAction = EmphasisAction.NONE;
-//            return true;
-//        } else if ((ch2 >= 0x20) && (ch2 <= 0x2F)) {
-//            _emphasis = new Emphasis(ch2);
-//            _emphasisAction = EmphasisAction.SET;
-//            return true;
-//        }
-//
-//        switch (ch2) {
-//            case ASCII_HT -> _activeDisplayPane.putCharacter(ASCII_HT, _emphasisAction, _emphasis);
-//            case ASCII_DC1 -> transmit(TransmitMode.ALL);
-//            case ASCII_DC2 -> printTransparent();
-//            case ASCII_DC4 -> _statusPane.setKeyboardLocked(true);
-//            case 'C' -> _activeDisplayPane.deleteInDisplay();
-//            case 'D' -> _activeDisplayPane.insertInDisplay();
-//            case 'E' -> {} // transfer changed fields - not implemented
-//            case 'F' -> {} // transfer variable fields - not implemented
-//            case 'G' -> {} // transfer all fields - not implemented
-//            case 'H' -> printForm();
-//            case 'K' -> _activeDisplayPane.eraseToEndOfField();
-//            case 'L' -> _statusPane.setKeyboardLocked(false);
-//            case 'M' -> _activeDisplayPane.eraseDisplay();
-//            case 'T' -> { // Tell the terminal to respond with the cursor position
-//                try {
-//                    if (!controlPageIsActive()) {
-//                        var msg = new CursorPositionMessage(_activeDisplayPane.getCursorPosition());
-//                        _socketHandler.write(msg);
-//                        _statusPane.setKeyboardLocked(true);
-//                    }
-//                } catch (IOException ex) {
-//                    disconnect();
-//                    IO.println("Cannot send cursor position: " + ex.getMessage());
-//                }
-//            }
-//            case 'X' -> ingestPutCharacterHex(input);
-//            case 'Y' -> ingestAddEmphasis(input);
-//            case 'Z' -> ingestRemoveEmphasis(input);
-//            case '[' -> _activeDisplayPane.putCharacter(ASCII_ESC, _emphasisAction, _emphasis);
-//            case '{' -> ingestPutCharacterDecimal(input);
-//            case 'a' -> _activeDisplayPane.eraseUnprotectedData();
-//            case 'b' -> _activeDisplayPane.eraseToEndOfLine();
-//            case 'c' -> _activeDisplayPane.deleteInLine();
-//            case 'd' -> _activeDisplayPane.insertInLine();
-//            case 'e' -> _activeDisplayPane.cursorToHome();
-//            case 'f' -> _activeDisplayPane.scanUp();
-//            case 'g' -> _activeDisplayPane.scanLeft();
-//            case 'h' -> _activeDisplayPane.scanRight();
-//            case 'i' -> _activeDisplayPane.scanDown();
-//            case 'j' -> _activeDisplayPane.insertLine();
-//            case 'k' -> _activeDisplayPane.deleteLine();
-//            case 'o' -> toggleControlPage();
-//            case 't' -> transmit(TransmitMode.CHANGED);
-//            case 'u' -> _activeDisplayPane.clearChangedBits();
-//            case 'w' -> _activeDisplayPane.fccClear();
-//            case 'y' -> _activeDisplayPane.duplicateLine();
-//            case 'z' -> _activeDisplayPane.tabBackward();
-//            default -> throw new InvalidEscapeSequenceException(ch2);
-//        }
-//
-//        // TODO there are a couple of special things that have to be the last thing before ETX - impose that.
-//        return true;
 //    }
 
     /**
@@ -1170,8 +1060,8 @@ public class Terminal extends Pane implements UTSSocketListener {
                     case DELETE_IN_LINE -> _activeDisplayPane.deleteInLine();
                     case DELETE_LINE -> _activeDisplayPane.deleteLine();
                     case ERASE_DISPLAY -> _activeDisplayPane.eraseDisplay();
-                    case ERASE_TO_END_OF_FIELD -> _activeDisplayPane.eraseToEndOfField();
-                    case ERASE_TO_END_OF_LINE -> _activeDisplayPane.eraseToEndOfLine();
+                    case ERASE_TO_END_OF_FIELD -> _activeDisplayPane.eraseToEndOfField(false);
+                    case ERASE_TO_END_OF_LINE -> _activeDisplayPane.eraseToEndOfLine(false);
                     case ERASE_UNPROTECTED_DATA -> _activeDisplayPane.eraseUnprotectedData();
                     case FCC_SEQUENCE -> {
                         var fPrim = (UTSFCCSequencePrimitive) prim;
