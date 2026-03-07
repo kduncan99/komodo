@@ -107,6 +107,10 @@ public class MiscKeyPad extends GridPane implements KeyPad, KeyListener {
     }
 
     @Override
+    public void notifyReleased(final Pane source, final int id) {
+    }
+
+    @Override
     public void refreshButtons() {
         // Re-evaluate enablement of certain buttons
         for (var button : _buttons) {

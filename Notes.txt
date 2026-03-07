@@ -1,12 +1,12 @@
 --------------------
 TODO InProgress
-BUG : No one is handling key released, which we should for certain keyboard actions.
 Need to figure out how to extend jpackage to include all executables
 
 Kute
     Console test app - should detect screen geometry and accommodate it
     Console test app - need to finish this up
         Set up pseudo-random read-only and read-reply messages
+    Disable almost all the keypad keys when keyboard is locked
     Tab forward is maybe broken
     Tab backward
     Lots of other basic stuff which is currently TODO in the code

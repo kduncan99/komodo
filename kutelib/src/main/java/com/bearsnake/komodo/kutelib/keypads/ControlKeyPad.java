@@ -86,6 +86,7 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
         _buttons[0][3] = new Key("Insert\nIn Disp", this, ID_INSERT_IN_DISP, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][4] = new Key("Insert\nLine", this, ID_INSERT_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][5] = new Key("Reset", this, ID_RESET, DARK_RED_TOP, DARK_RED_BOTTOM, TEXT_WHITE, this);
+        // TODO The following 5 buttons need to enable/disable based on active terminal states
         _buttons[0][6] = new Key("Connect\nSession", this, ID_CONNECT_SESSION, ORANGE_TOP, ORANGE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][7] = new Key("Drop\nSession", this, ID_DROP_SESSION, ORANGE_TOP, ORANGE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][8] = new Key("Trace\nStop", this, ID_TRACE_STOP, LIGHT_ORANGE_TOP, LIGHT_ORANGE_BOTTOM, TEXT_BLACK, this);
@@ -169,6 +170,10 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
             case ID_KB_UNLOCK -> _activeTerminal.kbUnlock();
             case ID_MSG_WAIT -> _activeTerminal.kbMessageWait();
         }
+    }
+
+    @Override
+    public void notifyReleased(final Pane source, final int id) {
     }
 
     @Override

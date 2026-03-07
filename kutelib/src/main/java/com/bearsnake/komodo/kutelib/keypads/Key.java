@@ -47,6 +47,8 @@ public class Key extends Button {
         _textColor = textColor;
         _listener = listener;
 
+        setFocusTraversable(false);
+
         setOnAction(event -> {
             if (!isDisabled() && _listener != null) {
                 _listener.notify(_source, _id);
@@ -58,7 +60,14 @@ public class Key extends Button {
         disableProperty().addListener((observable, oldValue, newValue) -> updateStyle());
 
         // Listen for pressed property changes (mouse/SPACE)
-        pressedProperty().addListener((observable, oldValue, newValue) -> updateStyle());
+        pressedProperty().addListener((observable, oldValue, newValue) -> {
+            updateStyle();
+            if (!newValue && _listener != null) {
+                // The button was released.
+                // We notify released regardless of disabled state, matching the key event behavior.
+                _listener.notifyReleased(_source, _id);
+            }
+        });
 
         // Intercept key events to show pressed state
         addEventHandler(KeyEvent.KEY_PRESSED, event -> {
@@ -68,6 +77,9 @@ public class Key extends Button {
         addEventHandler(KeyEvent.KEY_RELEASED, event -> {
             _isKeyPressed = false;
             updateStyle();
+            if (_listener != null) {
+                _listener.notifyReleased(_source, _id);
+            }
         });
 
         updateStyle();

@@ -81,6 +81,7 @@ public class Terminal extends Pane implements UTSSocketListener {
 
         addEventFilter(KeyEvent.KEY_TYPED, this::handleKeyTyped);
         addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+        addEventFilter(KeyEvent.KEY_RELEASED, this::handleKeyReleasedEvent);
     }
 
     public void adjustLayout() {
@@ -290,6 +291,16 @@ public class Terminal extends Pane implements UTSSocketListener {
         }
     }
 
+    private void handleKeyReleasedEvent(final KeyEvent event) {
+        if (event.isMetaDown() || event.isShortcutDown() || event.isAltDown()) {
+            return;
+        }
+
+        switch (event.getCode()) {
+            case HOME, DOWN, LEFT, RIGHT, UP -> handleKeyReleased(event.getCode());
+        }
+    }
+
     /**
      * We don't resolve protected cells until after a key is released...
      * at least not for cursor scanning key input which we get from handleKeyPressed().
@@ -298,7 +309,6 @@ public class Terminal extends Pane implements UTSSocketListener {
      * @param keyCode key which was released (which we currently don't need to know)
      */
     public void handleKeyReleased(final KeyCode keyCode) {
-        // TODO no one is invoking this... they should
         _activeDisplayPane.resolveProtectedCell();
     }
 

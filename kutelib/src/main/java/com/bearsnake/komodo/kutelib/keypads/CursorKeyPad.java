@@ -99,6 +99,17 @@ public class CursorKeyPad extends GridPane implements KeyPad, KeyListener {
     }
 
     @Override
+    public void notifyReleased(final Pane source, final int id) {
+        switch (id) {
+            case ID_HOME -> _activeTerminal.handleKeyReleased(javafx.scene.input.KeyCode.HOME);
+            case ID_UP -> _activeTerminal.handleKeyReleased(javafx.scene.input.KeyCode.UP);
+            case ID_LEFT -> _activeTerminal.handleKeyReleased(javafx.scene.input.KeyCode.LEFT);
+            case ID_RIGHT -> _activeTerminal.handleKeyReleased(javafx.scene.input.KeyCode.RIGHT);
+            case ID_DOWN -> _activeTerminal.handleKeyReleased(javafx.scene.input.KeyCode.DOWN);
+        }
+    }
+
+    @Override
     public void refreshButtons() {
         // Re-evaluate enablement of certain buttons
         for (var button : _buttons) {

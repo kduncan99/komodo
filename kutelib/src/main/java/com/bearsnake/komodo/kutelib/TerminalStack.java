@@ -67,7 +67,10 @@ public class TerminalStack extends TabPane {
         if (!getTabs().isEmpty()) {
             getTabs().getFirst().setStyle("-fx-background-color: lightyellow;");
             var term = getTerminal(getTabs().getFirst());
-            Platform.runLater(term::adjustLayout);
+            Platform.runLater(() -> {
+                term.adjustLayout();
+                term.requestFocus();
+            });
         }
 
         addEventFilter(KeyEvent.KEY_TYPED, this::handleKeyTyped);
