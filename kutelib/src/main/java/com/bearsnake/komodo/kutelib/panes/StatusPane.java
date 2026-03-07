@@ -30,6 +30,8 @@ public class StatusPane extends Canvas {
     private final Coordinates _cursorPosition;
     private boolean _errorIndicator;
     private boolean _isConnected;
+    private final javafx.beans.property.BooleanProperty _connectedProperty = new javafx.beans.property.SimpleBooleanProperty(false);
+    private final javafx.beans.property.BooleanProperty _traceStateProperty = new javafx.beans.property.SimpleBooleanProperty(false);
     private boolean _keyboardLocked;
     private final javafx.beans.property.BooleanProperty _keyboardLockedProperty = new javafx.beans.property.SimpleBooleanProperty(false);
     private boolean _messageWaiting;
@@ -170,11 +172,22 @@ public class StatusPane extends Canvas {
      */
     public void setConnected(final boolean flag) {
         _isConnected = flag;
+        _connectedProperty.set(flag);
         scheduleDrawStatus();
+    }
+
+    public javafx.beans.property.ReadOnlyBooleanProperty connectedProperty() {
+        return _connectedProperty;
+    }
+
+    public javafx.beans.property.ReadOnlyBooleanProperty traceStateProperty() {
+        return _traceStateProperty;
     }
 
     /**
      * Updates the tracked cursor position
+     * @param row the new row position
+     * @param column the new column position
      */
     public void setCursorPosition(final int row, final int column) {
         _cursorPosition.setRow(row);
@@ -256,6 +269,7 @@ public class StatusPane extends Canvas {
      */
     public void setTraceIndicator() {
         _traceIndicator = true;
+        _traceStateProperty.set(!_traceStateProperty.get());
         scheduleDrawStatus();
     }
 }

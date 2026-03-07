@@ -29,4 +29,10 @@ public interface UTSSocketListener {
      * @param source SocketChannelHandler that sent the notification
      */
     default void socketTrafficTraced(final UTSSocketHandler source) {}
+
+    /**
+     * Indicates that the trace state has changed.
+     * @param source SocketChannelHandler that sent the notification
+     */
+    default void socketTraceStateChanged(final UTSSocketHandler source) {}
 }

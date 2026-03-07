@@ -25,6 +25,12 @@ public class TerminalStack extends TabPane {
     private final ChangeListener<Boolean> _keyboardLockedListener = (observable, oldValue, newValue) -> {
         _keyPads.forEach(KeyPad::refreshButtons);
     };
+    private final ChangeListener<Boolean> _connectedListener = (observable, oldValue, newValue) -> {
+        _keyPads.forEach(KeyPad::refreshButtons);
+    };
+    private final ChangeListener<Boolean> _traceStateListener = (observable, oldValue, newValue) -> {
+        _keyPads.forEach(KeyPad::refreshButtons);
+    };
 
     public TerminalStack() {
         // TODO temporary hard-coded terminals
@@ -50,9 +56,17 @@ public class TerminalStack extends TabPane {
                     oldValue.setStyle("");
                     var oldTerminal = getTerminal(oldValue);
                     if (oldTerminal != null) {
-                        var prop = oldTerminal.keyboardLockedProperty();
-                        if (prop != null) {
-                            prop.removeListener(_keyboardLockedListener);
+                        var lockProp = oldTerminal.keyboardLockedProperty();
+                        if (lockProp != null) {
+                            lockProp.removeListener(_keyboardLockedListener);
+                        }
+                        var connProp = oldTerminal.connectedProperty();
+                        if (connProp != null) {
+                            connProp.removeListener(_connectedListener);
+                        }
+                        var traceProp = oldTerminal.traceStateProperty();
+                        if (traceProp != null) {
+                            traceProp.removeListener(_traceStateListener);
                         }
                     }
                 }
@@ -61,6 +75,8 @@ public class TerminalStack extends TabPane {
                     var newActiveTerminal = getTerminal(newValue);
                     newActiveTerminal.adjustLayout();
                     newActiveTerminal.keyboardLockedProperty().addListener(_keyboardLockedListener);
+                    newActiveTerminal.connectedProperty().addListener(_connectedListener);
+                    newActiveTerminal.traceStateProperty().addListener(_traceStateListener);
                     _keyPads.forEach(keyPad -> keyPad.setActiveTerminal(newActiveTerminal));
                 }
             }
@@ -79,6 +95,8 @@ public class TerminalStack extends TabPane {
             getTabs().getFirst().setStyle("-fx-background-color: lightyellow;");
             var term = getTerminal(getTabs().getFirst());
             term.keyboardLockedProperty().addListener(_keyboardLockedListener);
+            term.connectedProperty().addListener(_connectedListener);
+            term.traceStateProperty().addListener(_traceStateListener);
             Platform.runLater(() -> {
                 term.adjustLayout();
                 term.requestFocus();

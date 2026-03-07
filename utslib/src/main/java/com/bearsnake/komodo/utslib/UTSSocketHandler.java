@@ -140,6 +140,11 @@ public class UTSSocketHandler extends SocketHandler implements SocketListener {
         _utsListener.socketTrafficTraced(this);
     }
 
+    @Override
+    public void socketTraceStateChanged(final SocketHandler source) {
+        _utsListener.socketTraceStateChanged(this);
+    }
+
     /**
      * Writes a UTSMessage to the socket.
      * @param message the message to write

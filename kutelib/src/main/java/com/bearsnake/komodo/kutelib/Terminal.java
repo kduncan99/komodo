@@ -344,6 +344,14 @@ public class Terminal extends Pane implements UTSSocketListener {
         return _statusPane == null ? null : _statusPane.keyboardLockedProperty();
     }
 
+    public javafx.beans.property.ReadOnlyBooleanProperty connectedProperty() {
+        return _statusPane == null ? null : _statusPane.connectedProperty();
+    }
+
+    public javafx.beans.property.ReadOnlyBooleanProperty traceStateProperty() {
+        return _statusPane == null ? null : _statusPane.traceStateProperty();
+    }
+
     /**
      * Resets the terminal - this can be invoked externally, but that is not a requirement of this project.
      */
@@ -1343,6 +1351,11 @@ public class Terminal extends Pane implements UTSSocketListener {
     @Override
     public void socketTrafficTraced(final UTSSocketHandler source) {
         _statusPane.notifyTrace();
+    }
+
+    @Override
+    public void socketTraceStateChanged(final UTSSocketHandler source) {
+        _statusPane.setTraceIndicator();
     }
 
     // ---------------------------------------------------------------------------------------------

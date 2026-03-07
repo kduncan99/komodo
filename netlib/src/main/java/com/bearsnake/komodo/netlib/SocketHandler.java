@@ -84,6 +84,9 @@ public class SocketHandler extends Thread {
     public synchronized void tracePause() {
         if (_currentTrace != null) {
             _isTracePaused = true;
+            if (_listener != null) {
+                _listener.socketTraceStateChanged(this);
+            }
         }
     }
 
@@ -95,6 +98,9 @@ public class SocketHandler extends Thread {
         if (_currentTrace != null) {
             if (_isTracePaused) {
                 _isTracePaused = false;
+                if (_listener != null) {
+                    _listener.socketTraceStateChanged(this);
+                }
                 return true;
             } else {
                 return false;
@@ -102,6 +108,9 @@ public class SocketHandler extends Thread {
         } else {
             _currentTrace = new SocketTrace();
             _isTracePaused = false;
+            if (_listener != null) {
+                _listener.socketTraceStateChanged(this);
+            }
             return true;
         }
     }
@@ -117,6 +126,9 @@ public class SocketHandler extends Thread {
             var trace = _currentTrace;
             _currentTrace = null;
             _isTracePaused = false;
+            if (_listener != null) {
+                _listener.socketTraceStateChanged(this);
+            }
             return trace;
         }
     }

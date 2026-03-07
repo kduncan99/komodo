@@ -128,9 +128,8 @@ public class Key extends Button {
     public void updateStyle() {
         if (isDisabled()) {
             // Light-to-dark gray gradient, but preserving a hint of the base color
-            Color desaturatedColor = _baseColorTop.desaturate();
-            String topColor = toWebColor(desaturatedColor.deriveColor(0, 0.4, 1.2, 1.0));
-            String bottomColor = toWebColor(desaturatedColor.deriveColor(0, 0.4, 0.8, 1.0));
+            String topColor = toWebColor(_baseColorTop.deriveColor(0, 0.8, 1.0, 1.0));
+            String bottomColor = toWebColor(_baseColorBottom.deriveColor(0, 0.8, 1.0, 1.0));
             String textColor = "#333333";
             setStyle(String.format("-fx-background-color: linear-gradient(to bottom, %s, %s); " +
                                    "-fx-text-fill: %s; " +

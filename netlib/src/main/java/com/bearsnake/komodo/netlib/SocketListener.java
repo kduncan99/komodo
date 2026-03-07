@@ -30,4 +30,10 @@ public interface SocketListener {
      * @param source SocketChannelHandler that sent the notification
      */
     default void socketTrafficTraced(final SocketHandler source) {}
+
+    /**
+     * Indicates that the trace state has changed.
+     * @param source SocketChannelHandler that sent the notification
+     */
+    default void socketTraceStateChanged(final SocketHandler source) {}
 }

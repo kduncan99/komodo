@@ -86,7 +86,6 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
         _buttons[0][3] = new Key("Insert\nIn Disp", this, ID_INSERT_IN_DISP, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][4] = new Key("Insert\nLine", this, ID_INSERT_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][5] = new Key("Reset", this, ID_RESET, DARK_RED_TOP, DARK_RED_BOTTOM, TEXT_WHITE, this);
-        // TODO The following 5 buttons need to enable/disable based on active terminal states
         _buttons[0][6] = new Key("Connect\nSession", this, ID_CONNECT_SESSION, ORANGE_TOP, ORANGE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][7] = new Key("Drop\nSession", this, ID_DROP_SESSION, ORANGE_TOP, ORANGE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][8] = new Key("Trace\nStop", this, ID_TRACE_STOP, LIGHT_ORANGE_TOP, LIGHT_ORANGE_BOTTOM, TEXT_BLACK, this);
@@ -179,12 +178,16 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
     @Override
     public void refreshButtons() {
         boolean locked = (_activeTerminal != null) && _activeTerminal.isKeyboardLocked();
+        boolean connected = (_activeTerminal != null) && _activeTerminal.isConnected();
+        boolean traceActive = (_activeTerminal != null) && _activeTerminal.isTraceActive();
+        boolean tracePaused = (_activeTerminal != null) && _activeTerminal.isTracePaused();
+
         for (int rx = 0; rx < 2; rx++) {
             for (int cx = 0; cx < 14; cx++) {
                 Key button = _buttons[rx][cx];
                 if (button != null) {
+                    int id = button.getIdValue();
                     if (locked) {
-                        int id = button.getIdValue();
                         boolean allowed = switch (id) {
                             case ID_RESET,
                                  ID_CONNECT_SESSION,
@@ -198,12 +201,24 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
                         };
                         button.setDisable(!allowed);
                     } else {
-                        // When unlocked, we might need to re-enable them,
-                        // but some buttons might have other reasons to be disabled.
-                        // For now, let's just enable everything if it's unlocked,
-                        // except those explicitly managed elsewhere if any.
                         button.setDisable(false);
                     }
+
+                    // Further individual overrides
+                    if (!button.isDisabled()) {
+                        if (id == ID_CONNECT_SESSION) {
+                            button.setDisable(connected);
+                        } else if (id == ID_DROP_SESSION) {
+                            button.setDisable(!connected);
+                        } else if (id == ID_TRACE_STOP) {
+                            button.setDisable(!(connected && (traceActive || tracePaused)));
+                        } else if (id == ID_TRACE_PAUSE) {
+                            button.setDisable(!(connected && traceActive && !tracePaused));
+                        } else if (id == ID_TRACE_START) {
+                            button.setDisable(!(connected && (!traceActive || tracePaused)));
+                        }
+                    }
+
                     button.updateStyle();
                 }
             }
