@@ -111,9 +111,10 @@ public class CursorKeyPad extends GridPane implements KeyPad, KeyListener {
 
     @Override
     public void refreshButtons() {
-        // Re-evaluate enablement of certain buttons
+        boolean locked = (_activeTerminal != null) && _activeTerminal.isKeyboardLocked();
         for (var button : _buttons) {
             if (button != null) {
+                button.setDisable(locked);
                 button.updateStyle();
             }
         }
@@ -122,5 +123,6 @@ public class CursorKeyPad extends GridPane implements KeyPad, KeyListener {
     @Override
     public void setActiveTerminal(Terminal terminal) {
         _activeTerminal = terminal;
+        refreshButtons();
     }
 }

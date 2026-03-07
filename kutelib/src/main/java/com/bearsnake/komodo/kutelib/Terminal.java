@@ -334,6 +334,17 @@ public class Terminal extends Pane implements UTSSocketListener {
     }
 
     /**
+     * Indicates whether the keyboard is locked.
+     */
+    public boolean isKeyboardLocked() {
+        return (_statusPane != null) && _statusPane.isKeyboardLocked();
+    }
+
+    public javafx.beans.property.ReadOnlyBooleanProperty keyboardLockedProperty() {
+        return _statusPane == null ? null : _statusPane.keyboardLockedProperty();
+    }
+
+    /**
      * Resets the terminal - this can be invoked externally, but that is not a requirement of this project.
      */
     public void reset() {

@@ -178,11 +178,33 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
 
     @Override
     public void refreshButtons() {
-        // Re-evaluate enablement of certain buttons
+        boolean locked = (_activeTerminal != null) && _activeTerminal.isKeyboardLocked();
         for (int rx = 0; rx < 2; rx++) {
             for (int cx = 0; cx < 14; cx++) {
-                if (_buttons[rx][cx] != null) {
-                    _buttons[rx][cx].updateStyle();
+                Key button = _buttons[rx][cx];
+                if (button != null) {
+                    if (locked) {
+                        int id = button.getIdValue();
+                        boolean allowed = switch (id) {
+                            case ID_RESET,
+                                 ID_CONNECT_SESSION,
+                                 ID_DROP_SESSION,
+                                 ID_TRACE_STOP,
+                                 ID_TRACE_PAUSE,
+                                 ID_TRACE_START,
+                                 ID_KB_UNLOCK,
+                                 ID_MSG_WAIT -> true;
+                            default -> false;
+                        };
+                        button.setDisable(!allowed);
+                    } else {
+                        // When unlocked, we might need to re-enable them,
+                        // but some buttons might have other reasons to be disabled.
+                        // For now, let's just enable everything if it's unlocked,
+                        // except those explicitly managed elsewhere if any.
+                        button.setDisable(false);
+                    }
+                    button.updateStyle();
                 }
             }
         }
@@ -191,5 +213,6 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
     @Override
     public void setActiveTerminal(Terminal terminal) {
         _activeTerminal = terminal;
+        refreshButtons();
     }
 }

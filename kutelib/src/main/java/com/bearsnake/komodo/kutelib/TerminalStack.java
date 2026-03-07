@@ -22,6 +22,9 @@ import java.util.Set;
 public class TerminalStack extends TabPane {
 
     private final Set<KeyPad> _keyPads = new HashSet<>();
+    private final ChangeListener<Boolean> _keyboardLockedListener = (observable, oldValue, newValue) -> {
+        _keyPads.forEach(KeyPad::refreshButtons);
+    };
 
     public TerminalStack() {
         // TODO temporary hard-coded terminals
@@ -45,11 +48,19 @@ public class TerminalStack extends TabPane {
             public void changed(ObservableValue<? extends Tab> observable, Tab oldValue, Tab newValue) {
                 if (oldValue != null) {
                     oldValue.setStyle("");
+                    var oldTerminal = getTerminal(oldValue);
+                    if (oldTerminal != null) {
+                        var prop = oldTerminal.keyboardLockedProperty();
+                        if (prop != null) {
+                            prop.removeListener(_keyboardLockedListener);
+                        }
+                    }
                 }
                 if (newValue != null) {
                     newValue.setStyle("-fx-background-color: lightyellow;");
                     var newActiveTerminal = getTerminal(newValue);
                     newActiveTerminal.adjustLayout();
+                    newActiveTerminal.keyboardLockedProperty().addListener(_keyboardLockedListener);
                     _keyPads.forEach(keyPad -> keyPad.setActiveTerminal(newActiveTerminal));
                 }
             }
@@ -67,6 +78,7 @@ public class TerminalStack extends TabPane {
         if (!getTabs().isEmpty()) {
             getTabs().getFirst().setStyle("-fx-background-color: lightyellow;");
             var term = getTerminal(getTabs().getFirst());
+            term.keyboardLockedProperty().addListener(_keyboardLockedListener);
             Platform.runLater(() -> {
                 term.adjustLayout();
                 term.requestFocus();

@@ -42,6 +42,7 @@ public class Key extends Button {
         super(text);
         _source = source;
         _id = id;
+        setUserData(id);
         _baseColorTop = baseColorTop;
         _baseColorBottom = baseColorBottom;
         _textColor = textColor;
@@ -103,6 +104,10 @@ public class Key extends Button {
     public void setTextColor(final Color textColor) {
         _textColor = textColor;
         updateStyle();
+    }
+
+    public int getIdValue() {
+        return _id;
     }
 
     /**

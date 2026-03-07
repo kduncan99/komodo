@@ -31,6 +31,7 @@ public class StatusPane extends Canvas {
     private boolean _errorIndicator;
     private boolean _isConnected;
     private boolean _keyboardLocked;
+    private final javafx.beans.property.BooleanProperty _keyboardLockedProperty = new javafx.beans.property.SimpleBooleanProperty(false);
     private boolean _messageWaiting;
     private boolean _pollIndicator;
     private boolean _traceIndicator;
@@ -214,7 +215,12 @@ public class StatusPane extends Canvas {
      */
     public void setKeyboardLocked(final boolean flag) {
         _keyboardLocked = flag;
+        _keyboardLockedProperty.set(flag);
         scheduleDrawStatus();
+    }
+
+    public javafx.beans.property.ReadOnlyBooleanProperty keyboardLockedProperty() {
+        return _keyboardLockedProperty;
     }
 
     /**
