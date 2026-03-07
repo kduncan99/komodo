@@ -10,7 +10,7 @@ import com.bearsnake.komodo.utslib.exceptions.UTSBufferOverflowException;
 import com.bearsnake.komodo.utslib.exceptions.UTSCoordinateException;
 import com.bearsnake.komodo.utslib.exceptions.UTSIncompleteEscapeSequenceException;
 import com.bearsnake.komodo.utslib.exceptions.UTSInvalidEscapeSequenceException;
-import com.bearsnake.komodo.utslib.primitives.UTSCursorPositionPrimitive;
+import com.bearsnake.komodo.utslib.primitives.CursorPositionPrimitive;
 
 import java.nio.ByteBuffer;
 
@@ -45,7 +45,7 @@ public class CursorPositionMessage implements UTSMessage {
                 return null;
             }
 
-            var prim = UTSCursorPositionPrimitive.deserializePrimitive(bb);
+            var prim = CursorPositionPrimitive.deserializePrimitive(bb);
             if (prim == null) {
                 return null;
             }
@@ -66,12 +66,12 @@ public class CursorPositionMessage implements UTSMessage {
     @Override
     public ByteBuffer getByteBuffer() {
         try {
-            var prim = new UTSCursorPositionPrimitive(_coordinates.getRow(), _coordinates.getColumn());
+            var prim = new CursorPositionPrimitive(_coordinates.getRow(), _coordinates.getColumn());
             var bb = new UTSByteBuffer(16);
             bb.put(ASCII_SOH).put(ASCII_STX);
             prim.serialize(bb);
             bb.put(ASCII_ETX);
-            bb.setPointer(0);
+            bb.setIndex(0);
             return ByteBuffer.wrap(bb.getBuffer());
         } catch (UTSCoordinateException ex) {
             // should not be possible at this point

@@ -15,14 +15,14 @@ import static com.bearsnake.komodo.baselib.Constants.ASCII_EM;
 /**
  * For Immediate FCC sequences
  */
-public class UTSImmediateFCCSequencePrimitive extends UTSPrimitive {
+public class ImmediateFCCSequencePrimitive extends Primitive {
 
     private final FieldAttributes _attributes;
     private boolean _sendExpandedColor;
     private boolean _sendExpanded;
 
-    public UTSImmediateFCCSequencePrimitive(final FieldAttributes attributes) {
-        super(UTSPrimitiveType.IMMEDIATE_FCC_SEQUENCE);
+    public ImmediateFCCSequencePrimitive(final FieldAttributes attributes) {
+        super(PrimitiveType.IMMEDIATE_FCC_SEQUENCE);
         _attributes = attributes;
         _sendExpanded = true;
         _sendExpandedColor = true;
@@ -59,18 +59,20 @@ public class UTSImmediateFCCSequencePrimitive extends UTSPrimitive {
         _sendExpanded = flag;
     }
 
-    public static UTSImmediateFCCSequencePrimitive deserializePrimitive(final UTSByteBuffer source)
+    public static ImmediateFCCSequencePrimitive deserializePrimitive(final UTSByteBuffer source,
+                                                                     final boolean emphasisSupported,
+                                                                     final boolean colorSupported)
         throws UTSIncompleteFCCSequenceException,
                UTSInvalidFCCSequenceException {
         try {
-            var pointer = source.getPointer();
+            var pointer = source.getIndex();
             if (source.atEnd() || (source.getNext() != ASCII_EM)) {
-                source.setPointer(pointer);
+                source.setIndex(pointer);
                 return null;
             }
 
-            var attributes = FieldAttributes.deserialize(source);
-            return new UTSImmediateFCCSequencePrimitive(attributes);
+            var attributes = FieldAttributes.deserialize(source, emphasisSupported, colorSupported);
+            return new ImmediateFCCSequencePrimitive(attributes);
         } catch (UTSBufferOverflowException ex) {
             throw new UTSIncompleteFCCSequenceException();
         }

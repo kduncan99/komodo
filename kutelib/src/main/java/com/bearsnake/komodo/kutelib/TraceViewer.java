@@ -10,7 +10,7 @@ import com.bearsnake.komodo.utslib.exceptions.UTSBufferOverflowException;
 import com.bearsnake.komodo.utslib.exceptions.UTSException;
 import com.bearsnake.komodo.utslib.messages.TextMessage;
 import com.bearsnake.komodo.utslib.messages.UTSMessage;
-import com.bearsnake.komodo.utslib.primitives.UTSPrimitive;
+import com.bearsnake.komodo.utslib.primitives.Primitive;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -217,7 +217,7 @@ public class TraceViewer extends Stage {
             try {
                 if (_primitives.isSelected()) {
                     try {
-                        var prim = UTSPrimitive.deserializePrimitive(buffer);
+                        var prim = Primitive.deserializePrimitive(buffer, true, true);
                         if (prim != null) {
                             var text = new Text((prevChar ? " " : "") + prim + " ");
                             text.setFont(MONOSPACED_FONT);

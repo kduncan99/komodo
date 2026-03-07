@@ -47,6 +47,7 @@ public class Terminal extends Pane implements UTSSocketListener {
 
     private Emphasis _emphasis;
     private EmphasisAction _emphasisAction;
+    private boolean _sendColorFccs; // only true if color is supported in settings, and it is not disabled by host
 
     public Terminal(final String name,
                     final TerminalSettings terminalSettings,
@@ -59,6 +60,7 @@ public class Terminal extends Pane implements UTSSocketListener {
         _controlPagePane = null;
         _activeDisplayPane = _displayPane;
         _emphasis = new Emphasis();
+        _sendColorFccs = _settings.isColorSupported();
 
         _displayPane.setLayoutX(0);
         _displayPane.setLayoutY(0);
@@ -1032,30 +1034,40 @@ public class Terminal extends Pane implements UTSSocketListener {
             }
 
             // Look for a UTS primitive
-            var prim = UTSPrimitive.deserializePrimitive(input);
+            var prim = Primitive.deserializePrimitive(input, _settings.isEmphasisSupported(), _settings.isColorSupported());
             if (prim != null) {
                 switch (prim.getType()) {
-                    case ADD_EMPHASIS -> {}//TODO
+                    case ADD_EMPHASIS -> {
+                        if (_settings.isEmphasisSupported()) {
+                            // TODO
+                        }
+                    }
                     case BACKWARD_TAB -> _activeDisplayPane.tabBackward();
                     case CLEAR_CHANGED_BITS -> _activeDisplayPane.clearChangedBits();
                     case CLEAR_FCC -> _activeDisplayPane.fccClear();
                     case CONTROL_PAGE_ACCESS -> toggleControlPage();
                     case CREATE_REPLACE_EMPHASIS -> {
-                        var ePrim = (UTSCreateEmphasisPrimitive) prim;
-                        if (ePrim.allFlagsClear() && (_emphasisAction != EmphasisAction.NONE)) {
-                            _emphasis = null;
-                            _emphasisAction = EmphasisAction.NONE;
-                        } else {
-                            _emphasis = new Emphasis(ePrim.getColumnSeparator(), ePrim.getStrikeThrough(), ePrim.getUnderscore());
-                            _emphasisAction = EmphasisAction.SET;
+                        if (_settings.isEmphasisSupported()) {
+                            var ePrim = (CreateEmphasisPrimitive) prim;
+                            if (ePrim.allFlagsClear() && (_emphasisAction != EmphasisAction.NONE)) {
+                                _emphasis = null;
+                                _emphasisAction = EmphasisAction.NONE;
+                            } else {
+                                _emphasis = new Emphasis(ePrim.getColumnSeparator(), ePrim.getStrikeThrough(), ePrim.getUnderscore());
+                                _emphasisAction = EmphasisAction.SET;
+                            }
                         }
                     }
                     case CURSOR_POSITION -> {
-                        var cpPrim = (UTSCursorPositionPrimitive) prim;
+                        var cpPrim = (CursorPositionPrimitive) prim;
                         _activeDisplayPane.setCursorPosition(new Coordinates(cpPrim.getRow(), cpPrim.getColumn()));
                     }
                     case CURSOR_TO_HOME -> _activeDisplayPane.cursorToHome();
-                    case DELETE_EMPHASIS -> {}//TODO
+                    case DELETE_EMPHASIS -> {
+                        if (_settings.isEmphasisSupported()) {
+                            // TODO
+                        }
+                    }
                     case DELETE_IN_DISPLAY -> _activeDisplayPane.deleteInDisplay();
                     case DELETE_IN_LINE -> _activeDisplayPane.deleteInLine();
                     case DELETE_LINE -> _activeDisplayPane.deleteLine();
@@ -1064,13 +1076,13 @@ public class Terminal extends Pane implements UTSSocketListener {
                     case ERASE_TO_END_OF_LINE -> _activeDisplayPane.eraseToEndOfLine(false);
                     case ERASE_UNPROTECTED_DATA -> _activeDisplayPane.eraseUnprotectedData();
                     case FCC_SEQUENCE -> {
-                        var fPrim = (UTSFCCSequencePrimitive) prim;
+                        var fPrim = (FCCSequencePrimitive) prim;
                         var coord = new Coordinates(fPrim.getRow(), fPrim.getColumn());
                         _activeDisplayPane.setCursorPosition(coord);
                         _activeDisplayPane.putFCC(fPrim.getAttributes());
                     }
                     case IMMEDIATE_FCC_SEQUENCE -> {
-                        var fPrim = (UTSImmediateFCCSequencePrimitive) prim;
+                        var fPrim = (ImmediateFCCSequencePrimitive) prim;
                         _activeDisplayPane.putFCC(fPrim.getAttributes());
                     }
                     case INSERT_IN_DISPLAY -> _activeDisplayPane.insertInDisplay();
@@ -1081,9 +1093,25 @@ public class Terminal extends Pane implements UTSSocketListener {
                     case PRINT_ALL -> printAll();
                     case PRINT_FORM -> printForm();
                     case PRINT_TRANSPARENT -> printTransparent();
-                    case PUT_DECIMAL -> {}//TODO
+                    case PUT_DECIMAL -> {
+                        var pPrim = (PutCharacterDecimalPrimitive) prim;
+                        _activeDisplayPane.putCharacter(pPrim.getValue(), _emphasisAction, _emphasis);
+                    }
                     case PUT_ESCAPE -> _activeDisplayPane.putCharacter(ASCII_ESC, _emphasisAction, _emphasis);
-                    case PUT_HEXADECIMAL -> {}//TODO
+                    case PUT_HEXADECIMAL -> {
+                        var pPrim = (PutCharacterHexPrimitive) prim;
+                        _activeDisplayPane.putCharacter(pPrim.getValue(), _emphasisAction, _emphasis);
+                    }
+                    case REPORT_COLOR_FCC_DISABLE -> {
+                        if (_settings.isColorSupported()) {
+                            _sendColorFccs = false;
+                        }
+                    }
+                    case REPORT_COLOR_FCC_ENABLE -> {
+                        if (_settings.isColorSupported()) {
+                            _sendColorFccs = true;
+                        }
+                    }
                     case SCAN_DOWN -> _activeDisplayPane.scanDown();
                     case SCAN_LEFT -> _activeDisplayPane.scanLeft();
                     case SCAN_RIGHT -> _activeDisplayPane.scanRight();
@@ -1134,70 +1162,17 @@ public class Terminal extends Pane implements UTSSocketListener {
         _activeDisplayPane.setDeferred(false);
     }
 
-    // Wrapper around putCharacter(), but we have to get the character from the stream as decimal digits
-    // representing a value from 0 to 127 inclusive, followed by a '}' character
-    private void ingestPutCharacterDecimal(final UTSByteBuffer input) throws UTSException {
-        var value = 0;
-        boolean digits = false;
-        boolean done = false;
-        while (!input.atEnd()) {
-            var ch = input.getNext();
-            if (ch == '}') {
-                done = true;
-                break;
-            }
-
-            if (!Character.isDigit(ch)) {
-                throw new UTSInvalidEscapeSequenceException();
-            }
-            value = value * 10 + (ch - '0');
-            digits = true;
-        }
-
-        if (!done) {
-            throw new UTSIncompleteEscapeSequenceException();
-        }
-
-        if (!digits || (value > 127)) {
-            throw new UTSInvalidEscapeSequenceException();
-        }
-
-        _activeDisplayPane.putCharacter((byte)value, _emphasisAction, _emphasis);
-    }
-
-    // As above, but we have to get the character from the stream as exactly two hex digits
-    // representing a value from 0 to 255 inclusive.
-    private void ingestPutCharacterHex(final UTSByteBuffer input) throws UTSException {
-        var hex1 = input.getNext();
-        var hex2 = input.getNext();
-        var hexStr = String.format("%c%c", hex1, hex2);
-        var value = 0;
-        for (int i = 0; i < hexStr.length(); i++) {
-            var ch = hexStr.charAt(i);
-            if (Character.isDigit(ch)) {
-                value = value * 16 + (ch - '0');
-            } else if (ch >= 'a' && ch <= 'f') {
-                value = value * 16 + (ch - 'a' + 10);
-            } else if (ch >= 'A' && ch <= 'F') {
-                value = value * 16 + (ch - 'A' + 10);
-            } else {
-                throw new UTSInvalidEscapeSequenceException((byte)ch);
-            }
-        }
-
-        _activeDisplayPane.putCharacter((byte)value, _emphasisAction, _emphasis);
-    }
-
-    private void ingestRemoveEmphasis(final UTSByteBuffer input) throws UTSException {
-        // ESC Z code - we've already ingested ESC and Y
-        var code = input.getNext();
-        if ((code < 0x20) || (code > 0x2F)) {
-            throw new UTSInvalidEscapeSequenceException("Invalid emphasis code");
-        }
-
-        _emphasis = new Emphasis(code);
-        _emphasisAction = EmphasisAction.REMOVE;
-    }
+    // TODO obsolete after we incorporate it above
+//    private void ingestRemoveEmphasis(final UTSByteBuffer input) throws UTSException {
+//        // ESC Z code - we've already ingested ESC and Y
+//        var code = input.getNext();
+//        if ((code < 0x20) || (code > 0x2F)) {
+//            throw new UTSInvalidEscapeSequenceException("Invalid emphasis code");
+//        }
+//
+//        _emphasis = new Emphasis(code);
+//        _emphasisAction = EmphasisAction.REMOVE;
+//    }
 
     /**
      * Socket handler notifies us that the socket has been closed.
@@ -1286,7 +1261,7 @@ public class Terminal extends Pane implements UTSSocketListener {
             output.put(ASCII_SOH).put(ASCII_STX);
             var region = determineTransmitRegion();
             var coord = region.getStartingPosition();
-            new UTSCursorPositionPrimitive(coord.getRow(), coord.getColumn()).serialize(output);
+            new CursorPositionPrimitive(coord.getRow(), coord.getColumn()).serialize(output);
 
             var field = _displayPane.getCharacterCell(coord)
                                     .getField();
@@ -1298,11 +1273,12 @@ public class Terminal extends Pane implements UTSSocketListener {
 
                     // Serialize FCC sequence if we're at the first character of a field
                     if (coord.equals(field.getCoordinates()) && field instanceof ExplicitField eField) {
-                        var prim = new UTSFCCSequencePrimitive(eField.getCoordinates().getRow(),
-                                                               eField.getCoordinates().getColumn(),
-                                                               eField.getAttributes());
-                        prim.setSendExpanded(_settings.getSendExpandedFCCs());
-                        prim.setSendExpandedColor(_settings.getSendColorFCCs());
+                        var prim = new FCCSequencePrimitive(eField.getCoordinates().getRow(),
+                                                            eField.getCoordinates().getColumn(),
+                                                            eField.getAttributes());
+                        var sendColor = _settings.isColorSupported() && _sendColorFccs;
+                        prim.setSendExpanded(_settings.getSendExpandedFCCs() || sendColor);
+                        prim.setSendExpandedColor(sendColor);
                         prim.serialize(output);
                     }
 
@@ -1347,7 +1323,7 @@ public class Terminal extends Pane implements UTSSocketListener {
         }
 
         try {
-            _socketHandler.write(new TextMessage(output.setPointer(0).getBuffer()));
+            _socketHandler.write(new TextMessage(output.setIndex(0).getBuffer()));
             _statusPane.setKeyboardLocked(true);
         } catch (IOException ex) {
             disconnect(false);

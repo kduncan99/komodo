@@ -15,19 +15,19 @@ import static com.bearsnake.komodo.baselib.Constants.ASCII_ESC;
  * For Create/Replace Emphasis function
  *  ESC 0x2x
  */
-public class UTSCreateEmphasisPrimitive extends UTSPrimitive {
+public class CreateEmphasisPrimitive extends Primitive {
 
     private final Emphasis _emphasis;
 
-    public UTSCreateEmphasisPrimitive(final Emphasis emphasis) {
-        super(UTSPrimitiveType.CREATE_REPLACE_EMPHASIS);
+    public CreateEmphasisPrimitive(final Emphasis emphasis) {
+        super(PrimitiveType.CREATE_REPLACE_EMPHASIS);
         _emphasis = emphasis;
     }
 
-    public UTSCreateEmphasisPrimitive(final boolean columnSeparator,
-                                      final boolean strikeThrough,
-                                      final boolean underscore) {
-        super(UTSPrimitiveType.CREATE_REPLACE_EMPHASIS);
+    public CreateEmphasisPrimitive(final boolean columnSeparator,
+                                   final boolean strikeThrough,
+                                   final boolean underscore) {
+        super(PrimitiveType.CREATE_REPLACE_EMPHASIS);
         _emphasis = new Emphasis(columnSeparator, strikeThrough, underscore);
     }
 
@@ -36,23 +36,23 @@ public class UTSCreateEmphasisPrimitive extends UTSPrimitive {
     public boolean getStrikeThrough() { return _emphasis.isStrikeThrough(); }
     public boolean getUnderscore() { return _emphasis.isUnderscore(); }
 
-    public static UTSCreateEmphasisPrimitive deserializePrimitive(final UTSByteBuffer source) {
-        var pointer = source.getPointer();
+    public static CreateEmphasisPrimitive deserializePrimitive(final UTSByteBuffer source) {
+        var pointer = source.getIndex();
         try {
             if (source.atEnd() || (source.getNext() != ASCII_ESC)) {
-                source.setPointer(pointer);
+                source.setIndex(pointer);
                 return null;
             }
 
             var ch = source.getNext();
             if ((ch < 0x20) || (ch > 0x2F)) {
-                source.setPointer(pointer);
+                source.setIndex(pointer);
                 return null;
             }
 
-            return new UTSCreateEmphasisPrimitive(new Emphasis(ch));
+            return new CreateEmphasisPrimitive(new Emphasis(ch));
         } catch (UTSBufferOverflowException ex) {
-            source.setPointer(pointer);
+            source.setIndex(pointer);
             return null;
         }
     }

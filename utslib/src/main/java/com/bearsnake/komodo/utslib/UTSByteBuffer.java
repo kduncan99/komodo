@@ -7,7 +7,7 @@ package com.bearsnake.komodo.utslib;
 import com.bearsnake.komodo.utslib.exceptions.UTSBufferOverflowException;
 import com.bearsnake.komodo.utslib.exceptions.UTSCoordinateException;
 import com.bearsnake.komodo.utslib.exceptions.UTSFunctionKeyException;
-import com.bearsnake.komodo.utslib.primitives.UTSPrimitive;
+import com.bearsnake.komodo.utslib.primitives.Primitive;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -25,12 +25,12 @@ public class UTSByteBuffer {
 
     private byte[] _buffer;
     private int _limit;
-    private int _pointer;
+    private int _index;
 
     public UTSByteBuffer(final byte[] buffer) {
         _buffer = buffer.clone();
         _limit = _buffer.length;
-        _pointer = 0;
+        _index = 0;
         removeNulAndSyn();
     }
 
@@ -39,14 +39,14 @@ public class UTSByteBuffer {
                          final int length) {
         _buffer = Arrays.copyOfRange(buffer, offset, offset + length);
         _limit = _buffer.length;
-        _pointer = 0;
+        _index = 0;
         removeNulAndSyn();
     }
 
     public UTSByteBuffer(final int length) {
         _buffer = new byte[length];
         _limit = _buffer.length;
-        _pointer = 0;
+        _index = 0;
     }
 
     /**
@@ -65,10 +65,10 @@ public class UTSByteBuffer {
     }
 
     /**
-     * Indicates whether the pointer has reached the limit.
+     * Indicates whether the index has reached the limit.
      */
     public boolean atEnd() {
-        return _pointer >= _limit;
+        return _index >= _limit;
     }
 
     public void checkAtEnd() throws UTSBufferOverflowException {
@@ -79,16 +79,16 @@ public class UTSByteBuffer {
 
     /**
      * Compares the readable portion of the buffer to the given buffer.
-     * This consists of the data between the current pointer and the limit.
+     * This consists of the data between the current index and the limit.
      * @param buffer the buffer to compare to
      * @return true if the buffers are equal, false otherwise
      */
     public boolean equalsBuffer(final byte[] buffer) {
-        if (buffer.length != _limit - _pointer) {
+        if (buffer.length != _limit - _index) {
             return false;
         }
         for (int i = 0; i < buffer.length; i++) {
-            if (_buffer[_pointer + i] != buffer[i]) {
+            if (_buffer[_index + i] != buffer[i]) {
                 return false;
             }
         }
@@ -126,11 +126,11 @@ public class UTSByteBuffer {
     }
 
     /**
-     * Retrieves a subset of the backing buffer constrained by the pointer and the limit.
+     * Retrieves a subset of the backing buffer constrained by the index and the limit.
      * @return a subset of the backing buffer
      */
     public byte[] getBuffer() {
-        return Arrays.copyOfRange(_buffer, _pointer, _limit);
+        return Arrays.copyOfRange(_buffer, _index, _limit);
     }
 
     /**
@@ -154,6 +154,14 @@ public class UTSByteBuffer {
     }
 
     /**
+     * Retrieves the current index within the buffer.
+     * @return the current index
+     */
+    public int getIndex() {
+        return _index;
+    }
+
+    /**
      * Retrieves the limit of the buffer (that point at which no further get will succeed).
      * The limit does not limit puts, but is set by them (excepting the put with index).
      * @return the limit of the buffer
@@ -163,27 +171,19 @@ public class UTSByteBuffer {
     }
 
     /**
-     * Retrieves the next byte in the buffer, advancing the pointer.
+     * Retrieves the next byte in the buffer, advancing the index.
      * @return the next byte in the buffer, or null if at the end of the buffer
      */
     public Byte getNext() throws UTSBufferOverflowException {
         checkAtEnd();
-        return _buffer[_pointer++];
-    }
-
-    /**
-     * Retrieves the current pointer within the buffer.
-     * @return the current pointer within the buffer
-     */
-    public int getPointer() {
-        return _pointer;
+        return _buffer[_index++];
     }
 
     /**
      * Returns the number of bytes remaining in the buffer, constrained by the limit.
      */
     public int getRemaining() {
-        return _buffer.length - _pointer;
+        return _buffer.length - _index;
     }
 
     /**
@@ -200,23 +200,23 @@ public class UTSByteBuffer {
      */
     public Byte peekNext() throws UTSBufferOverflowException {
         checkAtEnd();
-        return _buffer[_pointer];
+        return _buffer[_index];
     }
 
     /**
-     * Puts a byte at the current position in the buffer, advancing the pointer.
-     * Expands the buffer if necessary; Sets the limit to the new value of the pointer
+     * Puts a byte at the current position in the buffer, advancing the index.
+     * Expands the buffer if necessary; Sets the limit to the new value of the index
      * Ignores NUL and SYN bytes.
      * @param b the byte to put
      * @return this buffer
      */
     public UTSByteBuffer put(final byte b) {
         if ((b != ASCII_NUL) && (b != ASCII_SYN)) {
-            if (_pointer >= _buffer.length) {
+            if (_index >= _buffer.length) {
                 expand();
             }
-            _buffer[_pointer++] = b;
-            _limit = _pointer;
+            _buffer[_index++] = b;
+            _limit = _index;
         }
         return this;
     }
@@ -239,8 +239,8 @@ public class UTSByteBuffer {
     }
 
     /**
-     * Copies the content of a source buffer to this buffer starting at the current pointer.
-     * Advances the current pointer accordingly and adjusts the limit as necessary.
+     * Copies the content of a source buffer to this buffer starting at the current index.
+     * Advances the current index accordingly and adjusts the limit as necessary.
      * Ignores NUL and SYN bytes.
      * @param buffer the source buffer
      * @return this buffer
@@ -251,8 +251,8 @@ public class UTSByteBuffer {
 
     /**
      * Copies the content of a source buffer, subject to the given offset and length,
-     * to this buffer starting at the current pointer.
-     * Advances the current pointer accordingly and adjusts the limit as necessary.
+     * to this buffer starting at the current index.
+     * Advances the current index accordingly and adjusts the limit as necessary.
      * Ignores NUL and SYN bytes.
      * @param buffer the source buffer
      * @param offset the offset within the source buffer
@@ -262,17 +262,17 @@ public class UTSByteBuffer {
     public UTSByteBuffer put(final byte[] buffer,
                              final int offset,
                              final int length) {
-        var newLength = _pointer + length;
+        var newLength = _index + length;
         while (newLength > _buffer.length) {
             expand();
         }
         for (int i = 0; i < length; i++) {
             var ch = buffer[offset + i];
             if ((ch != ASCII_NUL) && (ch != ASCII_SYN)) {
-                _buffer[_pointer++] = ch;
+                _buffer[_index++] = ch;
             }
         }
-        _limit = _pointer;
+        _limit = _index;
         return this;
     }
 
@@ -281,7 +281,7 @@ public class UTSByteBuffer {
      * @param primitive the primitive to put
      * @return this buffer
      */
-    public UTSByteBuffer put(final UTSPrimitive primitive) throws UTSCoordinateException {
+    public UTSByteBuffer put(final Primitive primitive) throws UTSCoordinateException {
         primitive.serialize(this);
         return this;
     }
@@ -381,19 +381,19 @@ public class UTSByteBuffer {
      * @return this buffer
      */
     public UTSByteBuffer putSpaces(final int count) {
-        while (getRemaining() < getPointer() + count) {
+        while (getRemaining() < getIndex() + count) {
             expand();
         }
         for (int i = 0; i < count; i++) {
-            _buffer[_pointer++] = ASCII_SP;
+            _buffer[_index++] = ASCII_SP;
         }
-        _limit = _pointer;
+        _limit = _index;
         return this;
     }
 
     /**
-     * Copies the content of a string to this buffer starting at the current pointer.
-     * Advances the current pointer accordingly and adjusts the limit as necessary.
+     * Copies the content of a string to this buffer starting at the current index.
+     * Advances the current index accordingly and adjusts the limit as necessary.
      * @param string the string to copy
      * @return this buffer
      */
@@ -411,39 +411,39 @@ public class UTSByteBuffer {
     }
 
     /**
-     * Resets the pointer to zero - does nothing with the limit.
+     * Resets the index to zero - does nothing with the limit.
      * Used by recipients prior to reading the buffer after the sender has written to it.
      * @return this buffer
      */
     public UTSByteBuffer reset() {
-        _pointer = 0;
+        _index = 0;
+        return this;
+    }
+
+    /**
+     * Sets the index to the given index, constrained by the limit.
+     * @param index a value from zero to the limit
+     * @return this buffer
+     */
+    public UTSByteBuffer setIndex(final int index) {
+        if (index >= 0 && index <= _limit) {
+            _index = index;
+        }
         return this;
     }
 
     /**
      * Sets the limit of the buffer.
-     * If the pointer is beyond the limit, it is set to the limit.
+     * If the index is beyond the limit, it is set to the limit.
      * @param limit the new value which must be between 0 and the current buffer length.
      */
     public void setLimit(final int limit) {
         if (limit >= 0 && limit <= _buffer.length) {
             _limit = limit;
-            if (_pointer > _limit) {
-                _pointer = _limit;
+            if (_index > _limit) {
+                _index = _limit;
             }
         }
-    }
-
-    /**
-     * Sets the pointer to the given position.
-     * @param position a value from zero to the limit
-     * @return this buffer
-     */
-    public UTSByteBuffer setPointer(final int position) {
-        if (position >= 0 && position <= _limit) {
-            _pointer = position;
-        }
-        return this;
     }
 
     /**
@@ -451,7 +451,7 @@ public class UTSByteBuffer {
      * @param count number of bytes to be skipped
      */
     public void skip(final int count) {
-        _pointer = Math.max(_pointer + count, _limit);
+        _index = Math.max(_index + count, _limit);
     }
 
     /**
@@ -459,7 +459,7 @@ public class UTSByteBuffer {
      */
     public void skipNext() {
         if (!atEnd()) {
-            _pointer++;
+            _index++;
         }
     }
 }

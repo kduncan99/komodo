@@ -11,8 +11,8 @@ import com.bearsnake.komodo.utslib.fields.FieldAttributes;
 import com.bearsnake.komodo.utslib.fields.UTSColor;
 import com.bearsnake.komodo.utslib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.utslib.messages.UTSMessage;
-import com.bearsnake.komodo.utslib.primitives.UTSCursorPositionPrimitive;
-import com.bearsnake.komodo.utslib.primitives.UTSFCCSequencePrimitive;
+import com.bearsnake.komodo.utslib.primitives.CursorPositionPrimitive;
+import com.bearsnake.komodo.utslib.primitives.FCCSequencePrimitive;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -226,8 +226,8 @@ public class ClockApp extends Application implements Runnable {
                         var endPos = new Coordinates(row, column + DIGIT_WIDTH);
 
                         var startAttr = new FieldAttributes().setTextColor(fgColor).setBackgroundColor(bgColor);
-                        new UTSFCCSequencePrimitive(startPos.getRow(), startPos.getColumn(), startAttr).serialize(stream);
-                        new UTSFCCSequencePrimitive(endPos.getRow(), endPos.getColumn(), new FieldAttributes()).serialize(stream);
+                        new FCCSequencePrimitive(startPos.getRow(), startPos.getColumn(), startAttr).serialize(stream);
+                        new FCCSequencePrimitive(endPos.getRow(), endPos.getColumn(), new FieldAttributes()).serialize(stream);
                     }
                 }
                 stream.put(ASCII_ETX);
@@ -273,11 +273,11 @@ public class ClockApp extends Application implements Runnable {
                       .put(ASCII_STX);
                 var row = _hintCoordinates.getRow();
                 var column = _hintCoordinates.getColumn();
-                new UTSCursorPositionPrimitive(row++, column).serialize(stream);
+                new CursorPositionPrimitive(row++, column).serialize(stream);
                 stream.putString("F1  - Cycle Colors");
-                new UTSCursorPositionPrimitive(row++, column).serialize(stream);
+                new CursorPositionPrimitive(row++, column).serialize(stream);
                 stream.putString("F2  - Toggle Mode");
-                new UTSCursorPositionPrimitive(row++, column).serialize(stream);
+                new CursorPositionPrimitive(row++, column).serialize(stream);
                 stream.putString("F22 - Return to Menu");
                 stream.putCursorToHome();
                 stream.put(ASCII_ETX);
@@ -295,7 +295,7 @@ public class ClockApp extends Application implements Runnable {
             var map = CHARACTER_MAPS.get(character);
             if (map != null) {
                 for (String s : map) {
-                    new UTSCursorPositionPrimitive(topRow++, leftColumn).serialize(stream);
+                    new CursorPositionPrimitive(topRow++, leftColumn).serialize(stream);
                     stream.putString(s);
                 }
             }

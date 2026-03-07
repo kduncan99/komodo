@@ -38,7 +38,7 @@ public class UTSByteBufferTest {
         buffer.put((byte) 0x01);
         buffer.put((byte) 0x02);
         buffer.put((byte) 0x03);
-        buffer.setPointer(0);
+        buffer.setIndex(0);
         assertArrayEquals(new byte[]{0x01, 0x02, 0x03}, buffer.getBuffer());
     }
 
@@ -49,7 +49,7 @@ public class UTSByteBufferTest {
         byte[] buffer2 = {0x04, 0x05, 0x06};
         buffer.put(buffer1);
         buffer.put(buffer2);
-        buffer.setPointer(0);
+        buffer.setIndex(0);
         assertArrayEquals(new byte[]{0x01, 0x02, 0x03, 0x04, 0x05, 0x06}, buffer.getBuffer());
     }
 
@@ -60,7 +60,7 @@ public class UTSByteBufferTest {
         byte[] buffer2 = {0x05, 0x06, 0x07, 0x08};
         buffer.put(buffer1, 1, 2);
         buffer.put(buffer2, 2, 1);
-        buffer.setPointer(0);
+        buffer.setIndex(0);
         assertArrayEquals(new byte[]{0x02, 0x03, 0x07}, buffer.getBuffer());
     }
 
@@ -69,7 +69,7 @@ public class UTSByteBufferTest {
         UTSByteBuffer buffer = new UTSByteBuffer(10);
         buffer.put((byte) 0x30);
         buffer.putString("Hello World");
-        buffer.setPointer(0);
+        buffer.setIndex(0);
         assertArrayEquals("0Hello World".getBytes(), buffer.getBuffer());
     }
 
@@ -79,7 +79,7 @@ public class UTSByteBufferTest {
         buffer.put(new byte[]{0x01, 0x02});
         var mainBuffer = new byte[]{0x03, 0x04, 0x05, 0x06, 0x30, 0x32, 0x7F};
         buffer.put(mainBuffer);
-        buffer.setPointer(2);
+        buffer.setIndex(2);
         assertTrue(buffer.equalsBuffer(mainBuffer));
     }
 

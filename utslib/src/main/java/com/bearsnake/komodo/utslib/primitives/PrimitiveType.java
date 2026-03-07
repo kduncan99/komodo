@@ -6,7 +6,7 @@ package com.bearsnake.komodo.utslib.primitives;
 
 import static com.bearsnake.komodo.baselib.Constants.*;
 
-public enum UTSPrimitiveType {
+public enum PrimitiveType {
     ADD_EMPHASIS(new byte[]{ASCII_ESC, 'Y'}, "AddEmp"),
     BACKWARD_TAB(new byte[]{ASCII_ESC, 'z'}, "BkTab"),
     CLEAR_CHANGED_BITS(new byte[]{ASCII_ESC, 'u'}, "ClrChan"),
@@ -36,6 +36,8 @@ public enum UTSPrimitiveType {
     PUT_DECIMAL(null, "PutDec"),// ESC { nnn }
     PUT_ESCAPE(new byte[]{ASCII_ESC, '['}, "PutEsc"),
     PUT_HEXADECIMAL(null, "PutHex"), // ESC X xx
+    REPORT_COLOR_FCC_DISABLE(new byte[]{ASCII_ESC, 'Z', 'e'}, "-RptColor"),
+    REPORT_COLOR_FCC_ENABLE(new byte[]{ASCII_ESC, 'Z', 'd'}, "+RptColor"),
     SCAN_DOWN(new byte[]{ASCII_ESC, 'i'}, "ScDown"),
     SCAN_LEFT(new byte[]{ASCII_ESC, 'g'}, "ScLeft"),
     SCAN_RIGHT(new byte[]{ASCII_ESC, 'h'}, "ScRight"),
@@ -57,7 +59,7 @@ public enum UTSPrimitiveType {
     // The token indicates what is displayed in traces and debug text.
     private final String _token;
 
-    UTSPrimitiveType(final byte[] pattern, final String token) {
+    PrimitiveType(final byte[] pattern, final String token) {
         _pattern = pattern;
         _token = token;
     }

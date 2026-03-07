@@ -12,14 +12,14 @@ import com.bearsnake.komodo.utslib.exceptions.UTSInvalidEscapeSequenceException;
 
 import static com.bearsnake.komodo.baselib.Constants.*;
 
-public class UTSCursorPositionPrimitive extends UTSPrimitive {
+public class CursorPositionPrimitive extends Primitive {
 
     private final int _row;
     private final int _column;
 
-    public UTSCursorPositionPrimitive(final int row,
-                                      final int column) {
-        super(UTSPrimitiveType.CURSOR_POSITION);
+    public CursorPositionPrimitive(final int row,
+                                   final int column) {
+        super(PrimitiveType.CURSOR_POSITION);
         _row = row;
         _column = column;
     }
@@ -27,7 +27,7 @@ public class UTSCursorPositionPrimitive extends UTSPrimitive {
     public int getRow() { return _row; }
     public int getColumn() { return _column; }
 
-    public static UTSCursorPositionPrimitive deserializePrimitive(final UTSByteBuffer source)
+    public static CursorPositionPrimitive deserializePrimitive(final UTSByteBuffer source)
         throws UTSCoordinateException,
                UTSIncompleteEscapeSequenceException,
                UTSInvalidEscapeSequenceException {
@@ -36,19 +36,19 @@ public class UTSCursorPositionPrimitive extends UTSPrimitive {
                 return null;
             }
 
-            var pointer = source.getPointer();
+            var pointer = source.getIndex();
             if ((source.getNext() != ASCII_ESC) || (source.getNext() != ASCII_VT)) {
-                source.setPointer(pointer);
+                source.setIndex(pointer);
                 return null;
             }
 
-            var row = UTSPrimitive.deserializeCoordinate(source);
-            var column = UTSPrimitive.deserializeCoordinate(source);
+            var row = Primitive.deserializeCoordinate(source);
+            var column = Primitive.deserializeCoordinate(source);
             if (source.getNext() != ASCII_SI) {
                 throw new UTSInvalidEscapeSequenceException();
             }
 
-            return new UTSCursorPositionPrimitive(row, column);
+            return new CursorPositionPrimitive(row, column);
         } catch (UTSBufferOverflowException ex) {
             throw new UTSIncompleteEscapeSequenceException();
         }

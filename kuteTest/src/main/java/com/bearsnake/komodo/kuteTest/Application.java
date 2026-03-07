@@ -9,7 +9,7 @@ import com.bearsnake.komodo.utslib.messages.CursorPositionMessage;
 import com.bearsnake.komodo.utslib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.utslib.messages.StatusPollMessage;
 import com.bearsnake.komodo.utslib.messages.UTSMessage;
-import com.bearsnake.komodo.utslib.primitives.UTSPrimitive;
+import com.bearsnake.komodo.utslib.primitives.Primitive;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -22,6 +22,8 @@ import static com.bearsnake.komodo.baselib.Constants.*;
 public abstract class Application implements Runnable {
 
     protected DisplayGeometry _geometry;
+    protected boolean _colorSupported = true;
+    protected boolean _emphasisSupported = false;
     private final LinkedList<UTSMessage> _inputMessages = new LinkedList<>();
     protected KuteTestServer _server;
     protected volatile boolean _terminate = false;
@@ -40,10 +42,10 @@ public abstract class Application implements Runnable {
 
     public String extractText(final UTSByteBuffer stream) {
         var sb = new StringBuilder();
-        stream.setPointer(0);
+        stream.setIndex(0);
         while (!stream.atEnd()) {
             try {
-                var prim = UTSPrimitive.deserializePrimitive(stream);
+                var prim = Primitive.deserializePrimitive(stream, _emphasisSupported, _colorSupported);
                 if (prim == null) {
                     var ch = stream.getNext();
                     if ((ch >= 32) && (ch < 127)) {

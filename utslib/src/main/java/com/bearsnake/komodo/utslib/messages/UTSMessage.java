@@ -25,7 +25,7 @@ public interface UTSMessage {
      * @return Message object created from the buffer
      */
     static UTSMessage create(final UTSByteBuffer buffer) {
-        return create(buffer.setPointer(0).getBuffer());
+        return create(buffer.setIndex(0).getBuffer());
     }
 
     /**

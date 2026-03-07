@@ -37,7 +37,7 @@ public class KuteTestServer implements UTSSocketListener {
 
     protected void sendMessage(final Application application,
                                final UTSByteBuffer buffer) throws IOException {
-        buffer.setPointer(0);
+        buffer.setIndex(0);
         synchronized (_sessions) {
             for (var session : _sessions) {
                 if (session._applications.contains(application)) {

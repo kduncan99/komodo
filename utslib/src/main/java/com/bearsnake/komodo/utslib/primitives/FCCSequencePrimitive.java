@@ -16,7 +16,7 @@ import static com.bearsnake.komodo.baselib.Constants.ASCII_US;
 /**
  * For FCC sequences containing coordinates
  */
-public class UTSFCCSequencePrimitive extends UTSPrimitive {
+public class FCCSequencePrimitive extends Primitive {
 
     private final int _row;
     private final int _column;
@@ -24,10 +24,10 @@ public class UTSFCCSequencePrimitive extends UTSPrimitive {
     private boolean _sendExpandedColor;
     private boolean _sendExpanded;
 
-    public UTSFCCSequencePrimitive(final int row,
-                                   final int column,
-                                   final FieldAttributes attributes) {
-        super(UTSPrimitiveType.FCC_SEQUENCE);
+    public FCCSequencePrimitive(final int row,
+                                final int column,
+                                final FieldAttributes attributes) {
+        super(PrimitiveType.FCC_SEQUENCE);
         this._row = row;
         this._column = column;
         _attributes = attributes;
@@ -66,22 +66,24 @@ public class UTSFCCSequencePrimitive extends UTSPrimitive {
         _sendExpanded = flag;
     }
 
-    public static UTSFCCSequencePrimitive deserializePrimitive(final UTSByteBuffer source)
+    public static FCCSequencePrimitive deserializePrimitive(final UTSByteBuffer source,
+                                                            final boolean emphasisSupported,
+                                                            final boolean colorSupported)
         throws UTSCoordinateException,
                UTSIncompleteFCCSequenceException,
                UTSInvalidFCCSequenceException {
 
-        var pointer = source.getPointer();
+        var pointer = source.getIndex();
         try {
             if (source.atEnd() || (source.getNext() != ASCII_US)) {
-                source.setPointer(pointer);
+                source.setIndex(pointer);
                 return null;
             }
 
             var row = source.getCoordinate();
             var column = source.getCoordinate();
-            var attributes = FieldAttributes.deserialize(source);
-            return new UTSFCCSequencePrimitive(row, column, attributes);
+            var attributes = FieldAttributes.deserialize(source, emphasisSupported, colorSupported);
+            return new FCCSequencePrimitive(row, column, attributes);
         } catch (UTSBufferOverflowException ex) {
             throw new UTSIncompleteFCCSequenceException();
         }

@@ -55,7 +55,7 @@ public class FunctionKeyMessage implements UTSMessage {
             bb.put(ASCII_SOH)
               .putFunctionKeyCode(_key)
               .put(ASCII_ETX);
-            bb.setPointer(0);
+            bb.setIndex(0);
             return ByteBuffer.wrap(bb.getBuffer());
         } catch (UTSFunctionKeyException ex) {
             // program logic prevents this

@@ -10,9 +10,9 @@ import com.bearsnake.komodo.utslib.fields.FieldAttributes;
 import com.bearsnake.komodo.utslib.fields.UTSColor;
 import com.bearsnake.komodo.utslib.messages.FunctionKeyMessage;
 import com.bearsnake.komodo.utslib.messages.StatusPollMessage;
-import com.bearsnake.komodo.utslib.primitives.UTSFCCSequencePrimitive;
-import com.bearsnake.komodo.utslib.primitives.UTSImmediateFCCSequencePrimitive;
-import com.bearsnake.komodo.utslib.primitives.UTSPrimitiveType;
+import com.bearsnake.komodo.utslib.primitives.FCCSequencePrimitive;
+import com.bearsnake.komodo.utslib.primitives.ImmediateFCCSequencePrimitive;
+import com.bearsnake.komodo.utslib.primitives.PrimitiveType;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -60,12 +60,12 @@ public class MenuApp extends Application implements Runnable {
                   .putCursorToHome()
                   .putCursorScanUp()
                   .putEraseDisplay();
-            new UTSImmediateFCCSequencePrimitive(attr).serialize(stream);
+            new ImmediateFCCSequencePrimitive(attr).serialize(stream);
             stream.putString(message)
                   .putCursorToHome()
                   .put(ASCII_ETX);
 
-            stream.setPointer(0);
+            stream.setIndex(0);
             _server.sendMessage(this, stream);
         } catch (IOException ex) {
             IO.println("MenuApp failed to send message");
@@ -85,15 +85,15 @@ public class MenuApp extends Application implements Runnable {
                 var app = appInfo.getValue();
 
                 var fkAttr = new FieldAttributes().setTextColor(UTSColor.YELLOW);
-                new UTSFCCSequencePrimitive(nextRow, 10, fkAttr).serialize(stream);
+                new FCCSequencePrimitive(nextRow, 10, fkAttr).serialize(stream);
                 stream.putString("F" + fkNumber);
 
                 var nameAttr = new FieldAttributes().setTextColor(UTSColor.CYAN);
-                new UTSFCCSequencePrimitive(nextRow, 15, nameAttr).serialize(stream);
+                new FCCSequencePrimitive(nextRow, 15, nameAttr).serialize(stream);
                 stream.putString(app.getName());
 
                 var descAttr = new FieldAttributes().setTextColor(UTSColor.GREEN);
-                new UTSFCCSequencePrimitive(nextRow, 25, descAttr).serialize(stream);
+                new FCCSequencePrimitive(nextRow, 25, descAttr).serialize(stream);
                 stream.putString(app.getDescription());
 
                 nextRow++;
@@ -101,20 +101,20 @@ public class MenuApp extends Application implements Runnable {
 
             nextRow++;
             var fkAttr = new FieldAttributes().setTextColor(UTSColor.YELLOW);
-            new UTSFCCSequencePrimitive(nextRow, 10, fkAttr).serialize(stream);
+            new FCCSequencePrimitive(nextRow, 10, fkAttr).serialize(stream);
             stream.putString("F22");
 
             var nameAttr = new FieldAttributes().setTextColor(UTSColor.CYAN);
-            new UTSFCCSequencePrimitive(nextRow, 15, nameAttr).serialize(stream);
+            new FCCSequencePrimitive(nextRow, 15, nameAttr).serialize(stream);
             stream.putString("EXIT");
 
             var descAttr = new FieldAttributes().setTextColor(UTSColor.GREEN);
-            new UTSFCCSequencePrimitive(nextRow, 25, descAttr).serialize(stream);
+            new FCCSequencePrimitive(nextRow, 25, descAttr).serialize(stream);
             stream.putString("Terminate Session");
 
-            stream.put(UTSPrimitiveType.CURSOR_TO_HOME.getPattern());
+            stream.put(PrimitiveType.CURSOR_TO_HOME.getPattern());
             stream.putCursorToHome().put(ASCII_ETX);
-            stream.setPointer(0);
+            stream.setIndex(0);
 
             _server.sendMessage(this, stream);
         } catch (IOException | UTSCoordinateException ex) {
@@ -137,7 +137,7 @@ public class MenuApp extends Application implements Runnable {
                 .putString("Goodbye")
                 .put(ASCII_CR)
                 .put(ASCII_ETX);
-            strm.setPointer(0);
+            strm.setIndex(0);
             _server.sendMessage(this, strm);
         } catch (IOException ex) {
             // nothing really to do here

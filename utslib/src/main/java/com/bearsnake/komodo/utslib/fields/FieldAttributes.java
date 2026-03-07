@@ -74,16 +74,21 @@ public class FieldAttributes {
 
     /**
      * Deserialize FCC field settings (M and N bytes, or O, M, and N bytes) from the source at the given offset.
+     * Note on support - generally, either color or emphasis is supported, but not both.
      * @param source buffer containing an FCC sequence which we are deserializing
+     * @param emphasisSupported whether emphasis is supported
+     * @param colorSupported whether color is supported
      */
-    public static FieldAttributes deserialize(final UTSByteBuffer source)
+    public static FieldAttributes deserialize(final UTSByteBuffer source,
+                                              final boolean emphasisSupported,
+                                              final boolean colorSupported)
         throws UTSInvalidFCCSequenceException, UTSBufferOverflowException {
         var fa = new FieldAttributes();
         var check = source.peekNext() & 0xF0;
-        if (check == 0x20) {
+        if (colorSupported && check == 0x20) {
             // we're doing color and expanded
             byte o = source.getNext();
-            fa.deserializeMNExpanded( source);
+            fa.deserializeMNExpanded(source, emphasisSupported);
             switch (o) {
                 case 0x20 -> {
                     var c1 = source.getNext();
@@ -100,10 +105,10 @@ public class FieldAttributes {
             }
         } else if (check == 0x30) {
             // we're doing basic only
-            fa.deserializeMNBasic( source);
+            fa.deserializeMNBasic(source);
         } else if (check == 0x40) {
             // we're doing expanded only
-            fa.deserializeMNExpanded( source);
+            fa.deserializeMNExpanded(source, emphasisSupported);
         } else {
             throw new UTSInvalidFCCSequenceException();
         }
@@ -129,7 +134,9 @@ public class FieldAttributes {
         _rightJustified = ((n & 0x04) == 0x04);
     }
 
-    public void deserializeMNExpanded(final UTSByteBuffer source) throws UTSBufferOverflowException {
+    public void deserializeMNExpanded(final UTSByteBuffer source,
+                                      final boolean emphasisSupported)
+        throws UTSBufferOverflowException {
         var m = source.getNext();
         switch (m & 0x03) {
             case 0x00 -> _intensity = Intensity.NORMAL;
@@ -138,7 +145,7 @@ public class FieldAttributes {
         }
         _changed = ((m & 0x04) == 0x04);
         _tabStop = ((m & 0x08) != 0x08);
-        _protectedEmphasis = ((m & 0x20) == 0x20);
+        _protectedEmphasis = emphasisSupported && ((m & 0x20) == 0x20);
 
         var n = source.getNext();
         _alphabeticOnly = ((n & 0x03) == 0x01);
