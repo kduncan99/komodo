@@ -16,5 +16,6 @@ import com.bearsnake.komodo.kutelib.Terminal;
  */
 public interface KeyPad {
 
+    void refreshButtons();
     void setActiveTerminal(final Terminal terminal);
 }

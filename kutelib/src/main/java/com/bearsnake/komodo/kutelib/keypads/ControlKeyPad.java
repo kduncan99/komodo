@@ -6,10 +6,11 @@ package com.bearsnake.komodo.kutelib.keypads;
 
 import com.bearsnake.komodo.kutelib.Terminal;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 
 /**
  * Two rows across the top of the display
@@ -20,197 +21,94 @@ import javafx.scene.layout.StackPane;
  *  Erase    Erase    Delete   Insert   Delete    Line     FCC       FCC       FCC      FCC     Clear    Control     KB      MSG
  * To EOF     EOL     InLine   InLine    Line     Dup      Gen     Enable     Clear    Locate   Change    Page    Unlock    Wait
  */
-public class ControlKeyPad extends StackPane implements KeyPad {
+public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
 
     public static final float BUTTON_HEIGHT = 45.0f;
     public static final float BUTTON_WIDTH = 70.0f;
 
+    private static final Color FCC_TOP = Color.web("#d7ffd7");
+    private static final Color FCC_BOTTOM = Color.web("lightgreen");
+    private static final Color BLUE_TOP = Color.web("#d7f0ff");
+    private static final Color BLUE_BOTTOM = Color.web("lightblue");
+    private static final Color RED_TOP = Color.web("#ffd7d7");
+    private static final Color RED_BOTTOM = Color.web("#ff9999");
+    private static final Color YELLOW_TOP = Color.web("#ffffd7");
+    private static final Color YELLOW_BOTTOM = Color.web("#ffff00");
+    private static final Color ORANGE_TOP = Color.web("#ffd7b5");
+    private static final Color ORANGE_BOTTOM = Color.web("#ff8c00");
+    private static final Color LIGHT_ORANGE_TOP = Color.web("#fff0e0");
+    private static final Color LIGHT_ORANGE_BOTTOM = Color.web("#ffb366");
+    private static final Color DARK_RED_TOP = Color.web("#cc7a7a");
+    private static final Color DARK_RED_BOTTOM = Color.web("#990000");
+
+    private static final Color TEXT_BLACK = Color.BLACK;
+    private static final Color TEXT_WHITE = Color.WHITE;
+
+    private static final int ID_ERASE_DISPLAY = 1;
+    private static final int ID_ERASE_EOD = 2;
+    private static final int ID_DELETE_IN_DISP = 3;
+    private static final int ID_INSERT_IN_DISP = 4;
+    private static final int ID_INSERT_LINE = 5;
+    private static final int ID_RESET = 6;
+    private static final int ID_CONNECT_SESSION = 7;
+    private static final int ID_DROP_SESSION = 8;
+    private static final int ID_TRACE_STOP = 9;
+    private static final int ID_TRACE_PAUSE = 10;
+    private static final int ID_TRACE_START = 11;
+    private static final int ID_XFER = 12;
+    private static final int ID_PRINT = 13;
+    private static final int ID_XMIT = 14;
+
+    private static final int ID_ERASE_EOF = 15;
+    private static final int ID_ERASE_EOL = 16;
+    private static final int ID_DELETE_IN_LINE = 17;
+    private static final int ID_INSERT_IN_LINE = 18;
+    private static final int ID_DELETE_LINE = 19;
+    private static final int ID_LINE_DUP = 20;
+    private static final int ID_FCC_GEN = 21;
+    private static final int ID_FCC_ENABLE = 22;
+    private static final int ID_FCC_CLEAR = 23;
+    private static final int ID_FCC_LOCATE = 24;
+    private static final int ID_CLEAR_CHANGE = 25;
+    private static final int ID_CONTROL_PAGE = 26;
+    private static final int ID_KB_UNLOCK = 27;
+    private static final int ID_MSG_WAIT = 28;
+
     private Terminal _activeTerminal;
-
-    private static final String FCC_DEFAULT_STYLE = "-fx-background-color: linear-gradient(to bottom, #d7ffd7, lightgreen); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-    private static final String FCC_PRESSED_STYLE = "-fx-background-color: linear-gradient(to bottom, #7acc7a, #5cad5c); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-
-    private static final String BLUE_DEFAULT_STYLE = "-fx-background-color: linear-gradient(to bottom, #d7f0ff, lightblue); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-    private static final String BLUE_PRESSED_STYLE = "-fx-background-color: linear-gradient(to bottom, #7abacc, #5c9aad); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-
-    private static final String RED_DEFAULT_STYLE = "-fx-background-color: linear-gradient(to bottom, #ffd7d7, #ff9999); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-    private static final String RED_PRESSED_STYLE = "-fx-background-color: linear-gradient(to bottom, #cc7a7a, #ad5c5c); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-
-    private static final String YELLOW_DEFAULT_STYLE = "-fx-background-color: linear-gradient(to bottom, #ffffd7, #ffff00); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-    private static final String YELLOW_PRESSED_STYLE = "-fx-background-color: linear-gradient(to bottom, #cccc7a, #adad5c); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-
-    private static final String ORANGE_DEFAULT_STYLE = "-fx-background-color: linear-gradient(to bottom, #ffd7b5, #ff8c00); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-    private static final String ORANGE_PRESSED_STYLE = "-fx-background-color: linear-gradient(to bottom, #ccac90, #ad5f00); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-
-    private static final String LIGHT_ORANGE_DEFAULT_STYLE = "-fx-background-color: linear-gradient(to bottom, #fff0e0, #ffb366); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-    private static final String LIGHT_ORANGE_PRESSED_STYLE = "-fx-background-color: linear-gradient(to bottom, #ffcc99, #ff8000); -fx-text-fill: black; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-
-    private static final String DARK_RED_DEFAULT_STYLE = "-fx-background-color: linear-gradient(to bottom, #cc7a7a, #990000); -fx-text-fill: white; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-    private static final String DARK_RED_PRESSED_STYLE = "-fx-background-color: linear-gradient(to bottom, #990000, #660000); -fx-text-fill: white; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-
-    private void setGreenButtonStyle(Button button) {
-        button.setStyle("-fx-background-color: lightgreen; -fx-text-fill: black; -fx-text-alignment: center;");
-        button.setOnMousePressed(e -> button.setStyle("-fx-background-color: derive(lightgreen, -20%); -fx-text-fill: black; -fx-text-alignment: center;"));
-        button.setOnMouseReleased(e -> button.setStyle("-fx-background-color: lightgreen; -fx-text-fill: black; -fx-text-alignment: center;"));
-    }
-
-    private void setFCCButtonStyle(Button button) {
-        button.setStyle(FCC_DEFAULT_STYLE);
-        button.setOnMousePressed(e -> button.setStyle(FCC_PRESSED_STYLE));
-        button.setOnMouseReleased(e -> button.setStyle(FCC_DEFAULT_STYLE));
-    }
-
-    private void setBlueButtonStyle(Button button) {
-        button.setStyle(BLUE_DEFAULT_STYLE);
-        button.setOnMousePressed(e -> button.setStyle(BLUE_PRESSED_STYLE));
-        button.setOnMouseReleased(e -> button.setStyle(BLUE_DEFAULT_STYLE));
-    }
-
-    private void setRedButtonStyle(Button button) {
-        button.setStyle(RED_DEFAULT_STYLE);
-        button.setOnMousePressed(e -> button.setStyle(RED_PRESSED_STYLE));
-        button.setOnMouseReleased(e -> button.setStyle(RED_DEFAULT_STYLE));
-    }
-
-    private void setYellowButtonStyle(Button button) {
-        button.setStyle(YELLOW_DEFAULT_STYLE);
-        button.setOnMousePressed(e -> button.setStyle(YELLOW_PRESSED_STYLE));
-        button.setOnMouseReleased(e -> button.setStyle(YELLOW_DEFAULT_STYLE));
-    }
-
-    private void setOrangeButtonStyle(Button button) {
-        button.setStyle(ORANGE_DEFAULT_STYLE);
-        button.setOnMousePressed(e -> button.setStyle(ORANGE_PRESSED_STYLE));
-        button.setOnMouseReleased(e -> button.setStyle(ORANGE_DEFAULT_STYLE));
-    }
-
-    private void setLightOrangeButtonStyle(Button button) {
-        button.setStyle(LIGHT_ORANGE_DEFAULT_STYLE);
-        button.setOnMousePressed(e -> button.setStyle(LIGHT_ORANGE_PRESSED_STYLE));
-        button.setOnMouseReleased(e -> button.setStyle(LIGHT_ORANGE_DEFAULT_STYLE));
-    }
-
-    private void setDarkRedButtonStyle(Button button) {
-        button.setStyle(DARK_RED_DEFAULT_STYLE);
-        button.setOnMousePressed(e -> button.setStyle(DARK_RED_PRESSED_STYLE));
-        button.setOnMouseReleased(e -> button.setStyle(DARK_RED_DEFAULT_STYLE));
-    }
+    private final Key[][] _buttons = new Key[2][14];
 
     public ControlKeyPad() {
         setAlignment(Pos.CENTER);
 
-        Button[][] _buttons = new Button[2][14];
-        _buttons[0][0] = new Button("Erase\nDisplay");
-        _buttons[0][0].setOnAction(e -> _activeTerminal.kbEraseDisplay());
-        setBlueButtonStyle(_buttons[0][0]);
+        _buttons[0][0] = new Key("Erase\nDisplay", this, ID_ERASE_DISPLAY, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][1] = new Key("Erase\nEOD", this, ID_ERASE_EOD, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][2] = new Key("Delete\nIn Disp", this, ID_DELETE_IN_DISP, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][3] = new Key("Insert\nIn Disp", this, ID_INSERT_IN_DISP, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][4] = new Key("Insert\nLine", this, ID_INSERT_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][5] = new Key("Reset", this, ID_RESET, DARK_RED_TOP, DARK_RED_BOTTOM, TEXT_WHITE, this);
+        _buttons[0][6] = new Key("Connect\nSession", this, ID_CONNECT_SESSION, ORANGE_TOP, ORANGE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][7] = new Key("Drop\nSession", this, ID_DROP_SESSION, ORANGE_TOP, ORANGE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][8] = new Key("Trace\nStop", this, ID_TRACE_STOP, LIGHT_ORANGE_TOP, LIGHT_ORANGE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][9] = new Key("Trace\nPause", this, ID_TRACE_PAUSE, LIGHT_ORANGE_TOP, LIGHT_ORANGE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][10] = new Key("Trace\nStart", this, ID_TRACE_START, LIGHT_ORANGE_TOP, LIGHT_ORANGE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][11] = new Key("XFER", this, ID_XFER, YELLOW_TOP, YELLOW_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][12] = new Key("PRINT", this, ID_PRINT, YELLOW_TOP, YELLOW_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][13] = new Key("XMIT", this, ID_XMIT, YELLOW_TOP, YELLOW_BOTTOM, TEXT_BLACK, this);
 
-        _buttons[0][1] = new Button("Erase\nEOD");
-        _buttons[0][1].setOnAction(e -> _activeTerminal.kbEraseToEndOfDisplay());
-        setBlueButtonStyle(_buttons[0][1]);
-
-        _buttons[0][2] = new Button("Delete\nIn Disp");
-        _buttons[0][2].setOnAction(e -> _activeTerminal.kbDeleteInDisplay());
-        setBlueButtonStyle(_buttons[0][2]);
-
-        _buttons[0][3] = new Button("Insert\nIn Disp");
-        _buttons[0][3].setOnAction(e -> _activeTerminal.kbInsertInDisplay());
-        setBlueButtonStyle(_buttons[0][3]);
-
-        _buttons[0][4] = new Button("Insert\nLine");
-        _buttons[0][4].setOnAction(e -> _activeTerminal.kbInsertLine());
-        setBlueButtonStyle(_buttons[0][4]);
-
-        _buttons[0][5] = new Button("Reset");
-        _buttons[0][5].setOnAction(e -> _activeTerminal.reset());
-        setDarkRedButtonStyle(_buttons[0][5]);
-
-        _buttons[0][6] = new Button("Connect\nSession");
-        _buttons[0][6].setOnAction(e -> _activeTerminal.connect());
-        setOrangeButtonStyle(_buttons[0][6]);
-
-        _buttons[0][7] = new Button("Drop\nSession");
-        _buttons[0][7].setOnAction(e -> _activeTerminal.disconnect(true));
-        setOrangeButtonStyle(_buttons[0][7]);
-
-        _buttons[0][8] = new Button("Trace\nStop");
-        _buttons[0][8].setOnAction(e -> _activeTerminal.stopNetworkTrace());
-        setLightOrangeButtonStyle(_buttons[0][8]);
-
-        _buttons[0][9] = new Button("Trace\nPause");
-        _buttons[0][9].setOnAction(e -> _activeTerminal.pauseNetworkTrace());
-        setLightOrangeButtonStyle(_buttons[0][9]);
-
-        _buttons[0][10] = new Button("Trace\nStart");
-        _buttons[0][10].setOnAction(e -> _activeTerminal.startNetworkTrace());
-        setLightOrangeButtonStyle(_buttons[0][10]);
-
-        _buttons[0][11] = new Button("XFER");
-        _buttons[0][11].setOnAction(e -> _activeTerminal.kbTransfer());
-        setYellowButtonStyle(_buttons[0][11]);
-
-        _buttons[0][12] = new Button("PRINT");
-        _buttons[0][12].setOnAction(e -> _activeTerminal.kbPrint());
-        setYellowButtonStyle(_buttons[0][12]);
-
-        _buttons[0][13] = new Button("XMIT");
-        _buttons[0][13].setOnAction(e -> _activeTerminal.kbTransmit());
-        setYellowButtonStyle(_buttons[0][13]);
-
-        _buttons[1][0] = new Button("Erase\nEOF");
-        _buttons[1][0].setOnAction(e -> _activeTerminal.kbEraseToEndOfField());
-        setBlueButtonStyle(_buttons[1][0]);
-
-        _buttons[1][1] = new Button("Erase\nEOL");
-        _buttons[1][1].setOnAction(e -> _activeTerminal.kbEraseToEndOfLine());
-        setBlueButtonStyle(_buttons[1][1]);
-
-        _buttons[1][2] = new Button("Delete\nIn Line");
-        _buttons[1][2].setOnAction(e -> _activeTerminal.kbDeleteInLine());
-        setBlueButtonStyle(_buttons[1][2]);
-
-        _buttons[1][3] = new Button("Insert\nIn Line");
-        _buttons[1][3].setOnAction(e -> _activeTerminal.kbInsertInLine());
-        setBlueButtonStyle(_buttons[1][3]);
-
-        _buttons[1][4] = new Button("Delete\nLine");
-        _buttons[1][4].setOnAction(e -> _activeTerminal.kbDeleteLine());
-        setBlueButtonStyle(_buttons[1][4]);
-
-        _buttons[1][5] = new Button("Line\nDup");
-        _buttons[1][5].setOnAction(e -> _activeTerminal.kbDuplicateLine());
-        setBlueButtonStyle(_buttons[1][5]);
-
-        _buttons[1][6] = new Button("FCC\nGen");
-        _buttons[1][6].setOnAction(e -> _activeTerminal.kbFCCGenerate());
-        setFCCButtonStyle(_buttons[1][6]);
-
-        _buttons[1][7] = new Button("FCC\nEnable");
-        _buttons[1][7].setOnAction(e -> _activeTerminal.kbFCCEnable());
-        setFCCButtonStyle(_buttons[1][7]);
-
-        _buttons[1][8] = new Button("FCC\nClear");
-        _buttons[1][8].setOnAction(e -> _activeTerminal.kbFCCClear());
-        setFCCButtonStyle(_buttons[1][8]);
-
-        _buttons[1][9] = new Button("FCC\nLocate");
-        _buttons[1][9].setOnAction(e -> _activeTerminal.kbFCCLocate());
-        setFCCButtonStyle(_buttons[1][9]);
-
-        _buttons[1][10] = new Button("Clear\nChange");
-        _buttons[1][10].setOnAction(e -> _activeTerminal.kbClearChanged());
-        setFCCButtonStyle(_buttons[1][10]);
-
-        _buttons[1][11] = new Button("Control\nPage");
-        _buttons[1][11].setOnAction(e -> _activeTerminal.kbToggleControlPage());
-        setYellowButtonStyle(_buttons[1][11]);
-
-        _buttons[1][12] = new Button("KB\nUnlock");
-        _buttons[1][12].setOnAction(e -> _activeTerminal.kbUnlock());
-        setYellowButtonStyle(_buttons[1][12]);
-
-        _buttons[1][13] = new Button("MSG\nWait");
-        _buttons[1][13].setOnAction(e -> _activeTerminal.kbMessageWait());
-        setRedButtonStyle(_buttons[1][13]);
+        _buttons[1][0] = new Key("Erase\nEOF", this, ID_ERASE_EOF, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][1] = new Key("Erase\nEOL", this, ID_ERASE_EOL, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][2] = new Key("Delete\nIn Line", this, ID_DELETE_IN_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][3] = new Key("Insert\nIn Line", this, ID_INSERT_IN_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][4] = new Key("Delete\nLine", this, ID_DELETE_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][5] = new Key("Line\nDup", this, ID_LINE_DUP, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][6] = new Key("FCC\nGen", this, ID_FCC_GEN, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][7] = new Key("FCC\nEnable", this, ID_FCC_ENABLE, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][8] = new Key("FCC\nClear", this, ID_FCC_CLEAR, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][9] = new Key("FCC\nLocate", this, ID_FCC_LOCATE, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][10] = new Key("Clear\nChange", this, ID_CLEAR_CHANGE, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][11] = new Key("Control\nPage", this, ID_CONTROL_PAGE, YELLOW_TOP, YELLOW_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][12] = new Key("KB\nUnlock", this, ID_KB_UNLOCK, YELLOW_TOP, YELLOW_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][13] = new Key("MSG\nWait", this, ID_MSG_WAIT, RED_TOP, RED_BOTTOM, TEXT_BLACK, this);
 
         var grid = new GridPane();
         grid.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
@@ -218,10 +116,8 @@ public class ControlKeyPad extends StackPane implements KeyPad {
         for (int rx = 0; rx < 2; rx++) {
             for (int cx = 0; cx < 14; cx++) {
                 if (_buttons[rx][cx] != null) {
-                    _buttons[rx][cx].setMinSize(BUTTON_WIDTH, BUTTON_HEIGHT);
-                    if (_buttons[rx][cx].getStyle().isEmpty()) {
-                        setGreenButtonStyle(_buttons[rx][cx]);
-                    }
+                    _buttons[rx][cx].setMinWidth(BUTTON_WIDTH);
+                    _buttons[rx][cx].setMinHeight(BUTTON_HEIGHT);
                     grid.add(_buttons[rx][cx], cx, rx);
                 }
             }
@@ -229,6 +125,62 @@ public class ControlKeyPad extends StackPane implements KeyPad {
 
         getChildren().add(grid);
         setFocusTraversable(false);
+    }
+
+    public void enableKeys(final boolean enabled) {
+        for (int rx = 0; rx < 2; rx++) {
+            for (int cx = 0; cx < 14; cx++) {
+                if (_buttons[rx][cx] != null) {
+                    _buttons[rx][cx].setDisable(!enabled);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void notify(final Pane source, final int id) {
+        switch (id) {
+            case ID_ERASE_DISPLAY -> _activeTerminal.kbEraseDisplay();
+            case ID_ERASE_EOD -> _activeTerminal.kbEraseToEndOfDisplay();
+            case ID_DELETE_IN_DISP -> _activeTerminal.kbDeleteInDisplay();
+            case ID_INSERT_IN_DISP -> _activeTerminal.kbInsertInDisplay();
+            case ID_INSERT_LINE -> _activeTerminal.kbInsertLine();
+            case ID_RESET -> _activeTerminal.reset();
+            case ID_CONNECT_SESSION -> _activeTerminal.connect();
+            case ID_DROP_SESSION -> _activeTerminal.disconnect(true);
+            case ID_TRACE_STOP -> _activeTerminal.stopNetworkTrace();
+            case ID_TRACE_PAUSE -> _activeTerminal.pauseNetworkTrace();
+            case ID_TRACE_START -> _activeTerminal.startNetworkTrace();
+            case ID_XFER -> _activeTerminal.kbTransfer();
+            case ID_PRINT -> _activeTerminal.kbPrint();
+            case ID_XMIT -> _activeTerminal.kbTransmit();
+            case ID_ERASE_EOF -> _activeTerminal.kbEraseToEndOfField();
+            case ID_ERASE_EOL -> _activeTerminal.kbEraseToEndOfLine();
+            case ID_DELETE_IN_LINE -> _activeTerminal.kbDeleteInLine();
+            case ID_INSERT_IN_LINE -> _activeTerminal.kbInsertInLine();
+            case ID_DELETE_LINE -> _activeTerminal.kbDeleteLine();
+            case ID_LINE_DUP -> _activeTerminal.kbDuplicateLine();
+            case ID_FCC_GEN -> _activeTerminal.kbFCCGenerate();
+            case ID_FCC_ENABLE -> _activeTerminal.kbFCCEnable();
+            case ID_FCC_CLEAR -> _activeTerminal.kbFCCClear();
+            case ID_FCC_LOCATE -> _activeTerminal.kbFCCLocate();
+            case ID_CLEAR_CHANGE -> _activeTerminal.kbClearChanged();
+            case ID_CONTROL_PAGE -> _activeTerminal.kbToggleControlPage();
+            case ID_KB_UNLOCK -> _activeTerminal.kbUnlock();
+            case ID_MSG_WAIT -> _activeTerminal.kbMessageWait();
+        }
+    }
+
+    @Override
+    public void refreshButtons() {
+        // Re-evaluate enablement of certain buttons
+        for (int rx = 0; rx < 2; rx++) {
+            for (int cx = 0; cx < 14; cx++) {
+                if (_buttons[rx][cx] != null) {
+                    _buttons[rx][cx].updateStyle();
+                }
+            }
+        }
     }
 
     @Override

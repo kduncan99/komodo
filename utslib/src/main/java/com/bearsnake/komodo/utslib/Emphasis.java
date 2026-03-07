@@ -80,5 +80,6 @@ public class Emphasis {
         return String.format("{Col%c:Stk%c:Und%c}",
                              _columnSeparator ? '+' : '-',
                              _strikeThrough ? '+' : '-',
-                             _underscore ? '+' : '-'); }
+                             _underscore ? '+' : '-');
+    }
 }

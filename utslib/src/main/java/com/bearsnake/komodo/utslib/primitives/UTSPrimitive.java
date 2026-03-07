@@ -60,6 +60,7 @@ public class UTSPrimitive {
             case 'g' -> new UTSPrimitive(UTSPrimitiveType.SCAN_LEFT);
             case 'h' -> new UTSPrimitive(UTSPrimitiveType.SCAN_RIGHT);
             case 'i' -> new UTSPrimitive(UTSPrimitiveType.SCAN_DOWN);
+            case 'j' -> new UTSPrimitive(UTSPrimitiveType.INSERT_LINE);
             case 'k' -> new UTSPrimitive(UTSPrimitiveType.DELETE_LINE);
             case 'u' -> new UTSPrimitive(UTSPrimitiveType.CLEAR_CHANGED_BITS);
             case 'y' -> new UTSPrimitive(UTSPrimitiveType.LINE_DUPLICATION);

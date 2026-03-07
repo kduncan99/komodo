@@ -5,8 +5,9 @@
 package com.bearsnake.komodo.kutelib.keypads;
 
 import com.bearsnake.komodo.kutelib.Terminal;
-import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 
 /**
  *  Home   CR
@@ -15,66 +16,94 @@ import javafx.scene.layout.GridPane;
  *     Down
  *  BTab  FTab
  */
-public class CursorKeyPad extends GridPane implements KeyPad {
+public class CursorKeyPad extends GridPane implements KeyPad, KeyListener {
 
     private static final float MIN_WIDTH = 50.0f;
     private static final float MIN_HEIGHT = 20.0f;
 
-    private static final String DEFAULT_STYLE = "-fx-background-color: linear-gradient(to bottom, #888888, #444444); -fx-text-fill: white; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
-    private static final String PRESSED_STYLE = "-fx-background-color: linear-gradient(to bottom, #444444, #222222); -fx-text-fill: white; -fx-text-alignment: center; -fx-border-color: black; -fx-border-width: 1px;";
+    private static final Color BASE_COLOR_TOP = Color.web("#888888");
+    private static final Color BASE_COLOR_BOTTOM = Color.web("#444444");
+    private static final Color TEXT_COLOR = Color.WHITE;
+
+    private static final int ID_HOME = 1;
+    private static final int ID_RETURN = 2;
+    private static final int ID_UP = 3;
+    private static final int ID_LEFT = 4;
+    private static final int ID_RIGHT = 5;
+    private static final int ID_DOWN = 6;
+    private static final int ID_BTAB = 7;
+    private static final int ID_FTAB = 8;
 
     private Terminal _activeTerminal;
-
-    private void setButtonStyle(Button button) {
-        button.setStyle(DEFAULT_STYLE);
-        button.setOnMousePressed(e -> button.setStyle(PRESSED_STYLE));
-        button.setOnMouseReleased(e -> button.setStyle(DEFAULT_STYLE));
-    }
+    private final Key[] _buttons = new Key[9];
 
     public CursorKeyPad() {
         setFocusTraversable(false);
 
-        var homeButton = new Button("↖");
-        homeButton.setOnAction(_ -> _activeTerminal.kbCursorToHome());
-        add(homeButton, 0, 0);
+        _buttons[ID_HOME] = new Key("↖", this, ID_HOME, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        add(_buttons[ID_HOME], 0, 0);
 
-        var returnButton = new Button("↲");
-        returnButton.setOnAction(_ -> _activeTerminal.kbSOE());
-        add(returnButton, 1, 0);
+        _buttons[ID_RETURN] = new Key("↲", this, ID_RETURN, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        add(_buttons[ID_RETURN], 1, 0);
 
-        var upButton = new Button("↑");
-        upButton.setOnAction(_ -> _activeTerminal.kbScanUp());
-        add(upButton, 0, 1, 2, 1);
+        _buttons[ID_UP] = new Key("↑", this, ID_UP, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        add(_buttons[ID_UP], 0, 1, 2, 1);
 
-        var leftButton = new Button("←");
-        leftButton.setOnAction(_ -> _activeTerminal.kbScanLeft());
-        add(leftButton, 0, 2);
+        _buttons[ID_LEFT] = new Key("←", this, ID_LEFT, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        add(_buttons[ID_LEFT], 0, 2);
 
-        var rightButton = new Button("→");
-        rightButton.setOnAction(_ -> _activeTerminal.kbScanRight());
-        add(rightButton, 1, 2);
+        _buttons[ID_RIGHT] = new Key("→", this, ID_RIGHT, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        add(_buttons[ID_RIGHT], 1, 2);
 
-        var downButton = new Button("↓");
-        downButton.setOnAction(_ -> _activeTerminal.kbScanDown());
-        add(downButton, 0, 3, 2, 1);
+        _buttons[ID_DOWN] = new Key("↓", this, ID_DOWN, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        add(_buttons[ID_DOWN], 0, 3, 2, 1);
 
-        var backwardTabButton = new Button("⇤");
-        backwardTabButton.setOnAction(_ -> _activeTerminal.kbTabBackward());
-        add(backwardTabButton, 0, 4);
+        _buttons[ID_BTAB] = new Key("⇤", this, ID_BTAB, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        add(_buttons[ID_BTAB], 0, 4);
 
-        var forwardTabButton = new Button("⇥");
-        forwardTabButton.setOnAction(_ -> _activeTerminal.kbTabForward());
-        add(forwardTabButton, 1, 4);
+        _buttons[ID_FTAB] = new Key("⇥", this, ID_FTAB, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        add(_buttons[ID_FTAB], 1, 4);
 
-        for (var node : getChildren()) {
-            if (node instanceof Button button) {
+        for (var button : _buttons) {
+            if (button != null) {
                 if (GridPane.getColumnSpan(button) != null && GridPane.getColumnSpan(button) > 1) {
                     button.setMinWidth(MIN_WIDTH * 2.0);
                 } else {
                     button.setMinWidth(MIN_WIDTH);
                 }
                 button.setMinHeight(MIN_HEIGHT);
-                setButtonStyle(button);
+            }
+        }
+    }
+
+    public void enableKeys(final boolean enabled) {
+        for (var button : _buttons) {
+            if (button != null) {
+                button.setDisable(!enabled);
+            }
+        }
+    }
+
+    @Override
+    public void notify(final Pane source, final int id) {
+        switch (id) {
+            case ID_HOME -> _activeTerminal.kbCursorToHome();
+            case ID_RETURN -> _activeTerminal.kbCursorReturn();
+            case ID_UP -> _activeTerminal.kbScanUp();
+            case ID_LEFT -> _activeTerminal.kbScanLeft();
+            case ID_RIGHT -> _activeTerminal.kbScanRight();
+            case ID_DOWN -> _activeTerminal.kbScanDown();
+            case ID_BTAB -> _activeTerminal.kbTabBackward();
+            case ID_FTAB -> _activeTerminal.kbTabForward();
+        }
+    }
+
+    @Override
+    public void refreshButtons() {
+        // Re-evaluate enablement of certain buttons
+        for (var button : _buttons) {
+            if (button != null) {
+                button.updateStyle();
             }
         }
     }
