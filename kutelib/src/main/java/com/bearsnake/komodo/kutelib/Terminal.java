@@ -12,6 +12,8 @@ import com.bearsnake.komodo.utslib.exceptions.*;
 import com.bearsnake.komodo.utslib.fields.ExplicitField;
 import com.bearsnake.komodo.utslib.messages.*;
 import com.bearsnake.komodo.utslib.primitives.*;
+import com.bearsnake.komodo.utslib.primitives.PutCharacterDecimalPrimitive;
+import com.bearsnake.komodo.utslib.primitives.PutCharacterHexPrimitive;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
@@ -1034,7 +1036,7 @@ public class Terminal extends Pane implements UTSSocketListener {
             }
 
             // Look for a UTS primitive
-            var prim = Primitive.deserializePrimitive(input, _settings.isEmphasisSupported(), _settings.isColorSupported());
+            var prim = Primitive.deserializePrimitive(input, _settings.isEmphasisSupported(), _sendColorFccs);
             if (prim != null) {
                 switch (prim.getType()) {
                     case ADD_EMPHASIS -> {

@@ -4,16 +4,22 @@
 
 package com.bearsnake.komodo.kutelib.keypads;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
 
 /**
  * A JavaFX Button with a configurable base color used as a gradient.
  * It has enabled and disabled states with corresponding gradients.
  */
 public class Key extends Button {
+
+    private static final int CYCLE_DELAY_MSEC = 1000;
+    private static final int CYCLE_REPEAT_MSEC = 100;
 
     private final Pane _source;
     private final int _id;
@@ -22,6 +28,8 @@ public class Key extends Button {
     private Color _baseColorBottom;
     private Color _textColor;
     private boolean _isKeyPressed = false;
+    private boolean _enableCycle = false;
+    private Timeline _cycleTimeline;
 
     /**
      * Creates a new KuteButton
@@ -63,27 +71,72 @@ public class Key extends Button {
         // Listen for pressed property changes (mouse/SPACE)
         pressedProperty().addListener((observable, oldValue, newValue) -> {
             updateStyle();
-            if (!newValue && _listener != null) {
-                // The button was released.
-                // We notify released regardless of disabled state, matching the key event behavior.
-                _listener.notifyReleased(_source, _id);
+            if (newValue) {
+                startCycle();
+            } else {
+                stopCycle();
+                if (_listener != null) {
+                    // The button was released.
+                    // We notify released regardless of disabled state, matching the key event behavior.
+                    _listener.notifyReleased(_source, _id);
+                }
             }
         });
 
         // Intercept key events to show pressed state
         addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-            _isKeyPressed = true;
-            updateStyle();
+            if (!_isKeyPressed) {
+                _isKeyPressed = true;
+                updateStyle();
+                startCycle();
+            }
         });
         addEventHandler(KeyEvent.KEY_RELEASED, event -> {
             _isKeyPressed = false;
             updateStyle();
+            stopCycle();
             if (_listener != null) {
                 _listener.notifyReleased(_source, _id);
             }
         });
 
         updateStyle();
+    }
+
+    private void startCycle() {
+        if (_enableCycle && !isDisabled() && _listener != null) {
+            if (_cycleTimeline != null) {
+                _cycleTimeline.stop();
+            }
+            _cycleTimeline = new Timeline(
+                new KeyFrame(Duration.millis(CYCLE_DELAY_MSEC), event -> {
+                    _cycleTimeline.setDelay(Duration.ZERO);
+                    _cycleTimeline.setCycleCount(Timeline.INDEFINITE);
+                    _cycleTimeline.getKeyFrames().setAll(
+                        new KeyFrame(Duration.millis(CYCLE_REPEAT_MSEC), e -> {
+                            if (!isDisabled()) {
+                                _listener.notify(_source, _id);
+                            } else {
+                                stopCycle();
+                            }
+                        })
+                    );
+                    _cycleTimeline.playFromStart();
+                })
+            );
+            _cycleTimeline.play();
+        }
+    }
+
+    private void stopCycle() {
+        if (_cycleTimeline != null) {
+            _cycleTimeline.stop();
+            _cycleTimeline = null;
+        }
+    }
+
+    public void setEnableCycle(final boolean enableCycle) {
+        _enableCycle = enableCycle;
     }
 
     /**

@@ -83,8 +83,11 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
         _buttons[0][0] = new Key("Erase\nDisplay", this, ID_ERASE_DISPLAY, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][1] = new Key("Erase\nEOD", this, ID_ERASE_EOD, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][2] = new Key("Delete\nIn Disp", this, ID_DELETE_IN_DISP, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][2].setEnableCycle(true);
         _buttons[0][3] = new Key("Insert\nIn Disp", this, ID_INSERT_IN_DISP, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][3].setEnableCycle(true);
         _buttons[0][4] = new Key("Insert\nLine", this, ID_INSERT_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[0][4].setEnableCycle(true);
         _buttons[0][5] = new Key("Reset", this, ID_RESET, DARK_RED_TOP, DARK_RED_BOTTOM, TEXT_WHITE, this);
         _buttons[0][6] = new Key("Connect\nSession", this, ID_CONNECT_SESSION, ORANGE_TOP, ORANGE_BOTTOM, TEXT_BLACK, this);
         _buttons[0][7] = new Key("Drop\nSession", this, ID_DROP_SESSION, ORANGE_TOP, ORANGE_BOTTOM, TEXT_BLACK, this);
@@ -98,9 +101,13 @@ public class ControlKeyPad extends StackPane implements KeyPad, KeyListener {
         _buttons[1][0] = new Key("Erase\nEOF", this, ID_ERASE_EOF, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
         _buttons[1][1] = new Key("Erase\nEOL", this, ID_ERASE_EOL, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
         _buttons[1][2] = new Key("Delete\nIn Line", this, ID_DELETE_IN_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][2].setEnableCycle(true);
         _buttons[1][3] = new Key("Insert\nIn Line", this, ID_INSERT_IN_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][3].setEnableCycle(true);
         _buttons[1][4] = new Key("Delete\nLine", this, ID_DELETE_LINE, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][4].setEnableCycle(true);
         _buttons[1][5] = new Key("Line\nDup", this, ID_LINE_DUP, BLUE_TOP, BLUE_BOTTOM, TEXT_BLACK, this);
+        _buttons[1][5].setEnableCycle(true);
         _buttons[1][6] = new Key("FCC\nGen", this, ID_FCC_GEN, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
         _buttons[1][7] = new Key("FCC\nLocate", this, ID_FCC_LOCATE, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);
         _buttons[1][8] = new Key("FCC\nClear", this, ID_FCC_CLEAR, FCC_TOP, FCC_BOTTOM, TEXT_BLACK, this);

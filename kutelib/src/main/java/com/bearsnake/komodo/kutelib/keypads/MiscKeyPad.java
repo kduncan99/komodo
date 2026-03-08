@@ -45,9 +45,11 @@ public class MiscKeyPad extends GridPane implements KeyPad, KeyListener {
         setFocusTraversable(false);
 
         _buttons[ID_SOE] = new Key("▷", this, ID_SOE, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        _buttons[ID_SOE].setEnableCycle(true);
         add(_buttons[ID_SOE], 0, 0);
 
         _buttons[ID_SET_TAB] = new Key("Tab\nSet", this, ID_SET_TAB, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        _buttons[ID_SET_TAB].setEnableCycle(true);
         add(_buttons[ID_SET_TAB], 1, 0);
 
         _buttons[ID_CR] = new Key("CR\nSet", this, ID_CR, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
@@ -63,6 +65,7 @@ public class MiscKeyPad extends GridPane implements KeyPad, KeyListener {
         add(_buttons[ID_FF], 1, 2);
 
         _buttons[ID_CHAR_ERASE] = new Key("Chr\nErs", this, ID_CHAR_ERASE, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        _buttons[ID_CHAR_ERASE].setEnableCycle(true);
         add(_buttons[ID_CHAR_ERASE], 0, 3);
 
         _buttons[ID_COL_SEP] = new Key("Col\nSep", this, ID_COL_SEP, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);

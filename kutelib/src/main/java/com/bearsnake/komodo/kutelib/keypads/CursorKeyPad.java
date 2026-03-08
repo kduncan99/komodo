@@ -44,24 +44,31 @@ public class CursorKeyPad extends GridPane implements KeyPad, KeyListener {
         add(_buttons[ID_HOME], 0, 0);
 
         _buttons[ID_RETURN] = new Key("↲", this, ID_RETURN, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        _buttons[ID_RETURN].setEnableCycle(true);
         add(_buttons[ID_RETURN], 1, 0);
 
         _buttons[ID_UP] = new Key("↑", this, ID_UP, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        _buttons[ID_UP].setEnableCycle(true);
         add(_buttons[ID_UP], 0, 1, 2, 1);
 
         _buttons[ID_LEFT] = new Key("←", this, ID_LEFT, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        _buttons[ID_LEFT].setEnableCycle(true);
         add(_buttons[ID_LEFT], 0, 2);
 
         _buttons[ID_RIGHT] = new Key("→", this, ID_RIGHT, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        _buttons[ID_RIGHT].setEnableCycle(true);
         add(_buttons[ID_RIGHT], 1, 2);
 
         _buttons[ID_DOWN] = new Key("↓", this, ID_DOWN, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        _buttons[ID_DOWN].setEnableCycle(true);
         add(_buttons[ID_DOWN], 0, 3, 2, 1);
 
         _buttons[ID_BTAB] = new Key("⇤", this, ID_BTAB, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        _buttons[ID_BTAB].setEnableCycle(true);
         add(_buttons[ID_BTAB], 0, 4);
 
         _buttons[ID_FTAB] = new Key("⇥", this, ID_FTAB, BASE_COLOR_TOP, BASE_COLOR_BOTTOM, TEXT_COLOR, this);
+        _buttons[ID_FTAB].setEnableCycle(true);
         add(_buttons[ID_FTAB], 1, 4);
 
         for (var button : _buttons) {
