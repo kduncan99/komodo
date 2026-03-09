@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
@@ -9,10 +9,6 @@ package com.bearsnake.komodo.engine.interrupts;
  * Some operation completed, but with a status that must be reported to software.
  */
 public class OperationTrapInterrupt extends MachineInterrupt {
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     public enum Reason {
         FixedPointBinaryIntegerOverflow(0),
@@ -27,69 +23,30 @@ public class OperationTrapInterrupt extends MachineInterrupt {
             _code = (short)code;
         }
 
-        public short getCode(
-        ) {
+        public short getCode() {
             return _code;
         }
     };
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     private final Reason _reason;
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Constructor
-     * <p>
-     * @param reason
-     */
     public OperationTrapInterrupt(
         final Reason reason
     ) {
-        super(InterruptClass.OperationTrap, ConditionCategory.NonFault, Synchrony.Synchronous, Deferrability.Exigent, InterruptPoint.IndirectExecute);
+        super(InterruptClass.OperationTrap,
+              ConditionCategory.NonFault,
+              Synchrony.Synchronous,
+              Deferrability.Exigent,
+              InterruptPoint.IndirectExecute);
         _reason = reason;
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
-    public Reason getReason(
-    ) {
+    public Reason getReason() {
         return _reason;
     }
 
-    /**
-     * Getter
-     * <p>
-     * @return
-     */
     @Override
-    public byte getShortStatusField(
-    ) {
+    public byte getShortStatusField() {
         return (byte)_reason.getCode();
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 }

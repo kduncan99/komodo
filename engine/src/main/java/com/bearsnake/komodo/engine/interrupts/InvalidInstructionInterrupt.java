@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
@@ -9,10 +9,6 @@ package com.bearsnake.komodo.engine.interrupts;
  * Occurs when we try to execute an instruction code which is not defined, or cannot be executed for some reason.
  */
 public class InvalidInstructionInterrupt extends MachineInterrupt {
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     public enum Reason {
         UndefinedFunctionCode(0),
@@ -29,28 +25,13 @@ public class InvalidInstructionInterrupt extends MachineInterrupt {
             _code = (short)code;
         }
 
-        public short getCode(
-        ) {
+        public short getCode() {
             return _code;
         }
-    };
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    }
 
     public final Reason _reason;
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Constructor
-     * @param reason reason code
-     */
     public InvalidInstructionInterrupt(
         final Reason reason
     ) {
@@ -62,18 +43,8 @@ public class InvalidInstructionInterrupt extends MachineInterrupt {
         _reason = reason;
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Getter
-     * @return ssf value
-     */
     @Override
-    public byte getShortStatusField(
-    ) {
+    public byte getShortStatusField() {
         return (byte)_reason.getCode();
     }
 }

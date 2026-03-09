@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
@@ -8,10 +8,6 @@ package com.bearsnake.komodo.engine.interrupts;
  * Represents a particular machine interrupt class
  */
 public class ReferenceViolationInterrupt extends MachineInterrupt {
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     public enum ErrorType {
         GRSViolation(0),
@@ -27,16 +23,10 @@ public class ReferenceViolationInterrupt extends MachineInterrupt {
             _code = (short)code;
         }
 
-        public short getCode(
-        ) {
+        public short getCode() {
             return _code;
         }
-    };
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    }
 
     public final ErrorType _errorType;
 
@@ -46,11 +36,6 @@ public class ReferenceViolationInterrupt extends MachineInterrupt {
      * _errorType will not be GRSViolation nor WriteAccessViolation if this is set.
      */
     public final boolean _fetchFlag;
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Constructor
@@ -70,14 +55,8 @@ public class ReferenceViolationInterrupt extends MachineInterrupt {
         _fetchFlag = fetchFlag;
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     @Override
-    public byte getShortStatusField(
-    ) {
+    public byte getShortStatusField() {
         return (byte)((_errorType.getCode() << 4) | (_fetchFlag ? 1 : 0));
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
@@ -21,7 +21,11 @@ public class UPINormalInterrupt extends MachineInterrupt {
         final Synchrony synchrony,
         final int upi
     ) {
-        super(InterruptClass.UPINormal, ConditionCategory.NonFault, synchrony, Deferrability.Deferrable, InterruptPoint.MidExecution);
+        super(InterruptClass.UPINormal,
+              ConditionCategory.NonFault,
+              synchrony,
+              Deferrability.Deferrable,
+              InterruptPoint.MidExecution);
         _upi = upi;
     }
 }

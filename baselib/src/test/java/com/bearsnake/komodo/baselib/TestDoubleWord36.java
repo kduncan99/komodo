@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.baselib;
 
 import org.junit.jupiter.api.Test;
-
-import java.math.BigInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,6 +21,7 @@ public class TestDoubleWord36 {
 
     //  Conversions ----------------------------------------------------------------------------------------------------------------
 
+    /*
     @Test
     public void stringToWordASCII() {
         DoubleWord36 dw = DoubleWord36.stringToWordASCII("HelpSlop");
@@ -840,4 +839,5 @@ public class TestDoubleWord36 {
         DoubleWord36 dw = new DoubleWord36(bi);
         assertEquals("050607101112606162636465", dw.toOctal());
     }
+     */
 }

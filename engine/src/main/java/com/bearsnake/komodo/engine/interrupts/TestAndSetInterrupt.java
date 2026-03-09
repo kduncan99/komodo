@@ -1,10 +1,8 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
-
-import com.bearsnake.komodo.baselib.Word36;
 
 /**
  * Represents a particular machine interrupt class
@@ -12,26 +10,9 @@ import com.bearsnake.komodo.baselib.Word36;
  */
 public class TestAndSetInterrupt extends MachineInterrupt {
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     private final int _baseRegisterIndex;
     private final int _relativeAddress;
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Constructor
-     */
     public TestAndSetInterrupt(
         final int baseRegisterIndex,
         final int relativeAddress
@@ -46,31 +27,10 @@ public class TestAndSetInterrupt extends MachineInterrupt {
         _relativeAddress = relativeAddress;
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Getter which may be overridden by the subclass
-     * <p>
-     * @return
-     */
     @Override
-    public Word36 getInterruptStatusWord0(
-    ) {
+    public long getInterruptStatusWord0() {
         long value = ((long)_baseRegisterIndex) << 30;
         value |= (_relativeAddress & 0_77_777777);
-        return new Word36(value);
+        return value;
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 }

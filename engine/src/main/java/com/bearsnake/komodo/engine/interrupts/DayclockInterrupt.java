@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
@@ -13,6 +13,10 @@ package com.bearsnake.komodo.engine.interrupts;
 public class DayclockInterrupt extends MachineInterrupt {
 
     public DayclockInterrupt(Synchrony synchrony) {
-        super(InterruptClass.Dayclock, ConditionCategory.NonFault, synchrony, Deferrability.Deferrable, InterruptPoint.MidExecution);
+        super(InterruptClass.Dayclock,
+              ConditionCategory.NonFault,
+              synchrony,
+              Deferrability.Deferrable,
+              InterruptPoint.MidExecution);
     }
 }

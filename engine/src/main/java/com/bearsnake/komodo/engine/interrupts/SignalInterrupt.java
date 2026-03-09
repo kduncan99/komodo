@@ -1,10 +1,8 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
-
-import com.bearsnake.komodo.baselib.Word36;
 
 /**
  * Represents a particular machine interrupt class
@@ -29,7 +27,7 @@ public class SignalInterrupt extends MachineInterrupt {
         }
 
         public short getCode() { return _code; }
-    };
+    }
 
     private final long _index;
     private final SignalType _signalType;
@@ -38,7 +36,11 @@ public class SignalInterrupt extends MachineInterrupt {
         final SignalType signalType,
         final long index
     ) {
-        super(InterruptClass.Signal, ConditionCategory.NonFault, Synchrony.Synchronous, Deferrability.Exigent, InterruptPoint.BetweenInstructions);
+        super(InterruptClass.Signal,
+              ConditionCategory.NonFault,
+              Synchrony.Synchronous,
+              Deferrability.Exigent,
+              InterruptPoint.BetweenInstructions);
         _signalType = signalType;
         _index = index;
     }
@@ -48,7 +50,7 @@ public class SignalInterrupt extends MachineInterrupt {
     public SignalType getSignalType() { return _signalType; }
 
     @Override
-    public Word36 getInterruptStatusWord0() { return new Word36(_index); }
+    public long getInterruptStatusWord0() { return _index; }
 
     @Override
     public byte getShortStatusField() { return (byte)_signalType.getCode(); }

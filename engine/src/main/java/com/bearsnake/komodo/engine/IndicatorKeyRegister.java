@@ -1,21 +1,28 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine;
 
 import com.bearsnake.komodo.baselib.Word36;
 
-public class IndicatorKeyRegister extends Word36 {
+public class IndicatorKeyRegister {
 
-    public IndicatorKeyRegister() {}
-    public IndicatorKeyRegister(final long value) { super(value); }
+    private long _value;
 
-    public final int getShortStatusField()                        { return (int) getS1(_value); }
-    public final int getMidInstructionDescription()               { return (int) (getS2(_value) >> 3); }
-    public final int getPendingInterruptInformation()             { return (int) (getS2(_value) & 07); }
-    public final int getInterruptClassField()                     { return (int) getS3(_value); }
-    public final int getAccessKey()                               { return (int) getH2(_value); }
+    public IndicatorKeyRegister() {
+        _value = 0;
+    }
+
+    public IndicatorKeyRegister(final long value) {
+        _value = value;
+    }
+
+    public final int getShortStatusField()                        { return (int) Word36.getS1(_value); }
+    public final int getMidInstructionDescription()               { return (int) (Word36.getS2(_value) >> 3); }
+    public final int getPendingInterruptInformation()             { return (int) (Word36.getS2(_value) & 07); }
+    public final int getInterruptClassField()                     { return (int) Word36.getS3(_value); }
+    public final int getAccessKey()                               { return (int) Word36.getH2(_value); }
     public final AccessInfo getAccessInfo()                       { return new AccessInfo(getAccessKey()); }
     public final boolean getInstructionInF0()                     { return (getMidInstructionDescription() & 04) != 0; }
     public final boolean getExecuteRepeatedInstruction()          { return (getMidInstructionDescription() & 02) != 0; }
@@ -50,8 +57,15 @@ public class IndicatorKeyRegister extends Word36 {
         return this;
     }
 
-    public IndicatorKeyRegister setInterruptClassField(final int value) { setS3(value); return this; }
-    public IndicatorKeyRegister setAccessKey(final int value) { setH2(value); return this; }
+    public IndicatorKeyRegister setInterruptClassField(final int value) {
+        _value = Word36.setS3(_value, value);
+        return this;
+    }
+
+    public IndicatorKeyRegister setAccessKey(final int value) {
+        _value = Word36.setH2(_value, value);
+        return this;
+    }
 
     public void setInstructionInF0(
         final boolean flag

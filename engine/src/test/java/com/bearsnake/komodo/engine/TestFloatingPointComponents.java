@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine;
@@ -53,18 +53,20 @@ public class TestFloatingPointComponents {
     private String decompose(final FloatingPointComponents fpc)
         throws CharacteristicOverflowException,
                CharacteristicUnderflowException {
-        DoubleWord36 dw36 = fpc.toDoubleWord36();
-        BigInteger bits = dw36.get();
-        long sign = bits.shiftRight(71).longValue();
-        long characteristic = bits.shiftRight(60).and(BigInteger.valueOf(03777)).longValue();
-        long mantissa = bits.and(BigInteger.valueOf(0_7777_7777).shiftLeft(36).or(BigInteger.valueOf(0_777777_777777L))).longValue();
+        long[] dw36 = new long[2];
+        fpc.toDoubleWord36(dw36, 0);
+        BigInteger bits = DoubleWord36.getTwosComplement(dw36, 0);
+        long sign = bits.compareTo(BigInteger.ZERO) < 0 ? 1 : 0;
+        BigInteger absBits = bits.abs();
+        long characteristic = absBits.shiftRight(60).and(BigInteger.valueOf(03777)).longValue();
+        long mantissa = absBits.and(BigInteger.valueOf(Word36.BIT_MASK).shiftLeft(36).or(BigInteger.valueOf(Word36.BIT_MASK))).longValue();
         long unbiasedExponent = characteristic - FloatingPointComponents.DW36_EXPONENT_BIAS;
 
         StringBuilder sb = new StringBuilder();
         sb.append("---------------------------------------------\n");
         sb.append(String.format("FPC value:       %s\n", fpc.toString()));
-        sb.append(String.format("DW36 value:      %s\n", dw36.toOctal()));
-        sb.append(String.format("raw bits:        %s\n", padZero(bits.toString(2), 72)));
+        sb.append(String.format("DW36 value:      %012o%012o\n", dw36[0], dw36[1]));
+        sb.append(String.format("raw bits:        %s\n", padZero(absBits.toString(2), 72)));
         sb.append(String.format("sign:            %s\n", Long.toBinaryString(sign)));
         sb.append(String.format("characteristic:  %s\n", padZero(Long.toBinaryString(characteristic), 11)));
         sb.append(String.format("mantissa:        %s\n", padZero(Long.toBinaryString(mantissa), 60)));
@@ -85,7 +87,7 @@ public class TestFloatingPointComponents {
         assertFalse(fpc._isNegative);
         assertEquals(9, fpc._exponent);
         assertEquals(0, fpc._integral);
-        assertEquals(0_40074_00000_00000_00000L, fpc._mantissa);
+        assertEquals(0_40074_00000_00000_00000L, fpc._fractional);
     }
 
     //  add ------------------------------------------------------------------------------------------------------------------------
@@ -320,7 +322,7 @@ public class TestFloatingPointComponents {
 
     @Test
     public void invertZero() {
-        Exception _ = assertThrows(DivideByZeroException.class, () -> {
+        assertThrows(DivideByZeroException.class, () -> {
             FloatingPointComponents fpZero = new FloatingPointComponents(false, 0, 0, 0);
             fpZero.invert();
         });
@@ -512,7 +514,7 @@ public class TestFloatingPointComponents {
 
     @Test
     public void normalize_Underflow() {
-        Exception e = assertThrows(CharacteristicUnderflowException.class, () -> {
+        assertThrows(CharacteristicUnderflowException.class, () -> {
             FloatingPointComponents operand = new FloatingPointComponents(false,
                                                                           FloatingPointComponents.LOWEST_EXPONENT,
                                                                           0L,
@@ -524,7 +526,7 @@ public class TestFloatingPointComponents {
 
     @Test
     public void normalize_Overflow() {
-        Exception e = assertThrows(CharacteristicOverflowException.class, () -> {
+        assertThrows(CharacteristicOverflowException.class, () -> {
             FloatingPointComponents operand = new FloatingPointComponents(false,
                                                                           FloatingPointComponents.HIGHEST_EXPONENT,
                                                                           01L,
@@ -571,12 +573,11 @@ public class TestFloatingPointComponents {
         //  actual value in binary is 100000100011.1
         //  result mantissa in binary is 10000010001110...0 - in octal is 404340...0
         //  real exponent in decimal is 12, biased in octal is 2014
-        Word36[] expected = {
-            new Word36(0_2014_40434000L),
-            new Word36(0L),
-        };
+        long[] expected = { 0_2014_40434000L, 0L };
+        long[] result = new long[2];
+        operand.toDoubleWord36(result, 0);
 
-        assertArrayEquals(expected, operand.toDoubleWord36().getWords());
+        assertArrayEquals(expected, result);
     }
 
     //  toFloat --------------------------------------------------------------------------------------------------------------------
@@ -616,7 +617,7 @@ public class TestFloatingPointComponents {
         //  actual value in binary is 100000100011.1
         //  result mantissa in binary is 10000010001110...0 - in octal is 404340...0
         //  real exponent in decimal is 12, biased in octal is 214
-        Word36 expected = new Word36(0_214_404340000L);
+        long expected = 0_214_404340000L;
 
         assertEquals(expected, operand.toWord36());
     }

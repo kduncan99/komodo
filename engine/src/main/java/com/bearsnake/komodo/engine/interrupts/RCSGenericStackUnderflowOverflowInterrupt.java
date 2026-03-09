@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
@@ -54,11 +54,8 @@ public class RCSGenericStackUnderflowOverflowInterrupt extends MachineInterrupt 
     public int getRelativeAddress() { return _relativeAddress; }
 
     @Override
-    public Word36 getInterruptStatusWord1(
-    ) {
-        Word36 result = new Word36(_relativeAddress);
-        result.setS1(_baseRegister);
-        return result;
+    public long getInterruptStatusWord1() {
+        return Word36.setS1(_relativeAddress, _baseRegister);
     }
 
     @Override public byte getShortStatusField() { return (byte)_reason.getCode(); }

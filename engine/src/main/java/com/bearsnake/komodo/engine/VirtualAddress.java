@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine;
@@ -9,49 +9,25 @@ import com.bearsnake.komodo.baselib.Word36;
 /**
  * Represents a virtual address for Basic or Extended mode.
  */
-public class VirtualAddress extends Word36 {
+public class VirtualAddress {
 
-    public VirtualAddress() {}
-    public VirtualAddress(
-        final long value
-    ) {
-        super(value);
+    protected VirtualAddress() {}
+
+    public static int getBankDescriptorIndex(final long source) {
+        return (int) (Word36.getH1(source) & 077777);
     }
 
-    /**
-     * Basic mode initial value constructor
-     * @param execFlag true for exec bank, else false
-     * @param levelFlag level portion of the bank name, true for 1, false for 0
-     * @param bdIndex bank descriptor index 0:07777
-     * @param offset offset 0:0777777 - represents an offset from the start of the bank
-     */
-    public VirtualAddress(
-        final boolean execFlag,
-        final boolean levelFlag,
-        final int bdIndex,
-        final int offset
-    ) {
-        super(getValue(execFlag, levelFlag, bdIndex, offset));
+    public static int getLevel(final long source) {
+        return (int) ((source >> 33) & 0_777777_777777L);
     }
 
-    /**
-     * Extended mode initial value constructor
-     * @param level level, 0:7
-     * @param bdIndex bank descriptor index 0:077777
-     * @param offset offset 0:0777777 - represents an offset from the start of the bank
-     */
-    public VirtualAddress(
-        final int level,
-        final int bdIndex,
-        final int offset
-    ) {
-        super(getValue(level, bdIndex, offset));
+    public static int getOffset(final long source) {
+        return (int) Word36.getH2(source);
     }
 
-    public int getBankDescriptorIndex() { return (int) (getH1() & 077777); }
-    public int getLevel()               { return (int) (getW() >> 33); }
-    public int getOffset()              { return (int) getH2(); }
-    public int getLBDI()                { return (getLevel() << 15) | getBankDescriptorIndex(); }
+    public static int getLBDI(final long source) {
+        return (getLevel(source) << 15) | getBankDescriptorIndex(source);
+    }
 
     /**
      * Converts discrete values to a composite 36-bit value wrapped in a long integer
@@ -108,14 +84,14 @@ public class VirtualAddress extends Word36 {
     /**
      * Translates this L,BDI,OFFSET bank name to E,LS,BDI,OFFSET format
      */
-    public long translateToBasicMode() {
+    public long translateToBasicMode(final long source) {
         boolean execFlag = true;
         boolean levelSpecFlag = true;
         int bdi = 0;
 
-        if (getBankDescriptorIndex() <= 07777) {
-            bdi = getBankDescriptorIndex();
-            switch (getLevel()) {
+        if (getBankDescriptorIndex(source) <= 07777) {
+            bdi = getBankDescriptorIndex(source);
+            switch (getLevel(source)) {
                 case 0:
                     break;
 
@@ -136,7 +112,7 @@ public class VirtualAddress extends Word36 {
         return (execFlag ? 0_400000_000000L : 0)
                | (levelSpecFlag ? 0_040000_000000L : 0)
                | ((long)bdi << 18)
-               | getOffset();
+               | getOffset(source);
     }
 
     /**

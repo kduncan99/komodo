@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
@@ -9,43 +9,13 @@ package com.bearsnake.komodo.engine.interrupts;
  * When enabled, this interrupt is generated when the conditionalJump history buffer if full.
  * Software must store the buffer *somewhere* to avoid losing conditionalJump history.
  */
-
 public class JumpHistoryFullInterrupt extends MachineInterrupt {
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Class attributes
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Constructors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Constructor
-     */
-    public JumpHistoryFullInterrupt(
-    ) {
-        super(InterruptClass.JumpHistoryFull, ConditionCategory.NonFault, Synchrony.Asynchronous, Deferrability.Exigent, InterruptPoint.BetweenInstructions);
+    public JumpHistoryFullInterrupt() {
+        super(InterruptClass.JumpHistoryFull,
+              ConditionCategory.NonFault,
+              Synchrony.Asynchronous,
+              Deferrability.Exigent,
+              InterruptPoint.BetweenInstructions);
     }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Instance methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
 }

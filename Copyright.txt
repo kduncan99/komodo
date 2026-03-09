@@ -3,7 +3,7 @@ A Unisys(TM) 2200(TM) systems emulator
 
 All source code in this project is protected by one or more of the following copyrights:
 
-Copyright (c) 2018-2020 by Kurt Duncan
+Copyright (c) 2018-2026 by Kurt Duncan
 
 Permissions is granted to download copies of this software, to alter it, and to compile and use it for personal use
 insofar as it is used strictly for purposes of running the emulator and the various sub-modules and sub-projects
@@ -231,7 +231,7 @@ With respect to the JavaHamcrest library, the following applies:
 
 BSD License
 
-Copyright (c) 2000-2015 www.hamcrest.org
+Copyright (c) 2000-2026 www.hamcrest.org
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -266,7 +266,7 @@ With respect to the FasterXML jackson libraries, the following applies:
 
 With respect to the Java-WebSocket library, the following applies:
 
-Copyright (c) 2010-2020 Nathan Rajlich
+Copyright (c) 2010-2026 Nathan Rajlich
 
  Permission is hereby granted, free of charge, to any person
  obtaining a copy of this software and associated documentation

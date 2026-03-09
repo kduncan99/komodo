@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
@@ -54,12 +54,9 @@ public class AddressingExceptionInterrupt extends MachineInterrupt {
     public Reason getReason() { return _reason; }
 
     @Override
-    public Word36 getInterruptStatusWord1(
-    ) {
+    public long getInterruptStatusWord1() {
         long levelBDI = (_bankLevel << 15) | _bankDescriptorIndex;
-        Word36 result = new Word36();
-        result.setH1(levelBDI);
-        return result;
+        return Word36.setH1(0, levelBDI);
     }
 
     @Override public byte getShortStatusField() { return (byte)_reason.getCode(); }

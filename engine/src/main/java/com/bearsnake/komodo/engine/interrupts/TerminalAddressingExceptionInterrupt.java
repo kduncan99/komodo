@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
@@ -29,17 +29,14 @@ public class TerminalAddressingExceptionInterrupt extends MachineInterrupt {
             _code = (short)code;
         }
 
-        public short getCode(
-        ) {
+        public short getCode() {
             return _code;
         }
-    };
-
+    }
 
     private final short _bankDescriptorIndex;   // 15 bits significant
     private final byte _bankLevel;              // 3 bits significant
     private final Reason _reason;
-
 
     /**
      * Constructor
@@ -52,7 +49,11 @@ public class TerminalAddressingExceptionInterrupt extends MachineInterrupt {
         final int bankLevel,
         final int bankDescriptorIndex
     ) {
-        super(InterruptClass.TerminalAddressingException, ConditionCategory.Fault, Synchrony.Pended, Deferrability.Exigent, InterruptPoint.MidExecution);
+        super(InterruptClass.TerminalAddressingException,
+              ConditionCategory.Fault,
+              Synchrony.Pended,
+              Deferrability.Exigent,
+              InterruptPoint.MidExecution);
         _bankLevel = (byte)(bankLevel & 07);
         _bankDescriptorIndex = (short)(bankDescriptorIndex & 077777);
         _reason = reason;
@@ -63,17 +64,13 @@ public class TerminalAddressingExceptionInterrupt extends MachineInterrupt {
     public Reason getReason() { return _reason; }
 
     @Override
-    public Word36 getInterruptStatusWord1(
-    ) {
+    public long getInterruptStatusWord1() {
         long levelBDI = (_bankLevel << 15) | _bankDescriptorIndex;
-        Word36 result = new Word36();
-        result.setH1(levelBDI);
-        return result;
+        return Word36.setH1(0, levelBDI);
     }
 
     @Override
-    public byte getShortStatusField(
-    ) {
+    public byte getShortStatusField() {
         return (byte)_reason.getCode();
     }
 }

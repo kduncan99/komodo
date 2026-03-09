@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine.interrupts;
@@ -13,10 +13,6 @@ import com.bearsnake.komodo.baselib.Word36;
  * invoke raiseInterrupt() for them.
  */
 public abstract class MachineInterrupt extends Exception {
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Nested enumerations
-    //  ----------------------------------------------------------------------------------------------------------------------------
 
     /**
      * Defines the priority of the various interrupt classes, lowest number representing the highest priority.
@@ -85,12 +81,12 @@ public abstract class MachineInterrupt extends Exception {
 
     public enum Synchrony {
         None(0),
-        Asynchronous(1),    //  taken at next interrupt point; persists until taken
-        Broadcast(2),       //  same as sync, except source is external to this processor
-        Pended(3),          //  can be deferred, or held until the next between-instruction interrupt point;
-                            //      dropped (more or less) when pre-empted, but condition is persisted in ASP
-        Synchronous(4);     //  taken at next interrupt point unless pre-empted by higher-priority interrupt,
-                            //      in which case this interrupt is dropped
+        Asynchronous(1),  //  taken at next interrupt point; persists until taken
+        Broadcast(2),     //  same as sync, except source is external to this processor
+        Pended(3),        //  can be deferred, or held until the next between-instruction interrupt point;
+                                //      dropped (more or less) when pre-empted, but condition is persisted in ASP
+        Synchronous(4);   //  taken at next interrupt point unless pre-empted by higher-priority interrupt,
+                                //      in which case this interrupt is dropped
 
         public final short _code;
         Synchrony(int code) { _code = (short)code; }
@@ -117,27 +113,17 @@ public abstract class MachineInterrupt extends Exception {
         _interruptPoint = interruptPoint;
     }
 
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Accessors
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
     public final ConditionCategory getConditionCategory()   { return _conditionCategory; }
     public final Deferrability getDeferrability()           { return _deferrability; }
     public final InterruptClass getInterruptClass()         { return _interruptClass; }
     public final InterruptPoint getInterruptPoint()         { return _interruptPoint; }
     public final Synchrony getSynchrony()                   { return _synchrony; }
 
-    /**
-     * Get a displayable description of this interrupt
-     * @return value
-     */
-    public final String getDescription(
-    ) {
+    public final String getDescription() {
         return String.format("%03o:%s", getInterruptClass().getCode(), this.getClass().getName());
     }
 
-    public Word36 getInterruptStatusWord0() { return new Word36(); }
-    public Word36 getInterruptStatusWord1() { return new Word36(); }
+    public long getInterruptStatusWord0() { return 0; }
+    public long getInterruptStatusWord1() { return 0; }
     public byte getShortStatusField() { return 0; }
 }

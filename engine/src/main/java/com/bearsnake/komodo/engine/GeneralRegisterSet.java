@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine;
@@ -140,23 +140,7 @@ public class GeneralRegisterSet {
         "EA12",  "EA13",  "EA14",  "EA15",  "0174",  "0175",  "0176",  "0177",
     };
 
-    private final GeneralRegister[] _registers = new GeneralRegister[128];
-
-    /**
-     * Standard constructor
-     */
-    public GeneralRegisterSet(
-    ) {
-        for (int rx = 0; rx < 128; ++rx) {
-            if ((rx >= X0) && (rx <= X15)) {
-                _registers[rx] = new IndexRegister();
-            } else if ((rx >= EX0) && (rx <= EX15)) {
-                _registers[rx] = new IndexRegister();
-            } else {
-                _registers[rx] = new GeneralRegister();
-            }
-        }
-    }
+    private final long[] _registers = new long[128];
 
     /**
      * Given a string, we return the GRS address of the indicated register if it is in fact a register name
@@ -181,7 +165,7 @@ public class GeneralRegisterSet {
      * @param registerIndex index of the requested register
      * @return reference as indicated above
      */
-    public GeneralRegister getRegister(
+    public long getRegister(
         final int registerIndex
     ) {
         if ((registerIndex < 0) || (registerIndex >= 128)) {
@@ -204,13 +188,7 @@ public class GeneralRegisterSet {
             throw new RuntimeException(String.format("registerIndex=%d", registerIndex));
         }
 
-        if ((registerIndex >= X0) && (registerIndex <= X15)) {
-            _registers[registerIndex] = new IndexRegister(value);
-        } else if ((registerIndex >= GeneralRegisterSet.EX0) && (registerIndex <= GeneralRegisterSet.EX15)) {
-            _registers[registerIndex] = new IndexRegister(value);
-        } else {
-            _registers[registerIndex] = new GeneralRegister(value);
-        }
+        _registers[registerIndex] = value;
     }
 
     /**
@@ -248,7 +226,7 @@ public class GeneralRegisterSet {
                 StringBuilder sb = new StringBuilder();
                 sb.append(String.format("  %5s:", NAMES[rx]));
                 for (int ry = 0; ry < 8; ++ry) {
-                    sb.append(String.format(" %012o", _registers[rx + ry].getW()));
+                    sb.append(String.format(" %012o", _registers[rx + ry]));
                 }
                 sb.append("\n");
                 writer.write(sb.toString());

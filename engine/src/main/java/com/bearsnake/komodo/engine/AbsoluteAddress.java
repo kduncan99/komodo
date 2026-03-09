@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.engine;
@@ -7,10 +7,11 @@ package com.bearsnake.komodo.engine;
 import com.bearsnake.komodo.baselib.ArraySlice;
 
 /**
-* Represents an absolute address - this is a composite value which identifies a particular
-* StaticMainStorageProcessor, and an offset from the beginning of the storage of that processor
-* which identifies a particular word of storage.
-*/
+ * Represents an absolute address - this is a composite value which identifies a particular
+ * StaticMainStorageProcessor, and an offset from the beginning of the storage of that processor
+ * which identifies a particular word of storage.
+ * TODO think about this
+ */
 public class AbsoluteAddress {
 
     /**

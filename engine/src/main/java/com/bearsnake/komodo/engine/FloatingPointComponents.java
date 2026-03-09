@@ -25,9 +25,9 @@ public class FloatingPointComponents {
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     //  Things we use internally
-    private static final int MANTISSA_BITS = 60;
-    private static final long MANTISSA_MASK = (1L << MANTISSA_BITS) - 1;
-    private static final long MANTISSA_LEFTMOST_BIT = 1L << (MANTISSA_BITS - 1);
+    private static final int MANTISSA_BIT_COUNT = 60;
+    private static final long MANTISSA_MASK = (1L << MANTISSA_BIT_COUNT) - 1;
+    private static final long MANTISSA_LEFTMOST_BIT = 1L << (MANTISSA_BIT_COUNT - 1);
     static final int HIGHEST_EXPONENT = 01777;
     static final int LOWEST_EXPONENT = -02000;
 
@@ -37,45 +37,44 @@ public class FloatingPointComponents {
     //  External floating point format information
     private static final int W36_CHARACTERISTIC_BITS = 8;
     private static final int W36_EXPONENT_BIAS = 128;
-    private static final int W36_EXPONENT_BITS = 8;
-    private static final int W36_MANTISSA_BITS = 27;
-    private static final long W36_CHARACTERISTIC_MASK = ((1L << W36_CHARACTERISTIC_BITS) - 1) << W36_MANTISSA_BITS;
-    private static final long W36_MANTISSA_MASK = (1L << W36_MANTISSA_BITS) - 1;
-    private static final long W36_SIGN_BIT = 1L << (W36_MANTISSA_BITS + W36_EXPONENT_BITS);
+    private static final int W36_EXPONENT_BIT_COUNT = 8;
+    private static final int W36_MANTISSA_BIT_COUNT = 27;
+    private static final long W36_CHARACTERISTIC_MASK = ((1L << W36_CHARACTERISTIC_BITS) - 1) << W36_MANTISSA_BIT_COUNT;
+    private static final long W36_MANTISSA_MASK = (1L << W36_MANTISSA_BIT_COUNT) - 1;
+    private static final long W36_SIGN_BIT = 1L << (W36_MANTISSA_BIT_COUNT + W36_EXPONENT_BIT_COUNT);
     private static final long W36_FULL_MASK = W36_CHARACTERISTIC_MASK | W36_MANTISSA_MASK | W36_SIGN_BIT;
     private static final int W36_LOWEST_EXPONENT = -128;
     private static final int W36_HIGHEST_EXPONENT = 127;
-    private static final long W36_NEGATIVE_ZERO = 0_777777_777777L;
 
     private static final int DW36_CHARACTERISTIC_BITS = 11;
     static final int DW36_EXPONENT_BIAS = 1024;
     private static final BigInteger DW36BI_EXPONENT_BIAS = BigInteger.valueOf(DW36_EXPONENT_BIAS);
-    private static final int DW36_EXPONENT_BITS = 11;
-    private static final int DW36_MANTISSA_BITS = 60;
-    private static final BigInteger DW36_CHARACTERISTIC_MASK = BigInteger.valueOf((1L << DW36_CHARACTERISTIC_BITS) - 1).shiftLeft(DW36_MANTISSA_BITS);
-    private static final BigInteger DW36_MANTISSA_MASK = BigInteger.valueOf((1L << DW36_MANTISSA_BITS) - 1);
-    private static final BigInteger DW36_SIGN_BIT = BigInteger.ONE.shiftLeft(DW36_MANTISSA_BITS + DW36_EXPONENT_BITS);
+    private static final int DW36_EXPONENT_BIT_COUNT = 11;
+    private static final int DW36_MANTISSA_BIT_COUNT = 60;
+    private static final BigInteger DW36_CHARACTERISTIC_MASK = BigInteger.valueOf((1L << DW36_CHARACTERISTIC_BITS) - 1).shiftLeft(DW36_MANTISSA_BIT_COUNT);
+    private static final BigInteger DW36_MANTISSA_MASK = BigInteger.valueOf((1L << DW36_MANTISSA_BIT_COUNT) - 1);
+    private static final BigInteger DW36_SIGN_BIT = BigInteger.ONE.shiftLeft(DW36_MANTISSA_BIT_COUNT + DW36_EXPONENT_BIT_COUNT);
     private static final BigInteger DW36_FULL_MASK = DW36_CHARACTERISTIC_MASK.or(DW36_MANTISSA_MASK).or(DW36_SIGN_BIT);
     private static final int DW36_LOWEST_EXPONENT = -1024;
     private static final int DW36_HIGHEST_EXPONENT = 1023;
     private static final BigInteger DW36_NEGATIVE_ZERO = BigInteger.valueOf(0_777777_777777L).shiftLeft(36).or(BigInteger.valueOf(0_777777_777777L));
     private static final BigInteger DW36_POSITIVE_ZERO = BigInteger.ZERO;
 
-    private static final int IEEE754_SINGLE_CHARACTERISTIC_BITS = 8;
+    private static final int IEEE754_SINGLE_CHARACTERISTIC_BIT_COUNT = 8;
     private static final int IEEE754_SINGLE_EXPONENT_BIAS = 127;
-    private static final int IEEE754_SINGLE_MANTISSA_BITS = 23;
-    private static final int IEEE754_SINGLE_MANTISSA_MASK = (1 << IEEE754_SINGLE_MANTISSA_BITS) - 1;
-    private static final int IEEE754_SINGLE_SIGN_BIT = (1 << (IEEE754_SINGLE_CHARACTERISTIC_BITS + IEEE754_SINGLE_MANTISSA_BITS));
+    private static final int IEEE754_SINGLE_MANTISSA_BIT_COUNT = 23;
+    private static final int IEEE754_SINGLE_MANTISSA_MASK = (1 << IEEE754_SINGLE_MANTISSA_BIT_COUNT) - 1;
+    private static final int IEEE754_SINGLE_SIGN_BIT = (1 << (IEEE754_SINGLE_CHARACTERISTIC_BIT_COUNT + IEEE754_SINGLE_MANTISSA_BIT_COUNT));
 
     private static final int IEEE754_SINGLE_NEGATIVE_ZERO = 0x8000_0000;
     private static final int IEEE754_SINGLE_POSITIVE_ZERO = 0;
 
-    private static final int IEEE754_DOUBLE_CHARACTERISTIC_BITS = 11;
+    private static final int IEEE754_DOUBLE_CHARACTERISTIC_BIT_COUNT = 11;
     static final int IEEE754_DOUBLE_EXPONENT_BIAS = 1023;
-    private static final int IEEE754_DOUBLE_MANTISSA_BITS = 52;
-    private static final long IEEE754_DOUBLE_CHARACTERISTIC_MASK = ((1L << IEEE754_DOUBLE_CHARACTERISTIC_BITS) - 1) << IEEE754_DOUBLE_MANTISSA_BITS;
-    private static final long IEEE754_DOUBLE_MANTISSA_MASK = (1L << IEEE754_DOUBLE_MANTISSA_BITS) - 1;
-    private static final long IEEE754_DOUBLE_SIGN_BIT = (1L << (IEEE754_DOUBLE_CHARACTERISTIC_BITS + IEEE754_DOUBLE_MANTISSA_BITS));
+    private static final int IEEE754_DOUBLE_MANTISSA_BIT_COUNT = 52;
+    private static final long IEEE754_DOUBLE_CHARACTERISTIC_MASK = ((1L << IEEE754_DOUBLE_CHARACTERISTIC_BIT_COUNT) - 1) << IEEE754_DOUBLE_MANTISSA_BIT_COUNT;
+    private static final long IEEE754_DOUBLE_MANTISSA_MASK = (1L << IEEE754_DOUBLE_MANTISSA_BIT_COUNT) - 1;
+    private static final long IEEE754_DOUBLE_SIGN_BIT = (1L << (IEEE754_DOUBLE_CHARACTERISTIC_BIT_COUNT + IEEE754_DOUBLE_MANTISSA_BIT_COUNT));
 
     private static final long IEEE754_DOUBLE_NEGATIVE_ZERO = 0x8000_0000_0000_0000L;
     private static final long IEEE754_DOUBLE_POSITIVE_ZERO = 0L;
@@ -87,8 +86,8 @@ public class FloatingPointComponents {
 
     final boolean _isNegative;
     final int _exponent;
-    final long _integral;    //  integral portion (usually zero, esp if normalized) - absolute evalue
-    final long _mantissa;    //  fractional portion if _integral is zero - absolute value
+    final long _integral;       //  integral portion (usually zero, esp if normalized) - absolute value
+    final long _fractional;     //  fractional portion if _integral is zero - absolute value
 
 
     //  ----------------------------------------------------------------------------------------------------------------------------
@@ -102,12 +101,12 @@ public class FloatingPointComponents {
         final boolean isNegative,
         final int exponent,
         final long integral,
-        final long mantissa
+        final long fractional
     ) {
         _isNegative = isNegative;
         _exponent = exponent;
         _integral = integral;
-        _mantissa = mantissa;
+        _fractional = fractional;
     }
 
     /**
@@ -118,7 +117,7 @@ public class FloatingPointComponents {
     ) {
         if (value == 0.0) {
             _exponent = 0;
-            _mantissa = 0;
+            _fractional = 0;
             _integral = 0;
             _isNegative = false;
         } else {
@@ -126,18 +125,18 @@ public class FloatingPointComponents {
             //  The mantissa will have its most significant bit just left of the decimal, so keep that in mind.
             long bits = Double.doubleToRawLongBits(value);
 
-            int tempExponent = (int) ((bits & IEEE754_DOUBLE_CHARACTERISTIC_MASK) >> IEEE754_DOUBLE_MANTISSA_BITS);
+            int tempExponent = (int) ((bits & IEEE754_DOUBLE_CHARACTERISTIC_MASK) >> IEEE754_DOUBLE_MANTISSA_BIT_COUNT);
             tempExponent -= IEEE754_DOUBLE_EXPONENT_BIAS;
 
             long tempMantissa = (bits & IEEE754_DOUBLE_MANTISSA_MASK);
-            tempMantissa |= 1L << IEEE754_DOUBLE_MANTISSA_BITS;
+            tempMantissa |= 1L << IEEE754_DOUBLE_MANTISSA_BIT_COUNT;
 
             //  Manipulate as necessary to get the FPC component values.
             //  At this point, tempMantissa is one bit larger than the IEEE754 mantissa field
             _isNegative = (bits & IEEE754_DOUBLE_SIGN_BIT) != 0;
             _integral = 0L;
             _exponent = tempExponent + 1;
-            _mantissa = tempMantissa << (MANTISSA_BITS - (IEEE754_DOUBLE_MANTISSA_BITS + 1));
+            _fractional = tempMantissa << (MANTISSA_BIT_COUNT - (IEEE754_DOUBLE_MANTISSA_BIT_COUNT + 1));
         }
     }
 
@@ -145,19 +144,19 @@ public class FloatingPointComponents {
      * Creates a not-necessarily-normalized FPC from a 36-bit floating point value stored in a Word36 object
      */
     public FloatingPointComponents(
-        final Word36 value
+        final long value
     ) {
-        _isNegative = value.isNegative();
-        long absValue = _isNegative ? value.negate().getW() : value.getW();
+        _isNegative = Word36.isNegative(value);
+        long absValue = _isNegative ? Word36.negate(value) : value;
 
         if (absValue == 0) {
             _integral = 0;
-            _mantissa = 0;
+            _fractional = 0;
             _exponent = 0;
         } else {
             _integral = 0;
-            _exponent = (int) ((absValue & W36_CHARACTERISTIC_MASK) >> W36_MANTISSA_BITS) - W36_EXPONENT_BIAS;
-            _mantissa = absValue & W36_MANTISSA_MASK;
+            _exponent = (int) ((absValue & W36_CHARACTERISTIC_MASK) >> W36_MANTISSA_BIT_COUNT) - W36_EXPONENT_BIAS;
+            _fractional = absValue & W36_MANTISSA_MASK;
         }
     }
 
@@ -165,22 +164,23 @@ public class FloatingPointComponents {
      * Creates a not-necessarily-normalized FPC from a 72-bit floating point value stored in a DoubleWord36 object.
      */
     public FloatingPointComponents(
-        final DoubleWord36 value
+        final long[] source,
+        final int offset
     ) {
-        _isNegative = value.isNegative();
-        BigInteger absValue = value.get();
+        _isNegative = DoubleWord36.isNegative(source, offset);
+        BigInteger absValue = DoubleWord36.getTwosComplement(source, offset);
         if (_isNegative) {
             absValue = absValue.xor(DoubleWord36.BIT_MASK);
         }
 
         if (absValue.equals(DW36_POSITIVE_ZERO)) {
             _integral = 0;
-            _mantissa = 0;
+            _fractional = 0;
             _exponent = 0;
         } else {
             _integral = 0;
-            _exponent = absValue.and(DW36_CHARACTERISTIC_MASK).shiftRight(DW36_MANTISSA_BITS).subtract(DW36BI_EXPONENT_BIAS).intValue();
-            _mantissa = absValue.and(DW36_MANTISSA_MASK).longValue();
+            _exponent = absValue.and(DW36_CHARACTERISTIC_MASK).shiftRight(DW36_MANTISSA_BIT_COUNT).subtract(DW36BI_EXPONENT_BIAS).intValue();
+            _fractional = absValue.and(DW36_MANTISSA_MASK).longValue();
         }
     }
 
@@ -200,7 +200,7 @@ public class FloatingPointComponents {
             ++exp;
         }
         _integral = workingValue.longValue();
-        _mantissa = 0;
+        _fractional = 0;
         _exponent = exp;
     }
 
@@ -213,12 +213,11 @@ public class FloatingPointComponents {
     public boolean equals(
         final Object obj
     ) {
-        if (obj instanceof FloatingPointComponents) {
-            FloatingPointComponents fpc = (FloatingPointComponents) obj;
+        if (obj instanceof FloatingPointComponents fpc) {
             return (_isNegative == fpc._isNegative)
                    && (_exponent == fpc._exponent)
                    && (_integral == fpc._integral)
-                   && (_mantissa == fpc._mantissa);
+                   && (_fractional == fpc._fractional);
         } else {
             return false;
         }
@@ -226,7 +225,7 @@ public class FloatingPointComponents {
 
     @Override
     public int hashCode() {
-        return (int) (_exponent ^ _integral ^ _mantissa);
+        return (int) (_exponent ^ _integral ^ _fractional);
     }
 
     @Override
@@ -234,7 +233,7 @@ public class FloatingPointComponents {
         return String.format("%s%o.%020o E%d",
                              _isNegative ? "-" : "",
                              _integral,
-                             _mantissa,
+                             _fractional,
                              _exponent);
     }
 
@@ -246,11 +245,11 @@ public class FloatingPointComponents {
     /**
      * Emits a normalized IEEE 754 double-precision floating point value corresponding to the attributes of this object.
      * Format is Sign(1) | Exponent(12) | Mantissa(51)
-     *  Sign:       0x0 number is positive, 0x1 number is negative
-     *  Exponent:   Absolute value of biased exponent
-     *  Mantissa:   Absolute value of the fractional portion of the value, with the significant bit dropped.
-     * Positive zero format is 0x0000_0000_0000_0000
-     * Negative zero format is 0x8000_0000_0000_0000
+     *  Sign: 0x0 number is positive, 0x1 number is negative
+     *  Exponent: Absolute value of biased exponent
+     *  Mantissa: Absolute value of the fractional portion of the value, with the significant bit dropped.
+     * Positive zero is 0x0000_0000_0000_0000
+     * Negative zero is 0x8000_0000_0000_0000
      * The most-significant bit is elided, as it can always be deduced from the remaining information.
      * This provides one extra bit of precision.
      */
@@ -260,7 +259,7 @@ public class FloatingPointComponents {
         long rawBits;
         FloatingPointComponents normalized = normalizeNoThrow();
 
-        if ((_integral == 0) && (_mantissa == 0)) {
+        if ((_integral == 0) && (_fractional == 0)) {
             rawBits = _isNegative ? IEEE754_DOUBLE_NEGATIVE_ZERO : IEEE754_DOUBLE_POSITIVE_ZERO;
         } else {
             if (normalized._exponent < Double.MIN_EXPONENT) {
@@ -271,9 +270,9 @@ public class FloatingPointComponents {
 
             //  Our internal mantissa is always bigger than the IEEE754 mantissa.  Down-shift it to fit.
             //  Don't forget to eliminate the MSB, which is always implicit in IEEE754.
-            long resultMantissa = normalized._mantissa >> (MANTISSA_BITS - IEEE754_DOUBLE_MANTISSA_BITS - 1);
+            long resultMantissa = normalized._fractional >> (MANTISSA_BIT_COUNT - IEEE754_DOUBLE_MANTISSA_BIT_COUNT - 1);
             resultMantissa &= IEEE754_DOUBLE_MANTISSA_MASK;
-            long resultCharacteristic = ((long)normalized._exponent + IEEE754_DOUBLE_EXPONENT_BIAS - 1) << IEEE754_DOUBLE_MANTISSA_BITS;
+            long resultCharacteristic = ((long)normalized._exponent + IEEE754_DOUBLE_EXPONENT_BIAS - 1) << IEEE754_DOUBLE_MANTISSA_BIT_COUNT;
             long resultSign = _isNegative ? IEEE754_DOUBLE_SIGN_BIT : 0;
             rawBits = resultSign | resultCharacteristic | resultMantissa;
         }
@@ -284,11 +283,11 @@ public class FloatingPointComponents {
     /**
      * Emits an IEEE 754 single-precision floating point value corresponding to the attributes of this object.
      * Format is Sign(1) | Exponent(8) | Mantissa(23)
-     *  Sign:       0x0 number is positive, 0x1 number is negative
-     *  Exponent:   Absolute value of biased exponent
-     *  Mantissa:   Absolute value of the fractional portion of the value, with the significant bit dropped.
-     * Positive zero format is 0x0000_0000
-     * Negative zero format is 0x8000_0000
+     *  Sign: 0x0 number is positive, 0x1 number is negative
+     *  Exponent: Absolute value of biased exponent
+     *  Mantissa: Absolute value of the fractional portion of the value, with the significant bit dropped.
+     * Positive zero is 0x0000_0000
+     * Negative zero is 0x8000_0000
      * The most-significant bit is elided, as it can always be deduced from the remaining information.
      * This provides one extra bit of precision.
      */
@@ -298,7 +297,7 @@ public class FloatingPointComponents {
         int rawBits;
         FloatingPointComponents normalized = normalizeNoThrow();
 
-        if ((_integral == 0) && (_mantissa == 0)) {
+        if ((_integral == 0) && (_fractional == 0)) {
             rawBits = _isNegative ? IEEE754_SINGLE_NEGATIVE_ZERO : IEEE754_SINGLE_POSITIVE_ZERO;
         } else {
             if (normalized._exponent < Float.MIN_EXPONENT) {
@@ -309,9 +308,9 @@ public class FloatingPointComponents {
 
             //  Our internal mantissa is always bigger than the IEEE754 mantissa.  Down-shift it to fit.
             //  Don't forget to eliminate the MSB, which is always implicit in IEEE754.
-            int resultMantissa = (int)(normalized._mantissa >> (MANTISSA_BITS - IEEE754_SINGLE_MANTISSA_BITS - 1));
+            int resultMantissa = (int)(normalized._fractional >> (MANTISSA_BIT_COUNT - IEEE754_SINGLE_MANTISSA_BIT_COUNT - 1));
             resultMantissa &= IEEE754_SINGLE_MANTISSA_MASK;
-            int resultCharacteristic = (normalized._exponent + IEEE754_SINGLE_EXPONENT_BIAS - 1) << IEEE754_SINGLE_MANTISSA_BITS;
+            int resultCharacteristic = (normalized._exponent + IEEE754_SINGLE_EXPONENT_BIAS - 1) << IEEE754_SINGLE_MANTISSA_BIT_COUNT;
             int resultSign = _isNegative ? IEEE754_SINGLE_SIGN_BIT : 0;
             rawBits = resultSign | resultCharacteristic | resultMantissa;
         }
@@ -322,20 +321,21 @@ public class FloatingPointComponents {
     /**
      * Emits a 72-bit DoubleWord36 containing a canonically-formatted representation of this object.
      * Format is Sign(1) | Exponent(11) | Mantissa(60)
-     *  Sign:       0x0 number is positive, 0x1 number is negative
-     *  Exponent:   Value of biased exponent, logically inverted for negative numbers
-     *  Mantissa:   Value of the fractional portion, logically inverted for negative numbers
-     * Positive zero format is 0_000000_000000_000000_000000
-     * Negative zero format is 0_777777_777777_777777_777777
+     *  Sign: 0x0 number is positive, 0x1 number is negative
+     *  Exponent: Value of biased exponent, logically inverted for negative numbers
+     *  Mantissa: Value of the fractional portion, logically inverted for negative numbers
+     * Positive zero is 0_000000_000000_000000_000000
+     * Negative zero is 0_777777_777777_777777_777777
      */
-    public DoubleWord36 toDoubleWord36(
-    ) throws CharacteristicOverflowException,
-             CharacteristicUnderflowException {
+    public void toDoubleWord36(final long[] destination,
+                               final int offset)
+        throws CharacteristicOverflowException,
+               CharacteristicUnderflowException {
         BigInteger rawBits;
         FloatingPointComponents normalized = normalizeNoThrow();
 
-        if ((_integral == 0) && (_mantissa == 0)) {
-            rawBits = _isNegative ? DW36_NEGATIVE_ZERO : DW36_NEGATIVE_ZERO;
+        if ((_integral == 0) && (_fractional == 0)) {
+            rawBits = _isNegative ? DW36_NEGATIVE_ZERO : DW36_POSITIVE_ZERO;
         } else {
             if (normalized._exponent < DW36_LOWEST_EXPONENT) {
                 throw new CharacteristicUnderflowException();
@@ -344,40 +344,36 @@ public class FloatingPointComponents {
             }
 
             long biasedExponent = normalized._exponent + DW36_EXPONENT_BIAS;
-            BigInteger sizedMantissa = BigInteger.valueOf(normalized._mantissa);
-            int shift = MANTISSA_BITS - DW36_MANTISSA_BITS;
-            if (shift < 0) {
-                sizedMantissa = sizedMantissa.shiftLeft(-shift);
-            } else if (shift > 0){
-                sizedMantissa = sizedMantissa.shiftRight(shift);
-            }
+            BigInteger sizedMantissa = BigInteger.valueOf(normalized._fractional);
+            // internal mantissa shift count is equal to the DW36 mantissa shift count,
+            // so no shift is necessary for the sized mantissa.
 
-            rawBits = BigInteger.valueOf(biasedExponent).shiftLeft(DW36_MANTISSA_BITS).or(sizedMantissa);
+            rawBits = BigInteger.valueOf(biasedExponent).shiftLeft(DW36_MANTISSA_BIT_COUNT).or(sizedMantissa);
             if (normalized._isNegative) {
                 rawBits = rawBits.xor(DW36_FULL_MASK);
             }
         }
 
-        return new DoubleWord36(rawBits);
+        DoubleWord36.getOnesComplement(rawBits, destination, offset);
     }
 
     /**
      * Emits a 36-bit Word36 containing a canonically-formatted representation of this object.
      * Format is Sign(1) | Exponent(8) | Mantissa(27)
-     *  Sign:       0x0 number is positive, 0x1 number is negative
-     *  Exponent:   Value of biased exponent, logically inverted for negative numbers
-     *  Mantissa:   Value of the fractional portion, logically inverted for negative numbers
-     * Positive zero format is 0_000000_000000
-     * Negative zero format is 0_777777_777777
+     *  Sign: 0x0 number is positive, 0x1 number is negative
+     *  Exponent: Value of biased exponent, logically inverted for negative numbers
+     *  Mantissa: Value of the fractional portion, logically inverted for negative numbers
+     * Positive zero is 0_000000_000000
+     * Negative zero is 0_777777_777777
      */
-    public Word36 toWord36(
-    ) throws CharacteristicOverflowException,
-             CharacteristicUnderflowException {
+    public long toWord36()
+        throws CharacteristicOverflowException,
+               CharacteristicUnderflowException {
         long rawBits;
         FloatingPointComponents normalized = normalizeNoThrow();
 
-        if ((_integral == 0) && (_mantissa == 0)) {
-            rawBits = _isNegative ? W36_NEGATIVE_ZERO : W36_NEGATIVE_ZERO;
+        if ((_integral == 0) && (_fractional == 0)) {
+            rawBits = _isNegative ? Word36.NEGATIVE_ZERO : Word36.POSITIVE_ZERO;
         } else {
             if (normalized._exponent < W36_LOWEST_EXPONENT) {
                 throw new CharacteristicUnderflowException();
@@ -386,22 +382,17 @@ public class FloatingPointComponents {
             }
 
             long biasedExponent = normalized._exponent + W36_EXPONENT_BIAS;
-            long sizedMantissa = normalized._mantissa;
-            int shift = MANTISSA_BITS - W36_MANTISSA_BITS;
-            if (shift < 0) {
-                sizedMantissa <<= (-shift);
-            } else if (shift > 0){
-                sizedMantissa >>>= shift;
-            }
+            long sizedMantissa = normalized._fractional;
+            int shift = MANTISSA_BIT_COUNT - W36_MANTISSA_BIT_COUNT;
+            sizedMantissa >>>= shift;
 
-
-            rawBits = biasedExponent << W36_MANTISSA_BITS | sizedMantissa;
+            rawBits = biasedExponent << W36_MANTISSA_BIT_COUNT | sizedMantissa;
             if (normalized._isNegative) {
                 rawBits ^= W36_FULL_MASK;
             }
         }
 
-        return new Word36(rawBits);
+        return rawBits;
     }
 
 
@@ -412,16 +403,15 @@ public class FloatingPointComponents {
     /**
      * Adds another FPC to this one, producing a new FPC as the resulting sum
      */
-    public FloatingPointComponents add(
-        final FloatingPointComponents addend
-    ) throws CharacteristicOverflowException,
-             CharacteristicUnderflowException {
+    public FloatingPointComponents add(final FloatingPointComponents addend)
+        throws CharacteristicOverflowException,
+               CharacteristicUnderflowException {
         //  Normalize the addends, Check for zeros and then shift the addend with the smaller exponent such that the exponents match.
         FloatingPointComponents normal1 = normalizeNoThrow();
         FloatingPointComponents normal2 = addend.normalizeNoThrow();
-        if (normal1._mantissa == 0) {
+        if (normal1._fractional == 0) {
             return normal2;
-        } else if (normal2._mantissa == 0) {
+        } else if (normal2._fractional == 0) {
             return normal1;
         }
 
@@ -430,24 +420,24 @@ public class FloatingPointComponents {
             normal1 = new FloatingPointComponents(normal1._isNegative,
                                                   normal1._exponent + diff,
                                                   0L,
-                                                  normal1._mantissa >>> diff);
+                                                  normal1._fractional >>> diff);
         } else if (normal2._exponent < normal1._exponent) {
             int diff = normal1._exponent - normal2._exponent;
             normal2 = new FloatingPointComponents(normal2._isNegative,
                                                   normal2._exponent + diff,
                                                   0L,
-                                                  normal2._mantissa >>> diff);
+                                                  normal2._fractional >>> diff);
         }
 
         //  Are we going to be adding (addend signs are equal) or subtracting (signs are unequal)?
         //  Is the result going to be negative?
         boolean adding = _isNegative == addend._isNegative;
         boolean resultNegative = (_isNegative && addend._isNegative)
-            || (_isNegative && (normal1._mantissa > normal2._mantissa))
-            || (addend._isNegative && (normal2._mantissa > normal1._mantissa));
+            || (_isNegative && (normal1._fractional > normal2._fractional))
+            || (addend._isNegative && (normal2._fractional > normal1._fractional));
 
         //  Now we can add (or subtract) the mantissas.  Check whether we've overflowed the mantissa and adjust accordingly.
-        long resultMantissa = adding ? normal1._mantissa + normal2._mantissa : Math.abs(normal1._mantissa - normal2._mantissa);
+        long resultMantissa = adding ? normal1._fractional + normal2._fractional : Math.abs(normal1._fractional - normal2._fractional);
         int resultExponent = normal1._exponent;
         if (adding & resultMantissa > MANTISSA_MASK) {
             resultMantissa >>= 1;
@@ -467,10 +457,8 @@ public class FloatingPointComponents {
      *          -1 if this object is less than the operand,
      *          1 if this object is greater than the operand
      */
-    public int compare(
-        final FloatingPointComponents operand,
-        final int precision
-    ) {
+    public int compare(final FloatingPointComponents operand,
+                       final int precision) {
         if (!isZero() && !operand.isZero()) {
             //  If the signs disagree, the positive value is greater
             if (_isNegative != operand._isNegative) {
@@ -486,13 +474,12 @@ public class FloatingPointComponents {
 
             //  Signs and normalized exponents agree - compare the mantissas (the integral values have already been shifted down).
             //  Apply the precision first, though...
-            int realPrecision = precision < 1 ? precision : 1;
-            realPrecision = realPrecision <= MANTISSA_BITS ? realPrecision : MANTISSA_BITS;
+            int realPrecision = Math.min(precision, 1);
             long mask = (1L << realPrecision) - 1;
             mask <<= (60 - realPrecision);
 
-            long shiftedThis = normThis._mantissa & mask;
-            long shiftedThat = normThat._mantissa & mask;
+            long shiftedThis = normThis._fractional & mask;
+            long shiftedThat = normThat._fractional & mask;
             return Long.compare(shiftedThis, shiftedThat);
         } else {
             return 0;
@@ -502,11 +489,10 @@ public class FloatingPointComponents {
     /**
      * Divides this value by a divisor
      */
-    public FloatingPointComponents divide(
-        final FloatingPointComponents divisor
-    ) throws CharacteristicOverflowException,
-             CharacteristicUnderflowException,
-             DivideByZeroException {
+    public FloatingPointComponents divide(final FloatingPointComponents divisor)
+        throws CharacteristicOverflowException,
+               CharacteristicUnderflowException,
+               DivideByZeroException {
         //  Is the result going to be negative?
         //  If either factor is zero, simply return zero
         boolean resultNegative = _isNegative != divisor._isNegative;
@@ -522,8 +508,8 @@ public class FloatingPointComponents {
         //  if and while the lowest bit of either is zero.  This makes the arithmetic a bit nicer.
         FloatingPointComponents normDividend = normalizeNoThrow();
         FloatingPointComponents normDivisor = divisor.normalizeNoThrow();
-        long workingDividend = normDividend._mantissa;
-        long workingDivisor = normDivisor._mantissa;
+        long workingDividend = normDividend._fractional;
+        long workingDivisor = normDivisor._fractional;
         while (((workingDividend & 01) == 0) && (workingDivisor & 01) == 0) {
             workingDividend >>>= 1;
             workingDivisor >>>= 1;
@@ -535,7 +521,7 @@ public class FloatingPointComponents {
         long quotient = 0;
 
         //  Loop while we've not iterated MANTISSA_BITS ties.
-        while (count < MANTISSA_BITS) {
+        while (count < MANTISSA_BIT_COUNT) {
             //  First, shift the quotient left by one digit.
             quotient <<= 1;
 
@@ -575,10 +561,10 @@ public class FloatingPointComponents {
     /**
      * Takes the multiplicative inverse
      */
-    public FloatingPointComponents invert(
-    ) throws CharacteristicOverflowException,
-             CharacteristicUnderflowException,
-             DivideByZeroException {
+    public FloatingPointComponents invert()
+        throws CharacteristicOverflowException,
+               CharacteristicUnderflowException,
+               DivideByZeroException {
         FloatingPointComponents fpcOne = new FloatingPointComponents(false,0,1,0);
         return fpcOne.divide(this);
     }
@@ -587,37 +573,36 @@ public class FloatingPointComponents {
      * Test for negative zero
      */
     public boolean isNegativeZero() {
-        return _isNegative && (_mantissa == 0) && (_integral == 0);
+        return _isNegative && (_fractional == 0) && (_integral == 0);
     }
 
     /**
      * Tests whether this value is normalized
      */
     public boolean isNormalized() {
-        return (isZero() || ((_integral == 0) && (_mantissa & MANTISSA_LEFTMOST_BIT) != 0));
+        return (isZero() || ((_integral == 0) && (_fractional & MANTISSA_LEFTMOST_BIT) != 0));
     }
 
     /**
      * Test for positive zero
      */
     public boolean isPositiveZero() {
-        return !_isNegative && (_mantissa == 0) && (_integral == 0);
+        return !_isNegative && (_fractional == 0) && (_integral == 0);
     }
 
     /**
      * Test for negative or positive zero
      */
     public boolean isZero() {
-        return (_mantissa == 0) && (_integral == 0);
+        return (_fractional == 0) && (_integral == 0);
     }
 
     /**
      * Multiplies this value by some other factor.
      */
-    public FloatingPointComponents multiply(
-        final FloatingPointComponents factor
-    ) throws CharacteristicOverflowException,
-             CharacteristicUnderflowException {
+    public FloatingPointComponents multiply(final FloatingPointComponents factor)
+        throws CharacteristicOverflowException,
+               CharacteristicUnderflowException {
         //  Is the result going to be negative?
         //  If either factor is zero, simply return zero
         boolean resultNegative = _isNegative != factor._isNegative;
@@ -630,15 +615,15 @@ public class FloatingPointComponents {
 
         //  Zeros are out of the way.  Downshift the mantissas until the LSB is non-zero.
         //  Keep track of positions right of the decimal point
-        long thisTempMantissa = factor1Norm._mantissa;
-        int thisDecimals = MANTISSA_BITS;
+        long thisTempMantissa = factor1Norm._fractional;
+        int thisDecimals = MANTISSA_BIT_COUNT;
         while ((thisTempMantissa & 01) == 0) {
             thisTempMantissa >>= 1;
             --thisDecimals;
         }
 
-        long operandTempMantissa = factor2Norm._mantissa;
-        int operandDecimals = MANTISSA_BITS;
+        long operandTempMantissa = factor2Norm._fractional;
+        int operandDecimals = MANTISSA_BIT_COUNT;
         while ((operandTempMantissa & 01) == 0) {
             operandTempMantissa >>= 1;
             --operandDecimals;
@@ -654,16 +639,16 @@ public class FloatingPointComponents {
         }
 
         //  Realign based on resultDecimals
-        if (resultDecimals < MANTISSA_BITS) {
-            result = result.shiftLeft(MANTISSA_BITS - resultDecimals);
-        } else if (resultDecimals > MANTISSA_BITS) {
-            result = result.shiftRight(resultDecimals - MANTISSA_BITS);
+        if (resultDecimals < MANTISSA_BIT_COUNT) {
+            result = result.shiftLeft(MANTISSA_BIT_COUNT - resultDecimals);
+        } else if (resultDecimals > MANTISSA_BIT_COUNT) {
+            result = result.shiftRight(resultDecimals - MANTISSA_BIT_COUNT);
         }
 
         //  Since we're multiplying a 60-bit value by another 60-bit value, the result could have as many
         //  as 119 significant bits.  Downshift the current result until only the bottom 60 bits are non-zero.
         int resultExponent = factor1Norm._exponent + factor2Norm._exponent;
-        BigInteger compMask = BigInteger.valueOf(MANTISSA_MASK).shiftLeft(MANTISSA_BITS);
+        BigInteger compMask = BigInteger.valueOf(MANTISSA_MASK).shiftLeft(MANTISSA_BIT_COUNT);
         while (!result.and(compMask).equals(BigInteger.ZERO)) {
             result = result.shiftRight(1);
             ++resultExponent;
@@ -685,16 +670,16 @@ public class FloatingPointComponents {
      * Takes the additive inverse
      */
     public FloatingPointComponents negate() {
-        return new FloatingPointComponents(!_isNegative, _exponent, _integral, _mantissa);
+        return new FloatingPointComponents(!_isNegative, _exponent, _integral, _fractional);
     }
 
     /**
      * Normalizes the value represented by the component portions by shifting integral and/or mantissa as needed,
      * and incrementing or decrementing the exponent accordingly.
      */
-    public FloatingPointComponents normalize(
-    ) throws CharacteristicOverflowException,
-             CharacteristicUnderflowException {
+    public FloatingPointComponents normalize()
+        throws CharacteristicOverflowException,
+               CharacteristicUnderflowException {
         FloatingPointComponents normalized = normalizeNoThrow();
         checkExponent(normalized._exponent);
         return normalized;
@@ -705,10 +690,9 @@ public class FloatingPointComponents {
     //  Private Methods
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    protected static void checkExponent(
-        final int exponent
-    ) throws CharacteristicOverflowException,
-             CharacteristicUnderflowException {
+    protected static void checkExponent(final int exponent)
+        throws CharacteristicOverflowException,
+               CharacteristicUnderflowException {
         if (exponent < LOWEST_EXPONENT) {
             throw new CharacteristicUnderflowException();
         } else if (exponent > HIGHEST_EXPONENT) {
@@ -716,14 +700,13 @@ public class FloatingPointComponents {
         }
     }
 
-    protected FloatingPointComponents normalizeNoThrow(
-    ) {
+    protected FloatingPointComponents normalizeNoThrow() {
         if (isNormalized()) {
             return this;
         }
 
         long tempIntegral = _integral;
-        long tempMantissa = _mantissa;
+        long tempMantissa = _fractional;
         int tempExponent = _exponent;
 
         if (tempIntegral > 0) {
@@ -744,5 +727,4 @@ public class FloatingPointComponents {
 
         return new FloatingPointComponents(_isNegative, tempExponent, tempIntegral, tempMantissa);
     }
-
 }
