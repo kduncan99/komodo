@@ -1,62 +1,38 @@
 /*
- * Copyright (c) 2018-2024 by Kurt Duncan - All Rights Reserved
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
 package com.bearsnake.komodo.baselib;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 /**
  * Library for doing architecturally-correct 36-bit operations on integers
  * We have designed this for two purposes.
- * There are static versions which operate against long values for use in arrays and ArraySlice things
+ * These are static versions which operate against long values for use in arrays and ArraySlice things
  * so that we do not have to use stupid amounts of storage for lots of Word36 objects.
- * There are non-static versions which operate on the class.
- * NOTE WE PREVIOUSLY DID NOT NOT NOT ALLOW THE VALUES TO CHANGE, AND IT MAY BE THAT A LOT OF THE
- * INSTRUCTION PROCESSOR CODE RELIES ON THIS BEHAVIOR WHICH WE NO LONGER EXHIBIT.
- * WATCH OUT FOR THAT.
  */
-public class Word36 implements Comparable<Word36> {
+public class Word36 {
 
     //  ----------------------------------------------------------------------------------------------------------------------------
     //  Nested classes
     //  ----------------------------------------------------------------------------------------------------------------------------
 
     public static class AdditionResult {
-        public final Flags _flags;
-        public final Word36 _result;
-
-        public AdditionResult(
-            final StaticAdditionResult sar
-        ) {
-            _flags = sar._flags;
-            _result = new Word36(sar._value);
-        }
-    }
-
-    public static class StaticAdditionResult {
-        public final Flags _flags;
-        public final long _value;
-
-        public StaticAdditionResult(
-            final Flags flags,
-            final long value
-        ) {
-            _flags = flags;
-            _value = value;
-        }
+        public Flags _flags;
+        public long _value;
     }
 
     public static class Flags {
-        public final boolean _carry;
-        public final boolean _overflow;
+        public boolean _carry;
+        public boolean _overflow;
 
-        public Flags(
-            final boolean carry,
-            final boolean overflow
-        ) {
+        public Flags() {
+            this(false, false);
+        }
+
+        Flags(boolean carry, boolean overflow) {
             _carry = carry;
             _overflow = overflow;
         }
@@ -75,10 +51,6 @@ public class Word36 implements Comparable<Word36> {
     public static final long NEGATIVE_ZERO  = 0_777777_777777L;
     public static final long POSITIVE_ONE   = 01L;
     public static final long POSITIVE_ZERO  = 0L;
-    public static final Word36 W36_NEGATIVE_ONE  = new Word36(NEGATIVE_ONE);
-    public static final Word36 W36_NEGATIVE_ZERO = new Word36(NEGATIVE_ZERO);
-    public static final Word36 W36_POSITIVE_ONE  = new Word36(POSITIVE_ONE);
-    public static final Word36 W36_POSITIVE_ZERO = new Word36(POSITIVE_ZERO);
 
     public static final long A_OPTION = 1L << 25;
     public static final long B_OPTION = 1L << 24;
@@ -269,126 +241,7 @@ public class Word36 implements Comparable<Word36> {
     //  Constructors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    /**
-     * Default constructor
-     */
-    public Word36()             { _value = 0; }
-
-    /**
-     * Constructor given a ones-complement integer
-     */
-    public Word36(long value)   { _value = value & BIT_MASK; }
-
-    /**
-     * Constructor from another object of the same type
-     */
-    public Word36(Word36 value) { _value = value._value; }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Overrides
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    @Override
-    public boolean equals(
-        final Object obj
-    ) {
-        return (obj instanceof Word36) && (_value == ((Word36)obj)._value);
-    }
-
-    @Override
-    public int hashCode() { return (int) _value; }
-
-    @Override
-    public String toString() { return String.format("%012o", _value); }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Non-Static methods
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    public long getH1() { return getH1(_value); }
-    public long getH2() { return getH2(_value); }
-    public long getQ1() { return getQ1(_value); }
-    public long getQ2() { return getQ2(_value); }
-    public long getQ3() { return getQ3(_value); }
-    public long getQ4() { return getQ4(_value); }
-    public long getS1() { return getS1(_value); }
-    public long getS2() { return getS2(_value); }
-    public long getS3() { return getS3(_value); }
-    public long getS4() { return getS4(_value); }
-    public long getS5() { return getS5(_value); }
-    public long getS6() { return getS6(_value); }
-    public long getT1() { return getT1(_value); }
-    public long getT2() { return getT2(_value); }
-    public long getT3() { return getT3(_value); }
-    public long getXH1() { return getXH1(_value); }
-    public long getXH2() { return getXH2(_value); }
-    public long getXT1() { return getXT1(_value); }
-    public long getXT2() { return getXT2(_value); }
-    public long getXT3() { return getXT3(_value); }
-    public long getW() { return _value; }
-
-    public Word36 setH1(final long value) { _value = setH1(_value, value); return this; }
-    public Word36 setH2(final long value) { _value = setH2(_value, value); return this; }
-    public Word36 setQ1(final long value) { _value = setQ1(_value, value); return this; }
-    public Word36 setQ2(final long value) { _value = setQ2(_value, value); return this; }
-    public Word36 setQ3(final long value) { _value = setQ3(_value, value); return this; }
-    public Word36 setQ4(final long value) { _value = setQ4(_value, value); return this; }
-    public Word36 setS1(final long value) { _value = setS1(_value, value); return this; }
-    public Word36 setS2(final long value) { _value = setS2(_value, value); return this; }
-    public Word36 setS3(final long value) { _value = setS3(_value, value); return this; }
-    public Word36 setS4(final long value) { _value = setS4(_value, value); return this; }
-    public Word36 setS5(final long value) { _value = setS5(_value, value); return this; }
-    public Word36 setS6(final long value) { _value = setS6(_value, value); return this; }
-    public Word36 setT1(final long value) { _value = setT1(_value, value); return this; }
-    public Word36 setT2(final long value) { _value = setT2(_value, value); return this; }
-    public Word36 setT3(final long value) { _value = setT3(_value, value); return this; }
-    public Word36 setW(final long value) { _value = value; return this; }
-
-    //  Negative, Positive, and Zero testing ---------------------------------------------------------------------------------------
-
-    public boolean isNegative() { return (_value & NEGATIVE_BIT) != 0; }
-    public boolean isPositive() { return (_value & NEGATIVE_BIT) == 0; }
-    public boolean isZero()     { return (_value == POSITIVE_ZERO) || (_value == NEGATIVE_ZERO); }
-
-
-    //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
-
-    public AdditionResult add(Word36 addend)    { return new AdditionResult(add(_value, addend._value)); }
-    public int compare(Word36 operand)          { return compare(_value, operand._value); }
-    public DoubleWord36 multiply(Word36 factor) { return new DoubleWord36(multiply(_value, factor._value)); }
-    public Word36 negate()                      { _value ^= 0_777777_777777L; return this; }
-
-
-    //  Logical Operations ---------------------------------------------------------------------------------------------------------
-
-    public Word36 logicalAnd(Word36 operand)    { _value = logicalAnd(_value, operand._value); return this; }
-    public Word36 logicalNot()                  { _value = logicalNot(_value); return this; }
-    public Word36 logicalOr(Word36 operand)     { _value = logicalOr(_value, operand._value); return this; }
-    public Word36 logicalXor(Word36 operand)    { _value = logicalXor(_value, operand._value); return this; }
-
-
-    //  Shift Operations -----------------------------------------------------------------------------------------------------------
-
-    public Word36 leftShiftAlgebraic(int count)   { _value = leftShiftAlgebraic(_value, count); return this; }
-    public Word36 leftShiftCircular(int count)    { _value = leftShiftCircular(_value, count); return this; }
-    public Word36 leftShiftLogical(int count)     { _value = leftShiftLogical(_value, count); return this; }
-    public Word36 rightShiftAlgebraic(int count)  { _value = rightShiftAlgebraic(_value, count); return this; }
-    public Word36 rightShiftCircular(int count)   { _value = rightShiftCircular(_value, count); return this; }
-    public Word36 rightShiftLogical(int count)    { _value = rightShiftLogical(_value, count); return this; }
-
-
-    //  Conversions ----------------------------------------------------------------------------------------------------------------
-
-    public long getTwosComplement() { return getTwosComplement(_value); }
-    public String toStringFromASCII()         { return toStringFromASCII(_value); }
-    public String toStringFromFieldata()      { return toStringFromFieldata(_value); }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods - these operate on and return long integers representing ones-complement values
-    //  ----------------------------------------------------------------------------------------------------------------------------
+    private Word36() {}
 
     //  Tests ----------------------------------------------------------------------------------------------------------------------
 
@@ -662,23 +515,23 @@ public class Word36 implements Comparable<Word36> {
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
-    public static StaticAdditionResult add(
+    public static void add(
+        final AdditionResult result,
         final long operand1,
         final long operand2
     ) {
         //  All values are ones-complement
         boolean neg1 = isNegative(operand1);
         boolean neg2 = isNegative(operand2);
-        long result = addSimple(operand1, operand2);
-        if ((result & CARRY_BIT) != 0) {
-            result &= BIT_MASK;
-            ++result;
+        result._value = addSimple(operand1, operand2);
+        if ((result._value & CARRY_BIT) != 0) {
+            result._value &= BIT_MASK;
+            ++result._value;
         }
 
-        boolean negRes = isNegative(result);
-        boolean carry = result < 0 ? (neg1 && neg2) : (neg1 || neg2);
-        boolean overflow = (neg1 == neg2) && (neg1 != negRes);
-        return new StaticAdditionResult(new Flags(carry, overflow), result);
+        boolean negRes = isNegative(result._value);
+        result._flags._carry = result._value < 0 ? (neg1 && neg2) : (neg1 || neg2);
+        result._flags._overflow = (neg1 == neg2) && (neg1 != negRes);
     }
 
     public static long addSimple(
@@ -721,20 +574,10 @@ public class Word36 implements Comparable<Word36> {
     }
 
     /**
-     * Multiplies two ones-complement 36-bit operands, producing a ones-complement 72-bit result.
-     * The first word of the result is the most-significant bits of the operation,
-     * while the second word is the least-significant.
+     * Arithmetically Negates a ones-complement 36-bit operand (i.e., flips the sign)
+     * @param operand the operand to negate
+     * @return the negated operand
      */
-    public static BigInteger multiply(
-        final long operand1,
-        final long operand2
-    ) {
-        long[] result = new long[2];
-        BigInteger biOp1 = BigInteger.valueOf(Word36.getTwosComplement(operand1));
-        BigInteger biOp2 = BigInteger.valueOf(Word36.getTwosComplement(operand2));
-        return DoubleWord36.getOnesComplement(biOp1.multiply(biOp2));
-    }
-
     public static long negate(
         final long operand
     ) {
@@ -1027,7 +870,6 @@ public class Word36 implements Comparable<Word36> {
      * @param buffer where we store converted characters
      * @param offset location in the buffer of the first word to be written
      * @param length maximum number of words to be written
-     * @return converted data
      */
     public static void stringToWordsASCII(
         final String source,
@@ -1101,7 +943,6 @@ public class Word36 implements Comparable<Word36> {
      * @param buffer where we store converted characters
      * @param offset location in the buffer of the first word to be written
      * @param length maximum number of words to be written
-     * @return converted data
      */
     public static void stringToWordsFieldata(
         final String source,
@@ -1129,7 +970,7 @@ public class Word36 implements Comparable<Word36> {
      * Given an integer which represents an ASCII character, we return the corresponding char if it is displayable,
      * or else the alternate character.
      * @param value value to be converted
-     * @param alternate character to be returned if the value presentes an undisplayable character
+     * @param alternate character to be returned if the value presents an undisplayable character
      */
     private static char getASCIIForDisplay(
         final int value,
@@ -1205,10 +1046,5 @@ public class Word36 implements Comparable<Word36> {
         return Arrays.stream(slice.getAll())
                      .mapToObj(Word36::toStringFromFieldata)
                      .collect(Collectors.joining());
-    }
-
-    @Override
-    public int compareTo(Word36 obj) {
-        return Long.compare(getW(), obj.getW());
     }
 }
