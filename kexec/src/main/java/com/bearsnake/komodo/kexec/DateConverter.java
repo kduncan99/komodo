@@ -17,14 +17,14 @@ public class DateConverter {
 
     private static final Instant SYSTIME_EPOCH = Instant.parse("1899-12-31T00:00:00.00Z");
 
-    public static Word36[] getDoubleWordTime(
+    public static long[] getDoubleWordTime(
         final Instant instant
     ) {
         // this will be problematic for values which exceed 64 bits
-        var dwTrunc = Duration.between(SYSTIME_EPOCH, instant).get(ChronoUnit.NANOS);
-        var result = new Word36[2];
-        result[0] = new Word36((dwTrunc >> 36) & 0x0FFFFFFF);
-        result[1] = new Word36(dwTrunc);
+        var dwTrunc = Duration.between(SYSTIME_EPOCH, instant).toNanos();
+        var result = new long[2];
+        result[0] = (dwTrunc >> 36) & 0x0FFFFFFF;
+        result[1] = dwTrunc & Word36.BIT_MASK;
         return result;
     }
 
@@ -37,14 +37,14 @@ public class DateConverter {
     public static long getSingleWordTime(
         final Instant instant
     ) {
-        return Duration.between(SYSTIME_EPOCH, instant).get(ChronoUnit.SECONDS);
+        return Duration.between(SYSTIME_EPOCH, instant).toSeconds();
     }
 
     public static Instant fromDoubleWordTime(
-        final Word36[] source
+        final long[] source
     ) {
         // this will be problematic for values which exceed 64 bits
-        return fromDoubleWordTime(source[0].getW(), source[1].getW());
+        return fromDoubleWordTime(source[0], source[1]);
     }
 
     public static Instant fromDoubleWordTime(

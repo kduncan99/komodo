@@ -50,14 +50,14 @@ public class ConsoleManager implements Manager {
                 try {
                     cons.close();
                 } catch (ConsoleException ex) {
-                    LOGGER.error(String.format("Cannot close console %012o:%s", cons.getConsoleId().getW(), ex.getMessage()));
+                    LOGGER.error(String.format("Cannot close console %s:%s", cons.getConsoleId().getConsoleName(), ex.getMessage()));
                 }
                 iter.remove();
             } else {
                 try {
                     cons.reset();
                 } catch (ConsoleException ex) {
-                    LOGGER.error(String.format("Cannot reset console %012o:%s", cons.getConsoleId().getW()), ex.getMessage());
+                    LOGGER.error(String.format("Cannot reset console %s:%s", cons.getConsoleId().getConsoleName(), ex.getMessage()));
                 }
             }
         }
@@ -116,7 +116,7 @@ public class ConsoleManager implements Manager {
 
         out.printf("%s  Primary console: %s (%s)\n",
                    indent,
-                   _consoles.get(_primaryConsoleId).getConsoleId().toStringFromFieldata(),
+                   _consoles.get(_primaryConsoleId).getConsoleId().getConsoleName(),
                    _consoles.get(_primaryConsoleId).getConsoleId());
 
         var subIndent = indent + "  ";

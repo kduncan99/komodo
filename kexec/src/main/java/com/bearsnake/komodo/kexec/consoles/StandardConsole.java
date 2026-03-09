@@ -72,7 +72,7 @@ public class StandardConsole implements Console {
 
     @Override
     public void dump(PrintStream out, String indent) {
-        out.printf("%sConsole %s(%s) StandardConsole\n", indent, _consoleId.toStringFromFieldata(), _consoleId);
+        out.printf("%sConsole %s(%s) StandardConsole\n", indent, _consoleId.getConsoleName(), _consoleId);
         if (_pendingUnsolicitedInput != null) {
             out.printf("%spending input:%s\n", indent, _pendingUnsolicitedInput);
         }

@@ -66,10 +66,13 @@ public final class FileCycleSpecification {
         } else if (parser.parseChar('-')) {
             try {
                 abs = false;
+                var terms = parser.getTerminators();
+                parser.setTerminators(")");
                 cyc = (int)parser.parseUnsignedDecimalInteger();
                 if (cyc > 31) {
                     throw new SyntaxErrorParserException("Invalid relative cycle");
                 }
+                parser.setTerminators(terms);
             } catch (NotFoundParserException | SyntaxErrorParserException ex) {
                 throw new SyntaxErrorParserException("Invalid relative cycle");
             }
