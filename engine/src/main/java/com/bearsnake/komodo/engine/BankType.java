@@ -12,9 +12,11 @@ public enum BankType {
     BasicMode(1),     //  Requires BD.S == 0
     Gate(2),          //  Requires BD.S == 0
     Indirect(3),      //  Word1:H1 contains L,BDI of the target bank
-    //  Only BD.ProcessorType, BD.Disp, BD.G, and BD.L are valid, Requires BD.S == 0
+                            //  Only BD.ProcessorType, BD.Disp, BD.G, and BD.L are valid, Requires BD.S == 0
     Queue(4),
-    QueueRepository(6);
+    Postern(5),
+    QueueRepository(6),
+    DataExpanse(7);
 
     public final int _code;
 
@@ -29,7 +31,9 @@ public enum BankType {
             case 2 -> Gate;
             case 3 -> Indirect;
             case 4 -> Queue;
+            case 5 -> Postern;
             case 6 -> QueueRepository;
+            case 7 -> DataExpanse;
             // TODO not sure I like throwing RTX below
             default -> throw new RuntimeException(String.format("Bad code passed to BankType.get:%d", code));
         };

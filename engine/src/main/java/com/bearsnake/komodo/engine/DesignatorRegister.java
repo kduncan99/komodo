@@ -44,7 +44,7 @@ public class DesignatorRegister {
     private boolean _divideCheck;
     private boolean _operationTrapEnabled;
     private boolean _arithmeticExceptionEnabled;
-    private boolean _basicModeBaseRegisterSelection;
+    private boolean _basicModeBaseRegisterSelection;    // If true, B13/B15 are the primary pair. When false, B12/B14 are primary.
     private boolean _quarterWordModeEnabled;
 
     public DesignatorRegister() {}
@@ -111,12 +111,13 @@ public class DesignatorRegister {
         _quarterWordModeEnabled = (value & MASK_QuarterWordModeEnabled) != 0;
     }
 
+    public short getProcessorPrivilege()                { return _processorPrivilege; }
+    public boolean getBasicModeBaseRegisterSelection()  { return _basicModeBaseRegisterSelection; }
     public boolean isActivityLevelQueueMonitorEnabled() { return _activityLevelQueueMonitorEnabled; }
     public boolean isFaultHandlingInProgress()          { return _faultHandlingInProgress; }
     public boolean isExecutive24BitIndexingEnabled()    { return _executive24BitIndexingEnabled; }
     public boolean isQuantumTimerEnabled()              { return _quantumTimerEnabled; }
     public boolean isDeferrableInterruptEnabled()       { return _deferrableInterruptEnabled; }
-    public short getProcessorPrivilege()                { return _processorPrivilege; }
     public boolean isBasicModeEnabled()                 { return _basicModeEnabled; }
     public boolean isExecRegisterSetSelected()          { return _execRegisterSetSelected; }
     public boolean isCarry()                            { return _carry; }
@@ -126,7 +127,6 @@ public class DesignatorRegister {
     public boolean isDivideCheck()                      { return _divideCheck; }
     public boolean isOperationTrapEnabled()             { return _operationTrapEnabled; }
     public boolean isArithmeticExceptionEnabled()       { return _arithmeticExceptionEnabled; }
-    public boolean isBasicModeBaseRegisterSelection()   { return _basicModeBaseRegisterSelection; }
     public boolean isQuarterWordModeEnabled()           { return _quarterWordModeEnabled; }
 
     public DesignatorRegister setActivityLevelQueueMonitorEnabled(final boolean flag) {

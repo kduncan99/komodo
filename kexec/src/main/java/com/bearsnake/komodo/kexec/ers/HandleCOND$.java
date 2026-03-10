@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.kexec.ers;
 
-import com.bearsnake.komodo.engine.ActivityState;
+import com.bearsnake.komodo.engine.ActivityStatePacket;
 import com.bearsnake.komodo.engine.GeneralRegisterSet;
 import com.bearsnake.komodo.kexec.scheduleManager.Run;
 
@@ -13,7 +13,7 @@ public class HandleCOND$ extends ERHandler {
     @Override
     public void handle(
         final Run run,
-        final ActivityState activityState
+        final ActivityStatePacket activityState
     ) {
         activityState.getGeneralRegisterSet().setRegister(GeneralRegisterSet.A0, run.getRunConditionWord().getWord36());
     }

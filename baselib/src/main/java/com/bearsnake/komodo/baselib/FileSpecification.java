@@ -77,9 +77,9 @@ public class FileSpecification {
         final String cutSet
     ) throws Exception {
         String qualifier = null;
-        String filename;
+        String filename = null;
 
-        var token = parser.parseUntil("*" + cutSet);
+        var token = parser.parseUntil("*(/" + cutSet);
         if (parser.peekNext() == '*') {
             if (!token.isEmpty() && !Parser.isValidQualifier(token)) {
                 throw new InvalidQualifierException();
@@ -87,13 +87,12 @@ public class FileSpecification {
 
             qualifier = token;
             parser.skipNext();
-
-            filename = parser.parseUntil("(" + cutSet);
+            filename = parser.parseUntil("(/" + cutSet);
         } else {
             filename = token;
         }
 
-        if (filename.isEmpty()) {
+        if ((qualifier == null) && filename.isEmpty()) {
             return null;
         } else if (!Parser.isValidFilename(filename)) {
             throw new InvalidFilenameException();
@@ -109,7 +108,7 @@ public class FileSpecification {
         String readKey = null;
         String writeKey = null;
         if (parser.parseChar('/')) {
-            readKey = parser.parseUntil(cutSet);
+            readKey = parser.parseUntil('/' + cutSet);
             if (readKey.isEmpty()) {
                 readKey = null;
             } else if (!Parser.isValidReadWriteKey(readKey)) {

@@ -5,7 +5,8 @@
 package com.bearsnake.komodo.engine;
 
 /**
- * Describes a ring/domain combination
+ * Describes a ring/domain combination.
+ * This could be used either as an Access_Key or an Access_Lock.
  */
 public class AccessInfo {
 
@@ -40,19 +41,36 @@ public class AccessInfo {
     }
 
     /**
-     * Retrieves ring/domain into a Word36 value formatted as such:
-     *      bits18,19   ring
-     *      bits20-35   domain
-     * @return compositional value
+     * Sets ring/domain from a Word36 value formatted as such:
+     *      bits 16-17: ring
+     *      bits 0-15:  domain
      */
-    public long get() {
-        return ((long)(_ring) << 16) | _domain;
+    public void fromComposite(final long value) {
+        _ring = (short)((value >> 16) & 0x3);
+        _domain = (int)(value & 0xFFFF);
     }
 
     public int getDomain() { return _domain; }
     public short getRing() { return _ring; }
+
+    public AccessInfo set(final AccessInfo source) {
+        _domain = source._domain;
+        _ring = source._ring;
+        return this;
+    }
+
     public AccessInfo setDomain(final int domain) { _domain = domain; return this; }
     public AccessInfo setRing(final short ring) { _ring = ring; return this; }
+
+    /**
+     * Retrieves ring/domain into a Word36 value formatted as such:
+     *      bits 16-17: ring
+     *      bits 0-15:  domain
+     * @return compositional value
+     */
+    public long toComposite() {
+        return ((long)(_ring) << 16) | _domain;
+    }
 
     /**
      * Equality check

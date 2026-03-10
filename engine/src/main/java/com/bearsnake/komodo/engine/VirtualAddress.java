@@ -4,94 +4,109 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.Word36;
-
 /**
  * Represents a virtual address for Basic or Extended mode.
+ * Be careful with this - we don't want to create and discard lots of these.
  */
 public class VirtualAddress {
 
-    protected VirtualAddress() {}
+    private short _level;
+    private int _bdi;
+    private int _offset;
 
-    public static int getBankDescriptorIndex(final long source) {
-        return (int) (Word36.getH1(source) & 077777);
+    public VirtualAddress() {
+        _level = 0;
+        _bdi = 0;
+        _offset = 0;
     }
 
-    public static int getLevel(final long source) {
-        return (int) ((source >> 33) & 0_777777_777777L);
+    public VirtualAddress(
+        final short level,
+        final int bdi,
+        final int offset
+    ) {
+        _level = (short)(level & 07);
+        _bdi = bdi & 077777;
+        _offset = offset & 0777777;
     }
 
-    public static int getOffset(final long source) {
-        return (int) Word36.getH2(source);
+    public VirtualAddress(
+        final long composite
+    ) {
+        fromComposite(composite);
     }
 
-    public static int getLBDI(final long source) {
-        return (getLevel(source) << 15) | getBankDescriptorIndex(source);
+    public int getBankDescriptorIndex() { return _bdi; }
+    public short getBankLevel() { return _level; }
+    public short getLevel() { return _level; }
+    public int getOffset() { return _offset; }
+    public int getLBDI() { return (_level << 15) | _bdi; }
+
+    public VirtualAddress setBankDescriptorIndex(final int bdi) { _bdi = bdi; return this; }
+    public VirtualAddress setBankLevel(final short level) { _level = level; return this; }
+    public VirtualAddress setOffset(final int offset) { _offset = offset; return this; }
+
+    /**
+     * Converts a composite 36-bit value wrapped in a long integer to discrete values
+     */
+    public void fromComposite(final long composite) {
+        _level = (short)((composite >> 33) & 07);
+        _bdi = (int)((composite >> 18) & 077777);
+        _offset = (int)(composite & 0777777);
     }
 
     /**
      * Converts discrete values to a composite 36-bit value wrapped in a long integer
-     * @param level level, 0:7
-     * @param bdIndex bank descriptor index 0:077777
-     * @param offset offset 0:0777777 - represents an offset from the start of the bank
      * @return composite 36-bit value
      */
-    public static long getValue(
-        final int level,
-        final int bdIndex,
-        final int offset
-    ) {
-        long value = (long)(level & 07) << 33;
-        value |= (long)(bdIndex & 077777) << 18;
-        value |= (offset & 0777777);
+    public long getCompositeValue() {
+        long value = (long) (_level) << 33;
+        value |= (long) _bdi << 18;
+        value |= _offset;
         return value;
     }
 
-    /**
-     * Converts discrete values to a composite 36-bit value wrapped in a long integer
-     * @param execFlag basic mode exec flag
-     * @param levelFlag basic mode level flag
-     * @param bdIndex bank descriptor index 0:07777
-     * @param offset offset 0:0777777 - represents an offset from the start of the bank
-     * @return composite 36-bit value
-     */
-    public static long getValue(
-        final boolean execFlag,
-        final boolean levelFlag,
-        final int bdIndex,
-        final int offset
-    ) {
-        long value = (long)(translateBasicToExtendedLevel(execFlag, levelFlag) & 07) << 33;
-        value |= (long)(bdIndex & 07777) << 18;
-        value |= (offset & 0777777);
-        return value;
+    public static long getCompositeValue(final int level,
+                                         final int bdi,
+                                         final int offset) {
+        return ((long) (level & 07) << 33) | ((long) (bdi & 077777) << 18) | (offset & 0777777);
+    }
+
+    public static long getCompositeValue(final boolean execFlag,
+                                         final boolean levelFlag,
+                                         final int bdi,
+                                         final int offset) {
+        return getCompositeValue(translateBasicToExtendedLevel(execFlag, levelFlag), bdi, offset);
     }
 
     /**
      * Translates basic mode E/L flags to extended mode bank level (see 4.6.3.1 in docs)
      */
-    public static int translateBasicToExtendedLevel(
-        final boolean execFlag,
-        final boolean levelFlag
-    ) {
+    public static int translateBasicToExtendedLevel(final boolean execFlag,
+                                                    final boolean levelFlag) {
         if (execFlag) {
-            return levelFlag ? (byte)0 : (byte)2;
+            return levelFlag ? (byte) 0 : (byte) 2;
         } else {
-            return levelFlag ? (byte)6 : (byte)4;
+            return levelFlag ? (byte) 6 : (byte) 4;
         }
     }
 
     /**
-     * Translates this L,BDI,OFFSET bank name to E,LS,BDI,OFFSET format
+     * Translates this object's (extended mode) L,BDI,OFFSET bank name to E,LS,BDI,OFFSET format.
+     * Effectively converts an EM VA to BM.
      */
-    public long translateToBasicMode(final long source) {
+    public long translateToBasicMode() {
+        return translateToBasicMode(_level, _bdi, _offset);
+    }
+
+    public static long translateToBasicMode(final int bankLevel,
+                                            final int bankDescriptorIndex,
+                                            final int offset) {
         boolean execFlag = true;
         boolean levelSpecFlag = true;
-        int bdi = 0;
 
-        if (getBankDescriptorIndex(source) <= 07777) {
-            bdi = getBankDescriptorIndex(source);
-            switch (getLevel(source)) {
+        if (bankDescriptorIndex <= 07777) {
+            switch (bankLevel) {
                 case 0:
                     break;
 
@@ -111,14 +126,14 @@ public class VirtualAddress {
 
         return (execFlag ? 0_400000_000000L : 0)
                | (levelSpecFlag ? 0_040000_000000L : 0)
-               | ((long)bdi << 18)
-               | getOffset(source);
+               | ((long) bankDescriptorIndex << 18)
+               | offset;
     }
 
     /**
      * Translates an extended mode bank name to the corresponding basic mode name
      */
-    public static long translateToBasicMode(
+    public static long translateToBasicModeName(
         final int bankLevel,
         final int bankDescriptorIndex,
         final int offset
