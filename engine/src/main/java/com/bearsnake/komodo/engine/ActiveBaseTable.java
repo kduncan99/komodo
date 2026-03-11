@@ -26,9 +26,26 @@ public class ActiveBaseTable {
             _subsetSpecification = subsetSpecification;
         }
 
-        public Entry setBankLevel(final short bankLevel) { _bankLevel = bankLevel; return this; }
-        public Entry setBankDescriptorIndex(final int bankDescriptorIndex) { _bankDescriptorIndex = bankDescriptorIndex; return this; }
-        public Entry setSubsetSpecification(final int subsetSpecification) { _subsetSpecification = subsetSpecification; return this; }
+        public Entry setBankLevel(
+            final short bankLevel
+        ) {
+            _bankLevel = (short)(bankLevel & 0_07);
+            return this;
+        }
+
+        public Entry setBankDescriptorIndex(
+            final int bankDescriptorIndex
+        ) {
+            _bankDescriptorIndex = bankDescriptorIndex & 0_077777;
+            return this;
+        }
+
+        public Entry setSubsetSpecification(
+            final int subsetSpecification
+        ) {
+            _subsetSpecification = subsetSpecification & 0_777777;
+            return this;
+        }
     }
 
     private final Entry[] _entries = new Entry[16];

@@ -42,9 +42,26 @@ public class VirtualAddress {
     public int getOffset() { return _offset; }
     public int getLBDI() { return (_level << 15) | _bdi; }
 
-    public VirtualAddress setBankDescriptorIndex(final int bdi) { _bdi = bdi; return this; }
-    public VirtualAddress setBankLevel(final short level) { _level = level; return this; }
-    public VirtualAddress setOffset(final int offset) { _offset = offset; return this; }
+    public VirtualAddress setBankDescriptorIndex(
+        final int bdi
+    ) {
+        _bdi = bdi & 0_077777;
+        return this;
+    }
+
+    public VirtualAddress setBankLevel(
+        final short level
+    ) {
+        _level = (short)(level & 0_07);
+        return this;
+    }
+
+    public VirtualAddress setOffset(
+        final int offset
+    ) {
+        _offset = offset & 0_777777;
+        return this;
+    }
 
     /**
      * Converts a composite 36-bit value wrapped in a long integer to discrete values

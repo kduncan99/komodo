@@ -26,10 +26,11 @@ public class HLTJFunction extends Function {
     }
 
     @Override
-    public void execute(
+    public boolean execute(
         ActivityStatePacket activityState
     ) throws MachineInterrupt {
         // TODO
+        return false;
     }
 
     @Override

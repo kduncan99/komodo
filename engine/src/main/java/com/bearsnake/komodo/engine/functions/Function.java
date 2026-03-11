@@ -91,7 +91,7 @@ public abstract class Function {
         return this;
     }
 
-    protected abstract void execute(
+    public abstract boolean execute(
         final ActivityStatePacket activityState
     ) throws MachineInterrupt;
 
@@ -118,7 +118,7 @@ public abstract class Function {
     // Interprets a function to the extent one can do so given only a
     // designator register to indicate relevant modes, and the instruction word
     // which we are interpreting.
-    protected static String interpret(
+    public static String interpret(
         final DesignatorRegister dReg,
         final InstructionWord iWord
     ) {

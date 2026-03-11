@@ -15,6 +15,6 @@ public class HandleCOND$ extends ERHandler {
         final Run run,
         final ActivityStatePacket activityState
     ) {
-        activityState.getGeneralRegisterSet().setRegister(GeneralRegisterSet.A0, run.getRunConditionWord().getWord36());
+        activityState.getGeneralRegisterSet().setRegister(GeneralRegisterSet.GRS_A0, run.getRunConditionWord().getWord36());
     }
 }

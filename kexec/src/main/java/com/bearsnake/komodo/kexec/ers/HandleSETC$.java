@@ -16,7 +16,7 @@ public class HandleSETC$ extends ERHandler {
         final Run run,
         final ActivityStatePacket activityState
     ) {
-        var a0 = activityState.getGeneralRegisterSet().getRegister(GeneralRegisterSet.A0);
+        var a0 = activityState.getGeneralRegisterSet().getRegisterValue(GeneralRegisterSet.GRS_A0);
         if (Word36.isPositive(a0)) {
             run.getRunConditionWord().setERSetCValue(a0);
         } else {

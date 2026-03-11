@@ -33,7 +33,7 @@ public class IndicatorKeyRegister {
     public final AccessKey getAccessKey()                         { return new AccessKey(_accessKey); }
     public final AccessInfo getAccessInfo()                       { return new AccessInfo(getAccessKey()); }
     public final boolean getInstructionInF0()                     { return (getMidInstructionDescription() & 04) != 0; }
-    public final boolean getExecuteRepeatedInstruction()          { return (getMidInstructionDescription() & 02) != 0; }
+    public final boolean isExecuteRepeatedInstruction()          { return (getMidInstructionDescription() & 02) != 0; }
     public final boolean getBreakpointRegisterMatchCondition()    { return (getPendingInterruptInformation() & 04) != 0; }
     public final boolean getSoftwareBreak()                       { return (getPendingInterruptInformation() & 02) != 0; }
 

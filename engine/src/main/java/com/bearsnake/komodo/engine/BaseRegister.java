@@ -121,7 +121,7 @@ public class BaseRegister {
         var lock = _bankDescriptor.getAccessLock();
         var spec = _bankDescriptor.getSpecialAccessPermissions();
         var gen = _bankDescriptor.getGeneralAccessPermissions();
-        return lock.getEffectivePermissions(key, spec, gen);
+        return lock.getEffectivePermissions(key, gen, spec);
     }
 
     public BaseRegister makeVoid() {

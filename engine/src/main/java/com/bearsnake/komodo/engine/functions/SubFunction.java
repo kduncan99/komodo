@@ -23,7 +23,7 @@ public abstract class SubFunction extends Function {
     }
 
     @Override
-    public final void execute(
+    public final boolean execute(
         ActivityStatePacket activityState
     ) throws InvalidInstructionInterrupt {
         throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);

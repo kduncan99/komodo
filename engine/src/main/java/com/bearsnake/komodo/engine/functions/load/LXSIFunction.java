@@ -25,7 +25,8 @@ public class LXSIFunction extends Function {
     }
 
     @Override
-    public void execute(ActivityStatePacket activityState) throws MachineInterrupt {
+    public boolean execute(ActivityStatePacket activityState) throws MachineInterrupt {
         // TODO
+        return false;
     }
 }

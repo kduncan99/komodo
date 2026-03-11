@@ -41,4 +41,20 @@ public class ProgramAddressRegister extends VirtualAddress {
                                          final int programCounter) {
         return getCompositeValue(translateBasicToExtendedLevel(execFlag, levelFlag), bdi, programCounter);
     }
+
+    public void incrementProgramCounter() {
+        var pc = getProgramCounter();
+        pc++;
+        if (pc > 0777777) {
+            pc = 0;
+        }
+        setOffset(pc);
+    }
+
+    public ProgramAddressRegister setProgramCounter(
+        final int value
+    ) {
+        setOffset(value & 0_777777);
+        return this;
+    }
 }
