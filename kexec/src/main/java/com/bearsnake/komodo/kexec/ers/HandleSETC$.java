@@ -5,7 +5,7 @@
 package com.bearsnake.komodo.kexec.ers;
 
 import com.bearsnake.komodo.engine.ActivityStatePacket;
-import com.bearsnake.komodo.engine.GeneralRegisterSet;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.kexec.scheduleManager.Run;
 import com.bearsnake.komodo.baselib.Word36;
 
@@ -16,7 +16,7 @@ public class HandleSETC$ extends ERHandler {
         final Run run,
         final ActivityStatePacket activityState
     ) {
-        var a0 = activityState.getGeneralRegisterSet().getRegisterValue(GeneralRegisterSet.GRS_A0);
+        var a0 = activityState.getGeneralRegisterSet().getRegisterValue(Constants.GRS_A0);
         if (Word36.isPositive(a0)) {
             run.getRunConditionWord().setERSetCValue(a0);
         } else {
