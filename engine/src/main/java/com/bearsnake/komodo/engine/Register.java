@@ -8,12 +8,7 @@ import com.bearsnake.komodo.baselib.Word36;
 
 public class Register extends Word36 {
 
-    protected long _value;
-
     protected Register() {}
-
-    public long getValue() { return _value; }
-    public void setValue(final long value) { _value = value; }
 
     public static final long MASK_XI        = 0_777777_000000L;     //  standard increment value
     public static final long MASK_XI12      = 0_777700_000000L;     //  increment value for 24/12 exec index register

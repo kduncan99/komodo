@@ -412,10 +412,10 @@ public class Engine {
         var basicMode = _activityStatePacket.getDesignatorRegister().isBasicModeEnabled();
         var programCounter = _activityStatePacket.getProgramAddressRegister().getProgramCounter();
         BaseRegister bReg = null;
+        int offset;
 
         if (basicMode) {
-            // If we don't know the index of the current basic mode instruction bank,
-            // find it and set DB31 accordingly.
+            // If we don't know the index of the current basic mode instruction bank, find it and set DB31 accordingly.
             if (_bmCachedBaseRegisterIndex == 0) {
                 findBasicModeBank(programCounter, true);
                 _activityStatePacket.getDesignatorRegister()
@@ -423,20 +423,27 @@ public class Engine {
             }
 
             bReg = _baseRegisters[_bmCachedBaseRegisterIndex];
+            if (bReg.isVoid() || bReg.getBankDescriptor().isLargeBank()) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
+            }
             if (!isReadAllowed(bReg)) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
             }
+
+            offset = _scratchpad._sourceRelativeAddress;
+            offset -= (int)bReg.getBankDescriptor().getLowerLimitNormalized();
         } else {
             bReg = _baseRegisters[0];
+            if (bReg.isVoid() || bReg.getBankDescriptor().isLargeBank()) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
+            }
+
             var ikr = _activityStatePacket.getIndicatorKeyRegister();
             checkAccessLimitsAndAccessibility(basicMode, 0, programCounter, true, false, false, new AccessKey(ikr.getAccessKey()));
+            offset = _scratchpad._sourceRelativeAddress;
         }
 
-        if (bReg.isVoid() || bReg.getBankDescriptor().isLargeBank()) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
-        }
-
-        _activityStatePacket.getCurrentInstruction().setW(0);
+        _activityStatePacket.getCurrentInstruction().setW(bReg.getStorage().get(offset));
         _activityStatePacket.getIndicatorKeyRegister().setInstructionInF0(true);
         _activityStatePacket.getIndicatorKeyRegister().setExecuteRepeatedInstruction(false);
     }
@@ -514,11 +521,24 @@ public class Engine {
         return _activityStatePacket;
     }
 
+    public BaseRegister getBaseRegister(
+        final int registerNumber
+    ) {
+        if (registerNumber < 0 || registerNumber > 31) {
+            // TODO throw an exception
+        }
+        return _baseRegisters[registerNumber];
+    }
+
     /**
      * For external callers to obtain the current instruction in F0.
      */
     public InstructionWord getCurrentInstruction() {
         return _activityStatePacket.getCurrentInstruction();
+    }
+
+    public DesignatorRegister getDesignatorRegister() {
+        return _activityStatePacket.getDesignatorRegister();
     }
 
     /**
@@ -559,7 +579,7 @@ public class Engine {
                ? Constants.GRS_ER0 + registerNumber : Constants.GRS_R0 + registerNumber;
     }
 
-    private Register getExecOrUserRRegister(
+    public Register getExecOrUserRRegister(
         final int registerNumber
     ) {
         return _generalRegisterSet.getRegister(getExecOrUserRRegisterIndex(registerNumber));
@@ -572,10 +592,16 @@ public class Engine {
                ? Constants.GRS_EX0 + registerNumber : Constants.GRS_X0 + registerNumber;
     }
 
-    private Register getExecOrUserXRegister(
+    public Register getExecOrUserXRegister(
         final int registerNumber
     ) {
         return _generalRegisterSet.getRegister(getExecOrUserXRegisterIndex(registerNumber));
+    }
+
+    public Register getGeneralRegister(
+        final int registerNumber
+    ) {
+        return _generalRegisterSet.getRegister(registerNumber);
     }
 
     /**
@@ -742,6 +768,10 @@ public class Engine {
             }
             return operand;
         }
+    }
+
+    public ProgramAddressRegister getProgramAddressRegister() {
+        return _activityStatePacket.getProgramAddressRegister();
     }
 
     /**

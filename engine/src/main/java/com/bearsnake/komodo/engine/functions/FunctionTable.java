@@ -122,8 +122,10 @@ public abstract class FunctionTable {
             }
 
             var topLevel = dReg.isBasicModeEnabled() ? BASIC_MODE_TOP_LEVEL : EXTENDED_MODE_TOP_LEVEL;
-            var func = topLevel.get((int) iWord.getF());
-            if (func instanceof SubFunction sf) {
+            var func = topLevel.get(iWord.getF());
+            if (func == null) {
+                throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
+            } else if (func instanceof SubFunction sf) {
                 func = sf.lookupFunction(iWord);
             }
             return func;

@@ -140,9 +140,11 @@ public abstract class Function {
         // partial-word designator, and thus is not displayed.
         sb.append(func.getMnemonic());
         if ((funcCode.getJField() == null) && (func.getImmediateMode())) {
-            sb.append(",").append(getJFieldToken(funcCode.getJField(), dReg));
+            sb.append(",").append(getJFieldToken(iWord.getJ(), dReg));
         }
-        sb.setLength(10);
+        while (sb.length() < 10) {
+            sb.append(" ");
+        }
 
         // Is there an a-field?
         switch (func.getAFieldSemantics()) {
@@ -230,7 +232,7 @@ public abstract class Function {
                 if (!dReg.isBasicModeEnabled() && (dReg.getProcessorPrivilege() < 2)) {
                     breg |= (int) (iWord.getI() << 4);
                 }
-                sb.append("B").append(breg).append(",");
+                sb.append("B").append(breg);
             }
         }
 
