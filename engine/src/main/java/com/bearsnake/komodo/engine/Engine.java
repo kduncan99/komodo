@@ -554,7 +554,7 @@ public class Engine {
             // Use 5 bits for register selection (allowing selection of B16-B32)
             _scratchpad._sourceBaseRegisterIndex = _activityStatePacket.getCurrentInstruction().getIB();
         } else {
-            _scratchpad._sourceBaseRegisterIndex =  _activityStatePacket.getCurrentInstruction().getI();
+            _scratchpad._sourceBaseRegisterIndex =  _activityStatePacket.getCurrentInstruction().getB();
         }
         _scratchpad._sourceBaseRegister = _baseRegisters[_scratchpad._sourceBaseRegisterIndex];
     }
