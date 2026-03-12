@@ -162,4 +162,47 @@ public class TestInstructionWord {
         iw.setW(0xFFFFFFFFFFFFFFFFL); // all ones, 64-bit
         assertEquals(0_777777_777777L, iw.getW()); // should be masked to 36 bits
     }
+
+    @Test
+    public void testGetIB() {
+        InstructionWord iw = new InstructionWord();
+        iw.setI(1);
+        iw.setB(0_12); // binary 1010
+        // i=1 (bit 16), b=1010 (bits 15-12)
+        // IB = 11010 binary = 0_32 octal
+        assertEquals(0_32, iw.getIB());
+
+        iw.setI(0);
+        iw.setB(0_05); // binary 0101
+        assertEquals(0_05, iw.getIB());
+
+        iw.setI(1);
+        iw.setB(0_17); // all ones
+        assertEquals(0_37, iw.getIB());
+    }
+
+    @Test
+    public void testStaticGetters() {
+        long value = (0_12L << 30) | (0_13L << 26) | (0_14L << 22) | (0_15L << 18) | (1L << 17) | (0L << 16) | 0_123456L;
+        // f=0_12, j=0_13, a=0_14, x=0_15, h=1, i=0, u=0_123456
+        assertEquals(0_12, InstructionWord.getF(value));
+        assertEquals(0_13, InstructionWord.getJ(value));
+        assertEquals(0_14, InstructionWord.getA(value));
+        assertEquals(0_15, InstructionWord.getX(value));
+        assertEquals(1, InstructionWord.getH(value));
+        assertEquals(0, InstructionWord.getI(value));
+        assertEquals(0_123456, InstructionWord.getU(value));
+
+        long expectedHIU = (1L << 17) | (0L << 16) | 0_123456L;
+        assertEquals(expectedHIU, InstructionWord.getHIU(value));
+
+        assertEquals(0_32, InstructionWord.getIB((1L << 16) | (0_12L << 12)));
+        assertEquals(0_05, InstructionWord.getIB(0_05L << 12));
+        assertEquals(0_37, InstructionWord.getIB((1L << 16) | (0_17L << 12)));
+
+        value = (0_12L << 30) | (0_13L << 26) | (0_14L << 22) | (0_15L << 18) | (1L << 17) | (0L << 16) | (0_16L << 12) | 0_1234L;
+        // f=0_12, j=0_13, a=0_14, x=0_15, h=1, i=0, b=0_16, d=0_1234
+        assertEquals(0_16, InstructionWord.getB(value));
+        assertEquals(0_1234, InstructionWord.getD(value));
+    }
 }

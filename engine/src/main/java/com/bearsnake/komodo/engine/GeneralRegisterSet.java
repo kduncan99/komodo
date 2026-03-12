@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.stream.IntStream;
 
 /**
  * Represents the General Register Set (GRS) for an Instruction Processor
@@ -19,7 +20,11 @@ public class GeneralRegisterSet {
 
     private static final Logger LOGGER = LogManager.getLogger(GeneralRegisterSet.class);
 
-    private final long[] _registers = new long[128];
+    private final Register[] _registers = new Register[128];
+
+    public GeneralRegisterSet() {
+        IntStream.range(0, 128).forEach(i -> _registers[i] = new Register());
+    }
 
     /**
      * Given a string, we return the GRS address of the indicated register if it is in fact a register name
@@ -44,7 +49,7 @@ public class GeneralRegisterSet {
      * @param registerIndex index of the requested register
      * @return reference as indicated above
      */
-    public long getRegisterValue(
+    public Register getRegister(
         final int registerIndex
     ) {
         if ((registerIndex < 0) || (registerIndex >= 128)) {
@@ -67,7 +72,7 @@ public class GeneralRegisterSet {
             throw new RuntimeException(String.format("registerIndex=%d", registerIndex));
         }
 
-        _registers[registerIndex] = value;
+        _registers[registerIndex].setW(value);
     }
 
     /**
@@ -105,7 +110,7 @@ public class GeneralRegisterSet {
                 StringBuilder sb = new StringBuilder();
                 sb.append(String.format("  %5s:", Constants.GRS_REGISTER_NAMES[rx]));
                 for (int ry = 0; ry < 8; ++ry) {
-                    sb.append(String.format(" %012o", _registers[rx + ry]));
+                    sb.append(String.format(" %012o", _registers[rx + ry].getW()));
                 }
                 sb.append("\n");
                 writer.write(sb.toString());

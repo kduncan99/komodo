@@ -6,8 +6,8 @@ package com.bearsnake.komodo.engine.functions;
 
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.engine.ActivityStatePacket;
 import com.bearsnake.komodo.engine.DesignatorRegister;
+import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.interrupts.HardwareDefaultInterrupt;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -92,7 +92,7 @@ public abstract class Function {
     }
 
     public abstract boolean execute(
-        final ActivityStatePacket activityState
+        final Engine engine
     ) throws MachineInterrupt;
 
     public ArrayList<FunctionCode> getBasicModeFunctionCodes() { return _basicModeFunctionCodes; }

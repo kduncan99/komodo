@@ -48,11 +48,11 @@ public class IndicatorKeyRegister {
     public IndicatorKeyRegister setWord36(
         final long value
     ) {
-        _shortStatusField = (int) Word36.getS1(value);
-        _midInstructionDescription = (int) (Word36.getS2(value) >> 3);
-        _pendingInterruptInformation = (int) (Word36.getS2(value) & 07);
-        _interruptClassField = (int) Word36.getS3(value);
-        _accessKey = (int) Word36.getH2(value);
+        _shortStatusField = Word36.getS1(value);
+        _midInstructionDescription = Word36.getS2(value) >> 3;
+        _pendingInterruptInformation = Word36.getS2(value) & 07;
+        _interruptClassField = Word36.getS3(value);
+        _accessKey = Word36.getH2(value);
         return this;
     }
 

@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
-import com.bearsnake.komodo.engine.ActivityStatePacket;
+import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -27,7 +27,7 @@ public class HLTJFunction extends Function {
 
     @Override
     public boolean execute(
-        ActivityStatePacket activityState
+        final Engine engine
     ) throws MachineInterrupt {
         // TODO
         return false;

@@ -5,7 +5,7 @@
 package com.bearsnake.komodo.engine.functions;
 
 import com.bearsnake.komodo.baselib.InstructionWord;
-import com.bearsnake.komodo.engine.ActivityStatePacket;
+import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 
 import java.util.HashMap;
@@ -24,7 +24,7 @@ public abstract class SubFunction extends Function {
 
     @Override
     public final boolean execute(
-        ActivityStatePacket activityState
+        final Engine engine
     ) throws InvalidInstructionInterrupt {
         throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
     }

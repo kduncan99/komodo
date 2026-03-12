@@ -4,7 +4,7 @@
 
 package com.bearsnake.komodo.engine.functions.load;
 
-import com.bearsnake.komodo.engine.ActivityStatePacket;
+import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -25,7 +25,9 @@ public class LXSIFunction extends Function {
     }
 
     @Override
-    public boolean execute(ActivityStatePacket activityState) throws MachineInterrupt {
+    public boolean execute(
+        final Engine engine
+    ) throws MachineInterrupt {
         // TODO
         return false;
     }

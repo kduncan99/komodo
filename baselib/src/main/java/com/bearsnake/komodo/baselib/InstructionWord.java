@@ -50,18 +50,18 @@ public class InstructionWord {
         _value |= d & 0_007777;
     }
 
-    public long getF() { return (_value & 0_770000_000000L) >> 30; }
-    public long getJ() { return (_value & 0_007400_000000L) >> 26; }
-    public long getA() { return (_value & 0_000360_000000L) >> 22; }
-    public long getX() { return (_value & 0_000017_000000L) >> 18; }
-    public long getH() { return (_value & 0_000000_400000L) >> 17; }
-    public long getI() { return (_value & 0_000000_200000L) >> 16; }
-    public long getU() { return _value & 0_000000_177777L; }
-    public long getHIU() { return _value & 0_000000_777777L; }
-    public long getB() { return (_value & 0_000000_170000L) >> 12; }
-    public long getD() { return _value & 0_000000_007777L; }
+    public int getF() { return (int)((_value & 0_770000_000000L) >> 30); }
+    public int getJ() { return (int)((_value & 0_007400_000000L) >> 26); }
+    public int getA() { return (int)((_value & 0_000360_000000L) >> 22); }
+    public int getX() { return (int)((_value & 0_000017_000000L) >> 18); }
+    public int getH() { return (int)((_value & 0_000000_400000L) >> 17); }
+    public int getI() { return (int)((_value & 0_000000_200000L) >> 16); }
+    public int getIB() { return (int)((_value & 0_000000_370000L) >> 12); }
+    public int getU() { return (int)(_value & 0_000000_177777L); }
+    public int getHIU() { return (int)(_value & 0_000000_777777L); }
+    public int getB() { return (int)((_value & 0_000000_170000L) >> 12); }
+    public int getD() { return (int)(_value & 0_000000_007777L); }
     public long getW() { return _value; }
-
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
@@ -204,4 +204,17 @@ public class InstructionWord {
         _value = value & 0_777777_777777L;
         return this;
     }
+
+    /* static versions of the above */
+    public static int getF(final long value) { return (int)((value >> 30) & 0_77); }
+    public static int getJ(final long value) { return (int)((value >> 26) & 0_17); }
+    public static int getA(final long value) { return (int)((value >> 22) & 0_17); }
+    public static int getX(final long value) { return (int)((value >> 18) & 0_17); }
+    public static int getH(final long value) { return (int)((value >> 17) & 0_1); }
+    public static int getI(final long value) { return (int)((value >> 16) & 0_1); }
+    public static int getIB(final long value) { return (int)((value >> 12) & 0_37); }
+    public static int getU(final long value) { return (int)(value & 0_177777); }
+    public static int getHIU(final long value) { return (int)(value & 0_777777); }
+    public static int getB(final long value) { return (int)((value >> 12) & 0_17); }
+    public static int getD(final long value) { return (int)(value & 0_007777); }
 }

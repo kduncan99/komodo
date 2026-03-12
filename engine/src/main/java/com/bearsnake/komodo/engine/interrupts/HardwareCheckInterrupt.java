@@ -4,8 +4,6 @@
 
 package com.bearsnake.komodo.engine.interrupts;
 
-import com.bearsnake.komodo.baselib.Word36;
-
 /**
  * Represents a particular machine interrupt class
  */
@@ -33,14 +31,16 @@ public class HardwareCheckInterrupt extends MachineInterrupt {
         }
     }
 
-    private final long _realAddress;
+    private final long _realAddressLower;
+    private final long _realAddressUpper;
     private final RecoveryAction _recoveryAction;
     private boolean _restartable;
 
     public HardwareCheckInterrupt(
         final RecoveryAction recoveryAction,
         final boolean restartable,
-        final long realAddress
+        final long realAddressUpper,
+        final long realAddressLower
     ) {
         super(InterruptClass.HardwareCheck,
               ConditionCategory.None,
@@ -49,11 +49,16 @@ public class HardwareCheckInterrupt extends MachineInterrupt {
               InterruptPoint.None);
         _recoveryAction = recoveryAction;
         _restartable = restartable;
-        _realAddress = realAddress;
+        _realAddressUpper = realAddressUpper;
+        _realAddressLower = realAddressLower;
     }
 
-    public long getRealAddress() {
-        return _realAddress;
+    public long getRealAddressLower() {
+        return _realAddressLower;
+    }
+
+    public long getRealAddressUpper() {
+        return _realAddressUpper;
     }
 
     public RecoveryAction getRecoveryAction() {
@@ -66,14 +71,16 @@ public class HardwareCheckInterrupt extends MachineInterrupt {
 
     @Override
     public long getInterruptStatusWord0() {
-        return _realAddress;
+        var result = (long)(_recoveryAction.getCode() & 0_77) << 30;
+        if (_restartable) {
+            result |= 0_004000_000000L;
+        }
+        result |= _realAddressUpper & 0_003777_777777L; // 28 bits
+        return result;
     }
 
     @Override
     public long getInterruptStatusWord1() {
-        long result = 0;
-        result = Word36.setS1(result, _restartable ? 1 : 0);
-        result = Word36.setH2(result, _recoveryAction.getCode());
-        return result;
+        return _realAddressLower & 0_777777_777777L;
     }
 }

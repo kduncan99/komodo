@@ -126,4 +126,26 @@ public class Constants {
         "EA4",   "EA5",   "EA6",   "EA7",   "EA8",   "EA9",   "EA10",  "EA11",
         "EA12",  "EA13",  "EA14",  "EA15",  "0174",  "0175",  "0176",  "0177",
         };
+
+    // Standard values for instruction word j-field
+    public static final int JFIELD_W = 0;
+    public static final int JFIELD_H2 = 1;
+    public static final int JFIELD_H1 = 2;
+    public static final int JFIELD_XH2 = 3;
+    public static final int JFIELD_XH1 = 4;
+    public static final int JFIELD_Q2 = 4;
+    public static final int JFIELD_T3 = 5;
+    public static final int JFIELD_Q4 = 5;
+    public static final int JFIELD_T2 = 6;
+    public static final int JFIELD_Q3 = 6;
+    public static final int JFIELD_T1 = 7;
+    public static final int JFIELD_Q1 = 7;
+    public static final int JFIELD_S6 = 8;
+    public static final int JFIELD_S5 = 9;
+    public static final int JFIELD_S4 = 10;
+    public static final int JFIELD_S3 = 11;
+    public static final int JFIELD_S2 = 12;
+    public static final int JFIELD_S1 = 13;
+    public static final int JFIELD_U = 14;
+    public static final int JFIELD_XU = 15;
 }

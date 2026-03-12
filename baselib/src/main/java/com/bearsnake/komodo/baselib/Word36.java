@@ -241,9 +241,33 @@ public class Word36 {
     //  Constructors
     //  ----------------------------------------------------------------------------------------------------------------------------
 
-    protected Word36() {}
+    public Word36() {
+        _value = 0L;
+    }
+
+    public Word36(
+        final long value
+    ) {
+        _value = value;
+    }
+
+    public long getW() { return _value; }
+
+    public Word36 setW(
+        final long newValue
+    ) {
+        _value = newValue & 0_777777_777777L;
+        return this;
+    }
+
 
     //  Tests ----------------------------------------------------------------------------------------------------------------------
+
+    public boolean isNegative()     { return (_value & NEGATIVE_BIT) == NEGATIVE_BIT; }
+    public boolean isNegativeZero() { return _value == NEGATIVE_ZERO; }
+    public boolean isPositive()     { return (_value & NEGATIVE_BIT) == 0; }
+    public boolean isPositiveZero() { return _value == 0L; }
+    public boolean isZero()         { return isPositiveZero() || isNegativeZero(); }
 
     public static boolean isNegative(long value)        { return (value & NEGATIVE_BIT) == NEGATIVE_BIT; }
     public static boolean isNegativeZero(long value)    { return value == NEGATIVE_ZERO; }
@@ -254,21 +278,43 @@ public class Word36 {
 
     //  Partial-word extraction ----------------------------------------------------------------------------------------------------
 
-    public static long getH1(long value)    { return (value & Word36.MASK_H1) >> 18; }
-    public static long getH2(long value)    { return value & Word36.MASK_H2; }
-    public static long getQ1(long value)    { return (value & Word36.MASK_Q1) >> 27; }
-    public static long getQ2(long value)    { return (value & Word36.MASK_Q2) >> 18; }
-    public static long getQ3(long value)    { return (value & Word36.MASK_Q3) >> 9; }
-    public static long getQ4(long value)    { return value & Word36.MASK_Q4; }
-    public static long getS1(long value)    { return (value & Word36.MASK_S1) >> 30; }
-    public static long getS2(long value)    { return (value & Word36.MASK_S2) >> 24; }
-    public static long getS3(long value)    { return (value & Word36.MASK_S3) >> 18; }
-    public static long getS4(long value)    { return (value & Word36.MASK_S4) >> 12; }
-    public static long getS5(long value)    { return (value & Word36.MASK_S5) >> 6; }
-    public static long getS6(long value)    { return value & Word36.MASK_S6; }
-    public static long getT1(long value)    { return (value & Word36.MASK_T1) >> 24; }
-    public static long getT2(long value)    { return (value & Word36.MASK_T2) >> 12; }
-    public static long getT3(long value)    { return value & Word36.MASK_T3; }
+    public int getH1()    { return (int)((_value & Word36.MASK_H1) >> 18); }
+    public int getH2()    { return (int)(_value & Word36.MASK_H2); }
+    public int getQ1()    { return (int)((_value & Word36.MASK_Q1) >> 27); }
+    public int getQ2()    { return (int)((_value & Word36.MASK_Q2) >> 18); }
+    public int getQ3()    { return (int)((_value & Word36.MASK_Q3) >> 9); }
+    public int getQ4()    { return (int)(_value & Word36.MASK_Q4); }
+    public int getS1()    { return (int)((_value & Word36.MASK_S1) >> 30); }
+    public int getS2()    { return (int)((_value & Word36.MASK_S2) >> 24); }
+    public int getS3()    { return (int)((_value & Word36.MASK_S3) >> 18); }
+    public int getS4()    { return (int)((_value & Word36.MASK_S4) >> 12); }
+    public int getS5()    { return (int)((_value & Word36.MASK_S5) >> 6); }
+    public int getS6()    { return (int)(_value & Word36.MASK_S6); }
+    public int getT1()    { return (int)((_value & Word36.MASK_T1) >> 24); }
+    public int getT2()    { return (int)((_value & Word36.MASK_T2) >> 12); }
+    public int getT3()    { return (int)(_value & Word36.MASK_T3); }
+
+    public long getXH1()   { return getXH1(_value); }
+    public long getXH2()   { return getXH2(_value); }
+    public long getXT1()   { return getXT1(_value); }
+    public long getXT2()   { return getXT2(_value); }
+    public long getXT3()   { return getXT3(_value); }
+
+    public static int getH1(long value)     { return (int)((value & Word36.MASK_H1) >> 18); }
+    public static int getH2(long value)     { return (int)(value & Word36.MASK_H2); }
+    public static int getQ1(long value)     { return (int)((value & Word36.MASK_Q1) >> 27); }
+    public static int getQ2(long value)     { return (int)((value & Word36.MASK_Q2) >> 18); }
+    public static int getQ3(long value)     { return (int)((value & Word36.MASK_Q3) >> 9); }
+    public static int getQ4(long value)     { return (int)(value & Word36.MASK_Q4); }
+    public static int getS1(long value)     { return (int)((value & Word36.MASK_S1) >> 30); }
+    public static int getS2(long value)     { return (int)((value & Word36.MASK_S2) >> 24); }
+    public static int getS3(long value)     { return (int)((value & Word36.MASK_S3) >> 18); }
+    public static int getS4(long value)     { return (int)((value & Word36.MASK_S4) >> 12); }
+    public static int getS5(long value)     { return (int)((value & Word36.MASK_S5) >> 6); }
+    public static int getS6(long value)     { return (int)(value & Word36.MASK_S6); }
+    public static int getT1(long value)     { return (int)((value & Word36.MASK_T1) >> 24); }
+    public static int getT2(long value)     { return (int)((value & Word36.MASK_T2) >> 12); }
+    public static int getT3(long value)     { return (int)(value & Word36.MASK_T3); }
 
     public static long getXH1(long value)
     {
@@ -283,7 +329,7 @@ public class Word36 {
     ) {
         long result = getH2(value);
         if ((result & 0_400000) != 0)
-            result |= 0777777_000000L;
+            result |= 0_777777_000000L;
         return result;
     }
 
@@ -292,7 +338,7 @@ public class Word36 {
     ) {
         long result = getT1(value);
         if ((result & 0_4000) != 0)
-            result |= 07777_7777_0000L;
+            result |= 0_7777_7777_0000L;
         return result;
     }
 
@@ -301,7 +347,7 @@ public class Word36 {
     ) {
         long result = getT2(value);
         if ((result & 0_4000) != 0)
-            result |= 07777_7777_0000L;
+            result |= 0_7777_7777_0000L;
         return result;
     }
 
@@ -310,12 +356,87 @@ public class Word36 {
     ) {
         long result = getT3(value);
         if ((result & 0_4000) != 0)
-            result |= 07777_7777_0000L;
+            result |= 0_7777_7777_0000L;
         return result;
     }
 
 
     //  Partial-word injection -----------------------------------------------------------------------------------------------------
+
+    public Word36 setH1(int newValue) {
+        _value = setH1(_value, newValue);
+        return this;
+    }
+
+    public Word36 setH2(int newValue) {
+        _value = setH2(_value, newValue);
+        return this;
+    }
+
+    public Word36 setQ1(int newValue) {
+        _value = setQ1(_value, newValue);
+        return this;
+    }
+
+    public Word36 setQ2(int newValue) {
+        _value = setQ2(_value, newValue);
+        return this;
+    }
+
+    public Word36 setQ3(int newValue) {
+        _value = setQ3(_value, newValue);
+        return this;
+    }
+
+    public Word36 setQ4(int newValue) {
+        _value = setQ4(_value, newValue);
+        return this;
+    }
+
+    public Word36 setS1(int newValue) {
+        _value = setS1(_value, newValue);
+        return this;
+    }
+
+    public Word36 setS2(int newValue) {
+        _value = setS2(_value, newValue);
+        return this;
+    }
+
+    public Word36 setS3(int newValue) {
+        _value = setS3(_value, newValue);
+        return this;
+    }
+
+    public Word36 setS4(int newValue) {
+        _value = setS4(_value, newValue);
+        return this;
+    }
+
+    public Word36 setS5(int newValue) {
+        _value = setS5(_value, newValue);
+        return this;
+    }
+
+    public Word36 setS6(int newValue) {
+        _value = setS6(_value, newValue);
+        return this;
+    }
+
+    public Word36 setT1(int newValue) {
+        _value = setT1(_value, newValue);
+        return this;
+    }
+
+    public Word36 setT2(int newValue) {
+        _value = setT2(_value, newValue);
+        return this;
+    }
+
+    public Word36 setT3(int newValue) {
+        _value = setT3(_value, newValue);
+        return this;
+    }
 
     /**
      * Injects a new value into a particular partial-value subset of a given existing value
@@ -772,8 +893,6 @@ public class Word36 {
         }
     }
 
-
-    //  Sign extension of several important partial-words --------------------------------------------------------------------------
 
     /**
      * Presuming the given value is a signed 12-bit value, we turn it into a 36-bit signed value
