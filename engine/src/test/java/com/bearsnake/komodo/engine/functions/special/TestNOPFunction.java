@@ -18,6 +18,14 @@ public class TestNOPFunction extends TestFunction {
 
     private Engine _engine;
 
+    private long nopEM(long x, long h, long i, long b, long d) {
+        return fjaxhibd(073, 014, 0, x, h, i, b, d);
+    }
+
+    private long nopBM(long x, long h, long i, long u) {
+        return fjaxhiu(073, 014, 0, x, h, i, u);
+    }
+
     @BeforeEach
     public void setup() {
         _engine = new Engine();
@@ -25,14 +33,10 @@ public class TestNOPFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
     }
 
-    private long nop(long x, long h, long i, long u) {
-        return fjaxhiu(073, 014, 0, x, h, i, u);
-    }
-
     @Test
-    public void testNOP() throws MachineInterrupt {
+    public void testNOP_EM() throws MachineInterrupt {
         var code = new long[] {
-            nop(0, 0, 0, 0),
+            nopEM(0, 0, 0, 0, 0),
         };
 
         var bank0 = new ArraySlice(code);
@@ -47,6 +51,27 @@ public class TestNOPFunction extends TestFunction {
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+        _engine.cycle();
+    }
+
+    @Test
+    public void testNOP_BM() throws MachineInterrupt {
+        var code = new long[] {
+            nopBM(0, 0, 0, 0),
+            };
+
+        var bank0 = new ArraySlice(code);
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0_22) // 022000
+                                      .setUpperLimit(0_22777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+
+        _engine.getBaseRegister(12).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.cycle();
     }
 }

@@ -13,20 +13,20 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestLAFunction extends TestFunction {
+public class TestLXFunction extends TestFunction {
 
     private Engine _engine;
 
-    private long laImm(long j, long a, long x, long u) {
-        return fjaxu(010, j, a, x, u);
+    private long lxImm(long j, long a, long x, long u) {
+        return fjaxu(027, j, a, x, u);
     }
 
-    private long laBM(long j, long a, long x, long h, long i, long u) {
-        return fjaxhiu(010, j, a, x, h, i, u);
+    private long lxBM(long j, long a, long x, long h, long i, long u) {
+        return fjaxhiu(027, j, a, x, h, i, u);
     }
 
-    private long laEM(long j, long a, long x, long h, long i, long b, long d) {
-        return fjaxhibd(010, j, a, x, h, i, b, d);
+    private long lxEM(long j, long a, long x, long h, long i, long b, long d) {
+        return fjaxhibd(027, j, a, x, h, i, b, d);
     }
 
     @BeforeEach
@@ -37,9 +37,9 @@ public class TestLAFunction extends TestFunction {
     }
 
     @Test
-    public void testLAImmediate_BM() throws MachineInterrupt {
+    public void testLXImmediate_BM() throws MachineInterrupt {
         var code = new long[] {
-            laImm(Constants.JFIELD_U, 0, 0, 0123),
+            lxImm(Constants.JFIELD_U, 0, 0, 0123),
             };
 
         var bank = new ArraySlice(code);
@@ -54,13 +54,13 @@ public class TestLAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.cycle();
-        assertEquals(0_123, _engine.getExecOrUserARegister(0).getW());
+        assertEquals(0_123, _engine.getExecOrUserXRegister(0).getW());
     }
 
     @Test
-    public void testLAImmediate_EM() throws MachineInterrupt {
+    public void testLXImmediate_EM() throws MachineInterrupt {
         var code = new long[] {
-            laImm(Constants.JFIELD_U, 0, 0, 0123),
+            lxImm(Constants.JFIELD_U, 0, 0, 0123),
         };
 
         var bank = new ArraySlice(code);
@@ -75,13 +75,13 @@ public class TestLAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.cycle();
-        assertEquals(0_123, _engine.getExecOrUserARegister(0).getW());
+        assertEquals(0_123, _engine.getExecOrUserXRegister(0).getW());
     }
 
     @Test
-    public void testLA_W_EM() throws MachineInterrupt {
+    public void testLX_W_EM() throws MachineInterrupt {
         var code = new long[] {
-            laEM(Constants.JFIELD_W, 2, 0, 0, 0, 1, 02),
+            lxEM(Constants.JFIELD_W, 2, 0, 0, 0, 1, 02),
         };
 
         var data = new long[] {
@@ -112,13 +112,13 @@ public class TestLAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.cycle();
-        assertEquals(3L, _engine.getExecOrUserARegister(2).getW());
+        assertEquals(3L, _engine.getExecOrUserXRegister(2).getW());
     }
 
     @Test
-    public void testLA_Indexed_EM() throws MachineInterrupt {
+    public void testLX_Indexed_EM() throws MachineInterrupt {
         var code = new long[] {
-            laEM(Constants.JFIELD_W, 5, 3, 1, 0, 1, 01),
+            lxEM(Constants.JFIELD_W, 5, 3, 1, 0, 1, 01),
             };
 
         var data = new long[] {
@@ -150,15 +150,15 @@ public class TestLAFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
         _engine.cycle();
-        assertEquals(0_15L, _engine.getExecOrUserARegister(5).getW());
+        assertEquals(0_15L, _engine.getExecOrUserXRegister(5).getW());
         assertEquals(0_01L, _engine.getExecOrUserXRegister(3).getXI());
         assertEquals(0_04L, _engine.getExecOrUserXRegister(3).getXM());
     }
 
     @Test
-    public void testLA_Q3_EM() throws MachineInterrupt {
+    public void testLX_Q3_EM() throws MachineInterrupt {
         var code = new long[] {
-            laEM(Constants.JFIELD_Q3, 15, 0, 0, 0, 1, 0),
+            lxEM(Constants.JFIELD_Q3, 15, 0, 0, 0, 1, 0),
         };
 
         var data = new long[] {
@@ -186,6 +186,6 @@ public class TestLAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.cycle();
-        assertEquals(0_445L, _engine.getExecOrUserARegister(15).getW());
+        assertEquals(0_445L, _engine.getExecOrUserXRegister(15).getW());
     }
 }

@@ -430,8 +430,7 @@ public class Engine {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
             }
 
-            offset = _scratchpad._sourceRelativeAddress;
-            offset -= (int)bReg.getBankDescriptor().getLowerLimitNormalized();
+            offset = programCounter - (int)bReg.getBankDescriptor().getLowerLimitNormalized();
         } else {
             bReg = _baseRegisters[0];
             if (bReg.isVoid() || bReg.getBankDescriptor().isLargeBank()) {
