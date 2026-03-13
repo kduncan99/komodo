@@ -1,0 +1,12 @@
+
+General architecture support
+    We do not manage cache pages, leaving that to the host operating system.
+    We do not support monolithic memory. All memory banks are allocated at size from the host operating system.
+    We do not support postern banks.
+    We do not support data expanse banks.
+
+Bank Size support
+  We support small banks per architecture, up to 2^18 words.
+  We support large banks per architecture, up to 2^24 words.
+  We *may* support very large banks, but only up to 2^32 words.
+

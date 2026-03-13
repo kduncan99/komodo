@@ -11,6 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Double Load A instruction
+ * (DL) loads the content of U and U+1, storing the values in Aa and Aa+1
  */
 public class DLFunction extends Function {
 
@@ -29,7 +30,15 @@ public class DLFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
-        return false;
+        var operands = engine.getConsecutiveOperands(true, 2);
+        if (operands == null) {
+            return false;
+        }
+
+        var ci = engine.getCurrentInstruction();
+        var ax = engine.getExecOrUserARegisterIndex(ci.getA());
+        engine.getGeneralRegister(ax).setW(operands[0]);
+        engine.getGeneralRegister(ax + 1).setW(operands[1]);
+        return true;
     }
 }

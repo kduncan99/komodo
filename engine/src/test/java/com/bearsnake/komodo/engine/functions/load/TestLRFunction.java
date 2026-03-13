@@ -7,6 +7,7 @@ package com.bearsnake.komodo.engine.functions.load;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ public class TestLRFunction extends TestFunction {
     public void testLRImmediate_BM() throws MachineInterrupt {
         var code = new long[] {
             lrImm(Constants.JFIELD_U, 0, 0, 0123),
+            0,
             };
 
         var bank = new ArraySlice(code);
@@ -54,7 +56,10 @@ public class TestLRFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        while (!_engine.cycle()) {}
+        try {
+            for (;;) _engine.cycle();
+        } catch (InvalidInstructionInterrupt e) {
+        }
 
         assertEquals(0_123, _engine.getExecOrUserRRegister(0).getW());
     }
@@ -63,6 +68,7 @@ public class TestLRFunction extends TestFunction {
     public void testLRImmediate_EM() throws MachineInterrupt {
         var code = new long[] {
             lrImm(Constants.JFIELD_U, 0, 0, 0123),
+            0,
         };
 
         var bank = new ArraySlice(code);
@@ -77,7 +83,10 @@ public class TestLRFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        while (!_engine.cycle()) {}
+        try {
+            for (;;) _engine.cycle();
+        } catch (InvalidInstructionInterrupt e) {
+        }
 
         assertEquals(0_123, _engine.getExecOrUserRRegister(0).getW());
     }
@@ -86,6 +95,7 @@ public class TestLRFunction extends TestFunction {
     public void testLR_W_EM() throws MachineInterrupt {
         var code = new long[] {
             lrEM(Constants.JFIELD_W, 2, 0, 0, 0, 1, 02),
+            0,
         };
 
         var data = new long[] {
@@ -116,7 +126,10 @@ public class TestLRFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        while (!_engine.cycle()) {}
+        try {
+            for (;;) _engine.cycle();
+        } catch (InvalidInstructionInterrupt e) {
+        }
 
         assertEquals(3L, _engine.getExecOrUserRRegister(2).getW());
     }
@@ -125,6 +138,7 @@ public class TestLRFunction extends TestFunction {
     public void testLR_Indexed_EM() throws MachineInterrupt {
         var code = new long[] {
             lrEM(Constants.JFIELD_W, 5, 3, 0, 0, 1, 01),
+            0,
             };
 
         var data = new long[] {
@@ -156,7 +170,10 @@ public class TestLRFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
 
-        while (!_engine.cycle()) {}
+        try {
+            for (;;) _engine.cycle();
+        } catch (InvalidInstructionInterrupt e) {
+        }
 
         assertEquals(0_15L, _engine.getExecOrUserRRegister(5).getW());
         assertEquals(0_01L, _engine.getExecOrUserXRegister(3).getXI());
@@ -167,6 +184,7 @@ public class TestLRFunction extends TestFunction {
     public void testLR_Q3_EM() throws MachineInterrupt {
         var code = new long[] {
             lrEM(Constants.JFIELD_Q3, 15, 0, 0, 0, 1, 0),
+            0,
         };
 
         var data = new long[] {
@@ -194,7 +212,10 @@ public class TestLRFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        while (!_engine.cycle()) {}
+        try {
+            for (;;) _engine.cycle();
+        } catch (InvalidInstructionInterrupt e) {
+        }
 
         assertEquals(0_445L, _engine.getExecOrUserRRegister(15).getW());
     }

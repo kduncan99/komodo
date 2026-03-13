@@ -41,6 +41,7 @@ public class TestLAFunction extends TestFunction {
     public void testLAImmediate_BM() throws MachineInterrupt {
         var code = new long[] {
             laImm(Constants.JFIELD_U, 0, 0, 0123),
+            0,
             };
 
         var bank = new ArraySlice(code);
@@ -55,7 +56,10 @@ public class TestLAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        while (!_engine.cycle()) {}
+        try {
+            for (;;) _engine.cycle();
+        } catch (InvalidInstructionInterrupt e) {
+        }
 
         assertEquals(0_123, _engine.getExecOrUserARegister(0).getW());
     }
@@ -64,6 +68,7 @@ public class TestLAFunction extends TestFunction {
     public void testLAImmediate_EM() throws MachineInterrupt {
         var code = new long[] {
             laImm(Constants.JFIELD_U, 0, 0, 0123),
+            0,
         };
 
         var bank = new ArraySlice(code);
@@ -78,7 +83,10 @@ public class TestLAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        while (!_engine.cycle()) {}
+        try {
+            for (;;) _engine.cycle();
+        } catch (InvalidInstructionInterrupt e) {
+        }
 
         assertEquals(0_123, _engine.getExecOrUserARegister(0).getW());
     }
@@ -87,6 +95,7 @@ public class TestLAFunction extends TestFunction {
     public void testLA_W_EM() throws MachineInterrupt {
         var code = new long[] {
             laEM(Constants.JFIELD_W, 2, 0, 0, 0, 1, 02),
+            0,
         };
 
         var data = new long[] {
@@ -117,7 +126,10 @@ public class TestLAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        while (!_engine.cycle()) {}
+        try {
+            for (;;) _engine.cycle();
+        } catch (InvalidInstructionInterrupt e) {
+        }
 
         assertEquals(3L, _engine.getExecOrUserARegister(2).getW());
     }
@@ -126,6 +138,7 @@ public class TestLAFunction extends TestFunction {
     public void testLA_Indexed_EM() throws MachineInterrupt {
         var code = new long[] {
             laEM(Constants.JFIELD_W, 5, 3, 1, 0, 1, 01),
+            0,
             };
 
         var data = new long[] {
@@ -157,7 +170,10 @@ public class TestLAFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
 
-        while (!_engine.cycle()) {}
+        try {
+            for (;;) _engine.cycle();
+        } catch (InvalidInstructionInterrupt e) {
+        }
 
         assertEquals(0_15L, _engine.getExecOrUserARegister(5).getW());
         assertEquals(0_01L, _engine.getExecOrUserXRegister(3).getXI());
@@ -201,7 +217,7 @@ public class TestLAFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short) 0_7);
 
         try {
-            for (; ; ) _engine.cycle();
+            for (;;) _engine.cycle();
         } catch (InvalidInstructionInterrupt e) {
         }
 

@@ -418,6 +418,10 @@ public class Engine {
 
         if (basicMode) {
             // Basic Mode.
+            // TODO THis is insufficient. Once a base register has been selected, it is used until
+            //   a subsequent instruction causes an entry to be made to the JUMP HISTORY table
+            //   AND the resulting environment is BASIC mode. It is not re-calculated on every fetch.
+            //   If we run off the end of the currently-selected bank, we throw a Reference Violation.
             var brx = findBasicModeBaseRegisterIndex(programCounter, true);
             bReg = _baseRegisters[brx];
             if (bReg.isVoid() || bReg.getBankDescriptor().isLargeBank()) {
@@ -490,6 +494,58 @@ public class Engine {
     }
 
     /**
+     * Retrieves one or more word values (for double- or multi-word transfer operations).
+     * The assumption is that this call is made for a single iteration of an instruction.
+     * Per doc 9.2, effective relative address (U) will be calculated only once;
+     * however, access checks must succeed for all accesses.
+     * We presume we are retrieving from GRS or from storage - i.e., NOT allowing immediate addressing.
+     * Also, we presume that we are doing full-word transfers - not partial word.
+     * @param grsCheck indicates we should check U to see if it is a GRS location
+     * @param count number of consecutive words to be returned
+     * @return an array containing the requested operands, or null if we are in the middle of indirect address resolution.
+     */
+    public long[] getConsecutiveOperands(
+        final boolean grsCheck,
+        final int count
+    ) throws MachineInterrupt {
+        var ci = _activityStatePacket.getCurrentInstruction();//TODO remove
+        resolveRelativeAddress(false, grsCheck, false);
+        if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+            return null;
+        }
+
+        // Is this a GRS access? If so, we have to ensure we do not go beyond the 0177 limit.
+        if (_scratchpad._operandIsGRS) {
+            long[] result = new long[count];
+            var grsIndex = _scratchpad._operandRelativeAddress;
+            if (grsIndex + count > 0200) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
+            }
+            for (int ox = 0; ox < count; ox++) {
+                if (!isGRSAccessAllowed(grsIndex, _activityStatePacket.getDesignatorRegister().getProcessorPrivilege(), false)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
+                }
+                result[ox] = _generalRegisterSet.getRegister(grsIndex).getW();
+                grsIndex++;
+            }
+            return result;
+        }
+
+        // Storage reference. We've already checked limits and accessibility for the first word (and thus for the bank).
+        // Do a quick check for the length.
+        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
+        var lastAddr = _scratchpad._operandRelativeAddress + count - 1;
+        if (lastAddr > bReg.getBankDescriptor().getUpperLimitNormalized()) {
+            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
+        }
+
+        var offset = (int)(_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        return IntStream.range(0, count)
+                        .mapToLong(ox -> bReg.getStorage().get(offset + ox))
+                        .toArray();
+    }
+
+    /**
      * For external callers to obtain the current instruction in F0.
      */
     public InstructionWord getCurrentInstruction() {
@@ -514,7 +570,7 @@ public class Engine {
         }
     }
 
-    private int getExecOrUserARegisterIndex(
+    public int getExecOrUserARegisterIndex(
         final int registerNumber
     ) {
         return _activityStatePacket.getDesignatorRegister().isExecRegisterSetSelected()
