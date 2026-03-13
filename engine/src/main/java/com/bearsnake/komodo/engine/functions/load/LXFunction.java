@@ -11,6 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Load X instruction
+ * (LX) loads the content of U under j-field control, and stores it in X(a)
  */
 public class LXFunction extends Function {
 

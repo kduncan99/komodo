@@ -11,6 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Load X Short Increment instruction
+ * (LXSI) loads the content of U under j-field control, and stores it in LX(a)[0-11]
  */
 public class LXSIFunction extends Function {
 

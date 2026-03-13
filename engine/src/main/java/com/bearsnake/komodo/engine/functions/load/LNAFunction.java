@@ -4,13 +4,15 @@
 
 package com.bearsnake.komodo.engine.functions.load;
 
+import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Load Negative A instruction
+ * Load Negative Accumulator instruction
+ * (LNA) loads the content of U under j-field control, arithmetically negates it, and stores it in A(a)
  */
 public class LNAFunction extends Function {
 
@@ -29,7 +31,13 @@ public class LNAFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
-        return false;
+        var operand = engine.getOperand(true, true, true, true, false);
+        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        var ci = engine.getCurrentInstruction();
+        engine.getExecOrUserARegister(ci.getA()).setW(Word36.negate(operand));
+        return true;
     }
 }

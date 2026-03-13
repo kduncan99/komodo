@@ -10,7 +10,8 @@ import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Double Load A instruction
+ * No Operation instruction
+ * (NOP) Does nothing functionally, but U is fully developed even though it is not accessed
  */
 public class NOPFunction extends Function {
 

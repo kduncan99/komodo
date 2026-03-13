@@ -10,7 +10,8 @@ import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Load R instruction
+ * Load Register instruction
+ * (LR) loads the content of U under j-field control, and stores it in R(a)
  */
 public class LRFunction extends Function {
 

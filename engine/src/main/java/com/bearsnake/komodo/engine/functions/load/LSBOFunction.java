@@ -11,6 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Load String Bit Offset instruction
+ * (LSBO) Copies the right-most 6 bits of U into X(a)[0:5]
  */
 public class LSBOFunction extends Function {
 

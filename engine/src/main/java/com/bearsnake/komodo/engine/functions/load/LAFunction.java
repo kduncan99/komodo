@@ -10,7 +10,8 @@ import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Load A instruction
+ * Load Accumulator instruction
+ * (LA) loads the content of U under j-field control, and stores it in A(a)
  */
 public class LAFunction extends Function {
 

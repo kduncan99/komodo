@@ -11,6 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Load X Long Modifier instruction
+ * (LXLM) loads the content of U under j-field control, and stores it in LX(a)[12-35]
  */
 public class LXLMFunction extends Function {
 

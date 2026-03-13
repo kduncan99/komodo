@@ -11,6 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Load String Bit Length instruction
+ * (LSBL) Copies the right-most 6 bits of U into X(a)[6:11]
  */
 public class LSBLFunction extends Function {
 
