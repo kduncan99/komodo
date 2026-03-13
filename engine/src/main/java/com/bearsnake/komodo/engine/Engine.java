@@ -37,17 +37,11 @@ public class Engine {
     // from the more basic data items in the Engine class.
     public static class ScratchPad {
         private Function _cachedFunction;
-        //TODO obsolete?        public boolean _complete;
         private InstructionPoint _instructionPoint;
-//        public long _operand;
         private boolean _preventProgramCounterUpdate;
-//        public long _source;
-        public boolean _sourceIsGRS;
-        public BaseRegister _sourceBaseRegister;
-        public int _sourceBaseRegisterIndex;
-        public int _sourceRelativeAddress;
-//        public VirtualAddress _sourceVirtualAddress;
-//        public AbsoluteAddress _sourceAbsoluteAddress;
+        public boolean _operandIsGRS;
+        public int _operandBaseRegisterIndex;
+        public int _operandRelativeAddress;
     }
 
     public final ScratchPad _scratchpad = new ScratchPad();
@@ -64,6 +58,7 @@ public class Engine {
     // to a memory location across interrupt points. It is static because it is most needed when we have
     // multiple active Engine objects.
     private static final HashMap<AbsoluteAddress, Engine> _lockedAddresses = new HashMap<>();
+    private static boolean _lockIsHeldByUs = false;
 
     public Engine() {
         IntStream.range(0, 32).forEach(bx -> _baseRegisters[bx] = BaseRegister.createVoid());
@@ -74,9 +69,12 @@ public class Engine {
      * Clears all the locks held by this engine.
      */
     private void addressClearLocks() {
-        synchronized (_lockedAddresses) {
-            _lockedAddresses.entrySet()
-                            .removeIf(entry -> entry.getValue() == this);
+        if (_lockIsHeldByUs) {
+            synchronized (_lockedAddresses) {
+                _lockedAddresses.entrySet()
+                                .removeIf(entry -> entry.getValue() == this);
+                _lockIsHeldByUs = false;
+            }
         }
     }
 
@@ -94,6 +92,7 @@ public class Engine {
                 return false;
             } else {
                 _lockedAddresses.put(address, this);
+                _lockIsHeldByUs = true;
                 return true;
             }
         }
@@ -124,23 +123,24 @@ public class Engine {
      * @param address the address to unlock.
      * @throws HardwareCheckInterrupt if the address is locked by a different engine.
      */
-    private void addressUnlock(
-        final AbsoluteAddress address
-    ) throws HardwareCheckInterrupt {
-        synchronized (_lockedAddresses) {
-            var eng = _lockedAddresses.get(address);
-            if (eng == this) {
-                _lockedAddresses.remove(address);
-            } else if (eng != null) {
-                // TODO create a log entry
-                var upper = ((long)address.getUpiIndex() << 32) | address.getSegment();
-                throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIP,
-                                                 false,
-                                                 upper,
-                                                 address.getOffset());
-            }
-        }
-    }
+    // TODO I don't think we'll ever use this...?
+//    private void addressUnlock(
+//        final AbsoluteAddress address
+//    ) throws HardwareCheckInterrupt {
+//        synchronized (_lockedAddresses) {
+//            var eng = _lockedAddresses.get(address);
+//            if (eng == this) {
+//                _lockedAddresses.remove(address);
+//            } else if (eng != null) {
+//                // TODO create a log entry
+//                var upper = ((long)address.getUpiIndex() << 32) | address.getSegment();
+//                throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIP,
+//                                                 false,
+//                                                 upper,
+//                                                 address.getOffset());
+//            }
+//        }
+//    }
 
     /**
      * Checks the accessibility of a given relative address in the bank described by this
@@ -286,19 +286,20 @@ public class Engine {
      *      If R1 is NOT zero, we simply return to the caller *without* incrementing PAR.PC even if we could have done so
      *      otherwise. Having INF and EXRF already set, we won't waste time re-evaluating the EXR instruction, we'll
      *      just (re-)execute the target instruction.
+     * @return true between instructions
      * @throws MachineInterrupt for varying architecturally-defined reasons.
      */
-    public void cycle() throws MachineInterrupt {
-        if (!_activityStatePacket.getIndicatorKeyRegister().getInstructionInF0()) {
-            fetchInstruction();
-        }
-
+    public boolean cycle() throws MachineInterrupt {
         var dr = _activityStatePacket.getDesignatorRegister();
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var par = _activityStatePacket.getProgramAddressRegister();
         var r1Reg = getExecOrUserRRegister(1);
         boolean complete = false;
         boolean isEXRF = ikr.isExecuteRepeatedInstruction();
+
+        if (!ikr.getInstructionInF0()) {
+            fetchInstruction();
+        }
 
         // pre-cycle check for EXR - was it executed with R1 already zero?
         // If so, we're done before we even do a single cycle of it.
@@ -332,8 +333,10 @@ public class Engine {
             if (!_scratchpad._preventProgramCounterUpdate) {
                 par.incrementProgramCounter();
             }
-            addressClearLocks();// TODO maybe a scratchpad entry indicating whether we locked anything so we don't have to do this unnecessarily?
+            addressClearLocks();
         }
+
+        return complete;
     }
 
     /**
@@ -411,18 +414,12 @@ public class Engine {
         throws ReferenceViolationInterrupt {
         var basicMode = _activityStatePacket.getDesignatorRegister().isBasicModeEnabled();
         var programCounter = _activityStatePacket.getProgramAddressRegister().getProgramCounter();
-        BaseRegister bReg = null;
-        int offset;
+        BaseRegister bReg;
 
         if (basicMode) {
-            // If we don't know the index of the current basic mode instruction bank, find it and set DB31 accordingly.
-            if (_bmCachedBaseRegisterIndex == 0) {
-                findBasicModeBank(programCounter, true);
-                _activityStatePacket.getDesignatorRegister()
-                                    .setBasicModeBaseRegisterSelection((_bmCachedBaseRegisterIndex == 13) || (_bmCachedBaseRegisterIndex == 15));
-            }
-
-            bReg = _baseRegisters[_bmCachedBaseRegisterIndex];
+            // Basic Mode.
+            var brx = findBasicModeBaseRegisterIndex(programCounter, true);
+            bReg = _baseRegisters[brx];
             if (bReg.isVoid() || bReg.getBankDescriptor().isLargeBank()) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
             }
@@ -430,64 +427,33 @@ public class Engine {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
             }
 
-            offset = programCounter - (int)bReg.getBankDescriptor().getLowerLimitNormalized();
+            _activityStatePacket.getDesignatorRegister()
+                                .setBasicModeBaseRegisterSelection((_bmCachedBaseRegisterIndex == 13) || (_bmCachedBaseRegisterIndex == 15));
         } else {
+            // Extended Mode. Only check to ensure we don't go out of limits
             bReg = _baseRegisters[0];
-            if (bReg.isVoid() || bReg.getBankDescriptor().isLargeBank()) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
+            var bd = bReg.getBankDescriptor();
+            if (programCounter < bd.getLowerLimitNormalized() || programCounter > bd.getUpperLimitNormalized()) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
             }
-
-            var ikr = _activityStatePacket.getIndicatorKeyRegister();
-            checkAccessLimitsAndAccessibility(basicMode, 0, programCounter, true, false, false, new AccessKey(ikr.getAccessKey()));
-            offset = _scratchpad._sourceRelativeAddress;
         }
 
+        int offset = programCounter - (int)bReg.getBankDescriptor().getLowerLimitNormalized();
         _activityStatePacket.getCurrentInstruction().setW(bReg.getStorage().get(offset));
         _activityStatePacket.getIndicatorKeyRegister().setInstructionInF0(true);
         _activityStatePacket.getIndicatorKeyRegister().setExecuteRepeatedInstruction(false);
     }
 
     /**
-     * Checks the execution mode and returns the index of the base register which should be used
-     * for any operand fetch or store, given the current F0 and other processor states.
-     * @param relativeAddress relative address to be checked (only for basic mode)
-     * @return base register index (from 12 to 15) for the proper bank descriptor.
-     * @throws ReferenceViolationInterrupt if the address is not within any based bank
-     */
-    // TODO THIS IS OBSOLETE - use findBasicModeBank() instead
-    public int findBaseRegisterIndex(
-        final int relativeAddress,
-        final boolean dummyToForceError
-    ) throws ReferenceViolationInterrupt {
-//        var dr = _activityStatePacket.getDesignatorRegister();
-//        if (dr.isBasicModeEnabled()) {
-//            return findBasicModeBank(relativeAddress, isFetch);
-//        } else {
-//            return getEffectiveBaseRegisterIndex();
-//        }
-        return 0;
-    }
-
-    public int findBaseRegisterIndexBasicMode(
-        final int relativeAddress,
-        final int dummyArgToForceError
-    ) {
-        return 0;// TODO any place which invokes this needs to invoke findBasicModeBank instead
-    }
-
-    /**
      * FOR BASIC MODE ONLY
      * Takes a relative address and determines which (if any) of the basic mode banks
      * currently based on BDR12-15 is to be selected for that address.
-     * If this is NOT a fetch operation, the BaseRegister index is stored in _scratchpad.sourceBaseRegisterIndex.
-     * If this IS a fetch operation, the base register index is stored in _bmCachedBaseRegisterIndex.
-     * Reference to the actual BaseRegister is stored in _scratchpad.sourceBaseRegister.
      * @param relativeAddress relative address to be checked
      * @param isFetch true if this is part of a fetch operation
+     * @return index of chosen base register
      * @throws ReferenceViolationInterrupt if the address is not within any based bank
      */
-    // TODO rename this to findBasicModeBaseRegister()
-    private void findBasicModeBank(
+    private int findBasicModeBaseRegisterIndex(
         final int relativeAddress,
         final boolean isFetch
     ) throws ReferenceViolationInterrupt {
@@ -497,16 +463,10 @@ public class Engine {
             // If the bank is void, skip it.
             // If the program counter is outside the bank limits, skip it.
             // Otherwise, we found the BDR we want to use.
-            var brIndex = BASE_REGISTER_CANDIDATES.get(db31)[tx];
-            var bReg = _baseRegisters[brIndex];
+            var brx = BASE_REGISTER_CANDIDATES.get(db31)[tx];
+            var bReg = _baseRegisters[brx];
             if (isWithinLimits(bReg, relativeAddress)) {
-                if (isFetch) {
-                    _bmCachedBaseRegisterIndex = brIndex;
-                } else {
-                    _scratchpad._sourceBaseRegisterIndex = brIndex;
-                }
-                _scratchpad._sourceBaseRegister = bReg;
-                return;
+                return brx;
             }
         }
 
@@ -544,18 +504,14 @@ public class Engine {
      * FOR EXTENDED MODE ONLY
      * Determines the index of the base register index indicated by the current processor privilege
      * and the values in F0.B and (possibly) F0.I.
-     * Places the index in _scratchpad.effectiveBaseRegisterIndex,
-     * and a reference to the actual BaseRegister in _scratchpad.effectiveBaseRegister.
      */
-    // TODO rename to getEffectiveBaseRegister()
-    private void getEffectiveBaseRegisterIndex() {
+    private int getEffectiveBaseRegisterIndex() {
         if (_activityStatePacket.getDesignatorRegister().getProcessorPrivilege() < 2) {
             // Use 5 bits for register selection (allowing selection of B16-B32)
-            _scratchpad._sourceBaseRegisterIndex = _activityStatePacket.getCurrentInstruction().getIB();
+            return _activityStatePacket.getCurrentInstruction().getIB();
         } else {
-            _scratchpad._sourceBaseRegisterIndex =  _activityStatePacket.getCurrentInstruction().getB();
+            return _activityStatePacket.getCurrentInstruction().getB();
         }
-        _scratchpad._sourceBaseRegister = _baseRegisters[_scratchpad._sourceBaseRegisterIndex];
     }
 
     private int getExecOrUserARegisterIndex(
@@ -716,57 +672,48 @@ public class Engine {
             return getImmediateOperand();
         }
 
-        // Get the _sourceRelativeAddress.
-        // For BM, this also gets the _sourceBaseRegister and _sourceBaseRegisterIndex.
-        resolveRelativeAddress(false);
+        // Get the _operandRelativeAddress.
+        // For BM, this also gets the _operandBaseRegister and _operandBaseRegisterIndex OR _operandIsGRS.
+        resolveRelativeAddress(false, grsCheck, false);
         if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
             return 0;
         }
 
-        // For EM, we need to explicitly get _sourceBaseRegister and _sourceBaseRegisterIndex.
+        // For EM, we need to explicitly get _operandBaseRegister and _operandBaseRegisterIndex.
         if (!basicMode) {
             getEffectiveBaseRegisterIndex();
         }
 
-        // increment index register if appropriate (now that we've obtained the relative address)
-        incrementIndexRegisterInF0();
-
         // Loading from GRS? If so, go get the value.
         // If grsDest is true, get the full value. Otherwise, honor j-field for partial-word transfer.
         // (Any GRS-to-GRS transfer is full-word, regardless of j-field)
-        if (grsCheck && (basicMode || (_scratchpad._sourceBaseRegisterIndex == 0)) && (_scratchpad._sourceRelativeAddress < 0200)) {
-            if (isGRSAccessAllowed(_scratchpad._sourceRelativeAddress, privilege, false)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
-            }
-
-            // Ig we are GRS or are otherwise not allowing partial word transfers, do a full word.
-            // Otherwise, honor partial word transferring.
-            _scratchpad._sourceIsGRS = true;// TODO do we care?
-            var operand = _generalRegisterSet.getRegister(_scratchpad._sourceRelativeAddress).getW();
+        if (_scratchpad._operandIsGRS) {
+            var operand = _generalRegisterSet.getRegister(_scratchpad._operandRelativeAddress).getW();
             if (!grsDestination && allowPartialWordTransfer) {
                 operand = extractPartialWord(operand, jFIeld, dr.isQuarterWordModeEnabled());
             }
             return operand;
-        } else {
-            // Loading from storage. Do so, then (maybe) honor partial word handling.
-            var key = ikr.getAccessKey();
-            checkAccessLimitsAndAccessibility(basicMode,
-                                              _scratchpad._sourceBaseRegisterIndex,
-                                              _scratchpad._sourceRelativeAddress,
-                                              false, true, false, key);
-
-            if (lockStorage) {
-                addressLockAndWait(_scratchpad._sourceBaseRegister.getBankDescriptor().getBaseAddress());
-            }
-
-            _scratchpad._sourceIsGRS = false;// TODO do we care?
-            var offset = (int) (_scratchpad._sourceRelativeAddress - _scratchpad._sourceBaseRegister.getBankDescriptor().getLowerLimitNormalized());
-            var operand = _scratchpad._sourceBaseRegister.getStorage().get(offset);
-            if (allowPartialWordTransfer) {
-                operand = extractPartialWord(operand, jFIeld, dr.isQuarterWordModeEnabled());
-            }
-            return operand;
         }
+
+        // Loading from storage. Do so, then (maybe) honor partial word handling.
+        var key = ikr.getAccessKey();
+        checkAccessLimitsAndAccessibility(basicMode,
+                                          _scratchpad._operandBaseRegisterIndex,
+                                          _scratchpad._operandRelativeAddress,
+                                          false, true, false, key);
+
+        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
+        if (lockStorage) {
+            addressLockAndWait(bReg.getBankDescriptor().getBaseAddress());
+        }
+
+        _scratchpad._operandIsGRS = false;
+        var offset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        var operand = bReg.getStorage().get(offset);
+        if (allowPartialWordTransfer) {
+            operand = extractPartialWord(operand, jFIeld, dr.isQuarterWordModeEnabled());
+        }
+        return operand;
     }
 
     public ProgramAddressRegister getProgramAddressRegister() {
@@ -785,27 +732,24 @@ public class Engine {
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var basicMode = dr.isBasicModeEnabled();
 
-        // Get the _sourceRelativeAddress.
-        // For BM, this also gets the _sourceBaseRegister and _sourceBaseRegisterIndex.
-        resolveRelativeAddress(false);
+        // Get the _operandRelativeAddress.
+        // For BM, this also gets the _operandBaseRegister and _operandBaseRegisterIndex.
+        resolveRelativeAddress(false, true, true);
         if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
             return;
         }
 
-        // For EM, we need to explicitly get _sourceBaseRegister and _sourceBaseRegisterIndex.
+        // For EM, we need to explicitly get _operandBaseRegister and _operandBaseRegisterIndex.
         if (!basicMode) {
             getEffectiveBaseRegisterIndex();
         }
 
-        // increment index register if appropriate (now that we've obtained the relative address)
-        incrementIndexRegisterInF0();
-
         // If we're not GRS, do the following just for access checks
-        if ((_scratchpad._sourceRelativeAddress > 0177) || (!basicMode && (_scratchpad._sourceBaseRegisterIndex > 0))) {
+        if ((_scratchpad._operandRelativeAddress > 0177) || (!basicMode && (_scratchpad._operandBaseRegisterIndex > 0))) {
             var key = ikr.getAccessKey();
             checkAccessLimitsAndAccessibility(basicMode,
-                                              _scratchpad._sourceBaseRegisterIndex,
-                                              _scratchpad._sourceRelativeAddress,
+                                              _scratchpad._operandBaseRegisterIndex,
+                                              _scratchpad._operandRelativeAddress,
                                               false, true, false, key);
         }
     }
@@ -875,26 +819,49 @@ public class Engine {
     }
 
     /**
+     * Wrapper for the two methods which provide this service for basic and extended modes, respectively.
+     */
+    private void resolveRelativeAddress(
+        final boolean useU,
+        final boolean grsCheck,
+        final boolean ignoreAccessChecks
+    ) throws MachineInterrupt {
+        if (_activityStatePacket.getDesignatorRegister().isBasicModeEnabled()) {
+            resolveBasicModeRelativeAddress(useU, grsCheck, ignoreAccessChecks);
+        } else {
+            resolveExtendedModeRelativeAddress(useU, grsCheck, ignoreAccessChecks);
+        }
+    }
+
+    /**
+     * FOR BASIC MODE ONLY
      * Reads the instruction in F0, and in conjunction with the current ASP environment,
      * develops the relative address as a function of the unsigned 16-bit U or the 12-bit D field,
      * added with the signed modifier portion of the index register indicated by F0.x (presuming that field is not zero).
      * If we hit an access or limits check during indirect address resolution, we propagate the interrupt.
-     * If we have iterated on indirect address resolution, we set _instructionPoint to RESOLVING_ADDRESS.
-     * Otherwise, we set _sourceRelativeAddress to the calculated relative address
-     * and set _instructionPoint to MID_INSTRUCTION.
+     * If we have iterated on indirect address resolution, we set
+     *      _instructionPoint to RESOLVING_ADDRESS.
+     * Otherwise, we set
+     *      _operandRelativeAddress to the calculated relative address
+     *      _operandBaseRegisterIndex to indicate the containing base register
+     *      _instructionPoint to MID_INSTRUCTION.
      * @param useU indicates an Extended Mode Jump instruction which uses the entire U (or HIU) fields for the relative address.
      *             basic mode always uses the u field.
+     * @param grsCheck indicates whether to perform GRS access checks
+     * @param ignoreAccessChecks indicates whether to ignore access checks during address resolution (for ignoreOperand())
      */
-    private void resolveRelativeAddress(
-        final boolean useU
+    private void resolveBasicModeRelativeAddress(
+        final boolean useU,
+        final boolean grsCheck,
+        final boolean ignoreAccessChecks
     ) throws MachineInterrupt {
         var ci = _activityStatePacket.getCurrentInstruction();
         var dr = _activityStatePacket.getDesignatorRegister();
 
         int relAddr = (dr.isBasicModeEnabled() || useU) ? ci.getU() : ci.getD();
         var x = ci.getX();
-        long addend;
         if (x != 0) {
+            long addend;
             var xReg = getExecOrUserXRegister(x);
             if (dr.isExecutive24BitIndexingEnabled() && dr.getProcessorPrivilege() < 2) {
                 addend = xReg.getSignedXM24();
@@ -902,27 +869,97 @@ public class Engine {
                 addend = xReg.getSignedXM();
             }
             relAddr = (int)Word36.addSimple(relAddr, addend);
+            incrementIndexRegisterInF0();
         }
 
-        var basicMode = dr.isBasicModeEnabled();
-        if (ci.getI() != 0 && basicMode && dr.getProcessorPrivilege() > 1) {
+        if (grsCheck && (relAddr < 0200)) {
+            // GRS address
+            if (!ignoreAccessChecks) {
+                if (isGRSAccessAllowed(relAddr, dr.getProcessorPrivilege(), false)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
+                }
+            }
+
+            _scratchpad._operandIsGRS = true;
+            _scratchpad._operandBaseRegisterIndex = 0;
+            _scratchpad._operandRelativeAddress = relAddr;
+            _scratchpad._instructionPoint = InstructionPoint.MID_INSTRUCTION;
+            return;
+        }
+
+        var brx = findBasicModeBaseRegisterIndex(relAddr, false);
+        if (ci.getI() != 0 && dr.getProcessorPrivilege() > 1) {
             // Indirect addressing is indicated - we need to go find the actual word of storage
             // and load a new XHIU from there, into the current instruction.
-            findBasicModeBank(relAddr, false);
-            var key = _activityStatePacket.getIndicatorKeyRegister().getAccessKey();
-            checkAccessLimitsAndAccessibility(true,
-                                              _scratchpad._sourceBaseRegisterIndex,
-                                              relAddr,
-                                              true, false, false, key);
-            var offset = (int)(relAddr - _scratchpad._sourceBaseRegister.getBankDescriptor().getLowerLimitNormalized());
-            var value = _scratchpad._sourceBaseRegister.getStorage().get(offset);
+            var key = _activityStatePacket.getIndicatorKeyRegister()
+                                          .getAccessKey();
+            checkAccessLimitsAndAccessibility(true, brx, relAddr, true, false, false, key);
+            var bReg = _baseRegisters[brx];
+            var offset = (int) (relAddr - bReg.getBankDescriptor()
+                                              .getLowerLimitNormalized());
+            var value = bReg.getStorage()
+                            .get(offset);
             ci.setXHIU(value);
+
             _scratchpad._instructionPoint = InstructionPoint.RESOLVING_ADDRESS;
             return;
         }
 
+        _scratchpad._operandBaseRegisterIndex = brx;
+        _scratchpad._operandRelativeAddress = relAddr;
         _scratchpad._instructionPoint = InstructionPoint.MID_INSTRUCTION;
-        _scratchpad._sourceRelativeAddress = relAddr;
+    }
+
+    /**
+     * FOR EXTENDED MODE ONLY
+     * Reads the instruction in F0, and in conjunction with the current ASP environment,
+     * develops the relative address as a function of the unsigned 16-bit U or the 12-bit D field,
+     * added with the signed modifier portion of the index register indicated by F0.x (presuming that field is not zero).
+     * We return with
+     *      _operandRelativeAddress to the calculated relative address
+     *      _operandBaseRegisterIndex to indicate the containing base register
+     *      _instructionPoint to MID_INSTRUCTION.
+     * @param useU indicates an Extended Mode Jump instruction which uses the entire U (or HIU) fields for the relative address.
+     *             basic mode always uses the u field.
+     * @param grsCheck indicates whether to perform GRS access checks
+     * @param ignoreAccessChecks indicates whether to ignore access checks during address resolution (for ignoreOperand())
+     */
+    private void resolveExtendedModeRelativeAddress(
+        final boolean useU,
+        final boolean grsCheck,
+        final boolean ignoreAccessChecks
+    ) throws ReferenceViolationInterrupt {
+        var ci = _activityStatePacket.getCurrentInstruction();
+        var dr = _activityStatePacket.getDesignatorRegister();
+
+        int relAddr = (dr.isBasicModeEnabled() || useU) ? ci.getU() : ci.getD();
+        var x = ci.getX();
+        if (x != 0) {
+            long addend;
+            var xReg = getExecOrUserXRegister(x);
+            if (dr.isExecutive24BitIndexingEnabled() && dr.getProcessorPrivilege() < 2) {
+                addend = xReg.getSignedXM24();
+            } else {
+                addend = xReg.getSignedXM();
+            }
+            relAddr = (int)Word36.addSimple(relAddr, addend);
+            incrementIndexRegisterInF0();
+        }
+
+        var brx = getEffectiveBaseRegisterIndex();
+        if (grsCheck && (brx == 0) && (relAddr < 0200)) {
+            // GRS address
+            if (!ignoreAccessChecks) {
+                if (isGRSAccessAllowed(_scratchpad._operandRelativeAddress, dr.getProcessorPrivilege(), false)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
+                }
+            }
+            _scratchpad._operandIsGRS = true;
+        }
+
+        _scratchpad._operandBaseRegisterIndex = brx;
+        _scratchpad._operandRelativeAddress = relAddr;
+        _scratchpad._instructionPoint = InstructionPoint.MID_INSTRUCTION;
     }
 
     /**

@@ -29,6 +29,9 @@ public class NOPFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         engine.ignoreOperand();
+        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
         return true;
     }
 }

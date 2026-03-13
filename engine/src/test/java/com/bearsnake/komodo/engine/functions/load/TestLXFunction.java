@@ -53,7 +53,9 @@ public class TestLXFunction extends TestFunction {
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-        _engine.cycle();
+
+        while (!_engine.cycle()) {}
+
         assertEquals(0_123, _engine.getExecOrUserXRegister(0).getW());
     }
 
@@ -74,7 +76,9 @@ public class TestLXFunction extends TestFunction {
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-        _engine.cycle();
+
+        while (!_engine.cycle()) {}
+
         assertEquals(0_123, _engine.getExecOrUserXRegister(0).getW());
     }
 
@@ -111,7 +115,9 @@ public class TestLXFunction extends TestFunction {
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-        _engine.cycle();
+
+        while (!_engine.cycle()) {}
+
         assertEquals(3L, _engine.getExecOrUserXRegister(2).getW());
     }
 
@@ -149,7 +155,9 @@ public class TestLXFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
-        _engine.cycle();
+
+        while (!_engine.cycle()) {}
+
         assertEquals(0_15L, _engine.getExecOrUserXRegister(5).getW());
         assertEquals(0_01L, _engine.getExecOrUserXRegister(3).getXI());
         assertEquals(0_04L, _engine.getExecOrUserXRegister(3).getXM());
@@ -185,7 +193,9 @@ public class TestLXFunction extends TestFunction {
                .setQuarterWordModeEnabled(true)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-        _engine.cycle();
+
+        while (!_engine.cycle()) {}
+
         assertEquals(0_445L, _engine.getExecOrUserXRegister(15).getW());
     }
 }
