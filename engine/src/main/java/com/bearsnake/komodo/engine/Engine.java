@@ -775,6 +775,43 @@ public class Engine {
     }
 
     /**
+     * Specifically for the NOP instruction.  We go through the process of developing U,
+     * but we do not retrieve the operand therefrom. This means that we do no access checks except in the case of checking
+     * for read access during indirect address resolution.
+     * Returns complete == false if we are in the middle of resolving addresses,
+     * or an interrupt if we fail some sort of limits or access checking.
+     */
+    public void ignoreOperand() throws MachineInterrupt {
+        var dr = _activityStatePacket.getDesignatorRegister();
+        var ikr = _activityStatePacket.getIndicatorKeyRegister();
+        var basicMode = dr.isBasicModeEnabled();
+
+        // Get the _sourceRelativeAddress.
+        // For BM, this also gets the _sourceBaseRegister and _sourceBaseRegisterIndex.
+        resolveRelativeAddress(false);
+        if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+            return;
+        }
+
+        // For EM, we need to explicitly get _sourceBaseRegister and _sourceBaseRegisterIndex.
+        if (!basicMode) {
+            getEffectiveBaseRegisterIndex();
+        }
+
+        // increment index register if appropriate (now that we've obtained the relative address)
+        incrementIndexRegisterInF0();
+
+        // If we're not GRS, do the following just for access checks
+        if ((_scratchpad._sourceRelativeAddress > 0177) || (!basicMode && (_scratchpad._sourceBaseRegisterIndex > 0))) {
+            var key = ikr.getAccessKey();
+            checkAccessLimitsAndAccessibility(basicMode,
+                                              _scratchpad._sourceBaseRegisterIndex,
+                                              _scratchpad._sourceRelativeAddress,
+                                              false, true, false, key);
+        }
+    }
+
+    /**
      * Checks the current instruction and modes to determine whether register X(x)
      * should be incremented, and if so it performs the appropriate incrementation.
      */

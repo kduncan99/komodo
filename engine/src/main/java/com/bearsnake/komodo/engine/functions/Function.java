@@ -14,6 +14,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 
 import static com.bearsnake.komodo.engine.functions.Function.AFieldSemantics.UNUSED;
 
@@ -130,9 +131,15 @@ public abstract class Function {
             return Word36.toOctal(iWord.getW());
         }
 
-        var funcCode = dReg.isBasicModeEnabled()
-                       ? func.getBasicModeFunctionCodes().getFirst()
-                       : func.getExtendedModeFunctionCodes().getFirst();
+        FunctionCode funcCode;
+        try {
+            funcCode = dReg.isBasicModeEnabled()
+                           ? func.getBasicModeFunctionCodes().getFirst()
+                           : func.getExtendedModeFunctionCodes().getFirst();
+        } catch (NoSuchElementException ex) {
+            return Word36.toOctal(iWord.getW());
+        }
+
         var sb = new StringBuilder();
 
         // first display field - mnemonic and optional j-field designation.

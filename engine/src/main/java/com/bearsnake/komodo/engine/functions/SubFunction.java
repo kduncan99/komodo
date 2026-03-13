@@ -16,11 +16,14 @@ import java.util.HashMap;
  */
 public abstract class SubFunction extends Function {
 
-    private final HashMap<Integer, Function> _functions = new HashMap<>();
+    protected final HashMap<Integer, Function> _functions = new HashMap<>();
 
     protected SubFunction(String mnemonic) {
         super(mnemonic);
     }
+
+    //TODO remove later
+    public abstract void debug(final String prefix);
 
     @Override
     public final boolean execute(

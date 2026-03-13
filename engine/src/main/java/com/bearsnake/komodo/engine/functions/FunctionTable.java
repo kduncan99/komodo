@@ -6,21 +6,37 @@ package com.bearsnake.komodo.engine.functions;
 
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.DesignatorRegister;
+import com.bearsnake.komodo.engine.functions.jump.*;
 import com.bearsnake.komodo.engine.functions.load.*;
-import com.bearsnake.komodo.engine.interrupts.HardwareDefaultInterrupt;
+import com.bearsnake.komodo.engine.functions.special.*;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 
 import java.util.HashMap;
 
 public abstract class FunctionTable {
 
+    public static class CollisionException extends RuntimeException {
+
+        public CollisionException(
+            final Function f1,
+            final Function f2
+        ) {
+            super("Function code collision between " + f1.getMnemonic() + " and " + f2.getMnemonic());
+        }
+    }
+
     private static final Function[] ALL_FUNCTIONS = new Function[]{
         new DLFunction(),
         new DLMFunction(),
         new DLNFunction(),
+        new HJFunction(),
+        new HLTJFunction(),
+        new JFunction(),
+        new JKFunction(),
         new LAFunction(),
         new LAQWFunction(),
         new LMAFunction(),
+        new LMJFunction(),
         new LNAFunction(),
         new LNMAFunction(),
         new LRFunction(),
@@ -32,6 +48,8 @@ public abstract class FunctionTable {
         new LXLMFunction(),
         new LXMFunction(),
         new LXSIFunction(),
+        new NOPFunction(),
+        new SLJFunction(),
     };
 
     private static boolean _isInitialized = false;
@@ -49,7 +67,11 @@ public abstract class FunctionTable {
 
         if ((j == null) && (a == null)) {
             // This is f-field sensitive, with no reliance on j or a fields.
-            return topLevel.put(f, function) == null;
+            var existing = topLevel.put(f, function);
+            if (existing != null) {
+                throw new CollisionException(existing, function);
+            }
+            return true;
         }
 
         if (j != null) {
@@ -60,8 +82,8 @@ public abstract class FunctionTable {
             if (existing == null) {
                 // Nothing at the targeted f location - create a new JSubFunction and pass it this function we're processing.
                 // If the function is f|j|a sensitive, the JSubFunction will handle the recursion down to an ASubFunction.
-                var jSub = new JSubFunction(String.format("f%03o", f));
-                topLevel.put(f, existing);
+                var jSub = new JSubFunction(String.format("f%03oj", f));
+                topLevel.put(f, jSub);
                 return jSub.putFunction(functionCode, function);
             }
 
@@ -70,7 +92,7 @@ public abstract class FunctionTable {
                 return jSub.putFunction(functionCode, function);
             }
 
-            return false;
+            throw new CollisionException(existing, function);
         }
 
         // Function code is f|a sensitive. Algorithm is basically the same as above for f|j.
@@ -78,8 +100,8 @@ public abstract class FunctionTable {
         if (existing == null) {
             // Nothing at the targeted f location - create a new JSubFunction and pass it this function we're processing.
             // If the function is f|j|a sensitive, the JSubFunction will handle the recursion down to an ASubFunction.
-            var aSub = new ASubFunction(String.format("f%03o", f));
-            topLevel.put(f, existing);
+            var aSub = new ASubFunction(String.format("f%03oa", f));
+            topLevel.put(f, aSub);
             return aSub.putFunction(functionCode, function);
         }
 
@@ -88,37 +110,47 @@ public abstract class FunctionTable {
             return jSub.putFunction(functionCode, function);
         }
 
-        return false;
+        throw new CollisionException(existing, function);
     }
 
-    private static boolean initializeLookups() {
-        var error = false;
+    private static void initializeLookups() {
         for (var func : ALL_FUNCTIONS) {
             for (var fc : func.getBasicModeFunctionCodes()) {
-                if (!ingestFunction(BASIC_MODE_TOP_LEVEL, func, fc)) {
-                    error = true;
-                }
+                ingestFunction(BASIC_MODE_TOP_LEVEL, func, fc);
             }
             for (var fc : func.getExtendedModeFunctionCodes()) {
-                if (!ingestFunction(EXTENDED_MODE_TOP_LEVEL, func, fc)) {
-                    error = true;
-                }
+                ingestFunction(EXTENDED_MODE_TOP_LEVEL, func, fc);
             }
         }
-        _isInitialized = !error;
-        return _isInitialized;
+        _isInitialized = true;
+
+        //TODO remove
+//        for (var e : BASIC_MODE_TOP_LEVEL.entrySet()) {
+//            var fc = e.getKey();
+//            var func = e.getValue();
+//            System.out.printf("BM:%03o: %s%n", fc, func.getMnemonic());
+//            if (func instanceof SubFunction sf) {
+//                sf.debug("  ");
+//            }
+//        }
+//        for (var e : EXTENDED_MODE_TOP_LEVEL.entrySet()) {
+//            var fc = e.getKey();
+//            var func = e.getValue();
+//            System.out.printf("BM:%03o: %s%n", fc, func.getMnemonic());
+//            if (func instanceof SubFunction sf) {
+//                sf.debug("  ");
+//            }
+//        }
+        //TODO end
     }
 
     public static Function lookupFunction(
         final DesignatorRegister dReg,
         final InstructionWord iWord
-    ) throws InvalidInstructionInterrupt,
-             HardwareDefaultInterrupt {
+    ) throws InvalidInstructionInterrupt {
         synchronized (FunctionTable.class) {
             if (!_isInitialized) {
-                if (!initializeLookups()) {
-                    throw new HardwareDefaultInterrupt();
-                }
+                initializeLookups();
             }
 
             var topLevel = dReg.isBasicModeEnabled() ? BASIC_MODE_TOP_LEVEL : EXTENDED_MODE_TOP_LEVEL;

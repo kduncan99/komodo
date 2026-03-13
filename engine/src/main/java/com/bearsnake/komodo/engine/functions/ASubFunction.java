@@ -7,25 +7,34 @@ package com.bearsnake.komodo.engine.functions;
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 
-import java.util.HashMap;
-
 /**
  * Handles routing of functions which have a common f field and possibly a j field,
  * and are further discriminated by an a subfield.
  */
 public class ASubFunction extends SubFunction {
 
-    private final HashMap<Integer, Function> _functions = new HashMap<>();
-
     protected ASubFunction(String mnemonic) {
         super(mnemonic);
+    }
+
+    //TODO remove later
+    @Override
+    public void debug(final String prefix) {
+        for (var e : _functions.entrySet()) {
+            var fc = e.getKey();
+            var func = e.getValue();
+            System.out.printf("%sa=%03o: %s%n", prefix, fc, func.getMnemonic());
+            if (func instanceof SubFunction sf) {
+                sf.debug(prefix + "  ");
+            }
+        }
     }
 
     @Override
     Function lookupFunction(
         final InstructionWord iWord
     ) throws InvalidInstructionInterrupt {
-        var func = _functions.get((int)iWord.getA());
+        var func = _functions.get(iWord.getA());
         if (func == null) {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
         }
@@ -38,6 +47,11 @@ public class ASubFunction extends SubFunction {
         final Function function
     ) {
         // There should be no subFunctions under an ASubFunction. This is easy.
-        return _functions.put(functionCode.getAField(), function) == null;
+        var existing = _functions.get(functionCode.getAField());
+        if (existing != null) {
+            throw new FunctionTable.CollisionException(existing, function);
+        }
+        _functions.put(functionCode.getAField(), function);
+        return true;
     }
 }

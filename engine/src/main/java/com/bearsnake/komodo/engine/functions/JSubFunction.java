@@ -7,27 +7,38 @@ package com.bearsnake.komodo.engine.functions;
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 
-import java.util.HashMap;
-
 /**
  * Handles routing of functions which have a common f field,
  * and are further discriminated by a j subfield.
  */
 public class JSubFunction extends SubFunction {
 
-    private final HashMap<Integer, Function> _functions = new HashMap<>();
-
     protected JSubFunction(String mnemonic) {
         super(mnemonic);
+    }
+
+    //TODO remove later
+    @Override
+    public void debug(final String prefix) {
+        for (var e : _functions.entrySet()) {
+            var fc = e.getKey();
+            var func = e.getValue();
+            System.out.printf("%sj=%03o: %s%n", prefix, fc, func.getMnemonic());
+            if (func instanceof SubFunction sf) {
+                sf.debug(prefix + "  ");
+            }
+        }
     }
 
     @Override
     Function lookupFunction(
         final InstructionWord iWord
     ) throws InvalidInstructionInterrupt {
-        var func = _functions.get((int)iWord.getJ());
+        var func = _functions.get(iWord.getJ());
         if (func == null) {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
+        } else if (func instanceof SubFunction sf) {
+            func = sf.lookupFunction(iWord);
         }
         return func;
     }
@@ -48,7 +59,7 @@ public class JSubFunction extends SubFunction {
             }
 
             // No, this is f|j|a sensitive. We need an ASubFunction
-            var asf = new ASubFunction(String.format("j%02o", j));
+            var asf = new ASubFunction(String.format("j%03oa", j));
             asf.putFunction(functionCode, function);
             _functions.put(j, asf);
             return true;
@@ -60,6 +71,6 @@ public class JSubFunction extends SubFunction {
         }
 
         // No, there is a collision of some kind here. Stop.
-        return false;
+        throw new FunctionTable.CollisionException(existing, function);
     }
 }

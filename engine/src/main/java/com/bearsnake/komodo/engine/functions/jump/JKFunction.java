@@ -19,9 +19,8 @@ public class JKFunction extends Function {
     // So... we just use a=01 for JK. It has no function anyway.
     // If the day ever comes when we need to support a > 01, we can do something here to make it happen.
     public JKFunction() {
-        super("J");
-        setBasicModeFunctionCode(new FunctionCode(0_74).setJField(0_04).setAField(0_00));
-        setExtendedModeFunctionCode(new FunctionCode(0_74).setJField(0_15).setAField(0_04));
+        super("JK");
+        setBasicModeFunctionCode(new FunctionCode(0_74).setJField(0_04).setAField(0_01));
 
         setAFieldSemantics(AFieldSemantics.UNUSED);
         setImmediateMode(false);
