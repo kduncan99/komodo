@@ -116,6 +116,30 @@ public abstract class Function {
 
     // --------------------------------------------------------------------------------------------
 
+    /**
+     * Takes care of the various housekeeping tasks associated with actually taking a jump.
+     * This is for transferring control within the current code bank, whether EM or BM.
+     */
+    protected void doJump(
+        final Engine engine,
+        final long jumpTarget
+    ) {
+        engine.preventPCUpdate();
+
+        var par = engine.getProgramAddressRegister();
+        var oldAddress = par.getProgramCounter();
+        par.setProgramCounter((int)(jumpTarget & 0_777777));
+
+        var dr = engine.getDesignatorRegister();
+        if (dr.isBasicModeEnabled()) {
+            engine.clearBMCachedBaseRegisterIndex();
+        }
+
+        engine.createJumpHistory(oldAddress);
+    }
+
+    // --------------------------------------------------------------------------------------------
+
     // Interprets a function to the extent one can do so given only a
     // designator register to indicate relevant modes, and the instruction word
     // which we are interpreting.
@@ -201,9 +225,9 @@ public abstract class Function {
                     var u = iWord.getU();
                     sb.append("0");
                     if (u != 0) {
-                        sb.append(Integer.toOctalString((int)u));
+                        sb.append(Integer.toOctalString(u));
                     }
-                    sb.append(",").append(x);
+                    sb.append(",");
                     if (iWord.getH() > 0) {
                         sb.append("*");
                     }
@@ -212,12 +236,12 @@ public abstract class Function {
                     var u = iWord.getU() | (iWord.getH() << 17) | (iWord.getI() << 16);
                     sb.append("0");
                     if (u != 0) {
-                        sb.append(Integer.toOctalString((int)u));
+                        sb.append(Integer.toOctalString(u));
                     }
                 }
             } else {
                 // Interpret d-field
-                var d = (int) iWord.getD();
+                var d = iWord.getD();
                 sb.append("0");
                 if (d > 0) {
                     sb.append(Integer.toOctalString(d));

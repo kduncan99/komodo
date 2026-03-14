@@ -10,7 +10,6 @@ import com.bearsnake.komodo.engine.BankDescriptor;
 import com.bearsnake.komodo.engine.BankType;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.TestFunction;
-import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,8 +17,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestDLMFunction extends TestFunction {
-
-    private Engine _engine;
 
     private long dlmBM(long a, long x, long h, long i, long u) {
         return fjaxhiu(071, 015, a, x, h, i, u);
@@ -73,10 +70,7 @@ public class TestDLMFunction extends TestFunction {
 
         _engine.getExecOrUserXRegister(2).setXI(0).setXM(0_02);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_000001_000001L, _engine.getExecOrUserARegister(0).getW());
         assertEquals(0_400002_000002L, _engine.getExecOrUserARegister(1).getW());
@@ -121,10 +115,7 @@ public class TestDLMFunction extends TestFunction {
 
         _engine.getExecOrUserXRegister(2).setXI(0).setXM(0_02);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_000000_000000L, _engine.getExecOrUserARegister(10).getW());
         assertEquals(0_777775_777775L, _engine.getExecOrUserARegister(11).getW());
@@ -175,10 +166,7 @@ public class TestDLMFunction extends TestFunction {
         _engine.getExecOrUserXRegister(3).setXI(0_00).setXM(0_06);
         _engine.getExecOrUserXRegister(4).setXI(0_04).setXM(0_04);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_000002_000002L, _engine.getExecOrUserXRegister(2).getW());
         assertEquals(0_000000_000006L, _engine.getExecOrUserXRegister(3).getW());

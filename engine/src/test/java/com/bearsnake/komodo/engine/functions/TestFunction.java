@@ -1,6 +1,11 @@
 package com.bearsnake.komodo.engine.functions;
 
+import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
+
 public abstract class TestFunction {
+
+    protected Engine _engine;
 
     protected long fjaxhibd(long f, long j, long a, long x, long h, long i, long b, long d) {
         return ((f & 077) << 30) | ((j & 017) << 26) | ((a & 017) << 22) | ((x & 017) << 18)
@@ -14,6 +19,10 @@ public abstract class TestFunction {
 
     protected long fjaxu(long f, long j, long a, long x, long u) {
         return ((f & 077) << 30) | ((j & 017) << 26) | ((a & 017) << 22) | ((x & 017) << 18) | (u & 0777777);
+    }
+
+    protected long data(long w) {
+        return w;
     }
 
     protected long data(long h1, long h2) {
@@ -30,5 +39,29 @@ public abstract class TestFunction {
 
     protected long data(long s1, long s2, long s3, long s4, long s5, long s6) {
         return ((s1 & 077) << 30) | ((s2 & 077) << 24) | ((s3 & 077) << 18) | ((s4 & 077) << 12) | ((s5 & 077) << 6) | (s6 & 077);
+    }
+
+    protected void run() throws MachineInterrupt {
+        boolean stop = false;
+        while (!stop) {
+            var interrupt = _engine.pollInterrupt();
+            if (interrupt != null) {
+                if (interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.InvalidInstruction) {
+                    var ci = _engine.getCurrentInstruction();
+                    if (ci.getW() == 0) {
+                        // this is our normal stop
+                        stop = true;
+                    } else {
+                        System.out.printf("Caught %s\n", interrupt);
+                        stop = true;
+                    }
+                } else {
+                    System.out.printf("Caught %s\n", interrupt);
+                    stop = true;
+                }
+            } else {
+                _engine.cycle();
+            }
+        }
     }
 }

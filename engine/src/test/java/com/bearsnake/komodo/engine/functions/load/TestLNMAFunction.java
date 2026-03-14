@@ -16,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestLNMAFunction extends TestFunction {
 
-    private Engine _engine;
-
     private long lnmaImm(long j, long a, long x, long u) {
         return fjaxu(013, j, a, x, u);
     }
@@ -58,10 +56,7 @@ public class TestLNMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_777777_777654L, _engine.getExecOrUserARegister(0).getW());
         assertEquals(0_777777_000004L, _engine.getExecOrUserARegister(1).getW());
@@ -104,10 +99,7 @@ public class TestLNMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_777777_777774L, _engine.getExecOrUserARegister(12).getW());
         assertEquals(0_777777_777773L, _engine.getExecOrUserARegister(13).getW());
@@ -149,10 +141,7 @@ public class TestLNMAFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_777777_777762L, _engine.getExecOrUserARegister(5).getW());
         assertEquals(0_01L, _engine.getExecOrUserXRegister(3).getXI());
@@ -195,10 +184,7 @@ public class TestLNMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short) 0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_777777_775566L, _engine.getExecOrUserARegister(0).getW());
         assertEquals(0_777777_776677L, _engine.getExecOrUserARegister(1).getW());
@@ -240,10 +226,7 @@ public class TestLNMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_777777_777665L, _engine.getExecOrUserARegister(12).getW());
         assertEquals(0_777777_777544L, _engine.getExecOrUserARegister(13).getW());

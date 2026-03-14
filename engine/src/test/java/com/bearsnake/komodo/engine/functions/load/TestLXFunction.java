@@ -16,8 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestLXFunction extends TestFunction {
 
-    private Engine _engine;
-
     private long lxImm(long j, long a, long x, long u) {
         return fjaxu(027, j, a, x, u);
     }
@@ -56,10 +54,7 @@ public class TestLXFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_123, _engine.getExecOrUserXRegister(0).getW());
     }
@@ -83,10 +78,7 @@ public class TestLXFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_123, _engine.getExecOrUserXRegister(0).getW());
     }
@@ -126,10 +118,7 @@ public class TestLXFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(3L, _engine.getExecOrUserXRegister(2).getW());
     }
@@ -170,10 +159,7 @@ public class TestLXFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_15L, _engine.getExecOrUserXRegister(5).getW());
         assertEquals(0_01L, _engine.getExecOrUserXRegister(3).getXI());
@@ -212,10 +198,7 @@ public class TestLXFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_445L, _engine.getExecOrUserXRegister(15).getW());
     }

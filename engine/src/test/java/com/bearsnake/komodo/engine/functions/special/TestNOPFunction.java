@@ -19,8 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestNOPFunction extends TestFunction {
 
-    private Engine _engine;
-
     private long nopEM(long x, long h, long i, long b, long d) {
         return fjaxhibd(073, 014, 0, x, h, i, b, d);
     }
@@ -40,6 +38,7 @@ public class TestNOPFunction extends TestFunction {
     public void testNOP_EM() throws MachineInterrupt {
         var code = new long[] {
             nopEM(0, 0, 0, 0, 0),
+            0,
         };
 
         var bank0 = new ArraySlice(code);
@@ -54,7 +53,7 @@ public class TestNOPFunction extends TestFunction {
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-        _engine.cycle();
+        run();
     }
 
     @Test
@@ -77,16 +76,14 @@ public class TestNOPFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            while (_engine.cycle()) ;
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
     }
 
     @Test
     public void testNOP_Indirect() throws MachineInterrupt {
         var code = new long[] {
             nopBM(1, 1, 1, 040000),
+            0,
         };
         var data = new long[] {
             fjaxhiu(0, 0, 0, 2, 1, 1, 040002),// here first
@@ -122,7 +119,7 @@ public class TestNOPFunction extends TestFunction {
         _engine.getExecOrUserXRegister(3).setXI(0_03).setXM(0_0);
         _engine.getExecOrUserXRegister(4).setXI(0_04).setXM(0_0);
 
-        while (!_engine.cycle()) {}
+        run();
 
         assertEquals(010001, _engine.getProgramAddressRegister().getProgramCounter());
         assertEquals(01, _engine.getExecOrUserXRegister(1).getXM());

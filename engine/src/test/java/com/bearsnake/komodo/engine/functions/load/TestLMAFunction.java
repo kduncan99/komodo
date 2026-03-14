@@ -7,7 +7,6 @@ package com.bearsnake.komodo.engine.functions.load;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.TestFunction;
-import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,8 +14,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestLMAFunction extends TestFunction {
-
-    private Engine _engine;
 
     private long lmaImm(long j, long a, long x, long u) {
         return fjaxu(012, j, a, x, u);
@@ -58,10 +55,7 @@ public class TestLMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_123L, _engine.getExecOrUserARegister(0).getW());
         assertEquals(0_777773L, _engine.getExecOrUserARegister(1).getW());
@@ -104,10 +98,7 @@ public class TestLMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_03L, _engine.getExecOrUserARegister(12).getW());
         assertEquals(0_04L, _engine.getExecOrUserARegister(13).getW());
@@ -149,10 +140,7 @@ public class TestLMAFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_15L, _engine.getExecOrUserARegister(5).getW());
         assertEquals(0_01L, _engine.getExecOrUserXRegister(3).getXI());
@@ -195,10 +183,7 @@ public class TestLMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short) 0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_2211L, _engine.getExecOrUserARegister(0).getW());
         assertEquals(0_1100L, _engine.getExecOrUserARegister(1).getW());
@@ -240,10 +225,7 @@ public class TestLMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        try {
-            for (;;) _engine.cycle();
-        } catch (InvalidInstructionInterrupt e) {
-        }
+        run();
 
         assertEquals(0_112L, _engine.getExecOrUserARegister(12).getW());
         assertEquals(0_233L, _engine.getExecOrUserARegister(13).getW());

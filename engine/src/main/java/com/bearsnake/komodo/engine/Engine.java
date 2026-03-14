@@ -11,12 +11,15 @@ import com.bearsnake.komodo.engine.functions.FunctionTable;
 import com.bearsnake.komodo.engine.interrupts.*;
 
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.stream.IntStream;
 
 /**
  * Our design specifies the possibility of using multiple Engine objects, all sharing the same memory.
  */
 public class Engine {
+
+    private static final int JUMP_HISTORY_TABLE_SIZE = 512;
 
     public enum InstructionPoint {
         BETWEEN_INSTRUCTIONS,
@@ -26,11 +29,27 @@ public class Engine {
 
     private final ActiveBaseTable _activeBaseTable = new ActiveBaseTable();
     private final ActivityStatePacket _activityStatePacket = new ActivityStatePacket();
-    //TODO breakpoint?
-    private final BaseRegister _baseRegisters[] = new BaseRegister[32];
-    private int _bmCachedBaseRegisterIndex = 0; // only applies to basic mode - if 0, it is not valid; otherwise it is 12:15
+    private final BaseRegister[] _baseRegisters = new BaseRegister[32];
     private final GeneralRegisterSet _generalRegisterSet = new GeneralRegisterSet();
+
+    // Normally PC is incremented at the end of instruction execution.
+    // Transfer instructions set this flag to prevent this behavior, as they have already
+    // set the PC to the desired value.
+    private boolean _preventProgramCounterUpdate = false;
+
+    // This only applies to basic mode - if it is set (12:15) it indicates the base register which contains
+    // the code we are currently executing. In this case, we do not try to resolve the next PAR.PC to a
+    // BM bank - we use this setting. It is recalculated when an instruction causes an entry to be made to
+    // the JUMP HISTORY table and results in the environment being BASIC mode.
+    private int _bmCachedBaseRegisterIndex = 0; // only applies to basic mode - if 0, it is not valid; otherwise it is 12:15
+
+    // Set true if you want to log every instruction executed.
+    // Don't do this if you want good performance.
     private boolean _traceInstructions = true;
+
+    private final long[] _jumpHistoryTable = new long[JUMP_HISTORY_TABLE_SIZE];
+    private int _jumpHistoryTableFirstIndex = 0;    // index of first existing entry in the jump history table
+    private int _jumpHistoryTableNextIndex = 0;     // where we put the next entry
 
     // ScratchPad is a collection of related data items which are manipulated during the processes of
     // developing an address for fetching, reading, and writing. They are kept here to remove the noise
@@ -38,7 +57,6 @@ public class Engine {
     public static class ScratchPad {
         private Function _cachedFunction;
         private InstructionPoint _instructionPoint;
-        private boolean _preventProgramCounterUpdate;
         public boolean _operandIsGRS;
         public int _operandBaseRegisterIndex;
         public int _operandRelativeAddress;
@@ -59,6 +77,11 @@ public class Engine {
     // multiple active Engine objects.
     private static final HashMap<AbsoluteAddress, Engine> _lockedAddresses = new HashMap<>();
     private static boolean _lockIsHeldByUs = false;
+
+    // Interrupt Stack - there may be at most one of each class of interrupt posted on the stack.
+    // In practice there will rarely be more than one or two.
+    // Caller must poll for interrupts before calling cycle().
+    private final TreeMap<MachineInterrupt.InterruptClass, MachineInterrupt> _interruptStack = new TreeMap<>();
 
     public Engine() {
         IntStream.range(0, 32).forEach(bx -> _baseRegisters[bx] = BaseRegister.createVoid());
@@ -115,32 +138,6 @@ public class Engine {
             }
         }
     }
-
-    /**
-     * Unlocks the given memory address.
-     * If the address is not locked, nothing happens.
-     * If the address is locked by some other engine, we throw a HardwareCheckInterrupt
-     * @param address the address to unlock.
-     * @throws HardwareCheckInterrupt if the address is locked by a different engine.
-     */
-    // TODO I don't think we'll ever use this...?
-//    private void addressUnlock(
-//        final AbsoluteAddress address
-//    ) throws HardwareCheckInterrupt {
-//        synchronized (_lockedAddresses) {
-//            var eng = _lockedAddresses.get(address);
-//            if (eng == this) {
-//                _lockedAddresses.remove(address);
-//            } else if (eng != null) {
-//                // TODO create a log entry
-//                var upper = ((long)address.getUpiIndex() << 32) | address.getSegment();
-//                throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIP,
-//                                                 false,
-//                                                 upper,
-//                                                 address.getOffset());
-//            }
-//        }
-//    }
 
     /**
      * Checks the accessibility of a given relative address in the bank described by this
@@ -238,8 +235,34 @@ public class Engine {
     }
 
     /**
+     * For various jump-like operations, this is used to clear the cached base register index.
+     */
+    public void clearBMCachedBaseRegisterIndex() {
+        _bmCachedBaseRegisterIndex = 0;
+    }
+
+    /**
+     * Creates a Jump History Entry.
+     * Since this can create a between-instructions interrupt, it should only be invoked just prior
+     * to the completion of the instruction which causes it.
+     */
+    public void createJumpHistory(final long entry) {
+        _jumpHistoryTable[_jumpHistoryTableNextIndex++] = entry;
+        if (_jumpHistoryTableNextIndex == JUMP_HISTORY_TABLE_SIZE) {
+            _jumpHistoryTableNextIndex = 0;
+            if (_jumpHistoryTableNextIndex == _jumpHistoryTableFirstIndex) {
+                postInterrupt(new JumpHistoryFullInterrupt());
+                _jumpHistoryTableFirstIndex++;
+                if (_jumpHistoryTableFirstIndex == JUMP_HISTORY_TABLE_SIZE) {
+                    _jumpHistoryTableFirstIndex = 0;
+                }
+            }
+        }
+    }
+
+    /**
      * DoCycle executes one cycle
-     * caller should disposition any pending interrupts before invoking this...
+     * Caller should disposition any pending interrupts before invoking this...
      * Since the engine is not specifically hardware (could be an executor for a native mode OS),
      * we don't actually know how to handle the interrupts.
      * In any event, we are driven by the following two flags in the indicator key register:
@@ -287,9 +310,8 @@ public class Engine {
      *      otherwise. Having INF and EXRF already set, we won't waste time re-evaluating the EXR instruction, we'll
      *      just (re-)execute the target instruction.
      * @return true between instructions
-     * @throws MachineInterrupt for varying architecturally-defined reasons.
      */
-    public boolean cycle() throws MachineInterrupt {
+    public boolean cycle() {
         var dr = _activityStatePacket.getDesignatorRegister();
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var par = _activityStatePacket.getProgramAddressRegister();
@@ -297,43 +319,47 @@ public class Engine {
         boolean complete = false;
         boolean isEXRF = ikr.isExecuteRepeatedInstruction();
 
-        if (!ikr.getInstructionInF0()) {
-            fetchInstruction();
-        }
-
-        // pre-cycle check for EXR - was it executed with R1 already zero?
-        // If so, we're done before we even do a single cycle of it.
-        if (isEXRF) {
-            if (r1Reg.isZero()) {
-                complete = true;
+        try {
+            if (!ikr.getInstructionInF0()) {
+                fetchInstruction();
             }
-        }
 
-        if (!complete) {
-            complete = executeInstruction();
-            if (ikr.isExecuteRepeatedInstruction()) {
-                if (isEXRF) {
-                    // R1 is the repeat counter for EXR instructions.
-                    // For Extended mode, use bits 12-35 as an unsigned counter.
-                    // For Basic mode, use bits 18-35. In either case, decrement the register.
-                    if (dr.isBasicModeEnabled()) {
-                        r1Reg.decrementCounter18();
-                    } else {
-                        r1Reg.decrementCounter24();
+            // pre-cycle check for EXR - was it executed with R1 already zero?
+            // If so, we're done before we even do a single cycle of it.
+            if (isEXRF) {
+                if (r1Reg.isZero()) {
+                    complete = true;
+                }
+            }
+
+            if (!complete) {
+                complete = executeInstruction();
+                if (ikr.isExecuteRepeatedInstruction()) {
+                    if (isEXRF) {
+                        // R1 is the repeat counter for EXR instructions.
+                        // For Extended mode, use bits 12-35 as an unsigned counter.
+                        // For Basic mode, use bits 18-35. In either case, decrement the register.
+                        if (dr.isBasicModeEnabled()) {
+                            r1Reg.decrementCounter18();
+                        } else {
+                            r1Reg.decrementCounter24();
+                        }
                     }
                 }
             }
-        }
 
-        if (complete) {
-            _scratchpad._instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
-            _scratchpad._cachedFunction = null;
-            ikr.setInstructionInF0(false);
-            ikr.setExecuteRepeatedInstruction(false);
-            if (!_scratchpad._preventProgramCounterUpdate) {
-                par.incrementProgramCounter();
+            if (complete) {
+                _scratchpad._instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
+                _scratchpad._cachedFunction = null;
+                ikr.setInstructionInF0(false);
+                ikr.setExecuteRepeatedInstruction(false);
+                if (!_preventProgramCounterUpdate) {
+                    par.incrementProgramCounter();
+                }
+                addressClearLocks();
             }
-            addressClearLocks();
+        } catch (MachineInterrupt e) {
+            postInterrupt(e);
         }
 
         return complete;
@@ -362,7 +388,7 @@ public class Engine {
             _scratchpad._cachedFunction = FunctionTable.lookupFunction(designatorRegister, instruction);
         }
 
-        _scratchpad._preventProgramCounterUpdate = false;
+        _preventProgramCounterUpdate = false;
         return _scratchpad._cachedFunction.execute(this);
     }
 
@@ -417,13 +443,12 @@ public class Engine {
         BaseRegister bReg;
 
         if (basicMode) {
-            // Basic Mode.
-            // TODO THis is insufficient. Once a base register has been selected, it is used until
-            //   a subsequent instruction causes an entry to be made to the JUMP HISTORY table
-            //   AND the resulting environment is BASIC mode. It is not re-calculated on every fetch.
-            //   If we run off the end of the currently-selected bank, we throw a Reference Violation.
-            var brx = findBasicModeBaseRegisterIndex(programCounter, true);
-            bReg = _baseRegisters[brx];
+            // If we don't have a cached brx, develop one. Usually we will, though.
+            if (_bmCachedBaseRegisterIndex == 0) {
+                _bmCachedBaseRegisterIndex = findBasicModeBaseRegisterIndex(programCounter, true);
+            }
+
+            bReg = _baseRegisters[_bmCachedBaseRegisterIndex];
             if (bReg.isVoid() || bReg.getBankDescriptor().isLargeBank()) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
             }
@@ -508,7 +533,6 @@ public class Engine {
         final boolean grsCheck,
         final int count
     ) throws MachineInterrupt {
-        var ci = _activityStatePacket.getCurrentInstruction();//TODO remove
         resolveRelativeAddress(false, grsCheck, false);
         if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
             return null;
@@ -635,7 +659,7 @@ public class Engine {
      */
 
     private long getImmediateOperand() {
-        long operand = 0;
+        long operand;
         var ci = _activityStatePacket.getCurrentInstruction();
         var dr = _activityStatePacket.getDesignatorRegister();
         var exec24Index = dr.isExecutive24BitIndexingEnabled();
@@ -668,9 +692,8 @@ public class Engine {
                 } else {
                     operand = Word36.addSimple(operand, xReg.getXM());
                 }
+                incrementIndexRegisterInF0();
             }
-
-            incrementIndexRegisterInF0();
         }
 
         // Truncate the result to the proper size, then sign-extend if appropriate to do so.
@@ -698,7 +721,86 @@ public class Engine {
     }
 
     /**
-     * This is the general case of retrieving and operand, including all forms of addressing
+     * Resolve the relative address, and return *that* as the operand.
+     * Also, we do not rely upon j-field for anything, as that has no meaning for jump instructions.
+     * @return requested operand or zero if we are in the middle of indirect address resolution.
+     */
+    public long getJumpOperand() throws MachineInterrupt {
+        long operand;
+        var ci = _activityStatePacket.getCurrentInstruction();
+        var dr = _activityStatePacket.getDesignatorRegister();
+        var exec24Index = dr.isExecutive24BitIndexingEnabled();
+        var privilege = dr.getProcessorPrivilege();
+        var valueIs24Bits = ((privilege < 2) && exec24Index) || ((privilege > 1) && (ci.getI() != 0));
+
+        if (ci.getX() == 0) {
+            // No indexing (x-field is zero).  Value is derived from h, i, and u fields.
+            // Get the value from h,i,u, and eliminate negative zero.
+            operand = ci.getHIU();
+            if (operand == 0_777777) {
+                operand = 0;
+            }
+
+            if ((ci.getJ() == 0_17) && ((operand & 0_400000) != 0)) {
+                operand |= 0_777777_000000L;
+            }
+        } else {
+            // Value is taken only from the u field, and we eliminate negative zero at this point.
+            operand = ci.getU();
+            if (operand == 0_177777) {
+                operand = 0;
+            }
+
+            // Add the contents of Xx(m) if F0.x is non-zero
+            if (ci.getX() != 0) {
+                var xReg = getExecOrUserXRegister(ci.getX());
+                if (!dr.isBasicModeEnabled() && (privilege < 2) && exec24Index) {
+                    operand = Word36.addSimple(operand, xReg.getXM24());
+                } else {
+                    operand = Word36.addSimple(operand, xReg.getXM());
+                }
+                incrementIndexRegisterInF0();
+            }
+        }
+
+        // Truncate the result to the proper size, then sign-extend if appropriate to do so.
+        var extend = ci.getJ() == 0_17;
+        if (valueIs24Bits) {
+            operand &= 077_777777;
+            if (extend && (operand & 040_000000) != 0) {
+                operand |= 0_777700_000000L;
+            }
+        } else {
+            operand &= 0_777777;
+            if (extend && (operand & 0_400000) != 0) {
+                operand |= 0_777777_000000L;
+            }
+        }
+
+        // Are we doing indirect addressing?
+        if (dr.isBasicModeEnabled()) {
+            if (ci.getI() != 0 && dr.getProcessorPrivilege() > 1) {
+                var brx = findBasicModeBaseRegisterIndex((int)operand, false);
+                // Indirect addressing is indicated - we need to go find the actual word of storage
+                // and load a new XHIU from there, into the current instruction.
+                var key = _activityStatePacket.getIndicatorKeyRegister()
+                                              .getAccessKey();
+                checkAccessLimitsAndAccessibility(true, brx, operand, true, false, false, key);
+                var bReg = _baseRegisters[brx];
+                var offset = (int) (operand - bReg.getBankDescriptor().getLowerLimitNormalized());
+                var value = bReg.getStorage().get(offset);
+                ci.setXHIU(value);
+
+                _scratchpad._instructionPoint = InstructionPoint.RESOLVING_ADDRESS;
+                return 0;
+            }
+        }
+
+        return operand & 0_777777;
+    }
+
+    /**
+     * This is the general case of retrieving an operand, including all forms of addressing
      * and partial word access. Instructions which use the j-field as part of the function code will likely set
      * allowImmediate and allowPartialWordTransfer false.
      * @param grsDestination true if we are going to put this value into a GRS location
@@ -720,7 +822,6 @@ public class Engine {
         var dr = _activityStatePacket.getDesignatorRegister();
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var basicMode = dr.isBasicModeEnabled();
-        var privilege = dr.getProcessorPrivilege();
 
         // immediate operand?
         var jFIeld = ci.getJ();
@@ -816,7 +917,7 @@ public class Engine {
      */
     private void incrementIndexRegisterInF0() {
         var ci = _activityStatePacket.getCurrentInstruction();
-        if ((ci.getX() > 0) && (ci.getH() > 0)) {
+        if (ci.getH() > 0) {
             var dr = _activityStatePacket.getDesignatorRegister();
             var xReg = getExecOrUserXRegister(ci.getX());
             if (!dr.isBasicModeEnabled() && (dr.getProcessorPrivilege() < 2) && dr.isExecutive24BitIndexingEnabled()) {
@@ -872,6 +973,32 @@ public class Engine {
         return !bReg.isVoid() &&
                 (offset >= bReg.getBankDescriptor().getLowerLimitNormalized()) &&
                 (offset <= bReg.getBankDescriptor().getUpperLimitNormalized());
+    }
+
+    /**
+     * Polls to see if an interrupt is pending
+     * @return the highest-priority interrupt currently pending, or null if none are pending
+     */
+    public MachineInterrupt pollInterrupt() {
+        synchronized (_interruptStack) {
+            var entry = _interruptStack.pollFirstEntry();
+            return entry == null ? null : entry.getValue();
+        }
+    }
+
+    /**
+     * Posts an interrupt to be processed by the interrupt handler.
+     */
+    public void postInterrupt(
+        final MachineInterrupt interrupt
+    ) {
+        synchronized (_interruptStack) {
+            _interruptStack.put(interrupt.getInterruptClass(), interrupt);
+        }
+    }
+
+    public void preventPCUpdate() {
+        _preventProgramCounterUpdate = true;
     }
 
     /**
