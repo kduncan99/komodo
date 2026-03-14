@@ -12,7 +12,6 @@ import com.bearsnake.komodo.engine.interrupts.HardwareDefaultInterrupt;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 
@@ -33,12 +32,11 @@ public abstract class Function {
     private static final HashMap<Integer, Function> EM_FUNCTIONS_BY_F_CODE = new HashMap<>();
 
     private AFieldSemantics _aFieldSemantics = UNUSED;
-    private final ArrayList<FunctionCode> _basicModeFunctionCodes = new ArrayList<>();
-    private final ArrayList<FunctionCode> _extendedModeFunctionCodes = new ArrayList<>();
+    private FunctionCode _basicModeFunctionCode = null;
+    private FunctionCode _extendedModeFunctionCode = null;
     private boolean _immediateMode = false;     // U and XU partial words are supported for this function
     private boolean _isGRS =  false;            // addresses < 0200 are GRS locations
     private final String _mnemonic;
-    private int _processorPrivilege = 3;        // If user PP > this, the instruction is invalid (defaults to 3)
 
     protected Function(
         final String mnemonic
@@ -68,12 +66,12 @@ public abstract class Function {
     }
 
     protected Function setBasicModeFunctionCode(final FunctionCode functionCode) {
-        _basicModeFunctionCodes.add(functionCode);
+        _basicModeFunctionCode = functionCode;
         return this;
     }
 
     public Function setExtendedModeFunctionCode(final FunctionCode functionCode) {
-        _extendedModeFunctionCodes.add(functionCode);
+        _extendedModeFunctionCode = functionCode;
         return this;
     }
 
@@ -87,19 +85,13 @@ public abstract class Function {
         return this;
     }
 
-    protected Function setProcessorPrivilege(final int privilege) {
-        _processorPrivilege = privilege & 0x03;
-        return this;
-    }
-
     public abstract boolean execute(
         final Engine engine
     ) throws MachineInterrupt;
 
-    public ArrayList<FunctionCode> getBasicModeFunctionCodes() { return _basicModeFunctionCodes; }
-    public ArrayList<FunctionCode> getExtendedModeFunctionCodes() { return _extendedModeFunctionCodes; }
+    public FunctionCode getBasicModeFunctionCode() { return _basicModeFunctionCode; }
+    public FunctionCode getExtendedModeFunctionCode() { return _extendedModeFunctionCode; }
     public boolean getImmediateMode() { return _immediateMode; }
-    public int getProcessorPrivilege() { return _processorPrivilege; }
     public boolean isGRS() { return _isGRS; }
 
     public static Function lookup(
@@ -107,11 +99,7 @@ public abstract class Function {
         final InstructionWord instruction
     ) throws InvalidInstructionInterrupt,
              HardwareDefaultInterrupt {
-        var func = FunctionTable.lookupFunction(designatorRegister, instruction);
-        if (func.getProcessorPrivilege() > designatorRegister.getProcessorPrivilege()) {
-            throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
-        }
-        return func;
+        return FunctionTable.lookupFunction(designatorRegister, instruction);
     }
 
     // --------------------------------------------------------------------------------------------
@@ -158,8 +146,8 @@ public abstract class Function {
         FunctionCode funcCode;
         try {
             funcCode = dReg.isBasicModeEnabled()
-                           ? func.getBasicModeFunctionCodes().getFirst()
-                           : func.getExtendedModeFunctionCodes().getFirst();
+                           ? func.getBasicModeFunctionCode()
+                           : func.getExtendedModeFunctionCode();
         } catch (NoSuchElementException ex) {
             return Word36.toOctal(iWord.getW());
         }

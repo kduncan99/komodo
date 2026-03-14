@@ -6,7 +6,6 @@ package com.bearsnake.komodo.engine;
 
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.engine.exceptions.EngineException;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionTable;
@@ -21,7 +20,7 @@ import java.util.stream.IntStream;
  */
 public class Engine {
 
-    public static enum HaltCode {
+    public enum HaltCode {
         HLTJ_INSTRUCTION,
     }
 
@@ -388,6 +387,8 @@ public class Engine {
                 ikr.setExecuteRepeatedInstruction(false);
                 if (!_preventProgramCounterUpdate) {
                     par.incrementProgramCounter();
+                } else {
+                    _preventProgramCounterUpdate = false;
                 }
                 addressClearLocks();
             }
@@ -408,11 +409,11 @@ public class Engine {
      */
     private boolean executeInstruction()
         throws MachineInterrupt {
-        var designatorRegister = _activityStatePacket.getDesignatorRegister();
-        var instruction = _activityStatePacket.getCurrentInstruction();
+        var dr = _activityStatePacket.getDesignatorRegister();
+        var ci = _activityStatePacket.getCurrentInstruction();
 
         if (_traceInstructions) {
-            var str = Function.interpret(designatorRegister, instruction);
+            var str = Function.interpret(dr, ci);
             // TODO log this, don't print it
             if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
                 IO.println("   [" + str + "]");
@@ -422,10 +423,16 @@ public class Engine {
         }
 
         if (_scratchpad._cachedFunction == null) {
-            _scratchpad._cachedFunction = FunctionTable.lookupFunction(designatorRegister, instruction);
+            _scratchpad._cachedFunction = FunctionTable.lookupFunction(dr, ci);
         }
 
-        _preventProgramCounterUpdate = false;
+        var cf = _scratchpad._cachedFunction;
+        var reqPP = dr.isBasicModeEnabled()
+                    ? cf.getBasicModeFunctionCode().getProcessorPrivilege()
+                    : cf.getExtendedModeFunctionCode().getProcessorPrivilege();
+        if (dr.getProcessorPrivilege() > reqPP) {
+            throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
+        }
         return _scratchpad._cachedFunction.execute(this);
     }
 

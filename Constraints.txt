@@ -2,6 +2,7 @@
 General architecture support
     We do not manage cache pages, leaving that to the host operating system.
     We do not support monolithic memory. All memory banks are allocated at size from the host operating system.
+    We do not support gate banks (BUT WE SHOULD)
     We do not support postern banks.
     We do not support data expanse banks.
 

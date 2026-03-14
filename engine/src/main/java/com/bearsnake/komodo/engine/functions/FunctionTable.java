@@ -26,17 +26,13 @@ public abstract class FunctionTable {
     }
 
     private static final Function[] ALL_FUNCTIONS = new Function[]{
+        // load
         new DLFunction(),
         new DLMFunction(),
         new DLNFunction(),
-        new HJFunction(),
-        new HLTJFunction(),
-        new JFunction(),
-        new JKFunction(),
         new LAFunction(),
         new LAQWFunction(),
         new LMAFunction(),
-        new LMJFunction(),
         new LNAFunction(),
         new LNMAFunction(),
         new LRFunction(),
@@ -48,8 +44,20 @@ public abstract class FunctionTable {
         new LXLMFunction(),
         new LXMFunction(),
         new LXSIFunction(),
-        new NOPFunction(),
+        // unconditional jump
+        new HJFunction(),
+        new HLTJFunction(),
+        new JFunction(),
+        new JKFunction(),
+        new LMJFunction(),
         new SLJFunction(),
+        // special
+        new DCBFunction(),
+        new EXFunction(),
+        new EXRFunction(),
+        new NOPFunction(),
+        new RNGBFunction(),
+        new RNGIFunction(),
     };
 
     private static boolean _isInitialized = false;
@@ -115,16 +123,16 @@ public abstract class FunctionTable {
 
     private static void initializeLookups() {
         for (var func : ALL_FUNCTIONS) {
-            for (var fc : func.getBasicModeFunctionCodes()) {
-                ingestFunction(BASIC_MODE_TOP_LEVEL, func, fc);
+            if (func.getBasicModeFunctionCode() != null) {
+                ingestFunction(BASIC_MODE_TOP_LEVEL, func, func.getBasicModeFunctionCode());
             }
-            for (var fc : func.getExtendedModeFunctionCodes()) {
-                ingestFunction(EXTENDED_MODE_TOP_LEVEL, func, fc);
+            if (func.getExtendedModeFunctionCode() != null) {
+                ingestFunction(EXTENDED_MODE_TOP_LEVEL, func, func.getExtendedModeFunctionCode());
             }
         }
         _isInitialized = true;
 
-        //TODO remove
+        //TODO - for debugging - remove
 //        for (var e : BASIC_MODE_TOP_LEVEL.entrySet()) {
 //            var fc = e.getKey();
 //            var func = e.getValue();
