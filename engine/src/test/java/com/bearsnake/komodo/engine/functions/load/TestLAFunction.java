@@ -274,25 +274,15 @@ public class TestLAFunction extends TestFunction {
     }
 
     @Test
-    public void testLA_Sx_BM() throws MachineInterrupt {
+    public void testLA_Indirect_BM() throws MachineInterrupt {
         var code = new long[] {
-            laBM(Constants.JFIELD_S1, 5, 3, 1, 0, 0),
-            laBM(Constants.JFIELD_S2, 6, 3, 1, 0, 0),
-            laBM(Constants.JFIELD_S3, 7, 3, 1, 0, 0),
-            laBM(Constants.JFIELD_S4, 8, 3, 1, 0, 0),
-            laBM(Constants.JFIELD_S5, 9, 3, 1, 0, 0),
-            laBM(Constants.JFIELD_S6, 10, 3, 1, 0, 0),
+            laBM(Constants.JFIELD_W, 5, 0, 0, 1, 022002),
             0,
+            laBM(0, 0, 0, 0, 1, 022003),
+            laBM(0, 0, 0, 0, 0, 040000),
             };
 
-        var data = new long[] {
-            0_221111_111111L,
-            0_113311_111111L,
-            0_111144_111111L,
-            0_111111_551111L,
-            0_111111_116611L,
-            0_111111_111177L,
-            };
+        var data = new long[] { 0_221111_111111L };
 
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
@@ -318,11 +308,6 @@ public class TestLAFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_22L, _engine.getExecOrUserARegister(5).getW());
-        assertEquals(0_33L, _engine.getExecOrUserARegister(6).getW());
-        assertEquals(0_44L, _engine.getExecOrUserARegister(7).getW());
-        assertEquals(0_55L, _engine.getExecOrUserARegister(8).getW());
-        assertEquals(0_66L, _engine.getExecOrUserARegister(9).getW());
-        assertEquals(0_77L, _engine.getExecOrUserARegister(10).getW());
+        assertEquals(0_221111_111111L, _engine.getExecOrUserARegister(5).getW());
     }
 }

@@ -381,7 +381,11 @@ public class Engine {
         if (_traceInstructions) {
             var str = Function.interpret(designatorRegister, instruction);
             // TODO log this, don't print it
-            IO.println("--> " + str);
+            if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+                IO.println("   [" + str + "]");
+            } else {
+                IO.println("--> " + str);
+            }
         }
 
         if (_scratchpad._cachedFunction == null) {
@@ -733,34 +737,23 @@ public class Engine {
         var privilege = dr.getProcessorPrivilege();
         var valueIs24Bits = ((privilege < 2) && exec24Index) || ((privilege > 1) && (ci.getI() != 0));
 
-        if (ci.getX() == 0) {
-            // No indexing (x-field is zero).  Value is derived from h, i, and u fields.
-            // Get the value from h,i,u, and eliminate negative zero.
+        if ((ci.getX() == 0) && (!dr.isBasicModeEnabled())) {
+            // No indexing (x-field is zero and EM).  Value is derived from h, i, and u fields.
             operand = ci.getHIU();
-            if (operand == 0_777777) {
-                operand = 0;
-            }
-
-            if ((ci.getJ() == 0_17) && ((operand & 0_400000) != 0)) {
-                operand |= 0_777777_000000L;
-            }
         } else {
-            // Value is taken only from the u field, and we eliminate negative zero at this point.
+            // Value is taken only from the u field
             operand = ci.getU();
-            if (operand == 0_177777) {
-                operand = 0;
-            }
+        }
 
-            // Add the contents of Xx(m) if F0.x is non-zero
-            if (ci.getX() != 0) {
-                var xReg = getExecOrUserXRegister(ci.getX());
-                if (!dr.isBasicModeEnabled() && (privilege < 2) && exec24Index) {
-                    operand = Word36.addSimple(operand, xReg.getXM24());
-                } else {
-                    operand = Word36.addSimple(operand, xReg.getXM());
-                }
-                incrementIndexRegisterInF0();
+        // Add the contents of Xx(m) if F0.x is non-zero
+        if (ci.getX() != 0) {
+            var xReg = getExecOrUserXRegister(ci.getX());
+            if (!dr.isBasicModeEnabled() && (privilege < 2) && exec24Index) {
+                operand = Word36.addSimple(operand, xReg.getXM24());
+            } else {
+                operand = Word36.addSimple(operand, xReg.getXM());
             }
+            incrementIndexRegisterInF0();
         }
 
         // Truncate the result to the proper size, then sign-extend if appropriate to do so.
@@ -778,24 +771,25 @@ public class Engine {
         }
 
         // Are we doing indirect addressing?
-        if (dr.isBasicModeEnabled()) {
-            if (ci.getI() != 0 && dr.getProcessorPrivilege() > 1) {
-                var brx = findBasicModeBaseRegisterIndex((int)operand, false);
-                // Indirect addressing is indicated - we need to go find the actual word of storage
-                // and load a new XHIU from there, into the current instruction.
-                var key = _activityStatePacket.getIndicatorKeyRegister()
-                                              .getAccessKey();
-                checkAccessLimitsAndAccessibility(true, brx, operand, true, false, false, key);
-                var bReg = _baseRegisters[brx];
-                var offset = (int) (operand - bReg.getBankDescriptor().getLowerLimitNormalized());
-                var value = bReg.getStorage().get(offset);
-                ci.setXHIU(value);
+        if (dr.isBasicModeEnabled() && (ci.getI() != 0) && (dr.getProcessorPrivilege() > 1)) {
+            var brx = findBasicModeBaseRegisterIndex((int) operand, false);
+            // Indirect addressing is indicated - we need to go find the actual word of storage
+            // and load a new XHIU from there, into the current instruction.
+            var key = _activityStatePacket.getIndicatorKeyRegister()
+                                          .getAccessKey();
+            checkAccessLimitsAndAccessibility(true, brx, operand, true, false, false, key);
+            var bReg = _baseRegisters[brx];
+            var offset = (int) (operand - bReg.getBankDescriptor()
+                                              .getLowerLimitNormalized());
+            var value = bReg.getStorage()
+                            .get(offset);
+            ci.setXHIU(value);
 
-                _scratchpad._instructionPoint = InstructionPoint.RESOLVING_ADDRESS;
-                return 0;
-            }
+            _scratchpad._instructionPoint = InstructionPoint.RESOLVING_ADDRESS;
+            return 0;
         }
 
+        _scratchpad._instructionPoint = InstructionPoint.MID_INSTRUCTION;
         return operand & 0_777777;
     }
 
