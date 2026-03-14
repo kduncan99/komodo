@@ -18,7 +18,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 public class EXRFunction extends Function {
 
     public EXRFunction() {
-        super("NOP");
+        super("EXR");
         setExtendedModeFunctionCode(new FunctionCode(0_73).setJField(0_14).setAField(0_06));
 
         setAFieldSemantics(AFieldSemantics.FUNCTION_CODE_EXTENSION);

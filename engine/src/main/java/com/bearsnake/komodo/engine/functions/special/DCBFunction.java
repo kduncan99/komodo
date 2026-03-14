@@ -17,7 +17,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 public class DCBFunction extends Function {
 
     public DCBFunction() {
-        super("NOP");
+        super("DCB");
         setExtendedModeFunctionCode(new FunctionCode(0_33).setJField(0_15));
 
         setAFieldSemantics(AFieldSemantics.A_REGISTER);
@@ -29,7 +29,13 @@ public class DCBFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
+        var operands = engine.getConsecutiveOperands(true, 2);
+        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        var count = Long.bitCount(operands[0]) + Long.bitCount(operands[1]);
+        engine.getExecOrUserARegister(engine.getCurrentInstruction().getA()).setW(count);
         return true;
     }
 }

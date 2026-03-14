@@ -17,7 +17,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 public class RNGIFunction extends Function {
 
     public RNGIFunction() {
-        super("NOP");
+        super("RNGI");
         setExtendedModeFunctionCode(new FunctionCode(0_37).setJField(0_04).setAField(0_05));
 
         setAFieldSemantics(AFieldSemantics.FUNCTION_CODE_EXTENSION);
