@@ -1,6 +1,7 @@
 package com.bearsnake.komodo.engine.functions;
 
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 public abstract class TestFunction {
@@ -42,25 +43,22 @@ public abstract class TestFunction {
     }
 
     protected void run() throws MachineInterrupt {
-        boolean stop = false;
-        while (!stop) {
-            var interrupt = _engine.pollInterrupt();
-            if (interrupt != null) {
+        for (;;) {
+            try {
+                _engine.cycle();
+            } catch (MachineInterrupt interrupt) {
                 if (interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.InvalidInstruction) {
                     var ci = _engine.getCurrentInstruction();
                     if (ci.getW() == 0) {
                         // this is our normal stop
-                        stop = true;
-                    } else {
-                        System.out.printf("Caught %s\n", interrupt);
-                        stop = true;
+                        break;
                     }
-                } else {
-                    System.out.printf("Caught %s\n", interrupt);
-                    stop = true;
                 }
-            } else {
-                _engine.cycle();
+
+                throw interrupt;
+            } catch (EngineHaltedException ex) {
+                IO.println("Engine Halted");
+                break;
             }
         }
     }

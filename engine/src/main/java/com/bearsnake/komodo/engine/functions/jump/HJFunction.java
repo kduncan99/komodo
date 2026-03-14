@@ -11,6 +11,8 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Halt Jump instruction
+ * (HJ or HKJ) Loads the program counter for the U field. No halt occurs.
+ * Effectively just a Jump instruction.
  */
 public class HJFunction extends Function {
 
@@ -27,8 +29,13 @@ public class HJFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
-        return false;
+        var operand = engine.getJumpOperand();
+        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        doJump(engine, operand);
+        return true;
     }
 
     @Override

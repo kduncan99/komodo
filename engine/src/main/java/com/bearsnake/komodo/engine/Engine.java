@@ -6,6 +6,8 @@ package com.bearsnake.komodo.engine;
 
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.engine.exceptions.EngineException;
+import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionTable;
 import com.bearsnake.komodo.engine.interrupts.*;
@@ -19,6 +21,10 @@ import java.util.stream.IntStream;
  */
 public class Engine {
 
+    public static enum HaltCode {
+        HLTJ_INSTRUCTION,
+    }
+
     private static final int JUMP_HISTORY_TABLE_SIZE = 512;
 
     public enum InstructionPoint {
@@ -31,6 +37,8 @@ public class Engine {
     private final ActivityStatePacket _activityStatePacket = new ActivityStatePacket();
     private final BaseRegister[] _baseRegisters = new BaseRegister[32];
     private final GeneralRegisterSet _generalRegisterSet = new GeneralRegisterSet();
+
+    private HaltCode _haltCode = null;
 
     // Normally PC is incremented at the end of instruction execution.
     // Transfer instructions set this flag to prevent this behavior, as they have already
@@ -234,6 +242,21 @@ public class Engine {
         }
     }
 
+    public void clear() {
+        _haltCode = null;
+        _activityStatePacket.getCurrentInstruction().setW(0);
+        _activityStatePacket.getDesignatorRegister().setWord36(0);
+        _activityStatePacket.getIndicatorKeyRegister().setWord36(0);
+        _activityStatePacket.getProgramAddressRegister().setProgramCounter(0).setBankLevel((short)0).setBankDescriptorIndex(0);
+        _interruptStack.clear();
+        IntStream.range(0, JUMP_HISTORY_TABLE_SIZE)
+                 .forEach(i -> _jumpHistoryTable[i] = 0);
+        _jumpHistoryTableFirstIndex = 0;
+        _jumpHistoryTableNextIndex = 0;
+        _scratchpad._instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
+        // TODO anything else to clear?
+    }
+
     /**
      * For various jump-like operations, this is used to clear the cached base register index.
      */
@@ -310,8 +333,18 @@ public class Engine {
      *      otherwise. Having INF and EXRF already set, we won't waste time re-evaluating the EXR instruction, we'll
      *      just (re-)execute the target instruction.
      * @return true between instructions
+     * @throws EngineHaltedException if the engine is halted
+     * @throws MachineInterrupt if at least one interrupt is pending (that interrupt is pulled from the stack and thrown here)
      */
-    public boolean cycle() {
+    public boolean cycle()
+        throws EngineHaltedException,
+               MachineInterrupt {
+        if (_haltCode != null) {
+            throw new EngineHaltedException(_haltCode);
+        } else if (!_interruptStack.isEmpty()) {
+            throw _interruptStack.pollFirstEntry().getValue();
+        }
+
         var dr = _activityStatePacket.getDesignatorRegister();
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var par = _activityStatePacket.getProgramAddressRegister();
@@ -643,6 +676,10 @@ public class Engine {
         return _generalRegisterSet.getRegister(registerNumber);
     }
 
+    public HaltCode getHaltCode() {
+        return _haltCode;
+    }
+
     /**
      * Retrieves an operand in the case where the u (and possibly h and i) fields
      * comprise the requested data.  This is NOT for jump instructions, which have slightly different rules.
@@ -869,6 +906,18 @@ public class Engine {
 
     public ProgramAddressRegister getProgramAddressRegister() {
         return _activityStatePacket.getProgramAddressRegister();
+    }
+
+    /**
+     * Sets the halt code for the engine.
+     * Subsequent invocations of cycle() will throw HaltedException until this is cleared.
+     * @param haltCode
+     */
+    public void halt(
+        final HaltCode haltCode
+    ) {
+        // TODO LOG THIS
+        _haltCode = haltCode;
     }
 
     /**

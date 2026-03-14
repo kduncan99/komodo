@@ -11,6 +11,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Jump instruction
+ * (JK) evaluates the operand, but does not jump.
+ * The assumption is that the selected jump key is present, but cleared.
+ * It is not specified how the jump key is selected, but it doesn't matter.
  */
 public class JKFunction extends Function {
 
@@ -31,8 +34,12 @@ public class JKFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
-        return false;
+        engine.getJumpOperand();
+        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override

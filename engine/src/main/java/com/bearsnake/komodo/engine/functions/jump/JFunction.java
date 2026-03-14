@@ -11,6 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Jump instruction
+ * (J) Loads the program counter from the U field - assumes no bank switching
  */
 public class JFunction extends Function {
 
