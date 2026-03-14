@@ -19,14 +19,14 @@ public class HandleSETC$ extends ERHandler {
     ) {
         var a0Reg = generalRegisterSet.getRegister(Constants.GRS_A0);
         if (a0Reg.isPositive()) {
-            run.getRunConditionWord().setERSetCValue(a0Reg.getValue());
+            run.getRunConditionWord().setERSetCValue(a0Reg.getW());
         } else {
             long mask = 0_0030_0000_7777L;
             var rcw = run.getRunConditionWord();
             synchronized (rcw) {
                 var value = rcw.getWord36();
                 value &= ~mask;
-                value |= a0Reg.getValue() & mask;
+                value |= a0Reg.getW() & mask;
                 rcw.setWord36(value);
             }
         }
