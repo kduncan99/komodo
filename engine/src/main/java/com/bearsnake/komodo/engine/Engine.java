@@ -453,7 +453,7 @@ public class Engine {
      * @param quarterWordMode whether to extract a quarter word (18 bits) or a half word (36 bits)
      * @return the extracted partial word
      */
-    private long extractPartialWord(
+    public static long extractPartialWord(
         final long source,
         final int partialWordIndicator,
         final boolean quarterWordMode
@@ -984,7 +984,7 @@ public class Engine {
      * @param processorPrivilege current processor privilege level
      * @param writeAccess true if we are checking for write access
      */
-    private boolean isGRSAccessAllowed(
+    public static boolean isGRSAccessAllowed(
         final int registerIndex,
         final short processorPrivilege,
         final boolean writeAccess
@@ -1108,7 +1108,7 @@ public class Engine {
         if (grsCheck && (relAddr < 0200)) {
             // GRS address
             if (!ignoreAccessChecks) {
-                if (isGRSAccessAllowed(relAddr, dr.getProcessorPrivilege(), false)) {
+                if (!isGRSAccessAllowed(relAddr, dr.getProcessorPrivilege(), false)) {
                     throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
                 }
             }
@@ -1183,7 +1183,7 @@ public class Engine {
         if (grsCheck && (brx == 0) && (relAddr < 0200)) {
             // GRS address
             if (!ignoreAccessChecks) {
-                if (isGRSAccessAllowed(_scratchpad._operandRelativeAddress, dr.getProcessorPrivilege(), false)) {
+                if (!isGRSAccessAllowed(_scratchpad._operandRelativeAddress, dr.getProcessorPrivilege(), false)) {
                     throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
                 }
             }

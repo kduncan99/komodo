@@ -8,6 +8,7 @@ import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
+import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 
 /**
  * Load Register Set instruction
@@ -36,11 +37,45 @@ public class LRSFunction extends Function {
         setIsGRS(false);
     }
 
+    private void doSubset(
+        final Engine engine,
+        final short pPriv,
+        int grsIndex,
+        int grsCount,
+        final long[] operands,
+        int opIndex
+    ) throws ReferenceViolationInterrupt {
+        while (grsCount > 0) {
+            if (grsIndex > 0177) {
+                grsIndex = 0;
+            }
+
+            if (!Engine.isGRSAccessAllowed(grsIndex, pPriv, true)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
+            }
+
+            engine.getGeneralRegister(grsIndex++).setW(operands[opIndex++]);
+            grsCount--;
+        }
+    }
+
     @Override
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
-        return false;
+        var ci = engine.getCurrentInstruction();
+        var dr = engine.getDesignatorRegister();
+        var aReg = engine.getExecOrUserARegister(ci.getA());
+
+        var grscount2 = aReg.getQ1() & 0177;
+        var grsx2 = aReg.getQ2() & 0177;
+        var grscount1 = aReg.getQ3() & 0177;
+        var grsx1 = aReg.getQ4() & 0177;
+        var count = grscount1 + grscount2;
+
+        var operands = engine.getConsecutiveOperands(true, count);
+        doSubset(engine, dr.getProcessorPrivilege(), grsx1, grscount1, operands, 0);
+        doSubset(engine, dr.getProcessorPrivilege(), grsx2, grscount2, operands, grscount1);
+        return true;
     }
 }

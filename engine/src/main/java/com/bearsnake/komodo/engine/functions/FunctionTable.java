@@ -44,7 +44,7 @@ public abstract class FunctionTable {
         new LXLMFunction(),
         new LXMFunction(),
         new LXSIFunction(),
-        // unconditional jump
+        // jump
         new HJFunction(),
         new HLTJFunction(),
         new JFunction(),

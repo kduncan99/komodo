@@ -145,6 +145,46 @@ public class TestLAFunction extends TestFunction {
     }
 
     @Test
+    public void testLA_LongIndexed_EM() throws MachineInterrupt {
+        var code = new long[] {
+            laEM(Constants.JFIELD_W, 4, 4, 1, 0, 1, 0),
+            0,
+            };
+
+        var data = new long[0_1000_1000];
+        data[0_1000_0000] = 0_445544_667766L;
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0_1)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0)
+                                      .setUpperLimit(0_10000_0777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+
+        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
+        _engine.getBaseRegister(1).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)1)
+               .setExecutive24BitIndexingEnabled(true)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserXRegister(4).setXI12(04).setXM24(0_1000_0000);
+
+        run();
+
+        assertEquals(0_445544_667766L, _engine.getExecOrUserARegister(4).getW());
+        assertEquals(04, _engine.getExecOrUserXRegister(4).getXI12());
+        assertEquals(0_1000_0004, _engine.getExecOrUserXRegister(4).getXM24());
+    }
+
+    @Test
     public void testLA_Indexed_EM() throws MachineInterrupt {
         var code = new long[] {
             laEM(Constants.JFIELD_W, 5, 3, 1, 0, 1, 01),
