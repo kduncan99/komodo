@@ -67,6 +67,14 @@ public class Engine {
         public boolean _operandIsGRS;
         public int _operandBaseRegisterIndex;
         public int _operandRelativeAddress;
+
+        public void clear() {
+            _cachedFunction = null;
+            _instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
+            _operandIsGRS = false;
+            _operandBaseRegisterIndex = 0;
+            _operandRelativeAddress = 0;
+        }
     }
 
     public final ScratchPad _scratchpad = new ScratchPad();
@@ -252,7 +260,7 @@ public class Engine {
                  .forEach(i -> _jumpHistoryTable[i] = 0);
         _jumpHistoryTableFirstIndex = 0;
         _jumpHistoryTableNextIndex = 0;
-        _scratchpad._instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
+        _scratchpad.clear();
         // TODO anything else to clear?
     }
 
@@ -354,6 +362,7 @@ public class Engine {
         try {
             if (!ikr.getInstructionInF0()) {
                 fetchInstruction();
+                _scratchpad.clear();
             }
 
             // pre-cycle check for EXR - was it executed with R1 already zero?
