@@ -9,6 +9,7 @@ import com.bearsnake.komodo.engine.DesignatorRegister;
 import com.bearsnake.komodo.engine.functions.jump.*;
 import com.bearsnake.komodo.engine.functions.load.*;
 import com.bearsnake.komodo.engine.functions.special.*;
+import com.bearsnake.komodo.engine.functions.store.SAFunction;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 
 import java.util.HashMap;
@@ -44,6 +45,8 @@ public abstract class FunctionTable {
         new LXLMFunction(),
         new LXMFunction(),
         new LXSIFunction(),
+        // store
+        new SAFunction(),
         // jump
         new HJFunction(),
         new HLTJFunction(),
@@ -64,7 +67,7 @@ public abstract class FunctionTable {
     private static final HashMap<Integer, Function> BASIC_MODE_TOP_LEVEL = new HashMap<>();
     private static final HashMap<Integer, Function> EXTENDED_MODE_TOP_LEVEL = new HashMap<>();
 
-    private static boolean ingestFunction(
+    private static void ingestFunction(
         final HashMap<Integer, Function> topLevel,
         final Function function,
         final FunctionCode functionCode
@@ -79,7 +82,7 @@ public abstract class FunctionTable {
             if (existing != null) {
                 throw new CollisionException(existing, function);
             }
-            return true;
+            return;
         }
 
         if (j != null) {
@@ -92,12 +95,14 @@ public abstract class FunctionTable {
                 // If the function is f|j|a sensitive, the JSubFunction will handle the recursion down to an ASubFunction.
                 var jSub = new JSubFunction(String.format("f%03oj", f));
                 topLevel.put(f, jSub);
-                return jSub.putFunction(functionCode, function);
+                jSub.putFunction(functionCode, function);
+                return;
             }
 
             // A function already exists at the f coordinate - is it a JSubFunction? It better be...
             if (existing instanceof JSubFunction jSub) {
-                return jSub.putFunction(functionCode, function);
+                jSub.putFunction(functionCode, function);
+                return;
             }
 
             throw new CollisionException(existing, function);
@@ -110,12 +115,14 @@ public abstract class FunctionTable {
             // If the function is f|j|a sensitive, the JSubFunction will handle the recursion down to an ASubFunction.
             var aSub = new ASubFunction(String.format("f%03oa", f));
             topLevel.put(f, aSub);
-            return aSub.putFunction(functionCode, function);
+            aSub.putFunction(functionCode, function);
+            return;
         }
 
         // A function already exists at the f coordinate - is it a JSubFunction? It better be...
         if (existing instanceof JSubFunction jSub) {
-            return jSub.putFunction(functionCode, function);
+            jSub.putFunction(functionCode, function);
+            return;
         }
 
         throw new CollisionException(existing, function);

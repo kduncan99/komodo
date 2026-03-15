@@ -15,6 +15,9 @@ import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
 
+import static com.bearsnake.komodo.engine.Constants.JFIELD_U;
+import static com.bearsnake.komodo.engine.Constants.JFIELD_XU;
+
 /**
  * Our design specifies the possibility of using multiple Engine objects, all sharing the same memory.
  */
@@ -872,7 +875,7 @@ public class Engine {
 
         // immediate operand?
         var jFIeld = ci.getJ();
-        if (allowImmediate && ((jFIeld == Constants.JFIELD_U) || (jFIeld == Constants.JFIELD_XU))) {
+        if (allowImmediate && ((jFIeld == JFIELD_U) || (jFIeld == JFIELD_XU))) {
             return getImmediateOperand();
         }
 
@@ -911,7 +914,6 @@ public class Engine {
             addressLockAndWait(bReg.getBankDescriptor().getBaseAddress());
         }
 
-        _scratchpad._operandIsGRS = false;
         var offset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
         var operand = bReg.getStorage().get(offset);
         if (allowPartialWordTransfer) {
@@ -985,6 +987,39 @@ public class Engine {
                 xReg.incrementModifier18();
             }
         }
+    }
+
+    /**
+     * Injects a partial word value into the given source value, based on the partial word indicator and quarter word mode.
+     * @param source the source value to inject into
+     * @param partialWordIndicator the partial word indicator
+     * @param partialWordValue the partial word value to inject
+     * @param quarterWordMode whether quarter word mode is enabled
+     * @return the modified source value with the injected partial word
+     */
+    public static long injectPartialWord(
+        final long source,
+        final int partialWordIndicator,
+        final long partialWordValue,
+        final boolean quarterWordMode
+    ) {
+        return switch (partialWordIndicator) {
+            case Constants.JFIELD_W -> partialWordValue;
+            case Constants.JFIELD_H2 -> Word36.setH2(source, partialWordValue);
+            case Constants.JFIELD_H1 -> Word36.setH1(source, partialWordValue);
+            case Constants.JFIELD_XH2 -> Word36.setH2(source, partialWordValue);
+            case Constants.JFIELD_XH1 -> quarterWordMode ? Word36.setQ2(source, partialWordValue) : Word36.setH1(source, partialWordValue);
+            case Constants.JFIELD_T3 -> quarterWordMode ? Word36.setQ4(source, partialWordValue) : Word36.setT3(source, partialWordValue);
+            case Constants.JFIELD_T2 -> quarterWordMode ? Word36.setQ3(source, partialWordValue) : Word36.setT2(source, partialWordValue);
+            case Constants.JFIELD_T1 -> quarterWordMode ? Word36.setQ1(source, partialWordValue) : Word36.setT1(source, partialWordValue);
+            case Constants.JFIELD_S1 -> Word36.setS1(source, partialWordValue);
+            case Constants.JFIELD_S2 -> Word36.setS2(source, partialWordValue);
+            case Constants.JFIELD_S3 -> Word36.setS3(source, partialWordValue);
+            case Constants.JFIELD_S4 -> Word36.setS4(source, partialWordValue);
+            case Constants.JFIELD_S5 -> Word36.setS5(source, partialWordValue);
+            case Constants.JFIELD_S6 -> Word36.setS6(source, partialWordValue);
+            default -> source;
+        };
     }
 
     /**
@@ -1204,61 +1239,73 @@ public class Engine {
         _scratchpad._instructionPoint = InstructionPoint.MID_INSTRUCTION;
     }
 
-    /**
-     * Translates a relative address within the context of the base register indicated by the given index,
-     * to a virtual address and an absolute address. This is ONLY for extended mode.
-     * @param baseRegisterIndex
-     * @param relativeAddress
-     * @param virtualAddress
-     * @param absoluteAddress
-     * @throws MachineInterrupt
-     */
-    //TODO obsolete?
-    private void translateAddress(
-        final int baseRegisterIndex,
-        final long relativeAddress,
-        final VirtualAddress virtualAddress,
-        final AbsoluteAddress absoluteAddress
-    ) throws AddressingExceptionInterrupt {
-        short level;
-        int bdi;
-        long offset;
+    public boolean storeOperand(
+        final boolean grsSource,
+        final boolean grsCheck,
+        final boolean checkImmediate,
+        final boolean allowPartial,
+        final long operand
+    ) throws MachineInterrupt {
+        // If we allow immediate addressing and j-field is U or XU, there's not much to be done.
+        var ci = _activityStatePacket.getCurrentInstruction();
+        var jField = ci.getJ();
+        if (checkImmediate && ((jField == JFIELD_U) || (jField == JFIELD_XU))) {
+            if (ci.getX() != 0) {
+                incrementIndexRegisterInF0();
+            }
+            return true;
+        }
 
-        if ((baseRegisterIndex < 0) || (baseRegisterIndex > 31)) {
-            // Bad index
-            throw new RuntimeException("Invalid base register index");
-        } else if (baseRegisterIndex == 0) {
-            // B0, some things are a little different since this (in extended mode) is always the code bank.
-            level = _activityStatePacket.getProgramAddressRegister().getBankLevel();
-            bdi = _activityStatePacket.getProgramAddressRegister().getBankDescriptorIndex();
-            offset = 0;
+        resolveRelativeAddress(false, grsCheck, false);
+        if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        var dr = _activityStatePacket.getDesignatorRegister();
+        var basicMode = dr.isBasicModeEnabled();
+        var pPriv = dr.getProcessorPrivilege();
+
+        if (!basicMode) {
+            getEffectiveBaseRegisterIndex();
+        }
+
+        if (grsCheck && (basicMode || (_scratchpad._operandBaseRegisterIndex == 0)) && (operand < 0200)) {
+            // storing into the GRS
+            if (!isGRSAccessAllowed(_scratchpad._operandRelativeAddress, pPriv, true)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
+            }
+
+            if (!grsSource && allowPartial) {
+                var qWord = dr.isQuarterWordModeEnabled();
+                var origValue = _generalRegisterSet.getRegister(_scratchpad._operandRelativeAddress).getW();
+                var newValue = injectPartialWord(origValue, jField, operand, qWord);
+                _generalRegisterSet.setRegister(_scratchpad._operandRelativeAddress, newValue);
+            } else {
+                _generalRegisterSet.setRegister(_scratchpad._operandRelativeAddress, operand);
+            }
+
+            return true;
+        }
+
+        // We're writing to storage...
+        var ikr = _activityStatePacket.getIndicatorKeyRegister();
+        var key = ikr.getAccessKey();
+        checkAccessLimitsAndAccessibility(basicMode,
+                                          _scratchpad._operandBaseRegisterIndex,
+                                          _scratchpad._operandRelativeAddress,
+                                          false, false, true, key);
+
+        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
+        var offset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        if (allowPartial) {
+            var qWord = dr.isQuarterWordModeEnabled();
+            var origValue = bReg.getStorage().get(offset);
+            var newValue = injectPartialWord(origValue, jField, operand, qWord);
+            bReg.getStorage().set(offset, newValue);
         } else {
-            ActiveBaseTable.Entry abte = _activeBaseTable.getEntry(baseRegisterIndex);
-            level = abte.getBankLevel();
-            bdi = abte.getBankDescriptorIndex();
-            offset = abte.getSubsetSpecification();
+            bReg.getStorage().set(offset, operand);
         }
 
-        var baseRegister = _baseRegisters[baseRegisterIndex];
-        if (baseRegister.isVoid()) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException, level, bdi);
-        }
-
-        var bankDescriptor = baseRegister.getBankDescriptor();
-        offset += relativeAddress - bankDescriptor.getLowerLimitNormalized();
-        virtualAddress.setBankDescriptorIndex(bdi);
-        virtualAddress.setBankLevel(level);
-        virtualAddress.setOffset((int)offset);
-
-        // TODO do we need to worry about gate banks here?
-        switch (bankDescriptor.getBankType()) {
-            case BankType.BasicMode -> virtualAddress.translateToBasicMode();
-            case BankType.ExtendedMode -> {}
-            default -> throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException, level, bdi);
-        }
-
-        absoluteAddress.setUpiIndex(bankDescriptor.getBaseAddress().getUpiIndex());
-        absoluteAddress.setSegment(bankDescriptor.getBaseAddress().getSegment());
-        absoluteAddress.setOffset((int)(offset + bankDescriptor.getBaseAddress().getOffset()));
+        return true;
     }
 }
