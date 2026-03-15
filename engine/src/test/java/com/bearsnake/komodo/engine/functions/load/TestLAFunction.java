@@ -145,6 +145,35 @@ public class TestLAFunction extends TestFunction {
     }
 
     @Test
+    public void testLA_from_GRS() throws MachineInterrupt {
+        var code = new long[] {
+            // use Q1 to verify reg->reg is always full-word
+            laEM(Constants.JFIELD_Q1, 2, 0, 0, 0, 0, Constants.GRS_A3),
+            0,
+            };
+
+        var bank0 = new ArraySlice(code);
+
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0_1)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+
+        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(3).setW(0_400013_022100L);
+
+        run();
+
+        assertEquals(0_400013_022100L, _engine.getExecOrUserARegister(2).getW());
+    }
+
+    @Test
     public void testLA_LongIndexed_EM() throws MachineInterrupt {
         var code = new long[] {
             laEM(Constants.JFIELD_W, 4, 4, 1, 0, 1, 0),
