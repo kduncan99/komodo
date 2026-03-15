@@ -11,6 +11,8 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Load Modifier and Jump instruction
+ * (LMJ) Stores the next address after this instruction in the modifier of X(a),
+ * and then jumps to the address indicated by resolving U.
  */
 public class LMJFunction extends Function {
 
@@ -29,8 +31,17 @@ public class LMJFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
-        return false;
+        var operand = engine.getJumpOperand();
+        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        var pc = engine.getProgramAddressRegister().getProgramCounter();
+        var ci = engine.getCurrentInstruction();
+        engine.getExecOrUserXRegister(ci.getA()).setXM(pc + 1);
+
+        doJump(engine, operand);
+        return true;
     }
 
     @Override

@@ -11,6 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Store Location and Jump instruction
+ * (SLJ) Stores the next address after this instruction into U, then jumps to U+1.
  */
 public class SLJFunction extends Function {
 
