@@ -17,9 +17,8 @@ public class LXLMFunction extends Function {
 
     public LXLMFunction() {
         super("LXLM");
-        var fc = new FunctionCode(0_75).setJField(013);
-        setBasicModeFunctionCode(fc);
-        setExtendedModeFunctionCode(fc);
+        setBasicModeFunctionCode(new FunctionCode(0_75).setJField(013).setProcessorPrivilege(0));
+        setExtendedModeFunctionCode(new FunctionCode(0_75).setJField(013));
 
         setAFieldSemantics(AFieldSemantics.X_REGISTER);
         setImmediateMode(false);
@@ -30,7 +29,13 @@ public class LXLMFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
-        return false;
+        var operand = engine.getOperand(true, true, true, false, false);
+        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        var ci = engine.getCurrentInstruction();
+        engine.getExecOrUserXRegister(ci.getA()).setXM24(operand);
+        return true;
     }
 }

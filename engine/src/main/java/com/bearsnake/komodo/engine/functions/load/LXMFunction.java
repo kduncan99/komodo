@@ -30,7 +30,13 @@ public class LXMFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
-        return false;
+        var operand = engine.getOperand(true, true, true, true, false);
+        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        var ci = engine.getCurrentInstruction();
+        engine.getExecOrUserXRegister(ci.getA()).setXM(operand);
+        return true;
     }
 }
