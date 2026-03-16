@@ -1103,8 +1103,10 @@ public class Engine {
         }
     }
 
-    public void preventPCUpdate() {
-        _preventProgramCounterUpdate = true;
+    public void preventProgramCounterUpdate(
+        final boolean flag
+    ) {
+        _preventProgramCounterUpdate = flag;
     }
 
     /**

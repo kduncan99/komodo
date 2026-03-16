@@ -112,7 +112,7 @@ public abstract class Function {
         final Engine engine,
         final long jumpTarget
     ) {
-        engine.preventPCUpdate();
+        engine.preventProgramCounterUpdate(true);
 
         var par = engine.getProgramAddressRegister();
         var oldAddress = par.getProgramCounter();
