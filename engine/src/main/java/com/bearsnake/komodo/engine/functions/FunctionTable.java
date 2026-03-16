@@ -46,30 +46,77 @@ public abstract class FunctionTable {
         new LXMFunction(),
         new LXSIFunction(),
         // store
+        // new DSFunction(),
         new SAFunction(),
+        // new SAQWFunction(),
         new SASFunction(),
         new SAZFunction(),
         new SFSFunction(),
         new SFZFunction(),
         new SN1Function(),
+        new SMAFunction(),
+        new SNAFunction(),
         new SNZFunction(),
         new SP1Function(),
+        new SRFunction(),
+        // new SRSFunction(),
+        new SXFunction(),
         new SZFunction(),
+        // fixed
+        // float
+        // decimal
+        // search
+        // test
+        // shift
         // jump
+        // new DJZFunction()
         new HJFunction(),
         new HLTJFunction(),
         new JFunction(),
+        // new JBFunction(),
+        // new JCFunction(),
+        // new JDFFunction(),
+        // new JFOFunction(),
+        // new JFUFunction(),
+        // new JGDFunction(),
         new JKFunction(),
+        // new JMGIFunction(),
+        // new JNBFunction(),
+        // new JNCFunction(),
+        // new JNDFFunction(),
+        // new JNFunction(),
+        // new JNFOFunction(),
+        // new JNFUFunction(),
+        // new JNOFunction(),
+        // new JNZFunction(),
+        // new JOFunction(),
+        // new JPFunction(),
+        // new JPSFunction(),
+        // new JZFunction()
         new LMJFunction(),
         new SLJFunction(),
+        // logical
+        // storage
+        // string
+        // addressSpace
+        // procedureControl
+        // queueing
+        // activity
+        // stack
+        // interrupt
+        // system
+        // dayclock
+        // upi
+        // instrumentation
         // special
         new DCBFunction(),
-        new EXFunction(),
-        new EXRFunction(),
+        new EXFunction(),// TODO implement
+        new EXRFunction(),// TODO implement
         new NOPFunction(),
-        new RNGBFunction(),
-        new RNGIFunction(),
+        new RNGBFunction(),// TODO implement
+        new RNGIFunction(),// TODO implement
     };
+
 
     private static boolean _isInitialized = false;
     private static final HashMap<Integer, Function> BASIC_MODE_TOP_LEVEL = new HashMap<>();
