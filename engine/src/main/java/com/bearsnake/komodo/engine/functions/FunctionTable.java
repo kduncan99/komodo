@@ -9,7 +9,7 @@ import com.bearsnake.komodo.engine.DesignatorRegister;
 import com.bearsnake.komodo.engine.functions.jump.*;
 import com.bearsnake.komodo.engine.functions.load.*;
 import com.bearsnake.komodo.engine.functions.special.*;
-import com.bearsnake.komodo.engine.functions.store.SAFunction;
+import com.bearsnake.komodo.engine.functions.store.*;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 
 import java.util.HashMap;
@@ -47,6 +47,14 @@ public abstract class FunctionTable {
         new LXSIFunction(),
         // store
         new SAFunction(),
+        new SASFunction(),
+        new SAZFunction(),
+        new SFSFunction(),
+        new SFZFunction(),
+        new SN1Function(),
+        new SNZFunction(),
+        new SP1Function(),
+        new SZFunction(),
         // jump
         new HJFunction(),
         new HLTJFunction(),
@@ -120,8 +128,8 @@ public abstract class FunctionTable {
         }
 
         // A function already exists at the f coordinate - is it a JSubFunction? It better be...
-        if (existing instanceof JSubFunction jSub) {
-            jSub.putFunction(functionCode, function);
+        if (existing instanceof ASubFunction aSub) {
+            aSub.putFunction(functionCode, function);
             return;
         }
 
@@ -129,34 +137,35 @@ public abstract class FunctionTable {
     }
 
     private static void initializeLookups() {
-        for (var func : ALL_FUNCTIONS) {
-            if (func.getBasicModeFunctionCode() != null) {
-                ingestFunction(BASIC_MODE_TOP_LEVEL, func, func.getBasicModeFunctionCode());
+        try {
+            for (var func : ALL_FUNCTIONS) {
+                if (func.getBasicModeFunctionCode() != null) {
+                    ingestFunction(BASIC_MODE_TOP_LEVEL, func, func.getBasicModeFunctionCode());
+                }
+                if (func.getExtendedModeFunctionCode() != null) {
+                    ingestFunction(EXTENDED_MODE_TOP_LEVEL, func, func.getExtendedModeFunctionCode());
+                }
             }
-            if (func.getExtendedModeFunctionCode() != null) {
-                ingestFunction(EXTENDED_MODE_TOP_LEVEL, func, func.getExtendedModeFunctionCode());
+            _isInitialized = true;
+        } catch (FunctionTable.CollisionException ex) {
+            for (var e : BASIC_MODE_TOP_LEVEL.entrySet()) {
+                var fc = e.getKey();
+                var func = e.getValue();
+                System.out.printf("BM:%03o: %s%n", fc, func.getMnemonic());
+                if (func instanceof SubFunction sf) {
+                    sf.debug("  ");
+                }
             }
+            for (var e : EXTENDED_MODE_TOP_LEVEL.entrySet()) {
+                var fc = e.getKey();
+                var func = e.getValue();
+                System.out.printf("BM:%03o: %s%n", fc, func.getMnemonic());
+                if (func instanceof SubFunction sf) {
+                    sf.debug("  ");
+                }
+            }
+            throw ex;
         }
-        _isInitialized = true;
-
-        //TODO - for debugging - remove
-//        for (var e : BASIC_MODE_TOP_LEVEL.entrySet()) {
-//            var fc = e.getKey();
-//            var func = e.getValue();
-//            System.out.printf("BM:%03o: %s%n", fc, func.getMnemonic());
-//            if (func instanceof SubFunction sf) {
-//                sf.debug("  ");
-//            }
-//        }
-//        for (var e : EXTENDED_MODE_TOP_LEVEL.entrySet()) {
-//            var fc = e.getKey();
-//            var func = e.getValue();
-//            System.out.printf("BM:%03o: %s%n", fc, func.getMnemonic());
-//            if (func instanceof SubFunction sf) {
-//                sf.debug("  ");
-//            }
-//        }
-        //TODO end
     }
 
     public static Function lookupFunction(

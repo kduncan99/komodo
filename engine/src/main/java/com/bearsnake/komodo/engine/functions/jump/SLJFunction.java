@@ -29,8 +29,14 @@ public class SLJFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
-        return false;
+        // Store PAR.PC + 1 in U
+        var retAddr = (engine.getProgramAddressRegister().getProgramCounter() + 1) & 0_777777;
+        if (!engine.storeOperand(false, true, false, false, retAddr))
+            return false;
+
+        // Now jump to U + 1
+        engine.jumpToCachedAddressPlusOne();
+        return true;
     }
 
     @Override

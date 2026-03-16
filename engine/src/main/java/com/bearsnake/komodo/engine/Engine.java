@@ -425,7 +425,7 @@ public class Engine {
         var ci = _activityStatePacket.getCurrentInstruction();
 
         if (_traceInstructions) {
-            var str = Function.interpret(dr, ci);
+            var str = Function.interpret(this, ci);
             // TODO log this, don't print it
             if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
                 IO.println("   [" + str + "]");
@@ -1239,6 +1239,16 @@ public class Engine {
         _scratchpad._instructionPoint = InstructionPoint.MID_INSTRUCTION;
     }
 
+    /**
+     * Stores an operand at the address indicated by U
+     * @param grsSource true if we are reading from GRS
+     * @param grsCheck true if we are checking GRS destination access
+     * @param checkImmediate true if we are allowing immediate addressing
+     * @param allowPartial true if we are allowing partial addressing
+     * @param operand value to be stored
+     * @return true if the operation is complete; false if we are doing indirect addressing
+     * @throws MachineInterrupt in any case where an interrupt is generated
+     */
     public boolean storeOperand(
         final boolean grsSource,
         final boolean grsCheck,
@@ -1269,7 +1279,7 @@ public class Engine {
             getEffectiveBaseRegisterIndex();
         }
 
-        if (grsCheck && (basicMode || (_scratchpad._operandBaseRegisterIndex == 0)) && (operand < 0200)) {
+        if (grsCheck && (basicMode || (_scratchpad._operandBaseRegisterIndex == 0)) && (_scratchpad._operandRelativeAddress < 0200)) {
             // storing into the GRS
             if (!isGRSAccessAllowed(_scratchpad._operandRelativeAddress, pPriv, true)) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
@@ -1307,5 +1317,18 @@ public class Engine {
         }
 
         return true;
+    }
+
+    /**
+     * For SLJ instruction - saves us the trouble of calculating the target address twice.
+     */
+    public void jumpToCachedAddressPlusOne() {
+        var par = _activityStatePacket.getProgramAddressRegister();
+        var oldAddress = par.getProgramCounter();
+        var newPC = _scratchpad._operandRelativeAddress + 1;
+        par.setProgramCounter(newPC);
+        _bmCachedBaseRegisterIndex = 0;
+        _preventProgramCounterUpdate = true;
+        createJumpHistory(oldAddress);
     }
 }

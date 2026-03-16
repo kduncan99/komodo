@@ -132,10 +132,13 @@ public abstract class Function {
     // designator register to indicate relevant modes, and the instruction word
     // which we are interpreting.
     public static String interpret(
-        final DesignatorRegister dReg,
+        final Engine engine,
         final InstructionWord iWord
     ) {
+        var dReg = engine.getDesignatorRegister();
+
         // TODO JGD, BT are weird
+
         Function func;
         try {
             func = lookup(dReg, iWord);
@@ -173,6 +176,7 @@ public abstract class Function {
             case AFieldSemantics.X_REGISTER -> sb.append("X").append(iWord.getA()).append(",");
         }
 
+        var xRegActive = false;
         if (dReg.isBasicModeEnabled()) {
             // Interpret u-field (I think there is always a u-field...)
             // If j-field is a partial word designator (jField is not set in the functionCode)
@@ -199,6 +203,7 @@ public abstract class Function {
                     sb.append("*");
                 }
                 sb.append("X").append(iWord.getX());
+                xRegActive = true;
             }
         } else {
             // extended mode.
@@ -220,6 +225,7 @@ public abstract class Function {
                         sb.append("*");
                     }
                     sb.append("X").append(x);
+                    xRegActive = true;
                 } else {
                     var u = iWord.getU() | (iWord.getH() << 17) | (iWord.getI() << 16);
                     sb.append("0");
@@ -243,6 +249,7 @@ public abstract class Function {
                         sb.append("*");
                     }
                     sb.append("X").append(x);
+                    xRegActive = true;
                 }
                 sb.append(",");
 
@@ -255,6 +262,14 @@ public abstract class Function {
             }
         }
 
+        if (xRegActive) {
+            while (sb.length() < 25) {
+                sb.append(" ");
+            }
+            sb.append("");
+            var xReg = engine.getExecOrUserXRegister(iWord.getX());
+            sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
+        }
         return sb.toString();
     }
 
