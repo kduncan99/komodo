@@ -47,8 +47,8 @@ public abstract class FunctionTable {
         new LXSIFunction(),
         // store
         // new DSFunction(),
+        new SAQWFunction(),
         new SAFunction(),
-        // new SAQWFunction(),
         new SASFunction(),
         new SAZFunction(),
         new SFSFunction(),
@@ -59,7 +59,7 @@ public abstract class FunctionTable {
         new SNZFunction(),
         new SP1Function(),
         new SRFunction(),
-        // new SRSFunction(),
+        new SRSFunction(),
         new SXFunction(),
         new SZFunction(),
         // fixed
@@ -121,6 +121,14 @@ public abstract class FunctionTable {
     private static boolean _isInitialized = false;
     private static final HashMap<Integer, Function> BASIC_MODE_TOP_LEVEL = new HashMap<>();
     private static final HashMap<Integer, Function> EXTENDED_MODE_TOP_LEVEL = new HashMap<>();
+
+    public static void clear() {
+        synchronized (FunctionTable.class) {
+            BASIC_MODE_TOP_LEVEL.clear();
+            EXTENDED_MODE_TOP_LEVEL.clear();
+            _isInitialized = false;
+        }
+    }
 
     private static void ingestFunction(
         final HashMap<Integer, Function> topLevel,

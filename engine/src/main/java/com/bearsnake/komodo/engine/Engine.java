@@ -1070,6 +1070,18 @@ public class Engine {
     }
 
     /**
+     * For SLJ instruction - saves us the trouble of calculating the target address twice.
+     */
+    public void jumpToCachedAddressPlusOne() {
+        var par = _activityStatePacket.getProgramAddressRegister();
+        var oldAddress = par.getProgramCounter();
+        var newPC = _scratchpad._operandRelativeAddress + 1;
+        par.setProgramCounter(newPC);
+        _bmCachedBaseRegisterIndex = 0;
+        _preventProgramCounterUpdate = true;
+        createJumpHistory(oldAddress);
+    }
+    /**
      * Polls to see if an interrupt is pending
      * @return the highest-priority interrupt currently pending, or null if none are pending
      */
@@ -1098,7 +1110,7 @@ public class Engine {
     /**
      * Wrapper for the two methods which provide this service for basic and extended modes, respectively.
      */
-    private void resolveRelativeAddress(
+    public void resolveRelativeAddress(
         final boolean useU,
         final boolean grsCheck,
         final boolean ignoreAccessChecks
@@ -1240,6 +1252,73 @@ public class Engine {
     }
 
     /**
+     * Stores consecutive operands into memory starting at the address indicated by U.
+     * @param grsCheck true if we are checking GRS destination access
+     * @param operands values to be stored
+     * @param offset starting index in the operands array
+     * @param count number of operands to store from the array
+     * @return true if the operation is complete; false if we are doing indirect addressing
+     * @throws MachineInterrupt in any case where an interrupt is generated
+     */
+    public boolean storeConsecutiveOperands(
+        final boolean grsCheck,
+        final long[] operands,
+        final int offset,
+        final int count
+    ) throws MachineInterrupt {
+        resolveRelativeAddress(false, grsCheck, false);
+        if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        var dr = _activityStatePacket.getDesignatorRegister();
+        var basicMode = dr.isBasicModeEnabled();
+        var pPriv = dr.getProcessorPrivilege();
+
+        if (!basicMode) {
+            getEffectiveBaseRegisterIndex();
+        }
+
+        if (grsCheck && (basicMode || (_scratchpad._operandBaseRegisterIndex == 0)) && (_scratchpad._operandRelativeAddress < 0200)) {
+            // storing into the GRS
+            for (int i = 0; i < count; i++) {
+                var addr = (_scratchpad._operandRelativeAddress + i) & 0177;
+                if (!isGRSAccessAllowed(addr, pPriv, true)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
+                }
+                _generalRegisterSet.setRegister(addr, operands[offset + i]);
+            }
+            return true;
+        }
+
+        // We're writing to storage...
+        var ikr = _activityStatePacket.getIndicatorKeyRegister();
+        var key = ikr.getAccessKey();
+        checkAccessLimitsRange(_baseRegisters[_scratchpad._operandBaseRegisterIndex],
+                               _scratchpad._operandRelativeAddress,
+                               count,
+                               false, true, key);
+
+        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
+        var baseOffset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        for (int i = 0; i < count; i++) {
+            bReg.getStorage().set(baseOffset + i, operands[offset + i]);
+        }
+
+        return true;
+    }
+
+    /**
+     * Wrapper for the above method which specifies the entire array.
+     */
+    public boolean storeConsecutiveOperands(
+        final boolean grsCheck,
+        final long[] operands
+    ) throws MachineInterrupt {
+        return storeConsecutiveOperands(grsCheck, operands, 0, operands.length);
+    }
+
+    /**
      * Stores an operand at the address indicated by U
      * @param grsSource true if we are reading from GRS
      * @param grsCheck true if we are checking GRS destination access
@@ -1320,15 +1399,42 @@ public class Engine {
     }
 
     /**
-     * For SLJ instruction - saves us the trouble of calculating the target address twice.
+     * Stores an operand in the specific partial-word after developing U where it is stored.
+     * @param partialWordValue the value to store (the lower {n} bits are stored, according to the partial word size)
+     * @param partialWordIndicator the partial word indicator (use j-field constants)
+     * @return true if the operation is complete; false if we are doing indirect addressing
+     * @throws MachineInterrupt in any case where an interrupt is generated
      */
-    public void jumpToCachedAddressPlusOne() {
-        var par = _activityStatePacket.getProgramAddressRegister();
-        var oldAddress = par.getProgramCounter();
-        var newPC = _scratchpad._operandRelativeAddress + 1;
-        par.setProgramCounter(newPC);
-        _bmCachedBaseRegisterIndex = 0;
-        _preventProgramCounterUpdate = true;
-        createJumpHistory(oldAddress);
+    public boolean storePartialWordOperand(
+        final long partialWordValue,
+        final int partialWordIndicator
+    ) throws MachineInterrupt {
+        resolveRelativeAddress(false, false, false);
+        if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        var dr = _activityStatePacket.getDesignatorRegister();
+        var basicMode = dr.isBasicModeEnabled();
+
+        if (!basicMode) {
+            getEffectiveBaseRegisterIndex();
+        }
+
+        var ikr = _activityStatePacket.getIndicatorKeyRegister();
+        var key = ikr.getAccessKey();
+        checkAccessLimitsAndAccessibility(basicMode,
+                                          _scratchpad._operandBaseRegisterIndex,
+                                          _scratchpad._operandRelativeAddress,
+                                          false, false, true, key);
+
+        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
+        var offset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        var qWord = dr.isQuarterWordModeEnabled();
+        var origValue = bReg.getStorage().get(offset);
+        var newValue = injectPartialWord(origValue, partialWordIndicator, partialWordValue, qWord);
+        bReg.getStorage().set(offset, newValue);
+
+        return true;
     }
 }
