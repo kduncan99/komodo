@@ -47,7 +47,7 @@ public abstract class FunctionTable {
         LXMFunction.INSTANCE,
         LXSIFunction.INSTANCE,
         // store
-        // DSFunction.INSTANCE,
+        DSFunction.INSTANCE,
         SAQWFunction.INSTANCE,
         SAFunction.INSTANCE,
         SASFunction.INSTANCE,
