@@ -80,7 +80,7 @@ public abstract class FunctionTable {
         JFUFunction.INSTANCE,
         JGDFunction.INSTANCE,
         JKFunction.INSTANCE,
-        // JMGIFunction.INSTANCE,
+        JMGIFunction.INSTANCE,
         JNBFunction.INSTANCE,
         JNCFunction.INSTANCE,
         JNDFFunction.INSTANCE,
