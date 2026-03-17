@@ -69,11 +69,11 @@ public abstract class FunctionTable {
         // test
         // shift
         // jump
-        // new DJZFunction()
+        new DJZFunction(),
         new HJFunction(),
         new HLTJFunction(),
         new JFunction(),
-        // new JBFunction(),
+        new JBFunction(),
         new JCFunction(),
         new JDFFunction(),
         new JFOFunction(),
@@ -81,18 +81,18 @@ public abstract class FunctionTable {
         // new JGDFunction(),
         new JKFunction(),
         // new JMGIFunction(),
-        // new JNBFunction(),
+        new JNBFunction(),
         new JNCFunction(),
         new JNDFFunction(),
-        // new JNFunction(),
+        new JNFunction(),
         new JNFOFunction(),
         new JNFUFunction(),
         new JNOFunction(),
-        // new JNZFunction(),
+        new JNZFunction(),
         new JOFunction(),
-        // new JPFunction(),
+        new JPFunction(),
         // new JPSFunction(),
-        // new JZFunction()
+        new JZFunction(),
         new LMJFunction(),
         new SLJFunction(),
         // logical

@@ -1,0 +1,49 @@
+/*
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
+ */
+
+package com.bearsnake.komodo.engine.functions.jump;
+
+import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.functions.Function;
+import com.bearsnake.komodo.engine.functions.FunctionCode;
+import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
+
+/**
+ * Jump Positive instruction
+ * (JP) Jumps if A(a) is positive (bit 0 is clear).
+ */
+public class JPFunction extends Function {
+
+    public JPFunction() {
+        super("JP");
+        var fc = new FunctionCode(0_74).setJField(0_02);
+        setBasicModeFunctionCode(fc);
+        setExtendedModeFunctionCode(fc);
+
+        setAFieldSemantics(AFieldSemantics.A_REGISTER);
+        setImmediateMode(false);
+        setIsGRS(true);
+    }
+
+    @Override
+    public boolean execute(
+        final Engine engine
+    ) throws MachineInterrupt {
+        var operand = engine.getJumpOperand();
+        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
+        var ci = engine.getCurrentInstruction();
+        if (engine.getGeneralRegister(ci.getA()).isPositive()) {
+            doJump(engine, operand);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isJumpInstruction() {
+        return true;
+    }
+}
