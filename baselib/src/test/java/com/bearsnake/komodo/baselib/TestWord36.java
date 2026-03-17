@@ -428,6 +428,38 @@ public class TestWord36 {
         assertEquals(Word36.POSITIVE_ZERO, result);
     }
 
+    @Test
+    public void decrement_Regular() {
+        assertEquals(4L, Word36.decrement(5L));
+    }
+
+    @Test
+    public void decrement_PositiveOne() {
+        assertEquals(Word36.POSITIVE_ZERO, Word36.decrement(Word36.POSITIVE_ONE));
+    }
+
+    @Test
+    public void decrement_PositiveZero() {
+        assertEquals(Word36.NEGATIVE_ZERO, Word36.decrement(Word36.POSITIVE_ZERO));
+    }
+
+    @Test
+    public void decrement_NegativeZero() {
+        assertEquals(Word36.NEGATIVE_ONE, Word36.decrement(Word36.NEGATIVE_ZERO));
+    }
+
+    @Test
+    public void decrement_Negative() {
+        assertEquals(0_777777_777771L, Word36.decrement(0_777777_777772L));
+    }
+
+    @Test
+    public void decrement_Instance() {
+        Word36 word = new Word36(5L);
+        word.decrement();
+        assertEquals(4L, word.getW());
+    }
+
 
     //  Shifts ---------------------------------------------------------------------------------------------------------------------
 

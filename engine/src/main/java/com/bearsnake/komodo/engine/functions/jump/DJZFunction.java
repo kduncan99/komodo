@@ -9,6 +9,7 @@ import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
+import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 
 /**
  * Double Jump Zero instruction
@@ -26,7 +27,7 @@ public class DJZFunction extends Function {
 
         setAFieldSemantics(AFieldSemantics.A_REGISTER);
         setImmediateMode(false);
-        setIsGRS(true);
+        setIsGRS(false);
     }
 
     @Override
@@ -38,14 +39,19 @@ public class DJZFunction extends Function {
             return false;
         }
 
-        var operands = engine.getConsecutiveOperands(true, 2);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
-            return false;
+        var dr = engine.getDesignatorRegister();
+        var pPriv = dr.getProcessorPrivilege();
+        var grsx0 = engine.getExecOrUserARegisterIndex(engine.getCurrentInstruction().getA());
+        var grsx1 = (grsx0 + 1) & 0177;
+        if (!Engine.isGRSAccessAllowed(grsx0, pPriv, false)
+            || !Engine.isGRSAccessAllowed(grsx1, pPriv, false)) {
+            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
         }
 
-        if (DoubleWord36.isZero(operands[0], operands[1])) {
+        if (DoubleWord36.isZero(engine.getGeneralRegister(grsx0).getW(), engine.getGeneralRegister(grsx1).getW())) {
             doJump(engine, jumpTarget);
         }
+
         return true;
     }
 
