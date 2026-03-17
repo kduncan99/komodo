@@ -8,6 +8,7 @@ import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.DesignatorRegister;
 import com.bearsnake.komodo.engine.functions.jump.*;
 import com.bearsnake.komodo.engine.functions.load.*;
+import com.bearsnake.komodo.engine.functions.logical.*;
 import com.bearsnake.komodo.engine.functions.special.*;
 import com.bearsnake.komodo.engine.functions.store.*;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
@@ -97,6 +98,10 @@ public abstract class FunctionTable {
         LMJFunction.INSTANCE,
         SLJFunction.INSTANCE,
         // logical
+        ANDFunction.INSTANCE,
+        MLUFunction.INSTANCE,
+        ORFunction.INSTANCE,
+        XORFunction.INSTANCE,
         // storage
         // string
         // addressSpace
