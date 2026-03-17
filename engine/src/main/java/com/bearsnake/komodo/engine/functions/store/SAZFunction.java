@@ -10,7 +10,9 @@ package com.bearsnake.komodo.engine.functions.store;
  */
 public class SAZFunction extends StoreConstantFunction {
 
-    public SAZFunction() {
+    public static final SAZFunction INSTANCE = new SAZFunction();
+
+    private SAZFunction() {
         super("SAZ", 07, 0_060060_060060L);
     }
 }

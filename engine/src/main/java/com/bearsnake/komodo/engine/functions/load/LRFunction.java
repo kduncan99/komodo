@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class LRFunction extends Function {
 
-    public LRFunction() {
+    public static final LRFunction INSTANCE = new LRFunction();
+
+    private LRFunction() {
         super("LR");
         var fc = new FunctionCode(0_23);
         setBasicModeFunctionCode(fc);

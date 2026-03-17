@@ -16,7 +16,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class DCBFunction extends Function {
 
-    public DCBFunction() {
+    public static final DCBFunction INSTANCE = new DCBFunction();
+
+    private DCBFunction() {
         super("DCB");
         setExtendedModeFunctionCode(new FunctionCode(0_33).setJField(0_15));
 

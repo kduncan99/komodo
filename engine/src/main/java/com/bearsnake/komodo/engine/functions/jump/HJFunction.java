@@ -16,7 +16,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class HJFunction extends Function {
 
-    public HJFunction() {
+    public static final HJFunction INSTANCE = new HJFunction();
+
+    private HJFunction() {
         super("HJ");
         setBasicModeFunctionCode(new FunctionCode(0_74).setJField(0_05));
 

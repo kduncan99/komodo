@@ -16,7 +16,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class SNAFunction extends Function {
 
-    public SNAFunction() {
+    public static final SNAFunction INSTANCE = new SNAFunction();
+
+    private SNAFunction() {
         super("SNA");
         var fc = new FunctionCode(0_02);
         setBasicModeFunctionCode(fc);

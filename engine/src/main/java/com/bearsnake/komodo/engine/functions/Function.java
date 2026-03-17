@@ -6,8 +6,10 @@ package com.bearsnake.komodo.engine.functions;
 
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.DesignatorRegister;
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.functions.jump.JGDFunction;
 import com.bearsnake.komodo.engine.interrupts.HardwareDefaultInterrupt;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -35,7 +37,7 @@ public abstract class Function {
     private FunctionCode _basicModeFunctionCode = null;
     private FunctionCode _extendedModeFunctionCode = null;
     private boolean _immediateMode = false;     // U and XU partial words are supported for this function
-    private boolean _isGRS =  false;            // addresses < 0200 are GRS locations
+    private boolean _isGRS = false;            // addresses < 0200 are GRS locations
     private final String _mnemonic;
 
     protected Function(
@@ -89,10 +91,21 @@ public abstract class Function {
         final Engine engine
     ) throws MachineInterrupt;
 
-    public FunctionCode getBasicModeFunctionCode() { return _basicModeFunctionCode; }
-    public FunctionCode getExtendedModeFunctionCode() { return _extendedModeFunctionCode; }
-    public boolean getImmediateMode() { return _immediateMode; }
-    public boolean isGRS() { return _isGRS; }
+    public FunctionCode getBasicModeFunctionCode() {
+        return _basicModeFunctionCode;
+    }
+
+    public FunctionCode getExtendedModeFunctionCode() {
+        return _extendedModeFunctionCode;
+    }
+
+    public boolean getImmediateMode() {
+        return _immediateMode;
+    }
+
+    public boolean isGRS() {
+        return _isGRS;
+    }
 
     public static Function lookup(
         final DesignatorRegister designatorRegister,
@@ -116,7 +129,7 @@ public abstract class Function {
 
         var par = engine.getProgramAddressRegister();
         var oldAddress = par.getProgramCounter();
-        par.setProgramCounter((int)(jumpTarget & 0_777777));
+        par.setProgramCounter((int) (jumpTarget & 0_777777));
 
         var dr = engine.getDesignatorRegister();
         if (dr.isBasicModeEnabled()) {
@@ -137,32 +150,73 @@ public abstract class Function {
     ) {
         var dReg = engine.getDesignatorRegister();
 
-        // TODO JGD, BT are weird
+        // Special code for JGD
+        //      JGD a,*u,*x
+        // looks normal, but the trick here is that a is a GRS index, created by concatenating the
+        // j-field with the a-field (dropping the highest bit of the j-field) for 7 bits of GRS index.
+        if (iWord.getF() == 070) {
+            var funcCode = new FunctionCode(070);
+            var sb = new StringBuilder("JGD       ");
+            var grsx = ((iWord.getJ() << 4) | iWord.getA()) & 0177;
+            sb.append(Constants.GRS_REGISTER_NAMES[grsx]).append(",");
+
+            // Interpret u-field
+            var u18 = (funcCode.getJField() == null) && (iWord.getJ() >= 016) && (iWord.getX() == 0);
+            if (!u18 && (iWord.getI() > 0)) {
+                sb.append("*");
+            }
+            var u = iWord.getU();
+            if (u18) {
+                u |= (iWord.getI() << 16);
+                u |= (iWord.getH() << 17);
+            }
+            sb.append("0");
+            if (u != 0) {
+                sb.append(Integer.toOctalString(u));
+            }
+
+            if (iWord.getX() > 0) {
+                sb.append(",");
+                if (iWord.getH() > 0) {
+                    sb.append("*");
+                }
+                sb.append("X").append(iWord.getX());
+
+                while (sb.length() < 25) {
+                    sb.append(" ");
+                }
+                sb.append("");
+                var xReg = engine.getExecOrUserXRegister(iWord.getX());
+                sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
+            }
+
+            return sb.toString();
+        }
 
         Function func;
+        FunctionCode funcCode;
+
         try {
             func = lookup(dReg, iWord);
         } catch (InvalidInstructionInterrupt | HardwareDefaultInterrupt e) {
             return Word36.toOctal(iWord.getW());
         }
 
-        FunctionCode funcCode;
         try {
             funcCode = dReg.isBasicModeEnabled()
-                           ? func.getBasicModeFunctionCode()
-                           : func.getExtendedModeFunctionCode();
+                       ? func.getBasicModeFunctionCode()
+                       : func.getExtendedModeFunctionCode();
         } catch (NoSuchElementException ex) {
             return Word36.toOctal(iWord.getW());
         }
 
-        var sb = new StringBuilder();
-
         // first display field - mnemonic and optional j-field designation.
         // If there is a j-field value in the function coordinate, it is not used as a
         // partial-word designator, and thus is not displayed.
-        sb.append(func.getMnemonic());
+        var sb = new StringBuilder(func.getMnemonic());
         if ((funcCode.getJField() == null) && (func.getImmediateMode())) {
-            sb.append(",").append(getJFieldToken(iWord.getJ(), dReg));
+            sb.append(",")
+              .append(getJFieldToken(iWord.getJ(), dReg));
         }
         while (sb.length() < 10) {
             sb.append(" ");
@@ -170,10 +224,18 @@ public abstract class Function {
 
         // Is there an a-field?
         switch (func.getAFieldSemantics()) {
-            case AFieldSemantics.A_REGISTER -> sb.append("A").append(iWord.getA()).append(",");
-            case AFieldSemantics.B_REGISTER -> sb.append("B").append(iWord.getA()).append(",");
-            case AFieldSemantics.R_REGISTER -> sb.append("R").append(iWord.getA()).append(",");
-            case AFieldSemantics.X_REGISTER -> sb.append("X").append(iWord.getA()).append(",");
+            case AFieldSemantics.A_REGISTER -> sb.append("A")
+                                                 .append(iWord.getA())
+                                                 .append(",");
+            case AFieldSemantics.B_REGISTER -> sb.append("B")
+                                                 .append(iWord.getA())
+                                                 .append(",");
+            case AFieldSemantics.R_REGISTER -> sb.append("R")
+                                                 .append(iWord.getA())
+                                                 .append(",");
+            case AFieldSemantics.X_REGISTER -> sb.append("X")
+                                                 .append(iWord.getA())
+                                                 .append(",");
         }
 
         var xRegActive = false;
@@ -195,14 +257,15 @@ public abstract class Function {
             }
             sb.append("0");
             if (u != 0) {
-                sb.append(Integer.toOctalString((int)u));
+                sb.append(Integer.toOctalString((int) u));
             }
             if (iWord.getX() > 0) {
                 sb.append(",");
                 if (iWord.getH() > 0) {
                     sb.append("*");
                 }
-                sb.append("X").append(iWord.getX());
+                sb.append("X")
+                  .append(iWord.getX());
                 xRegActive = true;
             }
         } else {
@@ -224,7 +287,8 @@ public abstract class Function {
                     if (iWord.getH() > 0) {
                         sb.append("*");
                     }
-                    sb.append("X").append(x);
+                    sb.append("X")
+                      .append(x);
                     xRegActive = true;
                 } else {
                     var u = iWord.getU() | (iWord.getH() << 17) | (iWord.getI() << 16);
@@ -248,7 +312,8 @@ public abstract class Function {
                     if (iWord.getH() > 0) {
                         sb.append("*");
                     }
-                    sb.append("X").append(x);
+                    sb.append("X")
+                      .append(x);
                     xRegActive = true;
                 }
                 sb.append(",");
@@ -258,7 +323,8 @@ public abstract class Function {
                 if (!dReg.isBasicModeEnabled() && (dReg.getProcessorPrivilege() < 2)) {
                     breg |= (int) (iWord.getI() << 4);
                 }
-                sb.append("B").append(breg);
+                sb.append("B")
+                  .append(breg);
             }
         }
 
@@ -270,6 +336,7 @@ public abstract class Function {
             var xReg = engine.getExecOrUserXRegister(iWord.getX());
             sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
         }
+
         return sb.toString();
     }
 

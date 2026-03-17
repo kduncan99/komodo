@@ -16,7 +16,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class LNAFunction extends Function {
 
-    public LNAFunction() {
+    public static final LNAFunction INSTANCE = new LNAFunction();
+
+    private LNAFunction() {
         super("LNA");
         var fc = new FunctionCode(0_11);
         setBasicModeFunctionCode(fc);

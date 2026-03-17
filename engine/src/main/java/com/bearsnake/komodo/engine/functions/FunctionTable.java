@@ -28,40 +28,40 @@ public abstract class FunctionTable {
 
     private static final Function[] ALL_FUNCTIONS = new Function[]{
         // load
-        new DLFunction(),
-        new DLMFunction(),
-        new DLNFunction(),
-        new LAFunction(),
-        new LAQWFunction(),
-        new LMAFunction(),
-        new LNAFunction(),
-        new LNMAFunction(),
-        new LRFunction(),
-        new LRSFunction(),
-        new LSBLFunction(),
-        new LSBOFunction(),
-        new LXFunction(),
-        new LXIFunction(),
-        new LXLMFunction(),
-        new LXMFunction(),
-        new LXSIFunction(),
+        DLFunction.INSTANCE,
+        DLMFunction.INSTANCE,
+        DLNFunction.INSTANCE,
+        LAFunction.INSTANCE,
+        LAQWFunction.INSTANCE,
+        LMAFunction.INSTANCE,
+        LNAFunction.INSTANCE,
+        LNMAFunction.INSTANCE,
+        LRFunction.INSTANCE,
+        LRSFunction.INSTANCE,
+        LSBLFunction.INSTANCE,
+        LSBOFunction.INSTANCE,
+        LXFunction.INSTANCE,
+        LXIFunction.INSTANCE,
+        LXLMFunction.INSTANCE,
+        LXMFunction.INSTANCE,
+        LXSIFunction.INSTANCE,
         // store
-        // new DSFunction(),
-        new SAQWFunction(),
-        new SAFunction(),
-        new SASFunction(),
-        new SAZFunction(),
-        new SFSFunction(),
-        new SFZFunction(),
-        new SN1Function(),
-        new SMAFunction(),
-        new SNAFunction(),
-        new SNZFunction(),
-        new SP1Function(),
-        new SRFunction(),
-        new SRSFunction(),
-        new SXFunction(),
-        new SZFunction(),
+        // DSFunction.INSTANCE,
+        SAQWFunction.INSTANCE,
+        SAFunction.INSTANCE,
+        SASFunction.INSTANCE,
+        SAZFunction.INSTANCE,
+        SFSFunction.INSTANCE,
+        SFZFunction.INSTANCE,
+        SN1Function.INSTANCE,
+        SMAFunction.INSTANCE,
+        SNAFunction.INSTANCE,
+        SNZFunction.INSTANCE,
+        SP1Function.INSTANCE,
+        SRFunction.INSTANCE,
+        SRSFunction.INSTANCE,
+        SXFunction.INSTANCE,
+        SZFunction.INSTANCE,
         // fixed
         // float
         // decimal
@@ -69,32 +69,33 @@ public abstract class FunctionTable {
         // test
         // shift
         // jump
-        new DJZFunction(),
-        new HJFunction(),
-        new HLTJFunction(),
-        new JFunction(),
-        new JBFunction(),
-        new JCFunction(),
-        new JDFFunction(),
-        new JFOFunction(),
-        new JFUFunction(),
-        // new JGDFunction(),
-        new JKFunction(),
-        // new JMGIFunction(),
-        new JNBFunction(),
-        new JNCFunction(),
-        new JNDFFunction(),
-        new JNFunction(),
-        new JNFOFunction(),
-        new JNFUFunction(),
-        new JNOFunction(),
-        new JNZFunction(),
-        new JOFunction(),
-        new JPFunction(),
-        // new JPSFunction(),
-        new JZFunction(),
-        new LMJFunction(),
-        new SLJFunction(),
+        DJZFunction.INSTANCE,
+        HJFunction.INSTANCE,
+        HLTJFunction.INSTANCE,
+        JFunction.INSTANCE,
+        JBFunction.INSTANCE,
+        JCFunction.INSTANCE,
+        JDFFunction.INSTANCE,
+        JFOFunction.INSTANCE,
+        JFUFunction.INSTANCE,
+        JGDFunction.INSTANCE,
+        JKFunction.INSTANCE,
+        // JMGIFunction.INSTANCE,
+        JNBFunction.INSTANCE,
+        JNCFunction.INSTANCE,
+        JNDFFunction.INSTANCE,
+        JNFunction.INSTANCE,
+        JNFOFunction.INSTANCE,
+        JNFUFunction.INSTANCE,
+        JNOFunction.INSTANCE,
+        JNSFunction.INSTANCE,
+        JNZFunction.INSTANCE,
+        JOFunction.INSTANCE,
+        JPFunction.INSTANCE,
+        JPSFunction.INSTANCE,
+        JZFunction.INSTANCE,
+        LMJFunction.INSTANCE,
+        SLJFunction.INSTANCE,
         // logical
         // storage
         // string
@@ -109,12 +110,12 @@ public abstract class FunctionTable {
         // upi
         // instrumentation
         // special
-        new DCBFunction(),
-        new EXFunction(),// TODO implement
-        new EXRFunction(),// TODO implement
-        new NOPFunction(),
-        new RNGBFunction(),// TODO implement
-        new RNGIFunction(),// TODO implement
+        DCBFunction.INSTANCE,
+        EXFunction.INSTANCE,// TODO implement
+        EXRFunction.INSTANCE,// TODO implement
+        NOPFunction.INSTANCE,
+        RNGBFunction.INSTANCE,// TODO implement
+        RNGIFunction.INSTANCE,// TODO implement
     };
 
 

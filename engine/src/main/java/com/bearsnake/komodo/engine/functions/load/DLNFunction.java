@@ -16,7 +16,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class DLNFunction extends Function {
 
-    public DLNFunction() {
+    public static final DLNFunction INSTANCE = new DLNFunction();
+
+    private DLNFunction() {
         super("DLN");
         var fc = new FunctionCode(0_71).setJField(014);
         setBasicModeFunctionCode(fc);

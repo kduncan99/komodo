@@ -26,7 +26,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class LAQWFunction extends Function {
 
-    public LAQWFunction() {
+    public static final LAQWFunction INSTANCE = new LAQWFunction();
+
+    private LAQWFunction() {
         super("LAQW");
         var fc = new FunctionCode(0_07).setJField(0_04);
         setBasicModeFunctionCode(fc);

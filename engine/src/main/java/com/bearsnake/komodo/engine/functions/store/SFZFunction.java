@@ -10,7 +10,9 @@ package com.bearsnake.komodo.engine.functions.store;
  */
 public class SFZFunction extends StoreConstantFunction {
 
-    public SFZFunction() {
+    public static final SFZFunction INSTANCE = new SFZFunction();
+
+    private SFZFunction() {
         super("SFZ", 05, 0_060606_060606L);
     }
 }

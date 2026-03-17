@@ -10,7 +10,9 @@ package com.bearsnake.komodo.engine.functions.store;
  */
 public class SFSFunction extends StoreConstantFunction {
 
-    public SFSFunction() {
+    public static final SFSFunction INSTANCE = new SFSFunction();
+
+    private SFSFunction() {
         super("SFS", 04, 0_050505_050505L);
     }
 }

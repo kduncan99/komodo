@@ -16,7 +16,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class LMJFunction extends Function {
 
-    public LMJFunction() {
+    public static final LMJFunction INSTANCE = new LMJFunction();
+
+    private LMJFunction() {
         super("LMJ");
         var c = new FunctionCode(0_74).setJField(0_13);
         setBasicModeFunctionCode(c);

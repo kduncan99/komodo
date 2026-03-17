@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class HLTJFunction extends Function {
 
-    public HLTJFunction() {
+    public static final HLTJFunction INSTANCE = new HLTJFunction();
+
+    private HLTJFunction() {
         super("HLTJ");
         var fc = new FunctionCode(0_74).setJField(0_15).setAField(0_05).setProcessorPrivilege(0);
         setBasicModeFunctionCode(fc);

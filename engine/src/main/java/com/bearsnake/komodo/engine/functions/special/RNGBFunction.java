@@ -16,7 +16,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class RNGBFunction extends Function {
 
-    public RNGBFunction() {
+    public static final RNGBFunction INSTANCE = new RNGBFunction();
+
+    private RNGBFunction() {
         super("RNGB");
         setExtendedModeFunctionCode(new FunctionCode(0_37).setJField(0_04).setAField(0_06));
 

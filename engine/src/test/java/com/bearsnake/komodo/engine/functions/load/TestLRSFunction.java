@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static com.bearsnake.komodo.engine.Constants.*;
+import static com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt.ErrorType.GRSViolation;
 import static com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt.ErrorType.WriteAccessViolation;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -180,7 +181,7 @@ public class TestLRSFunction extends TestFunction {
         _engine.getExecOrUserARegister(15).setQ4(0);        // area-1 grs index
 
         ReferenceViolationInterrupt mi = assertThrows(ReferenceViolationInterrupt.class, () -> run());
-        assertEquals(WriteAccessViolation, mi._errorType);
+        assertEquals(GRSViolation, mi._errorType);
         assertFalse(mi._fetchFlag);
 
         for (int rx = GRS_ER0; rx <= GRS_ER15; rx++) {
@@ -272,7 +273,7 @@ public class TestLRSFunction extends TestFunction {
         _engine.getExecOrUserARegister(15).setQ4(036);  // start 2 words ahead of hardware-reserved registers
 
         ReferenceViolationInterrupt mi = assertThrows(ReferenceViolationInterrupt.class, () -> run());
-        assertEquals(WriteAccessViolation, mi._errorType);
+        assertEquals(GRSViolation, mi._errorType);
         assertFalse(mi._fetchFlag);
 
         assertEquals(010, _engine.getGeneralRegister(036).getW());

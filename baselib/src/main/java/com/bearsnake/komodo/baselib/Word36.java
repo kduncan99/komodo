@@ -636,6 +636,11 @@ public class Word36 {
 
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
+    public Word36 decrement() {
+        _value = decrement(_value);
+        return this;
+    }
+
     public static void add(
         final AdditionResult result,
         final long operand1,
@@ -680,6 +685,21 @@ public class Word36 {
         final long operand2
     ) {
         return Long.compare(operand1, operand2);
+    }
+
+    /**
+     * Subtracts 1 from the operand. Eliminates negative zero.
+     */
+    public static long decrement(
+        final long operand
+    ) {
+        if (operand == 0L) {
+            return NEGATIVE_ZERO;
+        } else if (operand == NEGATIVE_ZERO) {
+            return NEGATIVE_ONE;
+        } else {
+            return (operand - 1) & BIT_MASK;
+        }
     }
 
     public static long getOnesComplement(

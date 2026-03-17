@@ -10,7 +10,9 @@ package com.bearsnake.komodo.engine.functions.store;
  */
 public class SN1Function extends StoreConstantFunction {
 
-    public SN1Function() {
+    public static final SN1Function INSTANCE = new SN1Function();
+
+    private SN1Function() {
         super("SN1", 03, 0_777777_777776L);
     }
 }

@@ -10,7 +10,9 @@ package com.bearsnake.komodo.engine.functions.store;
  */
 public class SNZFunction extends StoreConstantFunction {
 
-    public SNZFunction() {
+    public static final SNZFunction INSTANCE = new SNZFunction();
+
+    private SNZFunction() {
         super("SNZ", 01, 0_777777_777777L);
     }
 }

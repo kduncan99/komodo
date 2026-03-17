@@ -12,7 +12,7 @@ import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt.ErrorType.ReadAccessViolation;
+import static com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt.ErrorType.GRSViolation;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSRSFunction extends TestFunction {
@@ -195,6 +195,6 @@ public class TestSRSFunction extends TestFunction {
         _engine.getExecOrUserARegister(1).setQ4(040); // Attempt to read protected register 040
 
         ReferenceViolationInterrupt mi = assertThrows(ReferenceViolationInterrupt.class, () -> run());
-        assertEquals(ReadAccessViolation, mi._errorType);
+        assertEquals(GRSViolation, mi._errorType);
     }
 }

@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class SXFunction extends Function {
 
-    public SXFunction() {
+    public static final SXFunction INSTANCE = new SXFunction();
+
+    private SXFunction() {
         super("SX");
         var fc = new FunctionCode(0_06);
         setBasicModeFunctionCode(fc);

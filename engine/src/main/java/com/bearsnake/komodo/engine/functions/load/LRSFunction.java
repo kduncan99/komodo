@@ -26,7 +26,9 @@ import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
  */
 public class LRSFunction extends Function {
 
-    public LRSFunction() {
+    public static final LRSFunction INSTANCE = new LRSFunction();
+
+    private LRSFunction() {
         super("LRS");
         var fc = new FunctionCode(0_72).setJField(0_17);
         setBasicModeFunctionCode(fc);
@@ -51,7 +53,7 @@ public class LRSFunction extends Function {
             }
 
             if (!Engine.isGRSAccessAllowed(grsIndex, pPriv, true)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, false);
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
 
             engine.getGeneralRegister(grsIndex++).setW(operands[opIndex++]);

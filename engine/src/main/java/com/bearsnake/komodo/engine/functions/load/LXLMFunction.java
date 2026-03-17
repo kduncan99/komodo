@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class LXLMFunction extends Function {
 
-    public LXLMFunction() {
+    public static final LXLMFunction INSTANCE = new LXLMFunction();
+
+    private LXLMFunction() {
         super("LXLM");
         setBasicModeFunctionCode(new FunctionCode(0_75).setJField(013).setProcessorPrivilege(0));
         setExtendedModeFunctionCode(new FunctionCode(0_75).setJField(013));

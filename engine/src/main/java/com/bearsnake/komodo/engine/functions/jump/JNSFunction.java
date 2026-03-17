@@ -4,22 +4,24 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
+import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Jump Positive instruction
- * (JP) Jumps if A(a) is positive (bit 0 is clear).
+ * Jump Negative and Shift instruction
+ * (JNS) Jumps if A(a) is negative (bit 0 is set).
+ * Additionally, A(a) is shifted left circular by one position.
  */
-public class JPFunction extends Function {
+public class JNSFunction extends Function {
 
-    public static final JPFunction INSTANCE = new JPFunction();
+    public static final JNSFunction INSTANCE = new JNSFunction();
 
-    private JPFunction() {
-        super("JP");
-        var fc = new FunctionCode(0_74).setJField(0_02);
+    private JNSFunction() {
+        super("JNS");
+        var fc = new FunctionCode(0_72).setJField(0_03);
         setBasicModeFunctionCode(fc);
         setExtendedModeFunctionCode(fc);
 
@@ -38,7 +40,14 @@ public class JPFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        if (engine.getGeneralRegister(ci.getA()).isPositive()) {
+        var reg = engine.getGeneralRegister(ci.getA());
+        boolean isNegative = reg.isNegative();
+
+        // Shift happens regardless of jump
+        long value = reg.getW();
+        reg.setW(Word36.leftShiftCircular(value, 1));
+
+        if (isNegative) {
             doJump(engine, operand);
         }
         return true;
@@ -46,6 +55,11 @@ public class JPFunction extends Function {
 
     @Override
     public boolean isJumpInstruction() {
+        return true;
+    }
+
+    @Override
+    public boolean isShiftInstruction() {
         return true;
     }
 }

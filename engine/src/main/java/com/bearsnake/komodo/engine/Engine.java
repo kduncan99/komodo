@@ -786,12 +786,12 @@ public class Engine {
      * @return requested operand or zero if we are in the middle of indirect address resolution.
      */
     public long getJumpOperand() throws MachineInterrupt {
-        long operand;
         var ci = _activityStatePacket.getCurrentInstruction();
         var dr = _activityStatePacket.getDesignatorRegister();
         var exec24Index = dr.isExecutive24BitIndexingEnabled();
         var privilege = dr.getProcessorPrivilege();
         var valueIs24Bits = ((privilege < 2) && exec24Index) || ((privilege > 1) && (ci.getI() != 0));
+        long operand;
 
         if ((ci.getX() == 0) && (!dr.isBasicModeEnabled())) {
             // No indexing (x-field is zero and EM).  Value is derived from h, i, and u fields.

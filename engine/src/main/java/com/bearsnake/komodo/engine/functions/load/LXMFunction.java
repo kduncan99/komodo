@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class LXMFunction extends Function {
 
-    public LXMFunction() {
+    public static final LXMFunction INSTANCE = new LXMFunction();
+
+    private LXMFunction() {
         super("LXM");
         var fc = new FunctionCode(0_26);
         setBasicModeFunctionCode(fc);

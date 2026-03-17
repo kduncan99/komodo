@@ -17,11 +17,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class JKFunction extends Function {
 
-    // This is actually valid for f=074, j=04, and a=01 through 017.
-    // However, implementing that in our structure here would be annoying.
-    // So... we just use a=01 for JK. It has no function anyway.
-    // If the day ever comes when we need to support a > 01, we can do something here to make it happen.
-    public JKFunction() {
+    public static final JKFunction INSTANCE = new JKFunction();
+
+    private JKFunction() {
         super("JK");
         setBasicModeFunctionCode(new FunctionCode(0_74).setJField(0_04).setAField(0_01));
 

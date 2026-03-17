@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class JNCFunction extends Function {
 
-    public JNCFunction() {
+    public static final JNCFunction INSTANCE = new JNCFunction();
+
+    private JNCFunction() {
         super("JNC");
         setBasicModeFunctionCode(new FunctionCode(0_74).setJField(0_17));
         setExtendedModeFunctionCode(new FunctionCode(0_74).setJField(0_14).setAField(0_05));

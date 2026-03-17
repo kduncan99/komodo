@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class LXSIFunction extends Function {
 
-    public LXSIFunction() {
+    public static final LXSIFunction INSTANCE = new LXSIFunction();
+
+    private LXSIFunction() {
         super("LXSI");
         var fc = new FunctionCode(0_51);
         setExtendedModeFunctionCode(fc);

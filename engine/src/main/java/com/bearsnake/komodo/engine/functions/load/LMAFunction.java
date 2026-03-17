@@ -16,7 +16,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class LMAFunction extends Function {
 
-    public LMAFunction() {
+    public static final LMAFunction INSTANCE = new LMAFunction();
+
+    private LMAFunction() {
         super("LMA");
         var fc = new FunctionCode(0_12);
         setBasicModeFunctionCode(fc);

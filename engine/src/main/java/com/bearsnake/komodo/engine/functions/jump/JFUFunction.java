@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class JFUFunction extends Function {
 
-    public JFUFunction() {
+    public static final JFUFunction INSTANCE = new JFUFunction();
+
+    private JFUFunction() {
         super("JFU");
         setBasicModeFunctionCode(new FunctionCode(0_74).setJField(0_14).setAField(0_01));
         setExtendedModeFunctionCode(new FunctionCode(0_74).setJField(0_14).setAField(0_01));

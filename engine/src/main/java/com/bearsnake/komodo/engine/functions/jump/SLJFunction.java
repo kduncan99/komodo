@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class SLJFunction extends Function {
 
-    public SLJFunction() {
+    public static final SLJFunction INSTANCE = new SLJFunction();
+
+    private SLJFunction() {
         super("SLJ");
         var c = new FunctionCode(0_72).setJField(0_01);
         setBasicModeFunctionCode(c);

@@ -26,7 +26,9 @@ import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
  */
 public class SRSFunction extends Function {
 
-    public SRSFunction() {
+    public static final SRSFunction INSTANCE = new SRSFunction();
+
+    private SRSFunction() {
         super("SRS");
         var fc = new FunctionCode(0_72).setJField(0_16);
         setBasicModeFunctionCode(fc);
@@ -62,7 +64,7 @@ public class SRSFunction extends Function {
         for (int i = 0; i < r1Count; i++) {
             var grsIndex = (r1Index + i) & 0177;
             if (!Engine.isGRSAccessAllowed(grsIndex, pPriv, false)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
             operands[opIdx++] = engine.getGeneralRegister(grsIndex).getW();
         }
@@ -70,7 +72,7 @@ public class SRSFunction extends Function {
         for (int i = 0; i < r2Length; i++) {
             var grsIndex = (r2Index + i) & 0177;
             if (!Engine.isGRSAccessAllowed(grsIndex, pPriv, false)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, false);
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
             operands[opIdx++] = engine.getGeneralRegister(grsIndex).getW();
         }

@@ -20,7 +20,9 @@ import static com.bearsnake.komodo.engine.Constants.*;
  */
 public class SAQWFunction extends Function {
 
-    public SAQWFunction() {
+    public static final SAQWFunction INSTANCE = new SAQWFunction();
+
+    private SAQWFunction() {
         super("SAQW");
         var fc = new FunctionCode(0_07).setJField(0_05);
         setBasicModeFunctionCode(fc);

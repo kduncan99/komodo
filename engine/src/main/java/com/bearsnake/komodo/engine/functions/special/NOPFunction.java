@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class NOPFunction extends Function {
 
-    public NOPFunction() {
+    public static final NOPFunction INSTANCE = new NOPFunction();
+
+    private NOPFunction() {
         super("NOP");
         setBasicModeFunctionCode(new FunctionCode(0_73).setJField(0_14));
         setExtendedModeFunctionCode(new FunctionCode(0_73).setJField(0_14).setAField(00));

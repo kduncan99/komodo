@@ -16,7 +16,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class DJZFunction extends Function {
 
-    public DJZFunction() {
+    public static final DJZFunction INSTANCE = new DJZFunction();
+
+    private DJZFunction() {
         super("DJZ");
         var fc = new FunctionCode(0_71).setJField(0_16);
         setBasicModeFunctionCode(fc);

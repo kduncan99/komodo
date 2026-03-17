@@ -17,7 +17,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class LNMAFunction extends Function {
 
-    public LNMAFunction() {
+    public static final LNMAFunction INSTANCE = new LNMAFunction();
+
+    private LNMAFunction() {
         super("LNMA");
         var fc = new FunctionCode(0_13);
         setBasicModeFunctionCode(fc);

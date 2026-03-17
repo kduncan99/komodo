@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class LSBLFunction extends Function {
 
-    public LSBLFunction() {
+    public static final LSBLFunction INSTANCE = new LSBLFunction();
+
+    private LSBLFunction() {
         super("LSBL");
         var fc = new FunctionCode(0_61);
         setExtendedModeFunctionCode(fc);

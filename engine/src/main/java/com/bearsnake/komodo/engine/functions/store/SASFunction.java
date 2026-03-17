@@ -10,7 +10,9 @@ package com.bearsnake.komodo.engine.functions.store;
  */
 public class SASFunction extends StoreConstantFunction {
 
-    public SASFunction() {
+    public static final SASFunction INSTANCE = new SASFunction();
+
+    private SASFunction() {
         super("SAS", 06, 0_040040_040040L);
     }
 }

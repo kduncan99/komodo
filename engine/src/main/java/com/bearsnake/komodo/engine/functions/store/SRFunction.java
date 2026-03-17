@@ -15,7 +15,9 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public class SRFunction extends Function {
 
-    public SRFunction() {
+    public static final SRFunction INSTANCE = new SRFunction();
+
+    private SRFunction() {
         super("SR");
         var fc = new FunctionCode(0_04);
         setBasicModeFunctionCode(fc);
