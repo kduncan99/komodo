@@ -675,7 +675,9 @@ public class Word36 {
     }
 
     /**
-     * Compares two values
+     * Compares two values.
+     * Positive numbers are always greater than negative numbers,
+     * Thus +0 != -0.
      * Returns -1 if operand1 < operand2,
      *          1 if operand1 > operand2,
      *          0 if they are equal
@@ -684,7 +686,25 @@ public class Word36 {
         final long operand1,
         final long operand2
     ) {
-        return Long.compare(operand1, operand2);
+        boolean neg1 = isNegative(operand1);
+        boolean neg2 = isNegative(operand2);
+
+        if (neg1 && !neg2) {
+            return -1;
+        } else if (!neg1 && neg2) {
+            return 1;
+        } else if (neg1) {
+            // Both are negative.
+            // In ones-complement, bitwise higher value means "more negative" (smaller).
+            // -1 is 777777777776, -0 is 777777777777, -2 is 777777777775
+            // Actually, for negative numbers:
+            // -0 (777777777777) > -1 (777777777776) > ...
+            // So we can just compare the raw values.
+            return Long.compare(operand1, operand2);
+        } else {
+            // Both are positive.
+            return Long.compare(operand1, operand2);
+        }
     }
 
     /**

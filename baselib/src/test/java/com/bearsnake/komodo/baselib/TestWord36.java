@@ -66,6 +66,45 @@ public class TestWord36 {
     }
 
     @Test
+    public void compare_PositiveZero_NegativeZero() {
+        assertEquals(1, Word36.compare(Word36.POSITIVE_ZERO, Word36.NEGATIVE_ZERO));
+    }
+
+    @Test
+    public void compare_NegativeZero_PositiveZero() {
+        assertEquals(-1, Word36.compare(Word36.NEGATIVE_ZERO, Word36.POSITIVE_ZERO));
+    }
+
+    @Test
+    public void compare_NegativeZero_NegativeZero() {
+        assertEquals(0, Word36.compare(Word36.NEGATIVE_ZERO, Word36.NEGATIVE_ZERO));
+    }
+
+    @Test
+    public void compare_Positive_Negative() {
+        assertEquals(1, Word36.compare(10L, -10L));
+    }
+
+    @Test
+    public void compare_Negative_Positive() {
+        assertEquals(-1, Word36.compare(-10L, 10L));
+    }
+
+    @Test
+    public void compare_Positive_Positive() {
+        assertEquals(1, Word36.compare(20L, 10L));
+        assertEquals(-1, Word36.compare(10L, 20L));
+        assertEquals(0, Word36.compare(10L, 10L));
+    }
+
+    @Test
+    public void compare_Negative_Negative() {
+        assertEquals(1, Word36.compare(-10L, -20L));
+        assertEquals(-1, Word36.compare(-20L, -10L));
+        assertEquals(0, Word36.compare(-10L, -10L));
+    }
+
+    @Test
     public void isPositive_PositiveZero() {
         assertTrue(Word36.isPositive(Word36.POSITIVE_ZERO));
     }
