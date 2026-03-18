@@ -38,9 +38,8 @@ public class DLFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        var ax = engine.getExecOrUserARegisterIndex(ci.getA());
-        engine.getGeneralRegisterSet().getRegister(ax).setW(operands[0]);
-        engine.getGeneralRegisterSet().getRegister(ax + 1).setW(operands[1]);
+        engine.getExecOrUserARegister(ci.getA()).setW(operands[0]);
+        engine.getExecOrUserARegister(ci.getA() + 1).setW(operands[1]);
         return true;
     }
 }

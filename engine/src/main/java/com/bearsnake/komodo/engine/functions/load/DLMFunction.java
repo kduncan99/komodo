@@ -39,15 +39,14 @@ public class DLMFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        var ax = engine.getExecOrUserARegisterIndex(ci.getA());
 
         if (Word36.isNegative(operands[0])) {
             operands[0] = Word36.negate(operands[0]);
             operands[1] = Word36.negate(operands[1]);
         }
 
-        engine.getGeneralRegisterSet().getRegister(ax).setW(operands[0]);
-        engine.getGeneralRegisterSet().getRegister(ax + 1).setW(operands[1]);
+        engine.getExecOrUserARegister(ci.getA()).setW(operands[0]);
+        engine.getExecOrUserARegister(ci.getA() + 1).setW(operands[1]);
         return true;
     }
 }

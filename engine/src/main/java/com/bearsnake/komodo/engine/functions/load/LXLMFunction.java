@@ -37,7 +37,7 @@ public class LXLMFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(ci.getA())).setXM24(operand);
+        engine.getExecOrUserXRegister(ci.getA()).setXM24(operand);
         return true;
     }
 }

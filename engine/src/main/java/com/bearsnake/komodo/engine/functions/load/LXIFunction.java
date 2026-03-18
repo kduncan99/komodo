@@ -38,7 +38,7 @@ public class LXIFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(ci.getA())).setXI(operand);
+        engine.getExecOrUserXRegister(ci.getA()).setXI(operand);
         return true;
     }
 }

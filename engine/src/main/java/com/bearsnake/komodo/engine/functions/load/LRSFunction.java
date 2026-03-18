@@ -67,7 +67,7 @@ public class LRSFunction extends Function {
     ) throws MachineInterrupt {
         var ci = engine.getCurrentInstruction();
         var dr = engine.getDesignatorRegister();
-        var aReg = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA()));
+        var aReg = engine.getExecOrUserARegister(ci.getA());
 
         var grscount2 = aReg.getQ1() & 0177;
         var grsx2 = aReg.getQ2() & 0177;

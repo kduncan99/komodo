@@ -43,7 +43,7 @@ public class LNMAFunction extends Function {
         if (Word36.isPositive(operand)) {
             operand = Word36.negate(operand);
         }
-        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA())).setW(operand);
+        engine.getExecOrUserARegister(ci.getA()).setW(operand);
         return true;
     }
 }

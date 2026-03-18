@@ -38,7 +38,7 @@ public class LRFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserRRegisterIndex(ci.getA())).setW(operand);
+        engine.getExecOrUserRRegister(ci.getA()).setW(operand);
         return true;
     }
 }

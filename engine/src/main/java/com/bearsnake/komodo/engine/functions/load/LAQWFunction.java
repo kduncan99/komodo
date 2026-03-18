@@ -49,7 +49,7 @@ public class LAQWFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        var xReg = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(ci.getX()));
+        var xReg = engine.getExecOrUserXRegister(ci.getX());
         operand = switch (xReg.getS1() & 03) {
             case 0 -> Word36.getQ1(operand);
             case 1 -> Word36.getQ2(operand);

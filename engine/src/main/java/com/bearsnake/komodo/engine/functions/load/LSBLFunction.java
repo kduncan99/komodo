@@ -37,7 +37,7 @@ public class LSBLFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(ci.getA())).setS2((int)operand);
+        engine.getExecOrUserXRegister(ci.getA()).setS2((int)operand);
         return true;
     }
 }
