@@ -56,7 +56,7 @@ public class TestLXFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_123, _engine.getExecOrUserXRegister(0).getW());
+        assertEquals(0_123, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(0)).getW());
     }
 
     @Test
@@ -80,7 +80,7 @@ public class TestLXFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_123, _engine.getExecOrUserXRegister(0).getW());
+        assertEquals(0_123, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(0)).getW());
     }
 
     @Test
@@ -120,7 +120,7 @@ public class TestLXFunction extends TestFunction {
 
         run();
 
-        assertEquals(3L, _engine.getExecOrUserXRegister(2).getW());
+        assertEquals(3L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(2)).getW());
     }
 
     @Test
@@ -157,13 +157,13 @@ public class TestLXFunction extends TestFunction {
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-        _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXI(0_01).setXM(0_03);
 
         run();
 
-        assertEquals(0_15L, _engine.getExecOrUserXRegister(5).getW());
-        assertEquals(0_01L, _engine.getExecOrUserXRegister(3).getXI());
-        assertEquals(0_04L, _engine.getExecOrUserXRegister(3).getXM());
+        assertEquals(0_15L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(5)).getW());
+        assertEquals(0_01L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXI());
+        assertEquals(0_04L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXM());
     }
 
     @Test
@@ -200,6 +200,6 @@ public class TestLXFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_445L, _engine.getExecOrUserXRegister(15).getW());
+        assertEquals(0_445L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(15)).getW());
     }
 }

@@ -68,9 +68,9 @@ public class TestSNAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(4).setW(0_123456_654321L);
-        _engine.getExecOrUserARegister(5).setW(0_111111_111111L);
-        _engine.getExecOrUserARegister(6).setW(0_222222_222222L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_123456_654321L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0_111111_111111L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0_222222_222222L);
 
         run();
 
@@ -116,15 +116,15 @@ public class TestSNAFunction extends TestFunction {
                .setQuarterWordModeEnabled(true);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegister(GRS_A4).setW(0_030000_322334L);
-        _engine.getExecOrUserARegister(5).setW(0_111111_111111L);
-        _engine.getExecOrUserARegister(6).setW(0_222222_222222L);
-        _engine.getExecOrUserARegister(7).setW(0_111111_111111L);
-        _engine.getExecOrUserARegister(8).setW(0_222222_222222L);
-        _engine.getExecOrUserARegister(9).setW(0_333333_333333L);
-        _engine.getExecOrUserARegister(10).setW(0_444444_444444L);
-        _engine.getExecOrUserARegister(11).setW(0_555555_555555L);
-        _engine.getExecOrUserARegister(12).setW(0_666666_666666L);
+        _engine.getGeneralRegisterSet().getRegister(GRS_A4).setW(0_030000_322334L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0_111111_111111L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0_222222_222222L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(7)).setW(0_111111_111111L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(8)).setW(0_222222_222222L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(9)).setW(0_333333_333333L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(10)).setW(0_444444_444444L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(11)).setW(0_555555_555555L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(12)).setW(0_666666_666666L);
 
         run();
 
@@ -160,15 +160,15 @@ public class TestSNAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0_000000).setBankLevel((short)0_0);
 
-        _engine.getGeneralRegister(GRS_A4).setW(0_000000_000000L);
-        _engine.getGeneralRegister(GRS_A5).setW(0_000000_000000L);
-        _engine.getExecOrUserARegister(4).setW(0_123456_765432L);
-        _engine.getExecOrUserARegister(5).setW(0_111111_222222L);
+        _engine.getGeneralRegisterSet().getRegister(GRS_A4).setW(0_000000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(GRS_A5).setW(0_000000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_123456_765432L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0_111111_222222L);
 
         run();
 
-        assertEquals(0_654321_012345L, _engine.getGeneralRegister(GRS_A4).getW());
-        assertEquals(0_666666_555555L, _engine.getGeneralRegister(GRS_A5).getW());
+        assertEquals(0_654321_012345L, _engine.getGeneralRegisterSet().getRegister(GRS_A4).getW());
+        assertEquals(0_666666_555555L, _engine.getGeneralRegisterSet().getRegister(GRS_A5).getW());
     }
 
     @Test
@@ -203,7 +203,7 @@ public class TestSNAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(4).setW(0_777777_777777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_777777_777777L);
 
         run();
 
@@ -240,8 +240,8 @@ public class TestSNAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(4).setW(0_123456_654321L);
-        _engine.getExecOrUserXRegister(1).setXM(010);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_123456_654321L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setXM(010);
 
         run();
 
@@ -278,7 +278,7 @@ public class TestSNAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(4).setW(0_777666_555444L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_777666_555444L);
 
         run();
 
@@ -317,7 +317,7 @@ public class TestSNAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(4).setW(0_112233_445566L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_112233_445566L);
 
         run();
 

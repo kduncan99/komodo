@@ -6,6 +6,7 @@ package com.bearsnake.komodo.engine.functions.load;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.functions.TestFunction;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
@@ -74,18 +75,18 @@ public class TestLRSFunction extends TestFunction {
         // init all of GRS to magic number
         var magic = 0_112344_765230L;
         for (int rx = 0; rx < 128; rx++) {
-            _engine.getGeneralRegister(rx).setW(magic);
+            _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
         }
 
-        _engine.getExecOrUserARegister(7).setW(0); // both counts and indices are 0
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(7)).setW(0); // both counts and indices are 0
 
         run();
 
         for (int rx = 0; rx < 128; rx++) {
             if (rx == GRS_A7) {
-                assertEquals(0, _engine.getGeneralRegister(rx).getW());
+                assertEquals(0, _engine.getGeneralRegisterSet().getRegister(rx).getW());
             } else {
-                assertEquals(magic, _engine.getGeneralRegister(rx).getW());
+                assertEquals(magic, _engine.getGeneralRegisterSet().getRegister(rx).getW());
             }
         }
     }
@@ -123,24 +124,24 @@ public class TestLRSFunction extends TestFunction {
         // init all of GRS to magic number
         var magic = 0_112344_765230L;
         for (int rx = 0; rx < 128; rx++) {
-            _engine.getGeneralRegister(rx).setW(magic);
+            _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
         }
 
-        _engine.getExecOrUserARegister(15).setQ1(0);        // area-2 count
-        _engine.getExecOrUserARegister(15).setQ2(0);        // area-2 grs index
-        _engine.getExecOrUserARegister(15).setQ3(020);      // area-1 count
-        _engine.getExecOrUserARegister(15).setQ4(GRS_R0);   // area-1 grs index
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ1(0);        // area-2 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ2(0);        // area-2 grs index
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ3(020);      // area-1 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ4(GRS_R0);   // area-1 grs index
 
         run();
 
         for (int rx = 0; rx < 128; rx++) {
             if (rx == GRS_A15) {
-                assertEquals(0_000000_020000L | GRS_R0, _engine.getGeneralRegister(rx)
+                assertEquals(0_000000_020000L | GRS_R0, _engine.getGeneralRegisterSet().getRegister(rx)
                                                                .getW());
             } else if (rx >= GRS_R0 && rx <= GRS_R15) {
-                assertEquals(rx - GRS_R0 + 010, _engine.getGeneralRegister(rx).getW());
+                assertEquals(rx - GRS_R0 + 010, _engine.getGeneralRegisterSet().getRegister(rx).getW());
             } else {
-                assertEquals(magic, _engine.getGeneralRegister(rx).getW());
+                assertEquals(magic, _engine.getGeneralRegisterSet().getRegister(rx).getW());
             }
         }
     }
@@ -175,17 +176,17 @@ public class TestLRSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(15).setQ1(020);      // area-2 count
-        _engine.getExecOrUserARegister(15).setQ2(GRS_ER0);  // exec R register not accessible to PP > 0
-        _engine.getExecOrUserARegister(15).setQ3(0);        // area-1 count
-        _engine.getExecOrUserARegister(15).setQ4(0);        // area-1 grs index
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ1(020);      // area-2 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ2(GRS_ER0);  // exec R register not accessible to PP > 0
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ3(0);        // area-1 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ4(0);        // area-1 grs index
 
         ReferenceViolationInterrupt mi = assertThrows(ReferenceViolationInterrupt.class, () -> run());
         assertEquals(GRSViolation, mi._errorType);
         assertFalse(mi._fetchFlag);
 
         for (int rx = GRS_ER0; rx <= GRS_ER15; rx++) {
-            assertEquals(0, _engine.getGeneralRegister(rx).getW());
+            assertEquals(0, _engine.getGeneralRegisterSet().getRegister(rx).getW());
         }
     }
 
@@ -219,15 +220,15 @@ public class TestLRSFunction extends TestFunction {
                .setExecRegisterSetSelected(true);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(15).setQ1(020);      // area-2 count
-        _engine.getExecOrUserARegister(15).setQ2(GRS_ER0);  // exec R register not accessible to PP > 0
-        _engine.getExecOrUserARegister(15).setQ3(0);        // area-1 count
-        _engine.getExecOrUserARegister(15).setQ4(0);        // area-1 grs index
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ1(020);      // area-2 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ2(GRS_ER0);  // exec R register not accessible to PP > 0
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ3(0);        // area-1 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ4(0);        // area-1 grs index
 
         run();
 
         for (int rx = GRS_ER0; rx <= GRS_ER15; rx++) {
-            assertEquals(rx - GRS_ER0 + 010, _engine.getGeneralRegister(rx).getW());
+            assertEquals(rx - GRS_ER0 + 010, _engine.getGeneralRegisterSet().getRegister(rx).getW());
         }
     }
 
@@ -264,21 +265,21 @@ public class TestLRSFunction extends TestFunction {
         // init all of GRS to magic number
         var magic = 0_112344_765230L;
         for (int rx = 0; rx < 128; rx++) {
-            _engine.getGeneralRegister(rx).setW(magic);
+            _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
         }
 
-        _engine.getExecOrUserARegister(15).setQ1(0);    // area-2 count
-        _engine.getExecOrUserARegister(15).setQ2(0);    // area-2 grs index
-        _engine.getExecOrUserARegister(15).setQ3(020);  // area-1 count
-        _engine.getExecOrUserARegister(15).setQ4(036);  // start 2 words ahead of hardware-reserved registers
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ1(0);    // area-2 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ2(0);    // area-2 grs index
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ3(020);  // area-1 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ4(036);  // start 2 words ahead of hardware-reserved registers
 
         ReferenceViolationInterrupt mi = assertThrows(ReferenceViolationInterrupt.class, () -> run());
         assertEquals(GRSViolation, mi._errorType);
         assertFalse(mi._fetchFlag);
 
-        assertEquals(010, _engine.getGeneralRegister(036).getW());
-        assertEquals(011, _engine.getGeneralRegister(037).getW());
-        assertEquals(magic, _engine.getGeneralRegister(040).getW()); // unchanged
+        assertEquals(010, _engine.getGeneralRegisterSet().getRegister(036).getW());
+        assertEquals(011, _engine.getGeneralRegisterSet().getRegister(037).getW());
+        assertEquals(magic, _engine.getGeneralRegisterSet().getRegister(040).getW()); // unchanged
     }
 
     @Test
@@ -310,18 +311,18 @@ public class TestLRSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(1).setQ1(2);        // area-2 count
-        _engine.getExecOrUserARegister(1).setQ2(GRS_X10);  // area-2 grs index
-        _engine.getExecOrUserARegister(1).setQ3(3);        // area-1 count
-        _engine.getExecOrUserARegister(1).setQ4(GRS_R5);   // start 2 words ahead of hardware-reserved registers
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ1(2);        // area-2 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ2(GRS_X10);  // area-2 grs index
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ3(3);        // area-1 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ4(GRS_R5);   // start 2 words ahead of hardware-reserved registers
 
         run();
 
-        assertEquals(0100, _engine.getGeneralRegister(GRS_R5).getW());
-        assertEquals(0101, _engine.getGeneralRegister(GRS_R6).getW());
-        assertEquals(0102, _engine.getGeneralRegister(GRS_R7).getW());
-        assertEquals(0103, _engine.getGeneralRegister(GRS_X10).getW());
-        assertEquals(0104, _engine.getGeneralRegister(GRS_X11).getW());
+        assertEquals(0100, _engine.getGeneralRegisterSet().getRegister(GRS_R5).getW());
+        assertEquals(0101, _engine.getGeneralRegisterSet().getRegister(GRS_R6).getW());
+        assertEquals(0102, _engine.getGeneralRegisterSet().getRegister(GRS_R7).getW());
+        assertEquals(0103, _engine.getGeneralRegisterSet().getRegister(GRS_X10).getW());
+        assertEquals(0104, _engine.getGeneralRegisterSet().getRegister(GRS_X11).getW());
     }
 
     @Test
@@ -353,17 +354,17 @@ public class TestLRSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(1).setQ1(5);     // area-2 count
-        _engine.getExecOrUserARegister(1).setQ2(126);   // area-2 grs index
-        _engine.getExecOrUserARegister(1).setQ3(0);     // area-1 count
-        _engine.getExecOrUserARegister(1).setQ4(0);     // start 2 words ahead of hardware-reserved registers
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ1(5);     // area-2 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ2(126);   // area-2 grs index
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ3(0);     // area-1 count
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ4(0);     // start 2 words ahead of hardware-reserved registers
 
         run();
 
-        assertEquals(0100, _engine.getGeneralRegister(126).getW());
-        assertEquals(0101, _engine.getGeneralRegister(127).getW());
-        assertEquals(0102, _engine.getGeneralRegister(0).getW());
-        assertEquals(0103, _engine.getGeneralRegister(1).getW());
-        assertEquals(0104, _engine.getGeneralRegister(2).getW());
+        assertEquals(0100, _engine.getGeneralRegisterSet().getRegister(126).getW());
+        assertEquals(0101, _engine.getGeneralRegisterSet().getRegister(127).getW());
+        assertEquals(0102, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X0).getW());
+        assertEquals(0103, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X1).getW());
+        assertEquals(0104, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X2).getW());
     }
 }

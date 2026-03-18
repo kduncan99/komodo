@@ -6,6 +6,7 @@ package com.bearsnake.komodo.engine.functions.jump;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.TestFunction;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -31,7 +32,7 @@ public class TestJGDFunction extends TestFunction {
     @Test
     public void testJGD_Jump_BM() throws MachineInterrupt, EngineHaltedException {
         var code = new long[] {
-            jgd(0, 010, 0, 0, 0, 0_1000), // GRS index 010 (X8)
+            jgd(0, 8, 0, 0, 0, 0_1000), // GRS index 8 (X8)
             0,
             };
 
@@ -53,7 +54,7 @@ public class TestJGDFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup GRS value > 0
-        _engine.getGeneralRegister(010).setW(010);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setW(010);
 
         // Execute JGD
         _engine.cycle(); // First cycle: RESOLVING_ADDRESS
@@ -62,13 +63,13 @@ public class TestJGDFunction extends TestFunction {
         // Should have jumped to 01000
         assertEquals(0_1000, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be decremented: 010 -> 007
-        assertEquals(007, _engine.getGeneralRegister(010).getW());
+        assertEquals(007, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getW());
     }
 
     @Test
     public void testJGD_NoJump_BM() throws MachineInterrupt, EngineHaltedException {
         var code = new long[] {
-            jgd(0, 010, 0, 0, 0, 0_1000), // GRS index 010
+            jgd(0, 8, 0, 0, 0, 0_1000), // GRS index 8
             0,
             };
 
@@ -89,7 +90,7 @@ public class TestJGDFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup GRS value = 0
-        _engine.getGeneralRegister(010).setW(0);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setW(0);
 
         // Execute JGD
         _engine.cycle(); // RESOLVING_ADDRESS
@@ -98,13 +99,13 @@ public class TestJGDFunction extends TestFunction {
         // Should NOT have jumped, PC should be 1
         assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be decremented: 0 -> 0777777777777L (ones complement -0)
-        assertEquals(0777777777777L, _engine.getGeneralRegister(010).getW());
+        assertEquals(0777777777777L, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getW());
     }
 
     @Test
     public void testJGD_Negative_BM() throws MachineInterrupt, EngineHaltedException {
         var code = new long[] {
-            jgd(0, 010, 0, 0, 0, 0_1000), // GRS index 010
+            jgd(0, 8, 0, 0, 0, 0_1000), // GRS index 8
             0,
             };
 
@@ -125,7 +126,7 @@ public class TestJGDFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup GRS value < 0
-        _engine.getGeneralRegister(010).setW(0777777777770L); // -7
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setW(0777777777770L); // -7
 
         // Execute JGD
         _engine.cycle(); // RESOLVING_ADDRESS
@@ -134,13 +135,13 @@ public class TestJGDFunction extends TestFunction {
         // Should NOT have jumped
         assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be decremented: -7 -> -8
-        assertEquals(0777777777767L, _engine.getGeneralRegister(010).getW());
+        assertEquals(0777777777767L, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getW());
     }
 
     @Test
     public void testJGD_Jump_EM() throws MachineInterrupt, EngineHaltedException {
         var code = new long[] {
-            jgd(0, 010, 0, 0, 0, 0_1000), // GRS index 010
+            jgd(0, 8, 0, 0, 0, 0_1000), // GRS index 8
             0,
             };
 
@@ -160,7 +161,7 @@ public class TestJGDFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
 
         // Setup GRS value > 0
-        _engine.getGeneralRegister(010).setW(01);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setW(01);
 
         // Execute JGD
         _engine.cycle(); // RESOLVING_ADDRESS
@@ -169,7 +170,7 @@ public class TestJGDFunction extends TestFunction {
         // Should have jumped to 01000
         assertEquals(0_1000, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be decremented: 1 -> 0
-        assertEquals(0, _engine.getGeneralRegister(010).getW());
+        assertEquals(0, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getW());
     }
 
     @Test
@@ -201,7 +202,7 @@ public class TestJGDFunction extends TestFunction {
     @Test
     public void testJGD_Indexed_BM() throws MachineInterrupt, EngineHaltedException {
         var code = new long[]{
-            jgd(0, 010, 3, 0, 0, 0_1000), // GRS index 010, Indexed by X3
+            jgd(0, 8, 3, 0, 0, 0_1000), // GRS index 8, Indexed by X3
             0,
         };
 
@@ -222,9 +223,9 @@ public class TestJGDFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup GRS value > 0
-        _engine.getGeneralRegister(010).setW(1);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setW(1);
         // Setup Index Register X3
-        _engine.getExecOrUserXRegister(3).setXM(0_100);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_100);
 
         // Execute JGD
         _engine.cycle(); // RESOLVING_ADDRESS
@@ -233,13 +234,13 @@ public class TestJGDFunction extends TestFunction {
         // Should have jumped to 01000 + 0100 = 01100
         assertEquals(0_1100, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be decremented
-        assertEquals(0, _engine.getGeneralRegister(010).getW());
+        assertEquals(0, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getW());
     }
 
     @Test
     public void testJGD_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
         var code = new long[]{
-            jgd(0, 010, 3, 0, 0, 0_1000), // GRS index 010, Indexed by X3
+            jgd(0, 8, 3, 0, 0, 0_1000), // GRS index 8, Indexed by X3
             0,
         };
 
@@ -259,9 +260,9 @@ public class TestJGDFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short) 0);
 
         // Setup GRS value > 0
-        _engine.getGeneralRegister(010).setW(1);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setW(1);
         // Setup Index Register X3
-        _engine.getExecOrUserXRegister(3).setXM(0_200);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_200);
 
         // Execute JGD
         _engine.cycle(); // RESOLVING_ADDRESS
@@ -270,13 +271,13 @@ public class TestJGDFunction extends TestFunction {
         // Should have jumped to 01000 + 0200 = 01200
         assertEquals(0_1200, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be decremented
-        assertEquals(0, _engine.getGeneralRegister(010).getW());
+        assertEquals(0, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getW());
     }
 
     @Test
     public void testJGD_Indirect_BM() throws MachineInterrupt, EngineHaltedException {
         var code = new long[]{
-            jgd(0, 010, 0, 0, 1, 0_1000), // GRS index 010, Indirect bit set, U=01000
+            jgd(0, 8, 0, 0, 1, 0_1000), // GRS index 8, Indirect bit set, U=01000
             0,
         };
 
@@ -299,7 +300,7 @@ public class TestJGDFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup GRS value > 0
-        _engine.getGeneralRegister(010).setW(1);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setW(1);
 
         // Execute JGD
         _engine.cycle(); // RESOLVING_ADDRESS (first part)
@@ -309,6 +310,6 @@ public class TestJGDFunction extends TestFunction {
         // Should have jumped to 01500 (the value stored at 01000)
         assertEquals(0_1500, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be decremented
-        assertEquals(0, _engine.getGeneralRegister(010).getW());
+        assertEquals(0, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getW());
     }
 }

@@ -39,17 +39,16 @@ public class JPSFunction extends Function {
             return false;
         }
 
-        var ci = engine.getCurrentInstruction();
-        var reg = engine.getGeneralRegister(ci.getA());
-        boolean isPositive = reg.isPositive();
+        var a = engine.getCurrentInstruction().getA();
+        var reg = engine.getExecOrUserARegister(a);
+        if (reg.isPositive()) {
+            doJump(engine, operand);
+        }
 
         // Shift happens regardless of jump
         long value = reg.getW();
         reg.setW(Word36.leftShiftCircular(value, 1));
 
-        if (isPositive) {
-            doJump(engine, operand);
-        }
         return true;
     }
 

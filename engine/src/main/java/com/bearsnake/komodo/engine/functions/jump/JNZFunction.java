@@ -38,7 +38,7 @@ public class JNZFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        if (!engine.getExecOrUserARegister(ci.getA()).isZero()) {
+        if (!engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA())).isZero()) {
             doJump(engine, operand);
         }
         return true;

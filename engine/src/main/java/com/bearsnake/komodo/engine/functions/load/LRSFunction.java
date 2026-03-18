@@ -56,7 +56,7 @@ public class LRSFunction extends Function {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
 
-            engine.getGeneralRegister(grsIndex++).setW(operands[opIndex++]);
+            engine.getGeneralRegisterSet().getRegister(grsIndex++).setW(operands[opIndex++]);
             grsCount--;
         }
     }
@@ -67,7 +67,7 @@ public class LRSFunction extends Function {
     ) throws MachineInterrupt {
         var ci = engine.getCurrentInstruction();
         var dr = engine.getDesignatorRegister();
-        var aReg = engine.getExecOrUserARegister(ci.getA());
+        var aReg = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA()));
 
         var grscount2 = aReg.getQ1() & 0177;
         var grsx2 = aReg.getQ2() & 0177;

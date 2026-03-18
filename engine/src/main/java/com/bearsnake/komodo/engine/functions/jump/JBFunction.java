@@ -37,8 +37,8 @@ public class JBFunction extends Function {
             return false;
         }
 
-        var ci = engine.getCurrentInstruction();
-        if ((engine.getExecOrUserARegister(ci.getA()).getW() & 01) == 01) {
+        var a = engine.getCurrentInstruction().getA();
+        if ((engine.getExecOrUserARegister(a).getW() & 01) == 01) {
             doJump(engine, operand);
         }
         return true;

@@ -39,7 +39,7 @@ public class SAQWFunction extends Function {
     ) throws MachineInterrupt {
         var ic = engine.getCurrentInstruction();
         var xIndex = ic.getX();
-        var xReg = engine.getExecOrUserXRegister(xIndex);
+        var xReg = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(xIndex));
         var jField = switch (xReg.getS1() & 0x03) {
             case 0 -> JFIELD_Q1;
             case 1 -> JFIELD_Q2;
@@ -49,7 +49,7 @@ public class SAQWFunction extends Function {
         };
 
         var aRegIndex = engine.getExecOrUserARegisterIndex(ic.getA());
-        var valueToStore = engine.getGeneralRegister(aRegIndex).getW();
+        var valueToStore = engine.getGeneralRegisterSet().getRegister(aRegIndex).getW();
 
         engine.getDesignatorRegister().setQuarterWordModeEnabled(true);
         boolean result = engine.storePartialWordOperand(valueToStore, jField);

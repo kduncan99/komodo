@@ -6,6 +6,7 @@ package com.bearsnake.komodo.engine.functions.jump;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.TestFunction;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -85,7 +86,7 @@ public class TestJMGIFunction extends TestFunction {
         // Wait! ci.getX() was 010.
         // getExecOrUserXRegister(010).
         // Register 010 (X8) is GRS index 010.
-        // In my test: _engine.getGeneralRegister(010).setXI(1).setXM(10);
+        // In my test: _engine.getGeneralRegisterSet().getRegister(010).setXI(1).setXM(10);
         // XM is 10.
         // If it added 012, it must have read register 010 and got 012? No.
         // WAIT. GRS_X10 is 012.
@@ -122,7 +123,7 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup X8 (010): XI=1, XM=010 (8 decimal)
-        _engine.getGeneralRegister(010).setXI(1).setXM(010);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setXI(1).setXM(010);
 
         _engine.cycle(); // RESOLVING_ADDRESS
         _engine.cycle(); // Execute
@@ -130,7 +131,7 @@ public class TestJMGIFunction extends TestFunction {
         // Should have jumped to 01000
         assertEquals(0_1000, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be incremented: XM 010 -> 011
-        assertEquals(011, _engine.getGeneralRegister(010).getXM());
+        assertEquals(011, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getXM());
     }
 
     @Test
@@ -157,7 +158,7 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup X8 (010): XI=1, XM=0
-        _engine.getGeneralRegister(010).setXI(1).setXM(0);
+        _engine.getGeneralRegisterSet().getRegister(010).setXI(1).setXM(0);
 
         _engine.cycle(); // RESOLVING_ADDRESS
         _engine.cycle(); // Execute
@@ -165,7 +166,7 @@ public class TestJMGIFunction extends TestFunction {
         // Should NOT have jumped, PC should be 1
         assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should STILL be incremented: XM 0 -> 1
-        assertEquals(1, _engine.getGeneralRegister(010).getXM());
+        assertEquals(1, _engine.getGeneralRegisterSet().getRegister(010).getXM());
     }
 
     @Test
@@ -192,7 +193,7 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup X8 (010): XI=1, XM=-1 (ones complement 0777776)
-        _engine.getGeneralRegister(010).setXI(1).setXM(0777776);
+        _engine.getGeneralRegisterSet().getRegister(010).setXI(1).setXM(0777776);
 
         _engine.cycle(); // RESOLVING_ADDRESS
         _engine.cycle(); // Execute
@@ -200,7 +201,7 @@ public class TestJMGIFunction extends TestFunction {
         // Should NOT have jumped because -1 <= 0
         assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be incremented: XM -1 -> 0
-        assertEquals(0, _engine.getGeneralRegister(010).getXM());
+        assertEquals(0, _engine.getGeneralRegisterSet().getRegister(010).getXM());
     }
 
     @Test
@@ -228,9 +229,9 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup X8 (010): XI=1, XM=010
-        _engine.getGeneralRegister(010).setXI(1).setXM(010);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setXI(1).setXM(010);
         // Setup X9 (011): XM=0500
-        _engine.getGeneralRegister(011).setXM(0500);
+        _engine.getGeneralRegisterSet().getRegister(011).setXM(0500);
 
         _engine.cycle(); // RESOLVING_ADDRESS
         _engine.cycle(); // Execute
@@ -238,7 +239,7 @@ public class TestJMGIFunction extends TestFunction {
         // Should jump to 01000 + 0500 = 01500
         assertEquals(0_1500, _engine.getProgramAddressRegister().getProgramCounter());
         // X8 should be incremented: 010 -> 011
-        assertEquals(011, _engine.getGeneralRegister(010).getXM());
+        assertEquals(011, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getXM());
     }
 
     @Test
@@ -266,7 +267,7 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup X8 (010): XI=1, XM=010
-        _engine.getGeneralRegister(010).setXI(1).setXM(010);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setXI(1).setXM(010);
 
         _engine.cycle(); // RESOLVING_ADDRESS (Start)
         _engine.cycle(); // RESOLVING_ADDRESS (Indirect)
@@ -275,7 +276,7 @@ public class TestJMGIFunction extends TestFunction {
         // Should jump to 01500
         assertEquals(0_1500, _engine.getProgramAddressRegister().getProgramCounter());
         // X8 should be incremented: 010 -> 011
-        assertEquals(011, _engine.getGeneralRegister(010).getXM());
+        assertEquals(011, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getXM());
     }
 
     @Test
@@ -303,7 +304,7 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup X8 (010): XI=1, XM=010
-        _engine.getGeneralRegister(010).setXI(1).setXM(010);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setXI(1).setXM(010);
 
         _engine.cycle(); // RESOLVING_ADDRESS
         _engine.cycle(); // Execute
@@ -311,7 +312,7 @@ public class TestJMGIFunction extends TestFunction {
         // Target: 01000 + 010 = 01010
         assertEquals(0_1010, _engine.getProgramAddressRegister().getProgramCounter());
         // X8 should be incremented EXACTLY ONCE: 010 -> 011
-        assertEquals(011, _engine.getGeneralRegister(010).getXM());
+        assertEquals(011, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getXM());
     }
 
     @Test
@@ -339,7 +340,7 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup X8 (010): XI=1, XM=010
-        _engine.getGeneralRegister(010).setXI(1).setXM(010);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setXI(1).setXM(010);
 
         _engine.cycle(); // RESOLVING_ADDRESS (this will increment X8)
         _engine.cycle(); // Execute (should NOT increment X8 again)
@@ -347,7 +348,7 @@ public class TestJMGIFunction extends TestFunction {
         // Target: 01000 + 010 = 01010
         assertEquals(0_1010, _engine.getProgramAddressRegister().getProgramCounter());
         // X8 should be incremented EXACTLY ONCE by address resolution: 010 -> 011
-        assertEquals(011, _engine.getGeneralRegister(010).getXM());
+        assertEquals(011, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getXM());
     }
 
     @Test
@@ -374,7 +375,7 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // Setup X8 (010): XI=1, XM=-0 (ones complement 0777777)
-        _engine.getGeneralRegister(010).setXI(1).setXM(0777777);
+        _engine.getGeneralRegisterSet().getRegister(010).setXI(1).setXM(0777777);
 
         _engine.cycle(); // RESOLVING_ADDRESS
         _engine.cycle(); // Execute
@@ -384,7 +385,7 @@ public class TestJMGIFunction extends TestFunction {
         // Register should be incremented: XM -0 -> 1 (assuming ones-complement add: 0777777 + 1 = 1)
         // Wait, 0777777 + 1 in 18-bit ones complement:
         // 0777777 is -0. -0 + 1 = 1.
-        assertEquals(1, _engine.getGeneralRegister(010).getXM());
+        assertEquals(1, _engine.getGeneralRegisterSet().getRegister(010).getXM());
     }
 
     @Test
@@ -411,7 +412,7 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
 
         // Setup X8 (010): XM=010
-        _engine.getGeneralRegister(010).setXI(1).setXM(010);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setXI(1).setXM(010);
 
         _engine.cycle(); // RESOLVING_ADDRESS
         _engine.cycle(); // Execute
@@ -419,7 +420,7 @@ public class TestJMGIFunction extends TestFunction {
         // Should have jumped to 01000
         assertEquals(0_1000, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be incremented: XM 010 -> 011
-        assertEquals(011, _engine.getGeneralRegister(010).getXM());
+        assertEquals(011, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getXM());
     }
 
     @Test
@@ -446,7 +447,7 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
 
         // Setup X8 (010): XM=0
-        _engine.getGeneralRegister(010).setXI(1).setXM(0);
+        _engine.getGeneralRegisterSet().getRegister(010).setXI(1).setXM(0);
 
         _engine.cycle(); // RESOLVING_ADDRESS
         _engine.cycle(); // Execute
@@ -454,7 +455,7 @@ public class TestJMGIFunction extends TestFunction {
         // Should NOT have jumped, PC should be 1
         assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
         // Register should be incremented: XM 0 -> 1
-        assertEquals(1, _engine.getGeneralRegister(010).getXM());
+        assertEquals(1, _engine.getGeneralRegisterSet().getRegister(010).getXM());
     }
 
     @Test
@@ -481,9 +482,9 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
 
         // Setup X8 (010): XM=010
-        _engine.getGeneralRegister(010).setXI(1).setXM(010);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setXI(1).setXM(010);
         // Setup X9 (011): XM=0500
-        _engine.getGeneralRegister(011).setXM(0500);
+        _engine.getGeneralRegisterSet().getRegister(011).setXM(0500);
 
         _engine.cycle(); // RESOLVING_ADDRESS
         _engine.cycle(); // Execute
@@ -491,7 +492,7 @@ public class TestJMGIFunction extends TestFunction {
         // Should jump to 01000 + 0500 = 01500
         assertEquals(0_1500, _engine.getProgramAddressRegister().getProgramCounter());
         // X8 should be incremented: 010 -> 011
-        assertEquals(011, _engine.getGeneralRegister(010).getXM());
+        assertEquals(011, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getXM());
     }
 
     @Test
@@ -518,7 +519,7 @@ public class TestJMGIFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
 
         // Setup X8 (010): XI=1, XM=010
-        _engine.getGeneralRegister(010).setXI(1).setXM(010);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setXI(1).setXM(010);
 
         _engine.cycle(); // RESOLVING_ADDRESS (Indirect addressing does not happen in EM for JMGI via getJumpOperand?)
         // Wait, Engine.getJumpOperand says:
@@ -532,6 +533,6 @@ public class TestJMGIFunction extends TestFunction {
         // Target: 01000 + 0100000 (I-bit is 0200000 bit) = 0201000
         assertEquals(0201000, _engine.getProgramAddressRegister().getProgramCounter());
         // X8 should be incremented: 010 -> 011
-        assertEquals(011, _engine.getGeneralRegister(010).getXM());
+        assertEquals(011, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).getXM());
     }
 }

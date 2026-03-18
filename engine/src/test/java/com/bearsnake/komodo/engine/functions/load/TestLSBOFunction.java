@@ -75,17 +75,17 @@ public class TestLSBOFunction extends TestFunction {
 
         // set all X registers to -1.
         for (int gx = GRS_X0 ; gx <= GRS_X15; gx++) {
-            _engine.getGeneralRegister(gx).setW(0_777777_777777L);
+            _engine.getGeneralRegisterSet().getRegister(gx).setW(0_777777_777777L);
         }
-        _engine.getGeneralRegister(GRS_R5).setW(0_655443_322110L);
-        _engine.getGeneralRegister(GRS_X8).setW(0_000000_000004L);
+        _engine.getGeneralRegisterSet().getRegister(GRS_R5).setW(0_655443_322110L);
+        _engine.getGeneralRegisterSet().getRegister(GRS_X8).setW(0_000000_000004L);
 
         run();
 
-        assertEquals(0_107777_777777L, _engine.getGeneralRegister(GRS_X0).getW());
-        assertEquals(0_107777_777777L, _engine.getGeneralRegister(GRS_X1).getW());
-        assertEquals(0_337777_777777L, _engine.getGeneralRegister(GRS_X2).getW());
-        assertEquals(0_227777_777777L, _engine.getGeneralRegister(GRS_X3).getW());
-        assertEquals(0_447777_777777L, _engine.getGeneralRegister(GRS_X4).getW());
+        assertEquals(0_107777_777777L, _engine.getGeneralRegisterSet().getRegister(GRS_X0).getW());
+        assertEquals(0_107777_777777L, _engine.getGeneralRegisterSet().getRegister(GRS_X1).getW());
+        assertEquals(0_337777_777777L, _engine.getGeneralRegisterSet().getRegister(GRS_X2).getW());
+        assertEquals(0_227777_777777L, _engine.getGeneralRegisterSet().getRegister(GRS_X3).getW());
+        assertEquals(0_447777_777777L, _engine.getGeneralRegisterSet().getRegister(GRS_X4).getW());
     }
 }

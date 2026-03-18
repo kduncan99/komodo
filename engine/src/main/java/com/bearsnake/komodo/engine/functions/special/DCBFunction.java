@@ -37,7 +37,7 @@ public class DCBFunction extends Function {
         }
 
         var count = Long.bitCount(operands[0]) + Long.bitCount(operands[1]);
-        engine.getExecOrUserARegister(engine.getCurrentInstruction().getA()).setW(count);
+        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(engine.getCurrentInstruction().getA())).setW(count);
         return true;
     }
 }

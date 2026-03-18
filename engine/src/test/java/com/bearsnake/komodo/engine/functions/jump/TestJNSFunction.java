@@ -7,6 +7,7 @@ package com.bearsnake.komodo.engine.functions.jump;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.*;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.TestFunction;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -77,12 +78,12 @@ public class TestJNSFunction extends TestFunction {
 
         // A5 = 0_400000_000000L (Negative)
         // Shift left circular by 1: 0_000000_000001L
-        _engine.getGeneralRegister(5).setW(0_400000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(0_400000_000000L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
 
         assertEquals(0_440000_000100L, _engine.getProgramAddressRegister().getCompositeValue(), "Should jump");
-        assertEquals(0_000000_000001L, _engine.getGeneralRegister(5).getW(), "Should shift");
+        assertEquals(0_000000_000001L, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).getW(), "Should shift");
     }
 
     @Test
@@ -93,12 +94,12 @@ public class TestJNSFunction extends TestFunction {
 
         // A5 = 0_000000_000001L (Positive)
         // Shift left circular by 1: 0_000000_000002L
-        _engine.getGeneralRegister(5).setW(0_000000_000001L);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(0_000000_000001L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
 
         assertEquals(0_440000_000001L, _engine.getProgramAddressRegister().getCompositeValue(), "Should not jump");
-        assertEquals(0_000000_000002L, _engine.getGeneralRegister(5).getW(), "Should shift");
+        assertEquals(0_000000_000002L, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).getW(), "Should shift");
     }
 
     @Test
@@ -109,12 +110,12 @@ public class TestJNSFunction extends TestFunction {
 
         // A5 = Word36.NEGATIVE_ZERO (0_777777_777777L)
         // Shift left circular by 1: 0_777777_777777L
-        _engine.getGeneralRegister(5).setW(Word36.NEGATIVE_ZERO);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(Word36.NEGATIVE_ZERO);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
 
         assertEquals(0_440000_000100L, _engine.getProgramAddressRegister().getCompositeValue(), "Should jump");
-        assertEquals(Word36.NEGATIVE_ZERO, _engine.getGeneralRegister(5).getW(), "Should shift");
+        assertEquals(Word36.NEGATIVE_ZERO, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).getW(), "Should shift");
     }
 
     @Test
@@ -125,11 +126,11 @@ public class TestJNSFunction extends TestFunction {
 
         // A5 = 0_600000_000000L (Negative)
         // Shift left circular by 1: 0_400000_000001L
-        _engine.getGeneralRegister(5).setW(0_600000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(0_600000_000000L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
 
         assertEquals(0_100, _engine.getProgramAddressRegister().getProgramCounter(), "Should jump");
-        assertEquals(0_400000_000001L, _engine.getGeneralRegister(5).getW(), "Should shift");
+        assertEquals(0_400000_000001L, _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).getW(), "Should shift");
     }
 }

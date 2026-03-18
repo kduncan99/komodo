@@ -37,8 +37,9 @@ public class JNFunction extends Function {
             return false;
         }
 
-        var ci = engine.getCurrentInstruction();
-        if (engine.getGeneralRegister(ci.getA()).isNegative()) {
+        var a = engine.getCurrentInstruction().getA();
+        var reg = engine.getExecOrUserARegister(a);
+        if (reg.isNegative()) {
             doJump(engine, operand);
         }
         return true;

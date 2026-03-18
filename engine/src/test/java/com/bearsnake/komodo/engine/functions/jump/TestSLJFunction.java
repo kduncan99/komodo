@@ -111,14 +111,14 @@ public class TestSLJFunction extends TestFunction {
                .setBankDescriptorIndex(0_000004)
                .setBankLevel((short) 0_7);
 
-        _engine.getGeneralRegister(GRS_X3).setXI(0_000100).setXM(0_03);
+        _engine.getGeneralRegisterSet().getRegister(GRS_X3).setXI(0_000100).setXM(0_03);
 
         run();
 
         assertEquals(0_000000_001001L, code[3]);
         assertEquals(0_001004L, _engine.getProgramAddressRegister().getProgramCounter());
-        assertEquals(0_000100, _engine.getGeneralRegister(GRS_X3).getXI());
-        assertEquals(0_000103, _engine.getGeneralRegister(GRS_X3).getXM());
+        assertEquals(0_000100, _engine.getGeneralRegisterSet().getRegister(GRS_X3).getXI());
+        assertEquals(0_000103, _engine.getGeneralRegisterSet().getRegister(GRS_X3).getXM());
     }
 
     @Test

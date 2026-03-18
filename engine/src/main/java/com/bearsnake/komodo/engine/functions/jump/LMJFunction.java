@@ -40,7 +40,7 @@ public class LMJFunction extends Function {
 
         var pc = engine.getProgramAddressRegister().getProgramCounter();
         var ci = engine.getCurrentInstruction();
-        engine.getExecOrUserXRegister(ci.getA()).setXM(pc + 1);
+        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(ci.getA())).setXM(pc + 1);
 
         doJump(engine, operand);
         return true;

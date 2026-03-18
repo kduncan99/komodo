@@ -69,22 +69,22 @@ public class TestSAQWFunction extends TestFunction {
         _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
 
         // A1 contains 0x1FF (all 9 bits set)
-        _engine.getExecOrUserARegister(1).setW(0x1FFL);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setW(0x1FFL);
         
         // Q1: bits 4,5 of X1 = 0
-        _engine.getExecOrUserXRegister(1).setS1(0);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setS1(0);
         cycle();
 
         // Q2: bits 4,5 of X1 = 1
-        _engine.getExecOrUserXRegister(1).setS1(1);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setS1(1);
         cycle();
 
         // Q3: bits 4,5 of X1 = 2
-        _engine.getExecOrUserXRegister(1).setS1(2);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setS1(2);
         cycle();
 
         // Q4: bits 4,5 of X1 = 3
-        _engine.getExecOrUserXRegister(1).setS1(3);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setS1(3);
         cycle();
 
         // In 36-bit word: Q1 Q2 Q3 Q4
@@ -127,8 +127,8 @@ public class TestSAQWFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(4).setW(0_123L); // 0o123
-        _engine.getExecOrUserXRegister(2).setS1(2); // Q3
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_123L); // 0o123
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(2)).setS1(2); // Q3
 
         run();
 
@@ -166,8 +166,8 @@ public class TestSAQWFunction extends TestFunction {
                .setBasicModeBaseRegisterSelection(false);
         _engine.getProgramAddressRegister().fromComposite(0_000000_000000L);
 
-        _engine.getExecOrUserARegister(1).setW(0_777L);
-        _engine.getExecOrUserXRegister(2).setS1(3); // Q4
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setW(0_777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(2)).setS1(3); // Q4
 
         run();
 

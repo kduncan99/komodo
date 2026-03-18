@@ -65,13 +65,13 @@ public class TestANDFunction extends TestFunction {
         // AND A0, immediate 0_123456
         bank.set(0, fjaxhiu(0_42, 016, 0, 0, 0, 0, 0_123456));
         
-        _engine.getExecOrUserARegister(0).setW(0_777777_777777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).setW(0_777777_777777L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle(); // fetch
         _engine.cycle(); // execute
         
         // Result in A1
-        assertEquals(0_000000_123456L, _engine.getExecOrUserARegister(1).getW());
+        assertEquals(0_000000_123456L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).getW());
     }
 
     @Test
@@ -82,12 +82,12 @@ public class TestANDFunction extends TestFunction {
         // AND A0, immediate 0_123456
         bank.set(0, fjaxu(0_42, 016, 0, 0, 0_123456));
         
-        _engine.getExecOrUserARegister(0).setW(0_777777_777777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).setW(0_777777_777777L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle(); // fetch
         _engine.cycle(); // execute
         
-        assertEquals(0_000000_123456L, _engine.getExecOrUserARegister(1).getW());
+        assertEquals(0_000000_123456L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).getW());
     }
 
     @Test
@@ -96,29 +96,29 @@ public class TestANDFunction extends TestFunction {
         var bank = _engine.getBaseRegister(0).getStorage();
         bank.set(0, fjaxu(0_42, 017, 017, 0, 0_123456)); // AND A15, immediate 0_123456
         
-        _engine.getExecOrUserARegister(017).setW(0_777777_777777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(017)).setW(0_777777_777777L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle(); // fetch
         _engine.cycle(); // execute
         
         // Result in A(15+1) & 017 = A0
-        assertEquals(0_000000_123456L, _engine.getExecOrUserARegister(0).getW());
+        assertEquals(0_000000_123456L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).getW());
     }
 
     @Test
     public void testAND_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
         setupEM();
         var bank = _engine.getBaseRegister(0).getStorage();
-        _engine.getExecOrUserXRegister(1).setW(0_000000_000100L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setW(0_000000_000100L);
         bank.set(0, andEM(2, 1, 0_500)); // AND A2, [0_500 + X1] = [0_600]
         bank.set(0_600, 0_707070_707070L);
         
-        _engine.getExecOrUserARegister(2).setW(0_123456_123456L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(2)).setW(0_123456_123456L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle(); // fetch
         _engine.cycle(); // execute
         
-        assertEquals(0_103050_103050L, _engine.getExecOrUserARegister(3).getW());
+        assertEquals(0_103050_103050L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(3)).getW());
     }
 
     @Test
@@ -130,7 +130,7 @@ public class TestANDFunction extends TestFunction {
         bank.set(0_1010, 0_000000_001020L); // indirect to 0_1020 (i=0, so it's a final address)
         bank.set(0_1020, 0_000000_000017L);
         
-        _engine.getExecOrUserARegister(4).setW(0_000000_000037L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_000000_000037L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         
         // Execute fetch and then until done
@@ -139,7 +139,7 @@ public class TestANDFunction extends TestFunction {
             _engine.cycle();
         }
         
-        assertEquals(0_000000_000017L, _engine.getExecOrUserARegister(5).getW());
+        assertEquals(0_000000_000017L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).getW());
     }
 
     @Test
@@ -151,11 +151,11 @@ public class TestANDFunction extends TestFunction {
         // S2 is bits 24-29. In octal: 0_00XX00_000000.
         bank.set(0_500, 0_001200_000000L); // 12 in S2
         
-        _engine.getExecOrUserARegister(6).setW(0_777777_777777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0_777777_777777L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle(); // fetch
         _engine.cycle(); // execute
         
-        assertEquals(0_000000_000012L, _engine.getExecOrUserARegister(7).getW());
+        assertEquals(0_000000_000012L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(7)).getW());
     }
 }

@@ -37,8 +37,9 @@ public class JPFunction extends Function {
             return false;
         }
 
-        var ci = engine.getCurrentInstruction();
-        if (engine.getGeneralRegister(ci.getA()).isPositive()) {
+        var a = engine.getCurrentInstruction().getA();
+        var reg = engine.getExecOrUserARegister(a);
+        if (reg.isPositive()) {
             doJump(engine, operand);
         }
         return true;

@@ -68,11 +68,11 @@ public class TestLXLMFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegister(GRS_X2).setW(0_111111_111111L);
+        _engine.getGeneralRegisterSet().getRegister(GRS_X2).setW(0_111111_111111L);
 
         assertThrows(InvalidInstructionInterrupt.class, () -> run());
 
-        assertEquals(0_111111_111111L, _engine.getGeneralRegister(GRS_X2).getW());
+        assertEquals(0_111111_111111L, _engine.getGeneralRegisterSet().getRegister(GRS_X2).getW());
     }
 
     @Test
@@ -110,12 +110,12 @@ public class TestLXLMFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegister(GRS_X2).setW(0_111111_111111L);
+        _engine.getGeneralRegisterSet().getRegister(GRS_X2).setW(0_111111_111111L);
 
         run();
 
-        System.out.printf("%012o <=> %012o\n", 0_111134_454567L, _engine.getGeneralRegister(GRS_X2).getW());
-        assertEquals(0_111134_454567L, _engine.getGeneralRegister(GRS_X2).getW());
+        System.out.printf("%012o <=> %012o\n", 0_111134_454567L, _engine.getGeneralRegisterSet().getRegister(GRS_X2).getW());
+        assertEquals(0_111134_454567L, _engine.getGeneralRegisterSet().getRegister(GRS_X2).getW());
     }
 
     @Test
@@ -152,14 +152,14 @@ public class TestLXLMFunction extends TestFunction {
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-        _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXI(0_01).setXM(0_03);
 
-        _engine.getGeneralRegister(GRS_X5).setW(0_111111_111111L);
+        _engine.getGeneralRegisterSet().getRegister(GRS_X5).setW(0_111111_111111L);
 
         run();
 
-        assertEquals(0_111100_000015L, _engine.getGeneralRegister(GRS_X5).getW());
-        assertEquals(0_01L, _engine.getGeneralRegister(GRS_X3).getXI());
-        assertEquals(0_04L, _engine.getGeneralRegister(GRS_X3).getXM());
+        assertEquals(0_111100_000015L, _engine.getGeneralRegisterSet().getRegister(GRS_X5).getW());
+        assertEquals(0_01L, _engine.getGeneralRegisterSet().getRegister(GRS_X3).getXI());
+        assertEquals(0_04L, _engine.getGeneralRegisterSet().getRegister(GRS_X3).getXM());
     }
 }

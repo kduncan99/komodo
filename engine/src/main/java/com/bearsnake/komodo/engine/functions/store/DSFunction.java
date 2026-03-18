@@ -35,8 +35,8 @@ public class DSFunction extends Function {
         var ci = engine.getCurrentInstruction();
         var ax = engine.getExecOrUserARegisterIndex(ci.getA());
         var operands = new long[2];
-        operands[0] = engine.getGeneralRegister(ax).getW();
-        operands[1] = engine.getGeneralRegister(ax + 1).getW();
+        operands[0] = engine.getGeneralRegisterSet().getRegister(ax).getW();
+        operands[1] = engine.getGeneralRegisterSet().getRegister(ax + 1).getW();
         return engine.storeConsecutiveOperands(true, operands);
     }
 }

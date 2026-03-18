@@ -39,8 +39,8 @@ public class JNSFunction extends Function {
             return false;
         }
 
-        var ci = engine.getCurrentInstruction();
-        var reg = engine.getGeneralRegister(ci.getA());
+        var a = engine.getCurrentInstruction().getA();
+        var reg = engine.getExecOrUserARegister(a);
         boolean isNegative = reg.isNegative();
 
         // Shift happens regardless of jump

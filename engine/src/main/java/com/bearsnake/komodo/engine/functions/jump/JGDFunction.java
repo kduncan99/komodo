@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions.jump;
 
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.GeneralRegisterSet;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -21,13 +22,13 @@ public class JGDFunction extends Function {
     public static final JGDFunction INSTANCE = new JGDFunction();
 
     private JGDFunction() {
-        super("J");
+        super("JGD");
         setBasicModeFunctionCode(new FunctionCode(0_70));
         setExtendedModeFunctionCode(new FunctionCode(0_70));
 
-        setAFieldSemantics(AFieldSemantics.UNUSED);
+        setAFieldSemantics(AFieldSemantics.GRS_INDEX);
         setImmediateMode(false);
-        setIsGRS(false);
+        setIsGRS(true);
     }
 
     @Override
@@ -40,14 +41,12 @@ public class JGDFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        var grsx = ((ci.getJ() << 4) | ci.getA()) & 0177;
-        var reg = engine.getGeneralRegister(grsx);
-        var dr = engine.getDesignatorRegister();
-        var pPriv = dr.getProcessorPrivilege();
-        if (!Engine.isGRSAccessAllowed(grsx, pPriv, true)) {
+        var grsx = (ci.getJ() << 4) | ci.getA();
+        if (!GeneralRegisterSet.isAccessAllowed(grsx, engine.getDesignatorRegister().getProcessorPrivilege(), true)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
         }
 
+        var reg = engine.getGeneralRegisterSet().getRegister(grsx);
         if (reg.isPositive() && !reg.isZero()) {
             doJump(engine, operand);
         }

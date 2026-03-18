@@ -650,49 +650,87 @@ public class Engine {
         }
     }
 
+    /**
+     * For retrieving A registers from A0 to UA3.
+     * Note that UA0 through UA3 could be thought of as A16 through A19, and are accessed
+     * implicitly rather than by a-field. We accept values 16 through 19 for these registers.
+     * @param registerNumber
+     * @return
+     */
     public int getExecOrUserARegisterIndex(
         final int registerNumber
     ) {
-        return _activityStatePacket.getDesignatorRegister().isExecRegisterSetSelected()
-               ? Constants.GRS_EA0 + registerNumber : Constants.GRS_A0 + registerNumber;
+        var isExec = _activityStatePacket.getDesignatorRegister().isExecRegisterSetSelected();
+        return isExec ? Constants.GRS_EA0 + registerNumber : Constants.GRS_A0 + registerNumber;
     }
 
+    /**
+     * For general use. Do to the logic involved, it is not possible to access a register
+     * for which access is not implicitly allowed.
+     */
     public Register getExecOrUserARegister(
         final int registerNumber
     ) {
         return _generalRegisterSet.getRegister(getExecOrUserARegisterIndex(registerNumber));
     }
 
-    private int getExecOrUserRRegisterIndex(
+    public int getExecOrUserRRegisterIndex(
         final int registerNumber
     ) {
         return _activityStatePacket.getDesignatorRegister().isExecRegisterSetSelected()
                ? Constants.GRS_ER0 + registerNumber : Constants.GRS_R0 + registerNumber;
     }
 
+    /**
+     * For general use. Do to the logic involved, it is not possible to access a register
+     * for which access is not implicitly allowed.
+     */
     public Register getExecOrUserRRegister(
         final int registerNumber
     ) {
         return _generalRegisterSet.getRegister(getExecOrUserRRegisterIndex(registerNumber));
     }
 
-    private int getExecOrUserXRegisterIndex(
+    public int getExecOrUserXRegisterIndex(
         final int registerNumber
     ) {
         return _activityStatePacket.getDesignatorRegister().isExecRegisterSetSelected()
                ? Constants.GRS_EX0 + registerNumber : Constants.GRS_X0 + registerNumber;
     }
 
+    /**
+     * For general use. Do to the logic involved, it is not possible to access a register
+     * for which access is not implicitly allowed.
+     */
     public Register getExecOrUserXRegister(
         final int registerNumber
     ) {
         return _generalRegisterSet.getRegister(getExecOrUserXRegisterIndex(registerNumber));
     }
 
+    /**
+     * For use by various (likely external) callers.
+     * Because the caller is asking for a register by its GRS index, we have to ensure the access is allowed.
+     * @param registerIndex the GRS index of the register to be returned
+     * @param writeAccessAllowed whether the caller is requesting write access (as opposed to read access)
+     * @return the requested register
+     * @throws ReferenceViolationInterrupt if access is not allowed
+     */
     public Register getGeneralRegister(
-        final int registerNumber
-    ) {
-        return _generalRegisterSet.getRegister(registerNumber);
+        final int registerIndex,
+        final boolean writeAccessAllowed
+    ) throws ReferenceViolationInterrupt {
+        if (!isGRSAccessAllowed(registerIndex, _activityStatePacket.getDesignatorRegister().getProcessorPrivilege(), writeAccessAllowed)) {
+            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
+        }
+        return _generalRegisterSet.getRegister(registerIndex);
+    }
+
+    /**
+     * For unit tests - this one does *NOT* do access checking.
+     */
+    public GeneralRegisterSet getGeneralRegisterSet() {
+        return _generalRegisterSet;
     }
 
     public HaltCode getHaltCode() {

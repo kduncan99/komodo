@@ -237,12 +237,12 @@ public class TestJFunction extends TestFunction {
                .setProgramCounter(0_1000)
                .setBankDescriptorIndex(0_000004)
                .setBankLevel((short) 0_7);
-        _engine.getExecOrUserXRegister(3).setXI(0_10).setXM(0_01000);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXI(0_10).setXM(0_01000);
 
         run();
 
-        assertEquals(0_10, _engine.getExecOrUserXRegister(3).getXI());
-        assertEquals(0_01010, _engine.getExecOrUserXRegister(3).getXM());
+        assertEquals(0_10, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXI());
+        assertEquals(0_01010, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXM());
         assertEquals(0_001002L, _engine.getProgramAddressRegister().getProgramCounter());
     }
 
@@ -405,12 +405,12 @@ public class TestJFunction extends TestFunction {
                .setProgramCounter(0_1000)
                .setBankDescriptorIndex(0_000004)
                .setBankLevel((short) 0_7);
-        _engine.getExecOrUserXRegister(2).setXI(0_02).setXM(0_03);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(2)).setXI(0_02).setXM(0_03);
 
         run();
 
-        assertEquals(02, _engine.getExecOrUserXRegister(2).getXI());
-        assertEquals(05, _engine.getExecOrUserXRegister(2).getXM());
+        assertEquals(02, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(2)).getXI());
+        assertEquals(05, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(2)).getXM());
         assertEquals(0_001003L, _engine.getProgramAddressRegister().getProgramCounter());
     }
 }

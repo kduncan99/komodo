@@ -37,8 +37,9 @@ public class JNBFunction extends Function {
             return false;
         }
 
-        var ci = engine.getCurrentInstruction();
-        if ((engine.getExecOrUserARegister(ci.getA()).getW() & 01) == 0) {
+        var a = engine.getCurrentInstruction().getA();
+        var reg = engine.getExecOrUserARegister(a);
+        if ((reg.getW() & 01) == 0) {
             doJump(engine, operand);
         }
         return true;

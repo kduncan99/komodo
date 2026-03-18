@@ -33,7 +33,7 @@ public class SXFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var ci = engine.getCurrentInstruction();
-        var operand = engine.getExecOrUserXRegister(ci.getA()).getW();
+        var operand = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(ci.getA())).getW();
         return engine.storeOperand(true, true, true, true, operand);
     }
 }

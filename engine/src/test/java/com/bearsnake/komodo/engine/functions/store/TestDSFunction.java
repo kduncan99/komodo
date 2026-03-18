@@ -59,8 +59,8 @@ public class TestDSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(0).setW(0_123456_765432L);
-        _engine.getExecOrUserARegister(1).setW(0_111111_222222L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).setW(0_123456_765432L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setW(0_111111_222222L);
 
         run();
 
@@ -97,8 +97,8 @@ public class TestDSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(15).setW(0_777777_777777L);
-        _engine.getExecOrUserARegister(0).setW(0_000000_000000L); // A15+1 wrap to A0
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setW(0_777777_777777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).setW(0_000000_000000L); // A15+1 wrap to A0
 
         run();
 
@@ -135,9 +135,9 @@ public class TestDSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(4).setW(0_123456_654321L);
-        _engine.getExecOrUserARegister(5).setW(0_654321_123456L);
-        _engine.getExecOrUserXRegister(1).setW(010L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_123456_654321L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0_654321_123456L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setW(010L);
 
         run();
 
@@ -175,8 +175,8 @@ public class TestDSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserARegister(4).setW(0_777666_555444L);
-        _engine.getExecOrUserARegister(5).setW(0_111222_333444L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_777666_555444L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0_111222_333444L);
 
         run();
 

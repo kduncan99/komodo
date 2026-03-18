@@ -114,17 +114,17 @@ public class TestNOPFunction extends TestFunction {
                .setBankDescriptorIndex(0_000004)
                .setBankLevel((short)0_7);
 
-        _engine.getExecOrUserXRegister(1).setXI(0_01).setXM(0_0);
-        _engine.getExecOrUserXRegister(2).setXI(0_02).setXM(0_0);
-        _engine.getExecOrUserXRegister(3).setXI(0_03).setXM(0_0);
-        _engine.getExecOrUserXRegister(4).setXI(0_04).setXM(0_0);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setXI(0_01).setXM(0_0);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(2)).setXI(0_02).setXM(0_0);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXI(0_03).setXM(0_0);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(4)).setXI(0_04).setXM(0_0);
 
         run();
 
         assertEquals(010001, _engine.getProgramAddressRegister().getProgramCounter());
-        assertEquals(01, _engine.getExecOrUserXRegister(1).getXM());
-        assertEquals(02, _engine.getExecOrUserXRegister(2).getXM());
-        assertEquals(00, _engine.getExecOrUserXRegister(3).getXM());
-        assertEquals(04, _engine.getExecOrUserXRegister(4).getXM());
+        assertEquals(01, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).getXM());
+        assertEquals(02, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(2)).getXM());
+        assertEquals(00, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXM());
+        assertEquals(04, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(4)).getXM());
     }
 }

@@ -232,7 +232,7 @@ public abstract class TestConstantFunction extends TestFunction {
 
         _data[0] = fjaxhiu(0, 0, 0, 0, 0, 1, 022001);
         _data[1] = fjaxhiu(0, 0, 0, 5, 1, 0, 022000);
-        _engine.getGeneralRegister(GRS_X5).setXI(1).setXM(5);
+        _engine.getGeneralRegisterSet().getRegister(GRS_X5).setXI(1).setXM(5);
 
         run();
 
@@ -338,6 +338,6 @@ public abstract class TestConstantFunction extends TestFunction {
 
         run();
 
-        assertEquals(_constant, _engine.getGeneralRegister(GRS_X3).getW());
+        assertEquals(_constant, _engine.getGeneralRegisterSet().getRegister(GRS_X3).getW());
     }
 }

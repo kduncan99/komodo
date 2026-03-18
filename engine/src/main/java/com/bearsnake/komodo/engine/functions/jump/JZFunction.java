@@ -37,8 +37,9 @@ public class JZFunction extends Function {
             return false;
         }
 
-        var ci = engine.getCurrentInstruction();
-        if (engine.getExecOrUserARegister(ci.getA()).isZero()) {
+        var a = engine.getCurrentInstruction().getA();
+        var reg = engine.getExecOrUserARegister(a);
+        if (reg.isZero()) {
             doJump(engine, operand);
         }
         return true;

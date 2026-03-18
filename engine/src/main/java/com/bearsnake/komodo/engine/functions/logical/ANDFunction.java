@@ -41,18 +41,17 @@ public class ANDFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        var regA = engine.getExecOrUserARegister(ci.getA());
+        var regA = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA()));
         var result = Word36.logicalAnd(regA.getW(), operand);
 
         var dr = engine.getDesignatorRegister();
         var pPriv = dr.getProcessorPrivilege();
-        engine.getExecOrUserARegister((ci.getA() + 1) & 017).setW(result);
-        var grsx = (engine.getExecOrUserARegisterIndex(ci.getA()) + 1) & 017;
+        var grsx = engine.getExecOrUserARegisterIndex((ci.getA() + 1) & 017);
         if (!Engine.isGRSAccessAllowed(grsx, pPriv, true)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
         }
 
-        engine.getGeneralRegister(grsx).setW(result);
+        engine.getGeneralRegisterSet().getRegister(grsx).setW(result);
 
         return true;
     }

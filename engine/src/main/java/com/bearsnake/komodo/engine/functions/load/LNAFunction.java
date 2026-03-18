@@ -39,7 +39,7 @@ public class LNAFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        engine.getExecOrUserARegister(ci.getA()).setW(Word36.negate(operand));
+        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA())).setW(Word36.negate(operand));
         return true;
     }
 }

@@ -56,8 +56,8 @@ public class TestSXFunction extends TestFunction {
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short)3).setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getExecOrUserXRegister(1).setW(0_000000_123456L);
-        _engine.getExecOrUserXRegister(2).setW(0_000000_654321L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setW(0_000000_123456L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(2)).setW(0_000000_654321L);
 
         run();
 
@@ -84,7 +84,7 @@ public class TestSXFunction extends TestFunction {
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0);
 
-        _engine.getExecOrUserXRegister(1).setW(0_000000_111222L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setW(0_000000_111222L);
 
         run();
 
@@ -104,11 +104,11 @@ public class TestSXFunction extends TestFunction {
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0);
 
-        _engine.getExecOrUserXRegister(1).setW(0_000000_333444L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setW(0_000000_333444L);
 
         run();
 
-        assertEquals(0_000000_333444L, _engine.getGeneralRegister(GRS_X2).getW());
+        assertEquals(0_000000_333444L, _engine.getGeneralRegisterSet().getRegister(GRS_X2).getW());
     }
 
     @Test

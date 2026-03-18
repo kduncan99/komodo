@@ -7,6 +7,7 @@ package com.bearsnake.komodo.engine.functions.jump;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.*;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.TestFunction;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -76,19 +77,19 @@ public class TestJNFunction extends TestFunction {
         bank.set(0, jnBM(5, 0_100)); // JN if A5 is negative, jump to 0_100
 
         // Case 1: X5 is negative -> Should jump
-        _engine.getGeneralRegister(5).setW(0_400000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(0_400000_000000L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_440000_000100L, _engine.getProgramAddressRegister().getCompositeValue());
 
         // Case 2: X5 is negative zero -> Should jump
-        _engine.getGeneralRegister(5).setW(Word36.NEGATIVE_ZERO);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(Word36.NEGATIVE_ZERO);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_440000_000100L, _engine.getProgramAddressRegister().getCompositeValue());
 
         // Case 3: X5 is positive -> Should NOT jump
-        _engine.getGeneralRegister(5).setW(0_377777_777777L);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(0_377777_777777L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_440000_000001L, _engine.getProgramAddressRegister().getCompositeValue());
@@ -101,13 +102,13 @@ public class TestJNFunction extends TestFunction {
         bank.set(0, jnEM(5, 0_100)); // JN if A5 is negative, jump to 0_100
 
         // Case 1: X5 is negative -> Should jump
-        _engine.getGeneralRegister(5).setW(0_400000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(0_400000_000000L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_100, _engine.getProgramAddressRegister().getProgramCounter());
 
         // Case 2: X5 is positive
-        _engine.getGeneralRegister(5).setW(0);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(0);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
@@ -116,8 +117,8 @@ public class TestJNFunction extends TestFunction {
     @Test
     public void testJN_Indexed_BM() throws MachineInterrupt, EngineHaltedException {
         setupBM();
-        _engine.getExecOrUserXRegister(3).setXM(0_10);
-        _engine.getGeneralRegister(5).setW(0_400000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_10);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(0_400000_000000L);
         var bank = _engine.getBaseRegister(12).getStorage();
         bank.set(0, jnBM(5, 3, 0, 0, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
 
@@ -129,7 +130,7 @@ public class TestJNFunction extends TestFunction {
     @Test
     public void testJN_Indirect_BM() throws MachineInterrupt, EngineHaltedException {
         setupBM();
-        _engine.getGeneralRegister(5).setW(0_400000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(0_400000_000000L);
         var bank = _engine.getBaseRegister(12).getStorage();
         bank.set(0, jnBM(5, 0, 0, 1, 0_100)); // jump indirect via 0_100
         bank.set(0_100, fjaxu(0_74, 0_04, 0, 0, 0_200)); // second stage: J to 0_200
@@ -143,8 +144,8 @@ public class TestJNFunction extends TestFunction {
     @Test
     public void testJN_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
         setupEM();
-        _engine.getExecOrUserXRegister(3).setXM(0_10);
-        _engine.getGeneralRegister(5).setW(0_400000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_10);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A5).setW(0_400000_000000L);
         var bank = _engine.getBaseRegister(0).getStorage();
         bank.set(0, jnEM(5, 3, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
 
@@ -152,6 +153,7 @@ public class TestJNFunction extends TestFunction {
         _engine.cycle();
         assertEquals(0_110, _engine.getProgramAddressRegister().getProgramCounter());
     }
+
     @Test
     public void testJN_GRS_X() throws MachineInterrupt, EngineHaltedException {
         setupBM();
@@ -159,7 +161,7 @@ public class TestJNFunction extends TestFunction {
         bank.set(0, jnBM(3, 0_100)); // JN if GRS[3] (X3) is negative, jump to 0_100
 
         // Case 1: X3 is negative -> Should jump
-        _engine.getGeneralRegister(3).setW(0_400000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A3).setW(0_400000_000000L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_440000_000100L, _engine.getProgramAddressRegister().getCompositeValue());
@@ -169,10 +171,10 @@ public class TestJNFunction extends TestFunction {
     public void testJN_GRS_A() throws MachineInterrupt, EngineHaltedException {
         setupBM();
         var bank = _engine.getBaseRegister(12).getStorage();
-        bank.set(0, jnBM(014, 0_100)); // JN if GRS[014] (A0) is negative, jump to 0_100
+        bank.set(0, jnBM(14, 0_100)); // JN if GRS[014] (A0) is negative, jump to 0_100
 
         // Case 1: A0 is negative -> Should jump
-        _engine.getGeneralRegister(014).setW(0_400000_000000L);
+        _engine.getGeneralRegisterSet().getRegister(Constants.GRS_A14).setW(0_400000_000000L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_440000_000100L, _engine.getProgramAddressRegister().getCompositeValue());

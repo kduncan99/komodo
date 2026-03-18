@@ -57,9 +57,9 @@ public class TestLMAFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_123L, _engine.getExecOrUserARegister(0).getW());
-        assertEquals(0_777773L, _engine.getExecOrUserARegister(1).getW());
-        assertEquals(0_04L, _engine.getExecOrUserARegister(2).getW());
+        assertEquals(0_123L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).getW());
+        assertEquals(0_777773L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).getW());
+        assertEquals(0_04L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(2)).getW());
     }
 
     @Test
@@ -100,8 +100,8 @@ public class TestLMAFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_03L, _engine.getExecOrUserARegister(12).getW());
-        assertEquals(0_04L, _engine.getExecOrUserARegister(13).getW());
+        assertEquals(0_03L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(12)).getW());
+        assertEquals(0_04L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(13)).getW());
     }
 
     @Test
@@ -138,13 +138,13 @@ public class TestLMAFunction extends TestFunction {
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-        _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXI(0_01).setXM(0_03);
 
         run();
 
-        assertEquals(0_15L, _engine.getExecOrUserARegister(5).getW());
-        assertEquals(0_01L, _engine.getExecOrUserXRegister(3).getXI());
-        assertEquals(0_04L, _engine.getExecOrUserXRegister(3).getXM());
+        assertEquals(0_15L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).getW());
+        assertEquals(0_01L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXI());
+        assertEquals(0_04L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXM());
     }
 
     @Test
@@ -185,9 +185,9 @@ public class TestLMAFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_2211L, _engine.getExecOrUserARegister(0).getW());
-        assertEquals(0_1100L, _engine.getExecOrUserARegister(1).getW());
-        assertEquals(0_2476L, _engine.getExecOrUserARegister(2).getW());
+        assertEquals(0_2211L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).getW());
+        assertEquals(0_1100L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).getW());
+        assertEquals(0_2476L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(2)).getW());
     }
 
     @Test
@@ -227,9 +227,9 @@ public class TestLMAFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_112L, _engine.getExecOrUserARegister(12).getW());
-        assertEquals(0_233L, _engine.getExecOrUserARegister(13).getW());
-        assertEquals(0_445L, _engine.getExecOrUserARegister(14).getW());
-        assertEquals(0_566L, _engine.getExecOrUserARegister(15).getW());
+        assertEquals(0_112L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(12)).getW());
+        assertEquals(0_233L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(13)).getW());
+        assertEquals(0_445L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(14)).getW());
+        assertEquals(0_566L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).getW());
     }
 }

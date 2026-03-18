@@ -44,8 +44,8 @@ public class DLNFunction extends Function {
         operands[0] = Word36.negate(operands[0]);
         operands[1] = Word36.negate(operands[1]);
 
-        engine.getGeneralRegister(ax).setW(operands[0]);
-        engine.getGeneralRegister(ax + 1).setW(operands[1]);
+        engine.getGeneralRegisterSet().getRegister(ax).setW(operands[0]);
+        engine.getGeneralRegisterSet().getRegister(ax + 1).setW(operands[1]);
         return true;
     }
 }

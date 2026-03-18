@@ -43,19 +43,18 @@ public class MLUFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        var regAValue = engine.getExecOrUserARegister(ci.getA()).getW();
-        var regR2Value = engine.getExecOrUserRRegister(2).getW();
+        var regAValue = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA())).getW();
+        var regR2Value = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserRRegisterIndex(2)).getW();
         var result = (regR2Value & operand) | (Word36.logicalNot(regR2Value) & regAValue);
 
         var dr = engine.getDesignatorRegister();
         var pPriv = dr.getProcessorPrivilege();
-        engine.getExecOrUserARegister((ci.getA() + 1) & 017).setW(result);
-        var grsx = (engine.getExecOrUserARegisterIndex(ci.getA()) + 1) & 017;
+        var grsx = engine.getExecOrUserARegisterIndex((ci.getA() + 1) & 017);
         if (!Engine.isGRSAccessAllowed(grsx, pPriv, true)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
         }
 
-        engine.getGeneralRegister(grsx).setW(result);
+        engine.getGeneralRegisterSet().getRegister(grsx).setW(result);
 
         return true;
     }

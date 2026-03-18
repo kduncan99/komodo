@@ -78,10 +78,9 @@ public class TestMLUFunction extends TestFunction {
         // MLU A0, immediate 0_000000_123456 (using j=016)
         bank.set(0, fjaxhiu(0_43, 016, 0, 0, 0, 0, 0_123456));
 
-        // R2 = 0_777777_000000 (Choose high from operand, low from A0)
-        _engine.getExecOrUserRRegister(2).setW(0_777777_000000L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(2)).setW(0_777777_000000L);
         // A0 = 0_111111_222222
-        _engine.getExecOrUserARegister(0).setW(0_111111_222222L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).setW(0_111111_222222L);
         // operand = 0_000000_123456 (immediate)
 
         _engine.getProgramAddressRegister().setProgramCounter(0);
@@ -92,7 +91,7 @@ public class TestMLUFunction extends TestFunction {
         // (R2 & operand) = (0_777777_000000 & 0_000000_123456) = 0
         // (~R2 & A0) = (0_000000_777777 & 0_111111_222222) = 0_000000_222222
         // result = 0_000000_222222
-        assertEquals(0_000000_222222L, _engine.getExecOrUserARegister(1).getW());
+        assertEquals(0_000000_222222L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).getW());
     }
 
     @Test
@@ -105,10 +104,9 @@ public class TestMLUFunction extends TestFunction {
         // For AND/OR/XOR J=016 was used for JFIELD_U.
         bank.set(0, fjaxu(0_43, 016, 0, 0, 0_123456));
 
-        // R2 = 0_000000_777777 (Choose low from operand, high from A0)
-        _engine.getExecOrUserRRegister(2).setW(0_000000_777777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(2)).setW(0_000000_777777L);
         // A0 = 0_111111_222222
-        _engine.getExecOrUserARegister(0).setW(0_111111_222222L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).setW(0_111111_222222L);
         // operand = 0_000000_123456 (immediate)
 
         _engine.getProgramAddressRegister().setProgramCounter(0);
@@ -119,7 +117,7 @@ public class TestMLUFunction extends TestFunction {
         // (R2 & operand) = (0_000000_777777 & 0_000000_123456) = 0_000000_123456
         // (~R2 & A0) = (0_777777_000000 & 0_111111_222222) = 0_111111_000000
         // result = 0_111111_123456
-        assertEquals(0_111111_123456L, _engine.getExecOrUserARegister(1).getW());
+        assertEquals(0_111111_123456L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).getW());
     }
 
     @Test
@@ -129,31 +127,29 @@ public class TestMLUFunction extends TestFunction {
         // MLU A15, immediate 0_123456 (using j=016)
         bank.set(0, fjaxu(0_43, 016, 017, 0, 0_123456));
 
-        // R2 = 0_777777_777777 (Choose all from operand)
-        _engine.getExecOrUserRRegister(2).setW(0_777777_777777L);
-        _engine.getExecOrUserARegister(017).setW(0_111111_111111L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(2)).setW(0_777777_777777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(017)).setW(0_111111_111111L);
 
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle(); // fetch
         _engine.cycle(); // execute
 
         // Result in A(15+1) & 017 = A0
-        assertEquals(0_000000_123456L, _engine.getExecOrUserARegister(0).getW());
+        assertEquals(0_000000_123456L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).getW());
     }
 
     @Test
     public void testMLU_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
         setupEM();
         var bank = _engine.getBaseRegister(0).getStorage();
-        _engine.getExecOrUserXRegister(1).setW(0_000000_000100L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(1)).setW(0_000000_000100L);
         // MLU A2, [0_500 + X1] = [0_600]
         bank.set(0, mluEM(2, 1, 0_500));
         bank.set(0_600, 0_707070_707070L);
 
-        // R2 = 0_555555_555555
-        _engine.getExecOrUserRRegister(2).setW(0_555555_555555L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(2)).setW(0_555555_555555L);
         // A2 = 0_222222_222222
-        _engine.getExecOrUserARegister(2).setW(0_222222_222222L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(2)).setW(0_222222_222222L);
 
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle(); // fetch
@@ -164,7 +160,7 @@ public class TestMLUFunction extends TestFunction {
         // R2 & operand = 0_555555_555555 & 0_707070_707070 = 0_505050_505050
         // ~R2 & A2 = 0_222222_222222 & 0_222222_222222 = 0_222222_222222
         // result = 0_505050_505050 | 0_222222_222222 = 0_727272_727272
-        assertEquals(0_727272_727272L, _engine.getExecOrUserARegister(3).getW());
+        assertEquals(0_727272_727272L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(3)).getW());
     }
 
     @Test
@@ -176,8 +172,8 @@ public class TestMLUFunction extends TestFunction {
         bank.set(0_1010, 0_000000_001020L); // indirect to 0_1020
         bank.set(0_1020, 0_777777_777777L);
 
-        _engine.getExecOrUserRRegister(2).setW(0_777777_777777L); // mask = all operand
-        _engine.getExecOrUserARegister(4).setW(0L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(2)).setW(0_777777_777777L); // mask = all operand
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0L);
 
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle(); // fetch
@@ -186,7 +182,7 @@ public class TestMLUFunction extends TestFunction {
         }
 
         // result = (0_777777_777777 & 0_777777_777777) | (0 & 0) = 0_777777_777777
-        assertEquals(0_777777_777777L, _engine.getExecOrUserARegister(5).getW());
+        assertEquals(0_777777_777777L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).getW());
     }
 
     @Test
@@ -200,10 +196,9 @@ public class TestMLUFunction extends TestFunction {
         // 0_00XX00_000000
         bank.set(0_500, 0_001200_000000L); // 12 in S2
 
-        // R2 = 0_000000_777777 (Select operand for low bits, A6 for high)
-        _engine.getExecOrUserRRegister(2).setW(0_000000_777777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(2)).setW(0_000000_777777L);
         // A6 = 0_123456_777777
-        _engine.getExecOrUserARegister(6).setW(0_123456_777777L);
+        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0_123456_777777L);
 
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle(); // fetch
@@ -213,6 +208,6 @@ public class TestMLUFunction extends TestFunction {
         // R2 & operand = 0_000000_777777 & 0_000000_000012 = 0_000000_000012
         // ~R2 & A6 = 0_777777_000000 & 0_123456_777777 = 0_123456_000000
         // result = 0_123456_000012
-        assertEquals(0_123456_000012L, _engine.getExecOrUserARegister(7).getW());
+        assertEquals(0_123456_000012L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(7)).getW());
     }
 }

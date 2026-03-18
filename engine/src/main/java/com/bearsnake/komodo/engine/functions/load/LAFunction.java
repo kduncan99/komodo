@@ -38,7 +38,7 @@ public class LAFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        engine.getExecOrUserARegister(ci.getA()).setW(operand);
+        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA())).setW(operand);
         return true;
     }
 }

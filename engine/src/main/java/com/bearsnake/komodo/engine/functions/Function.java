@@ -28,6 +28,7 @@ public abstract class Function {
         B_REGISTER,
         R_REGISTER,
         X_REGISTER,
+        GRS_INDEX,
     }
 
     private static final HashMap<Integer, Function> BM_FUNCTIONS_BY_F_CODE = new HashMap<>();
@@ -186,7 +187,7 @@ public abstract class Function {
                     sb.append(" ");
                 }
                 sb.append("");
-                var xReg = engine.getExecOrUserXRegister(iWord.getX());
+                var xReg = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(iWord.getX()));
                 sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
             }
 
@@ -333,7 +334,7 @@ public abstract class Function {
                 sb.append(" ");
             }
             sb.append("");
-            var xReg = engine.getExecOrUserXRegister(iWord.getX());
+            var xReg = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(iWord.getX()));
             sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
         }
 

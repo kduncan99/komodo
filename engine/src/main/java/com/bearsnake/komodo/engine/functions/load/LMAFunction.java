@@ -42,7 +42,7 @@ public class LMAFunction extends Function {
         if (Word36.isNegative(operand)) {
             operand = Word36.negate(operand);
         }
-        engine.getExecOrUserARegister(ci.getA()).setW(operand);
+        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA())).setW(operand);
         return true;
     }
 }

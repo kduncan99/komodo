@@ -46,7 +46,7 @@ public class SRSFunction extends Function {
         var ci = engine.getCurrentInstruction();
         var dr = engine.getDesignatorRegister();
         var pPriv = dr.getProcessorPrivilege();
-        var aVal = engine.getExecOrUserARegister(ci.getA());
+        var aVal = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA()));
 
         var r2Length = aVal.getQ1() & 0177;
         var r2Index = aVal.getQ2() & 0177;
@@ -66,7 +66,7 @@ public class SRSFunction extends Function {
             if (!Engine.isGRSAccessAllowed(grsIndex, pPriv, false)) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
-            operands[opIdx++] = engine.getGeneralRegister(grsIndex).getW();
+            operands[opIdx++] = engine.getGeneralRegisterSet().getRegister(grsIndex).getW();
         }
 
         for (int i = 0; i < r2Length; i++) {
@@ -74,7 +74,7 @@ public class SRSFunction extends Function {
             if (!Engine.isGRSAccessAllowed(grsIndex, pPriv, false)) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
-            operands[opIdx++] = engine.getGeneralRegister(grsIndex).getW();
+            operands[opIdx++] = engine.getGeneralRegisterSet().getRegister(grsIndex).getW();
         }
 
         return engine.storeConsecutiveOperands(true, operands);

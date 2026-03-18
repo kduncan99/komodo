@@ -46,8 +46,8 @@ public class DLMFunction extends Function {
             operands[1] = Word36.negate(operands[1]);
         }
 
-        engine.getGeneralRegister(ax).setW(operands[0]);
-        engine.getGeneralRegister(ax + 1).setW(operands[1]);
+        engine.getGeneralRegisterSet().getRegister(ax).setW(operands[0]);
+        engine.getGeneralRegisterSet().getRegister(ax + 1).setW(operands[1]);
         return true;
     }
 }

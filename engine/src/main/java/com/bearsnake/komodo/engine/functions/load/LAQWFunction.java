@@ -49,7 +49,7 @@ public class LAQWFunction extends Function {
         }
 
         var ci = engine.getCurrentInstruction();
-        var xReg = engine.getExecOrUserXRegister(ci.getX());
+        var xReg = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(ci.getX()));
         operand = switch (xReg.getS1() & 03) {
             case 0 -> Word36.getQ1(operand);
             case 1 -> Word36.getQ2(operand);
@@ -58,7 +58,7 @@ public class LAQWFunction extends Function {
             default -> throw new IllegalStateException("Unexpected value: " + (xReg.getS1() & 03)); // this isn't really possible
         };
 
-        engine.getExecOrUserARegister(ci.getA()).setW(operand);
+        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA())).setW(operand);
         return true;
     }
 }

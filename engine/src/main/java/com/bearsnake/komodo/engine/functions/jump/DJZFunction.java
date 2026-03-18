@@ -39,16 +39,9 @@ public class DJZFunction extends Function {
             return false;
         }
 
-        var dr = engine.getDesignatorRegister();
-        var pPriv = dr.getProcessorPrivilege();
-        var grsx0 = engine.getExecOrUserARegisterIndex(engine.getCurrentInstruction().getA());
-        var grsx1 = (grsx0 + 1) & 0177;
-        if (!Engine.isGRSAccessAllowed(grsx0, pPriv, false)
-            || !Engine.isGRSAccessAllowed(grsx1, pPriv, false)) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
-        }
-
-        if (DoubleWord36.isZero(engine.getGeneralRegister(grsx0).getW(), engine.getGeneralRegister(grsx1).getW())) {
+        var a = engine.getCurrentInstruction().getA();
+        if (DoubleWord36.isZero(engine.getExecOrUserARegister(a).getW(),
+                                engine.getExecOrUserARegister(a + 1).getW())) {
             doJump(engine, jumpTarget);
         }
 
