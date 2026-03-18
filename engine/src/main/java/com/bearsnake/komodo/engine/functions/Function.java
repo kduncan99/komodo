@@ -195,7 +195,6 @@ public abstract class Function {
         }
 
         Function func;
-        FunctionCode funcCode;
 
         try {
             func = lookup(dReg, iWord);
@@ -203,13 +202,9 @@ public abstract class Function {
             return Word36.toOctal(iWord.getW());
         }
 
-        try {
-            funcCode = dReg.isBasicModeEnabled()
-                       ? func.getBasicModeFunctionCode()
-                       : func.getExtendedModeFunctionCode();
-        } catch (NoSuchElementException ex) {
-            return Word36.toOctal(iWord.getW());
-        }
+        FunctionCode funcCode = dReg.isBasicModeEnabled()
+                                ? func.getBasicModeFunctionCode()
+                                : func.getExtendedModeFunctionCode();
 
         // first display field - mnemonic and optional j-field designation.
         // If there is a j-field value in the function coordinate, it is not used as a

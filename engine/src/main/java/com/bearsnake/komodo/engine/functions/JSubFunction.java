@@ -34,11 +34,14 @@ public class JSubFunction extends SubFunction {
     Function lookupFunction(
         final InstructionWord iWord
     ) throws InvalidInstructionInterrupt {
-        var func = _functions.get(iWord.getJ());
+        var j = iWord.getJ();
+        var func = _functions.get(j);
         if (func == null) {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
-        } else if (func instanceof SubFunction sf) {
-            func = sf.lookupFunction(iWord);
+        }
+
+        if (func instanceof SubFunction sf) {
+            return sf.lookupFunction(iWord);
         }
         return func;
     }
@@ -50,27 +53,34 @@ public class JSubFunction extends SubFunction {
         var j = functionCode.getJField();
         var a = functionCode.getAField();
         var existing = _functions.get(j);
-        if (existing == null) {
-            // There is nothing currently for the given j-field value.
-            // Is the function insensitive to a-field? If so, we're just about done.
-            if (a == null) {
+
+        if (a == null) {
+            if (existing == null) {
                 _functions.put(j, function);
                 return true;
             }
+            if (existing instanceof ASubFunction asf) {
+                // If we have an ASubFunction, we can't put an f|j function there
+                // unless we move it to a=0? No, that's not right.
+                throw new FunctionTable.CollisionException(existing, function);
+            }
+            throw new FunctionTable.CollisionException(existing, function);
+        }
 
-            // No, this is f|j|a sensitive. We need an ASubFunction
-            var asf = new ASubFunction(String.format("j%03oa", j));
-            asf.putFunction(functionCode, function);
+        // New function is f|j|a sensitive.
+        ASubFunction asf;
+        if (existing == null) {
+            asf = new ASubFunction(String.format("j%03oa", j));
             _functions.put(j, asf);
-            return true;
+        } else if (existing instanceof ASubFunction existingAsf) {
+            asf = existingAsf;
+        } else {
+            // Collision: existing is a Function, but we need an ASubFunction
+            // Special handling: if existing is indeed the function for a=0, we could convert.
+            // But let's assume registration order is consistent.
+            throw new FunctionTable.CollisionException(existing, function);
         }
 
-        // Something already exists for the given j-field value. If we are f|j|a sensitive this might still work.
-        if ((a != null) && (existing instanceof ASubFunction asf)) {
-            return asf.putFunction(functionCode, function);
-        }
-
-        // No, there is a collision of some kind here. Stop.
-        throw new FunctionTable.CollisionException(existing, function);
+        return asf.putFunction(functionCode, function);
     }
 }

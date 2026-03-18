@@ -11,20 +11,21 @@ import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Test Not Zero instruction
- * (TNZ) Checks the value of U to see if it is neither positive nor negative zero.
+ * Test Equal instruction
+ * (TE) Checks the value of U to see if it is equal to A(a).
  * If the test succeeds, skip the next instruction by incrementing the program counter.
  */
-public class TNZFunction extends Function {
+public class TEFunction extends Function {
 
-    public static final TNZFunction INSTANCE = new TNZFunction();
+    public static final TEFunction INSTANCE = new TEFunction();
 
-    private TNZFunction() {
-        super("TNZ");
-        setBasicModeFunctionCode(new FunctionCode(051));
-        setExtendedModeFunctionCode(new FunctionCode(050).setAField(011));
+    private TEFunction() {
+        super("TE");
+        var fc = new FunctionCode(052);
+        setBasicModeFunctionCode(fc);
+        setExtendedModeFunctionCode(fc);
 
-        setAFieldSemantics(AFieldSemantics.UNUSED);
+        setAFieldSemantics(AFieldSemantics.A_REGISTER);
         setImmediateMode(true);
         setIsGRS(true);
     }
@@ -38,7 +39,10 @@ public class TNZFunction extends Function {
             return false;
         }
 
-        if (!Word36.isZero(operand)) {
+        var ci = engine.getCurrentInstruction();
+        var aValue = engine.getExecOrUserARegister(ci.getA()).getW();
+
+        if (Word36.compare(operand, aValue) == 0) {
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 

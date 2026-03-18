@@ -38,6 +38,9 @@ public class ASubFunction extends SubFunction {
         if (func == null) {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
         }
+        if (func instanceof SubFunction sf) {
+            return sf.lookupFunction(iWord);
+        }
         return func;
     }
 

@@ -346,7 +346,9 @@ public class DoubleWord36 {
                                 final long factor2,
                                 final long[] product,
                                 final int productOffset) {
-        getOnesComplement(getTwosComplement(0, factor1).multiply(getTwosComplement(0, factor2)),
+        var native1 = getTwosComplement(Word36.isNegative(factor1) ? Word36.NEGATIVE_ZERO : Word36.POSITIVE_ZERO, factor1);
+        var native2 = getTwosComplement(Word36.isNegative(factor2) ? Word36.NEGATIVE_ZERO : Word36.POSITIVE_ZERO, factor2);
+        getOnesComplement(native1.multiply(native2),
                           product,
                           productOffset);
     }
@@ -493,19 +495,30 @@ public class DoubleWord36 {
 //        return getOnesComplement(native1.add(native2));
 //    }
 //
-//    /**
-//     * Compares two values
-//     * Returns -1 if operand1 < operand2,
-//     *          1 if operand1 > operand2,
-//     *          0 if they are equal
-//     */
-//    public static int compare(
-//        final BigInteger operand1,
-//        final BigInteger operand2
-//    ) {
-//        return operand1.compareTo(operand2);
-//    }
-//
+    /**
+     * Compares two values
+     * Returns -1 if operand1 < operand2,
+     *          1 if operand1 > operand2,
+     *          0 if they are equal
+     * Remember that negative zero is less than positive zero.
+     */
+    public static int compare(
+        final long leftMSW,
+        final long leftLSW,
+        final long rightMSW,
+        final long rightLSW
+    ) {
+        if (isNegativeZero(leftMSW, leftLSW) && isPositiveZero(rightMSW, rightLSW)) {
+            return -1;
+        } else if (isPositiveZero(leftMSW, leftLSW) && isNegativeZero(rightMSW, rightLSW)) {
+            return 1;
+        } else {
+            var left = getTwosComplement(leftMSW, leftLSW);
+            var right = getTwosComplement(rightMSW, rightLSW);
+            return left.compareTo(right);
+        }
+    }
+
 //    /**
 //     * Divide two 72-bit integer values
 //     */

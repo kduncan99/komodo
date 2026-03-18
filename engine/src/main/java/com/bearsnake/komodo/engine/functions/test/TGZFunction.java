@@ -4,23 +4,25 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
+import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Test Skip instruction
- * (TSKIP) Retrieves the operand, then always skips.
+ * Test Greater Than Zero instruction
+ * (TGZ) Checks the value of U to see if it is greater than positive zero.
+ * If the test succeeds, skip the next instruction by incrementing the program counter.
  * Extended Mode only.
  */
-public class TSKIPFunction extends Function {
+public class TGZFunction extends Function {
 
-    public static final TSKIPFunction INSTANCE = new TSKIPFunction();
+    public static final TGZFunction INSTANCE = new TGZFunction();
 
-    private TSKIPFunction() {
-        super("TSKIP");
-        setExtendedModeFunctionCode(new FunctionCode(050).setAField(017));
+    private TGZFunction() {
+        super("TGZ");
+        setExtendedModeFunctionCode(new FunctionCode(050).setAField(01));
 
         setAFieldSemantics(AFieldSemantics.UNUSED);
         setImmediateMode(true);
@@ -31,13 +33,14 @@ public class TSKIPFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TSKIP retrieves the operand, then always skips.
-        engine.getOperand(false, true, true, true, false);
+        var operand = engine.getOperand(false, true, true, true, false);
         if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
-        engine.getProgramAddressRegister().incrementProgramCounter();
+        if (Word36.compare(operand, 0L) > 0) {
+            engine.getProgramAddressRegister().incrementProgramCounter();
+        }
 
         return true;
     }

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestTSKIPFunction extends TestFunction {
+public class TestTSKPFunction extends TestFunction {
 
     @BeforeEach
     public void setup() {
@@ -22,15 +22,15 @@ public class TestTSKIPFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
     }
 
-    private long tskipEM(long j, long x, long h, long i, long b, long d) {
+    private long tskpEM(long j, long x, long h, long i, long b, long d) {
         // Extended mode TSKIP has A field = 017
         return fjaxhibd(050, j, 017, x, h, i, b, d);
     }
 
     @Test
-    public void testTSKIP_EM() throws MachineInterrupt {
+    public void testTSKP_EM() throws MachineInterrupt {
         var code = new long[] {
-            tskipEM(Constants.JFIELD_W, 0, 0, 0, 2, 0),
+            tskpEM(Constants.JFIELD_W, 0, 0, 0, 2, 0),
             0,
             0,
         };

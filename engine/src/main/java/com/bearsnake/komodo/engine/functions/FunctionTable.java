@@ -47,6 +47,7 @@ public abstract class FunctionTable {
         LXLMFunction.INSTANCE,
         LXMFunction.INSTANCE,
         LXSIFunction.INSTANCE,
+
         // store
         DSFunction.INSTANCE,
         SAQWFunction.INSTANCE,
@@ -64,45 +65,50 @@ public abstract class FunctionTable {
         SRSFunction.INSTANCE,
         SXFunction.INSTANCE,
         SZFunction.INSTANCE,
-        // fixed
-        // float
-        // decimal
-        // search
+
         // test
         // CRFunction.INSTANCE,
-        // DTEFunction.INSTANCE,
-        // DTGMFunction.INSTANCE,
+        DTEFunction.INSTANCE,
+        DTGMFunction.INSTANCE,
         // MATGFunction.INSTANCE,
         // MATLFunction.INSTANCE,
-        // MTEFunction.INSTANCE,
-        // MTGFunction.INSTANCE,
-        // MTLEFunction.INSTANCE,
-        // MTNEFunction.INSTANCE,
+        MTEFunction.INSTANCE,
+        MTGFunction.INSTANCE,
+        MTLEFunction.INSTANCE,
+        MTNEFunction.INSTANCE,
         // MTNWFunction.INSTANCE,
         // MTWFunction.INSTANCE,
         // TCSFunction.INSTANCE,
+        TEFunction.INSTANCE,
         TEPFunction.INSTANCE,
-        // TGFunction.INSTANCE,
-        // TGMFunction.INSTANCE,
-        // TGZFunction.INSTANCE,
-        // TLEFunction.INSTANCE,
-        // TLEMFunction.INSTANCE,
-        // TLZFunction.INSTANCE,
-        // TMZFunction.INSTANCE,
-        // TMZGFunction.INSTANCE,
+        TGFunction.INSTANCE,
+        TGMFunction.INSTANCE,
+        TGZFunction.INSTANCE,
+        TLEFunction.INSTANCE,
+        TLEMFunction.INSTANCE,
+        TLZFunction.INSTANCE,
+        TMZFunction.INSTANCE,
+        TMZGFunction.INSTANCE,
         TNFunction.INSTANCE,
-        // TNEFunction.INSTANCE,
-        // TNGZFunction.INSTANCE,
-        // TNLZFunction.INSTANCE,
-        TNOPFunction.INSTANCE,
+        TNEFunction.INSTANCE,
+        TNGZFunction.INSTANCE,
+        TNLZFunction.INSTANCE,
         TNMZFunction.INSTANCE,
+        TNOPFunction.INSTANCE,
         TNPZFunction.INSTANCE,
-        // TNWFunction.INSTANCE,
+        TNWFunction.INSTANCE,
         TNZFunction.INSTANCE,
         TOPFunction.INSTANCE,
-        TSKIPFunction.INSTANCE,
+        TPFunction.INSTANCE,
+        TPZFunction.INSTANCE,
+        TPZLFunction.INSTANCE,
+        // TSFunction.INSTANCE,
+        TSKPFunction.INSTANCE,
+        // TSSFunction.INSTANCE,
+        TWFunction.INSTANCE,
         TZFunction.INSTANCE,
         // UNLKFunction.INSTANCE,
+
         // shift
         // jump
         DJZFunction.INSTANCE,
@@ -180,56 +186,45 @@ public abstract class FunctionTable {
         Integer j = functionCode.getJField();
         Integer a = functionCode.getAField();
 
-        if ((j == null) && (a == null)) {
-            // This is f-field sensitive, with no reliance on j or a fields.
-            var existing = topLevel.put(f, function);
+        var existing = topLevel.get(f);
+        if (j == null && a == null) {
+            // f-only sensitive
             if (existing != null) {
+                if (existing instanceof SubFunction) {
+                    throw new CollisionException(existing, function);
+                }
+                if (existing != function) {
+                    throw new CollisionException(existing, function);
+                }
+            }
+            topLevel.put(f, function);
+            return;
+        }
+
+        // Must be JSub or ASub
+        if (j != null) {
+            JSubFunction jSub;
+            if (existing == null) {
+                jSub = new JSubFunction(String.format("f%03oj", f));
+                topLevel.put(f, jSub);
+            } else if (existing instanceof JSubFunction existingJSub) {
+                jSub = existingJSub;
+            } else {
                 throw new CollisionException(existing, function);
             }
-            return;
-        }
-
-        if (j != null) {
-            // function code is f|j field sensitive (and maybe |a-field).
-            // Look for a function with the given f-field to see if it exists,
-            // and if so, if it is a j-subfunction.
-            var existing = topLevel.get(f);
+            jSub.putFunction(functionCode, function);
+        } else if (a != null) {
+            ASubFunction aSub;
             if (existing == null) {
-                // Nothing at the targeted f location - create a new JSubFunction and pass it this function we're processing.
-                // If the function is f|j|a sensitive, the JSubFunction will handle the recursion down to an ASubFunction.
-                var jSub = new JSubFunction(String.format("f%03oj", f));
-                topLevel.put(f, jSub);
-                jSub.putFunction(functionCode, function);
-                return;
+                aSub = new ASubFunction(String.format("f%03oa", f));
+                topLevel.put(f, aSub);
+            } else if (existing instanceof ASubFunction existingASub) {
+                aSub = existingASub;
+            } else {
+                throw new CollisionException(existing, function);
             }
-
-            // A function already exists at the f coordinate - is it a JSubFunction? It better be...
-            if (existing instanceof JSubFunction jSub) {
-                jSub.putFunction(functionCode, function);
-                return;
-            }
-
-            throw new CollisionException(existing, function);
-        }
-
-        // Function code is f|a sensitive. Algorithm is basically the same as above for f|j.
-        var existing = topLevel.get(f);
-        if (existing == null) {
-            // Nothing at the targeted f location - create a new JSubFunction and pass it this function we're processing.
-            // If the function is f|j|a sensitive, the JSubFunction will handle the recursion down to an ASubFunction.
-            var aSub = new ASubFunction(String.format("f%03oa", f));
-            topLevel.put(f, aSub);
             aSub.putFunction(functionCode, function);
-            return;
         }
-
-        // A function already exists at the f coordinate - is it a JSubFunction? It better be...
-        if (existing instanceof ASubFunction aSub) {
-            aSub.putFunction(functionCode, function);
-            return;
-        }
-
-        throw new CollisionException(existing, function);
     }
 
     private static void initializeLookups() {
@@ -277,8 +272,10 @@ public abstract class FunctionTable {
             var func = topLevel.get(iWord.getF());
             if (func == null) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
-            } else if (func instanceof SubFunction sf) {
-                func = sf.lookupFunction(iWord);
+            }
+
+            if (func instanceof SubFunction sf) {
+                return sf.lookupFunction(iWord);
             }
             return func;
         }

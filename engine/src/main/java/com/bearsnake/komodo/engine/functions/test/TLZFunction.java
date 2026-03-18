@@ -11,18 +11,19 @@ import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Test Not Zero instruction
- * (TNZ) Checks the value of U to see if it is neither positive nor negative zero.
+ * Test Less Than Zero instruction
+ * (TLZ) Checks the value of U to see if it is less than negative zero.
+ * This skips if (U) < -0.
  * If the test succeeds, skip the next instruction by incrementing the program counter.
+ * Extended Mode only.
  */
-public class TNZFunction extends Function {
+public class TLZFunction extends Function {
 
-    public static final TNZFunction INSTANCE = new TNZFunction();
+    public static final TLZFunction INSTANCE = new TLZFunction();
 
-    private TNZFunction() {
-        super("TNZ");
-        setBasicModeFunctionCode(new FunctionCode(051));
-        setExtendedModeFunctionCode(new FunctionCode(050).setAField(011));
+    private TLZFunction() {
+        super("TLZ");
+        setExtendedModeFunctionCode(new FunctionCode(050).setAField(010));
 
         setAFieldSemantics(AFieldSemantics.UNUSED);
         setImmediateMode(true);
@@ -38,7 +39,7 @@ public class TNZFunction extends Function {
             return false;
         }
 
-        if (!Word36.isZero(operand)) {
+        if (Word36.compare(operand, Word36.NEGATIVE_ZERO) < 0) {
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 

@@ -11,20 +11,21 @@ import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Test Not Zero instruction
- * (TNZ) Checks the value of U to see if it is neither positive nor negative zero.
+ * Test Within Range instruction
+ * (TW) Checks if A(a) < (U) <= A(a+1).
  * If the test succeeds, skip the next instruction by incrementing the program counter.
  */
-public class TNZFunction extends Function {
+public class TWFunction extends Function {
 
-    public static final TNZFunction INSTANCE = new TNZFunction();
+    public static final TWFunction INSTANCE = new TWFunction();
 
-    private TNZFunction() {
-        super("TNZ");
-        setBasicModeFunctionCode(new FunctionCode(051));
-        setExtendedModeFunctionCode(new FunctionCode(050).setAField(011));
+    private TWFunction() {
+        super("TW");
+        var fc = new FunctionCode(056);
+        setBasicModeFunctionCode(fc);
+        setExtendedModeFunctionCode(fc);
 
-        setAFieldSemantics(AFieldSemantics.UNUSED);
+        setAFieldSemantics(AFieldSemantics.A_REGISTER);
         setImmediateMode(true);
         setIsGRS(true);
     }
@@ -38,7 +39,12 @@ public class TNZFunction extends Function {
             return false;
         }
 
-        if (!Word36.isZero(operand)) {
+        var ci = engine.getCurrentInstruction();
+        int a = ci.getA();
+        var aValue = engine.getExecOrUserARegister(a).getW();
+        var aPlus1Value = engine.getExecOrUserARegister((a + 1) & 017).getW();
+
+        if (Word36.compare(aValue, operand) < 0 && Word36.compare(operand, aPlus1Value) <= 0) {
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 

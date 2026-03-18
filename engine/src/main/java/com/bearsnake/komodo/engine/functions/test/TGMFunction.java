@@ -11,21 +11,21 @@ import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Test Not Zero instruction
- * (TNZ) Checks the value of U to see if it is neither positive nor negative zero.
+ * Test Greater Magnitude instruction
+ * (TGM) Checks if the magnitude of (U) is greater than A(a).
  * If the test succeeds, skip the next instruction by incrementing the program counter.
+ * Extended Mode only, f=033, j=013.
  */
-public class TNZFunction extends Function {
+public class TGMFunction extends Function {
 
-    public static final TNZFunction INSTANCE = new TNZFunction();
+    public static final TGMFunction INSTANCE = new TGMFunction();
 
-    private TNZFunction() {
-        super("TNZ");
-        setBasicModeFunctionCode(new FunctionCode(051));
-        setExtendedModeFunctionCode(new FunctionCode(050).setAField(011));
+    private TGMFunction() {
+        super("TGM");
+        setExtendedModeFunctionCode(new FunctionCode(033).setJField(013));
 
-        setAFieldSemantics(AFieldSemantics.UNUSED);
-        setImmediateMode(true);
+        setAFieldSemantics(AFieldSemantics.A_REGISTER);
+        setImmediateMode(false);
         setIsGRS(true);
     }
 
@@ -33,12 +33,17 @@ public class TNZFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        var operand = engine.getOperand(false, true, true, true, false);
+        var operand = engine.getOperand(false, true, false, false, false);
         if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
-        if (!Word36.isZero(operand)) {
+        var ci = engine.getCurrentInstruction();
+        var aValue = engine.getExecOrUserARegister(ci.getA()).getW();
+
+        long uMag = Word36.isNegative(operand) ? Word36.negate(operand) : operand;
+
+        if (Word36.compare(uMag, aValue) > 0) {
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 
