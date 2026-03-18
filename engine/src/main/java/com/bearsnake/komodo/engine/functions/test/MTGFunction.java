@@ -45,7 +45,7 @@ public class MTGFunction extends Function {
 
         operand &= engine.getExecOrUserRRegister(2).getW();
         aValue &= engine.getExecOrUserRRegister(2).getW();
-        if (operand > aValue) {
+        if (Word36.compare(operand, aValue) > 0) {
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 

@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
+import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
@@ -45,7 +46,7 @@ public class MTWFunction extends Function {
         operand &= engine.getExecOrUserRRegister(2).getW();
         aValue0 &= engine.getExecOrUserRRegister(2).getW();
         aValue1 &= engine.getExecOrUserRRegister(2).getW();
-        if ((aValue0 < operand) && (operand <= aValue1)) {
+        if ((Word36.compare(aValue0, operand) < 0) && (Word36.compare(operand, aValue1) <= 0)) {
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 
