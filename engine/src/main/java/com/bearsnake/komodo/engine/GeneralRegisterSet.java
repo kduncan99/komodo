@@ -88,12 +88,13 @@ public class GeneralRegisterSet {
         final boolean writeAccess
     ) {
         if (registerIndex < 040) {
-            return true;
+            return true; // user X, A registers
         } else if (registerIndex < 0100) {
-            return false;
+            return false; // even exec cannot access these hardware registers
         } else if (registerIndex < 0120) {
-            return true;
+            return true; // user R registers
         } else {
+            // these are exec registers. you can read them at pp <= 2, and write them at pp == 3.
             return ((writeAccess && (processorPrivilege == 0)) || (!writeAccess && (processorPrivilege <= 2)));
         }
     }
