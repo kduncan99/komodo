@@ -225,7 +225,7 @@ public class TestJGDFunction extends TestFunction {
         // Setup GRS value > 0
         _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setW(1);
         // Setup Index Register X3
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_100);
+        _engine.getExecOrUserXRegister(3).setXM(0_100);
 
         // Execute JGD
         _engine.cycle(); // RESOLVING_ADDRESS
@@ -262,7 +262,7 @@ public class TestJGDFunction extends TestFunction {
         // Setup GRS value > 0
         _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X8).setW(1);
         // Setup Index Register X3
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_200);
+        _engine.getExecOrUserXRegister(3).setXM(0_200);
 
         // Execute JGD
         _engine.cycle(); // RESOLVING_ADDRESS

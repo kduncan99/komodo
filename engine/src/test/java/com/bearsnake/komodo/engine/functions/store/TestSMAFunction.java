@@ -67,9 +67,9 @@ public class TestSMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_777777_777776L); // -1 (magnitude 1)
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0_400000_000000L); // Negative zero? bit 35 is set.
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0_000000_000005L); // +5 (magnitude 5)
+        _engine.getExecOrUserARegister(4).setW(0_777777_777776L); // -1 (magnitude 1)
+        _engine.getExecOrUserARegister(5).setW(0_400000_000000L); // Negative zero? bit 35 is set.
+        _engine.getExecOrUserARegister(6).setW(0_000000_000005L); // +5 (magnitude 5)
 
         run();
 
@@ -108,9 +108,9 @@ public class TestSMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_777777_777776L); // -1 (magnitude 1)
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0_000000_000000L); // +0 (magnitude 0)
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0_000000_000005L); // +5 (magnitude 5)
+        _engine.getExecOrUserARegister(4).setW(0_777777_777776L); // -1 (magnitude 1)
+        _engine.getExecOrUserARegister(5).setW(0_000000_000000L); // +0 (magnitude 0)
+        _engine.getExecOrUserARegister(6).setW(0_000000_000005L); // +5 (magnitude 5)
 
         run();
 
@@ -150,8 +150,8 @@ public class TestSMAFunction extends TestFunction {
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
         _engine.getGeneralRegisterSet().getRegister(GRS_A4).setW(0_777777_777770L); // -7 (magnitude 7)
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0_111111_111111L);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0_777777_777772L); // -5 (magnitude 5)
+        _engine.getExecOrUserARegister(5).setW(0_111111_111111L);
+        _engine.getExecOrUserARegister(6).setW(0_777777_777772L); // -5 (magnitude 5)
 
         run();
 
@@ -180,7 +180,7 @@ public class TestSMAFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0_000000).setBankLevel((short)0_0);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(4)).setW(0_777777_777776L); // -1
+        _engine.getExecOrUserARegister(4).setW(0_777777_777776L); // -1
 
         run();
 

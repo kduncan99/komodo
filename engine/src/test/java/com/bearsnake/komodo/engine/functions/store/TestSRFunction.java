@@ -55,7 +55,7 @@ public class TestSRFunction extends TestFunction {
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short)3).setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(1)).setW(0_123456_765432L);
+        _engine.getExecOrUserRRegister(1).setW(0_123456_765432L);
 
         run();
 
@@ -81,7 +81,7 @@ public class TestSRFunction extends TestFunction {
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(1)).setW(0_000000_123456L);
+        _engine.getExecOrUserRRegister(1).setW(0_000000_123456L);
 
         run();
 
@@ -101,7 +101,7 @@ public class TestSRFunction extends TestFunction {
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(1)).setW(0_765432_123456L);
+        _engine.getExecOrUserRRegister(1).setW(0_765432_123456L);
 
         run();
 

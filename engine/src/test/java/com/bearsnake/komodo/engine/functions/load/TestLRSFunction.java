@@ -78,7 +78,7 @@ public class TestLRSFunction extends TestFunction {
             _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
         }
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(7)).setW(0); // both counts and indices are 0
+        _engine.getExecOrUserARegister(7).setW(0); // both counts and indices are 0
 
         run();
 
@@ -127,10 +127,10 @@ public class TestLRSFunction extends TestFunction {
             _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
         }
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ1(0);        // area-2 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ2(0);        // area-2 grs index
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ3(020);      // area-1 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ4(GRS_R0);   // area-1 grs index
+        _engine.getExecOrUserARegister(15).setQ1(0);        // area-2 count
+        _engine.getExecOrUserARegister(15).setQ2(0);        // area-2 grs index
+        _engine.getExecOrUserARegister(15).setQ3(020);      // area-1 count
+        _engine.getExecOrUserARegister(15).setQ4(GRS_R0);   // area-1 grs index
 
         run();
 
@@ -176,10 +176,10 @@ public class TestLRSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ1(020);      // area-2 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ2(GRS_ER0);  // exec R register not accessible to PP > 0
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ3(0);        // area-1 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ4(0);        // area-1 grs index
+        _engine.getExecOrUserARegister(15).setQ1(020);      // area-2 count
+        _engine.getExecOrUserARegister(15).setQ2(GRS_ER0);  // exec R register not accessible to PP > 0
+        _engine.getExecOrUserARegister(15).setQ3(0);        // area-1 count
+        _engine.getExecOrUserARegister(15).setQ4(0);        // area-1 grs index
 
         ReferenceViolationInterrupt mi = assertThrows(ReferenceViolationInterrupt.class, () -> run());
         assertEquals(GRSViolation, mi._errorType);
@@ -220,10 +220,10 @@ public class TestLRSFunction extends TestFunction {
                .setExecRegisterSetSelected(true);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ1(020);      // area-2 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ2(GRS_ER0);  // exec R register not accessible to PP > 0
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ3(0);        // area-1 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ4(0);        // area-1 grs index
+        _engine.getExecOrUserARegister(15).setQ1(020);      // area-2 count
+        _engine.getExecOrUserARegister(15).setQ2(GRS_ER0);  // exec R register not accessible to PP > 0
+        _engine.getExecOrUserARegister(15).setQ3(0);        // area-1 count
+        _engine.getExecOrUserARegister(15).setQ4(0);        // area-1 grs index
 
         run();
 
@@ -268,10 +268,10 @@ public class TestLRSFunction extends TestFunction {
             _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
         }
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ1(0);    // area-2 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ2(0);    // area-2 grs index
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ3(020);  // area-1 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(15)).setQ4(036);  // start 2 words ahead of hardware-reserved registers
+        _engine.getExecOrUserARegister(15).setQ1(0);    // area-2 count
+        _engine.getExecOrUserARegister(15).setQ2(0);    // area-2 grs index
+        _engine.getExecOrUserARegister(15).setQ3(020);  // area-1 count
+        _engine.getExecOrUserARegister(15).setQ4(036);  // start 2 words ahead of hardware-reserved registers
 
         ReferenceViolationInterrupt mi = assertThrows(ReferenceViolationInterrupt.class, () -> run());
         assertEquals(GRSViolation, mi._errorType);
@@ -311,10 +311,10 @@ public class TestLRSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ1(2);        // area-2 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ2(GRS_X10);  // area-2 grs index
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ3(3);        // area-1 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ4(GRS_R5);   // start 2 words ahead of hardware-reserved registers
+        _engine.getExecOrUserARegister(1).setQ1(2);        // area-2 count
+        _engine.getExecOrUserARegister(1).setQ2(GRS_X10);  // area-2 grs index
+        _engine.getExecOrUserARegister(1).setQ3(3);        // area-1 count
+        _engine.getExecOrUserARegister(1).setQ4(GRS_R5);   // start 2 words ahead of hardware-reserved registers
 
         run();
 
@@ -354,10 +354,10 @@ public class TestLRSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ1(5);     // area-2 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ2(126);   // area-2 grs index
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ3(0);     // area-1 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ4(0);     // start 2 words ahead of hardware-reserved registers
+        _engine.getExecOrUserARegister(1).setQ1(5);     // area-2 count
+        _engine.getExecOrUserARegister(1).setQ2(126);   // area-2 grs index
+        _engine.getExecOrUserARegister(1).setQ3(0);     // area-1 count
+        _engine.getExecOrUserARegister(1).setQ4(0);     // start 2 words ahead of hardware-reserved registers
 
         run();
 

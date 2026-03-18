@@ -108,7 +108,7 @@ public class TestJNCFunction extends TestFunction {
     @Test
     public void testJNC_Indexed_BM() throws MachineInterrupt, EngineHaltedException {
         setupBM();
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_10);
+        _engine.getExecOrUserXRegister(3).setXM(0_10);
         var bank = _engine.getBaseRegister(12).getStorage();
         bank.set(0, jncBM(3, 0, 0, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
 
@@ -135,7 +135,7 @@ public class TestJNCFunction extends TestFunction {
     @Test
     public void testJNC_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
         setupEM();
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_10);
+        _engine.getExecOrUserXRegister(3).setXM(0_10);
         var bank = _engine.getBaseRegister(0).getStorage();
         bank.set(0, jncEM(3, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
 

@@ -76,37 +76,37 @@ public class TestDJZFunction extends TestFunction {
         bank.set(0, djzBM(5, 0_100)); // DJZ using A5,A6. Jump to 0_100
 
         // Case 1: A5,A6 are positive zero -> Should jump
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0);
+        _engine.getExecOrUserARegister(5).setW(0);
+        _engine.getExecOrUserARegister(6).setW(0);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_100, _engine.getProgramAddressRegister().getProgramCounter());
 
         // Case 2: A5,A6 are negative zero -> Should jump
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(Word36.NEGATIVE_ZERO);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(Word36.NEGATIVE_ZERO);
+        _engine.getExecOrUserARegister(5).setW(Word36.NEGATIVE_ZERO);
+        _engine.getExecOrUserARegister(6).setW(Word36.NEGATIVE_ZERO);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_100, _engine.getProgramAddressRegister().getProgramCounter());
 
         // Case 3: A5 is non-zero -> Should NOT jump
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(1);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0);
+        _engine.getExecOrUserARegister(5).setW(1);
+        _engine.getExecOrUserARegister(6).setW(0);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
 
         // Case 4: A6 is non-zero -> Should NOT jump
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(1);
+        _engine.getExecOrUserARegister(5).setW(0);
+        _engine.getExecOrUserARegister(6).setW(1);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
 
         // Case 5: A0, A1 are zero -> Should jump
         bank.set(1, djzBM(0, 0_200));
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).setW(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setW(0);
+        _engine.getExecOrUserARegister(0).setW(0);
+        _engine.getExecOrUserARegister(1).setW(0);
         _engine.getProgramAddressRegister().setProgramCounter(1);
         _engine.cycle();
         assertEquals(0_200, _engine.getProgramAddressRegister().getProgramCounter());
@@ -116,9 +116,9 @@ public class TestDJZFunction extends TestFunction {
     @Test
     public void testDJZ_Indexed_BM() throws MachineInterrupt, EngineHaltedException {
         setupBM();
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_10);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0);
+        _engine.getExecOrUserXRegister(3).setXM(0_10);
+        _engine.getExecOrUserARegister(5).setW(0);
+        _engine.getExecOrUserARegister(6).setW(0);
         var bank = _engine.getBaseRegister(12).getStorage();
         bank.set(0, djzBM(5, 3, 0, 0, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
 
@@ -130,8 +130,8 @@ public class TestDJZFunction extends TestFunction {
     @Test
     public void testDJZ_Indirect_BM() throws MachineInterrupt, EngineHaltedException {
         setupBM();
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0);
+        _engine.getExecOrUserARegister(5).setW(0);
+        _engine.getExecOrUserARegister(6).setW(0);
         var bank = _engine.getBaseRegister(12).getStorage();
         bank.set(0, djzBM(5, 0, 0, 1, 0_100)); // jump indirect via 0_100
         bank.set(0_100, fjaxu(0_74, 0_04, 0, 0, 0_200)); // second stage: J to 0_200
@@ -145,8 +145,8 @@ public class TestDJZFunction extends TestFunction {
     @Test
     public void testDJZ_GRS_EM() throws MachineInterrupt, EngineHaltedException {
         setupEM();
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0);
+        _engine.getExecOrUserARegister(5).setW(0);
+        _engine.getExecOrUserARegister(6).setW(0);
         var bank = _engine.getBaseRegister(0).getStorage();
         bank.set(0, djzEM(5, 0_100)); // DJZ if A5,A6 are zero, jump to 0_100
 
@@ -156,14 +156,14 @@ public class TestDJZFunction extends TestFunction {
 
         // Case: A0, A1 are zero -> Should jump
         bank.set(1, djzEM(0, 0_200));
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(0)).setW(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setW(0);
+        _engine.getExecOrUserARegister(0).setW(0);
+        _engine.getExecOrUserARegister(1).setW(0);
         _engine.getProgramAddressRegister().setProgramCounter(1);
         _engine.cycle();
         assertEquals(0_200, _engine.getProgramAddressRegister().getProgramCounter());
 
         // Non-zero
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(1);
+        _engine.getExecOrUserARegister(5).setW(1);
         bank.set(2, djzEM(5, 0_300));
         _engine.getProgramAddressRegister().setProgramCounter(2);
         _engine.cycle();
@@ -173,9 +173,9 @@ public class TestDJZFunction extends TestFunction {
     @Test
     public void testDJZ_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
         setupEM();
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_10);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(6)).setW(0);
+        _engine.getExecOrUserXRegister(3).setXM(0_10);
+        _engine.getExecOrUserARegister(5).setW(0);
+        _engine.getExecOrUserARegister(6).setW(0);
         var bank = _engine.getBaseRegister(0).getStorage();
         bank.set(0, djzEM(5, 3, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
 

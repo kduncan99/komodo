@@ -75,13 +75,13 @@ public class TestJBFunction extends TestFunction {
         bank.set(0, jbBM(5, 0_100)); // JB if A5 low bit is set, jump to 0_100
 
         // Case 1: A5 bit 0 is set -> Should jump
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(01);
+        _engine.getExecOrUserARegister(5).setW(01);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_440000_000100L, _engine.getProgramAddressRegister().getCompositeValue());
 
         // Case 2: A5 bit 0 is clear -> Should NOT jump
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(02);
+        _engine.getExecOrUserARegister(5).setW(02);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_440000_000001L, _engine.getProgramAddressRegister().getCompositeValue());
@@ -94,13 +94,13 @@ public class TestJBFunction extends TestFunction {
         bank.set(0, jbEM(5, 0_100)); // JB if A5 low bit is set, jump to 0_100
 
         // Case 1: A5 bit 0 is set -> Should jump
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0_777777_777771L);
+        _engine.getExecOrUserARegister(5).setW(0_777777_777771L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(0_100, _engine.getProgramAddressRegister().getProgramCounter());
 
         // Case 2: A5 bit 0 is clear -> Should NOT jump
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(0_777777_777776L);
+        _engine.getExecOrUserARegister(5).setW(0_777777_777776L);
         _engine.getProgramAddressRegister().setProgramCounter(0);
         _engine.cycle();
         assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
@@ -109,8 +109,8 @@ public class TestJBFunction extends TestFunction {
     @Test
     public void testJB_Indexed_BM() throws MachineInterrupt, EngineHaltedException {
         setupBM();
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_10);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(01);
+        _engine.getExecOrUserXRegister(3).setXM(0_10);
+        _engine.getExecOrUserARegister(5).setW(01);
         var bank = _engine.getBaseRegister(12).getStorage();
         bank.set(0, jbBM(5, 3, 0, 0, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
 
@@ -122,7 +122,7 @@ public class TestJBFunction extends TestFunction {
     @Test
     public void testJB_Indirect_BM() throws MachineInterrupt, EngineHaltedException {
         setupBM();
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(01);
+        _engine.getExecOrUserARegister(5).setW(01);
         var bank = _engine.getBaseRegister(12).getStorage();
         bank.set(0, jbBM(5, 0, 0, 1, 0_100)); // jump indirect via 0_100
         bank.set(0_100, fjaxu(0_74, 0_04, 0, 0, 0_200)); // second stage: J to 0_200
@@ -136,8 +136,8 @@ public class TestJBFunction extends TestFunction {
     @Test
     public void testJB_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
         setupEM();
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXM(0_10);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(5)).setW(01);
+        _engine.getExecOrUserXRegister(3).setXM(0_10);
+        _engine.getExecOrUserARegister(5).setW(01);
         var bank = _engine.getBaseRegister(0).getStorage();
         bank.set(0, jbEM(5, 3, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
 

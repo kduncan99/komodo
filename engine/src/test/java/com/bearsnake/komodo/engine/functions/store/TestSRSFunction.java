@@ -62,10 +62,10 @@ public class TestSRSFunction extends TestFunction {
         _engine.getGeneralRegisterSet().getRegister(0101).setW(0222);
 
         // Setup SRS parameters in A1
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ1(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ2(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ3(2);     // range 1 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ4(0100);  // range 1 first GRS index
+        _engine.getExecOrUserARegister(1).setQ1(0);
+        _engine.getExecOrUserARegister(1).setQ2(0);
+        _engine.getExecOrUserARegister(1).setQ3(2);     // range 1 count
+        _engine.getExecOrUserARegister(1).setQ4(0100);  // range 1 first GRS index
 
         run();
 
@@ -108,10 +108,10 @@ public class TestSRSFunction extends TestFunction {
         _engine.getGeneralRegisterSet().getRegister(0112).setW(0202);
 
         // Setup SRS parameters in A1
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ1(3);     // range 2 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ2(0110);  // range 2 first GRS index
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ3(2);     // range 1 count
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ4(0100);  // range 1 first GRS index
+        _engine.getExecOrUserARegister(1).setQ1(3);     // range 2 count
+        _engine.getExecOrUserARegister(1).setQ2(0110);  // range 2 first GRS index
+        _engine.getExecOrUserARegister(1).setQ3(2);     // range 1 count
+        _engine.getExecOrUserARegister(1).setQ4(0100);  // range 1 first GRS index
 
         run();
 
@@ -152,10 +152,10 @@ public class TestSRSFunction extends TestFunction {
         _engine.getGeneralRegisterSet().getRegister(127).setW(0777);
         _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X0).setW(01000);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ1(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ2(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ3(2);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ4(127);
+        _engine.getExecOrUserARegister(1).setQ1(0);
+        _engine.getExecOrUserARegister(1).setQ2(0);
+        _engine.getExecOrUserARegister(1).setQ3(2);
+        _engine.getExecOrUserARegister(1).setQ4(127);
 
         run();
 
@@ -190,10 +190,10 @@ public class TestSRSFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ1(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ2(0);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ3(1);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserARegisterIndex(1)).setQ4(040); // Attempt to read protected register 040
+        _engine.getExecOrUserARegister(1).setQ1(0);
+        _engine.getExecOrUserARegister(1).setQ2(0);
+        _engine.getExecOrUserARegister(1).setQ3(1);
+        _engine.getExecOrUserARegister(1).setQ4(040); // Attempt to read protected register 040
 
         ReferenceViolationInterrupt mi = assertThrows(ReferenceViolationInterrupt.class, () -> run());
         assertEquals(GRSViolation, mi._errorType);

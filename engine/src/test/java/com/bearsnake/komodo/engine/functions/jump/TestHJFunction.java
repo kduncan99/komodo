@@ -224,12 +224,12 @@ public class TestHJFunction extends TestFunction {
                .setProgramCounter(0_1000)
                .setBankDescriptorIndex(0_000004)
                .setBankLevel((short) 0_7);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXI(0_10).setXM(0_01000);
+        _engine.getExecOrUserXRegister(3).setXI(0_10).setXM(0_01000);
 
         run();
 
-        assertEquals(0_10, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXI());
-        assertEquals(0_01010, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXM());
+        assertEquals(0_10, _engine.getExecOrUserXRegister(3).getXI());
+        assertEquals(0_01010, _engine.getExecOrUserXRegister(3).getXM());
         assertEquals(0_001002L, _engine.getProgramAddressRegister().getProgramCounter());
     }
 

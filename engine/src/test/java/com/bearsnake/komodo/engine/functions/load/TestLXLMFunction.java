@@ -152,7 +152,7 @@ public class TestLXLMFunction extends TestFunction {
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXI(0_01).setXM(0_03);
+        _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
 
         _engine.getGeneralRegisterSet().getRegister(GRS_X5).setW(0_111111_111111L);
 

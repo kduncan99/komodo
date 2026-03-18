@@ -1074,7 +1074,7 @@ public class Engine {
         if (registerIndex < 040) {
             return true;
         } else if (registerIndex < 0100) {
-            return false;
+            return processorPrivilege == 0;
         } else if (registerIndex < 0120) {
             return true;
         } else {
@@ -1205,7 +1205,7 @@ public class Engine {
             // GRS address
             if (!ignoreAccessChecks) {
                 if (!isGRSAccessAllowed(relAddr, dr.getProcessorPrivilege(), false)) {
-                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
                 }
             }
 
@@ -1279,8 +1279,8 @@ public class Engine {
         if (grsCheck && (brx == 0) && (relAddr < 0200)) {
             // GRS address
             if (!ignoreAccessChecks) {
-                if (!isGRSAccessAllowed(_scratchpad._operandRelativeAddress, dr.getProcessorPrivilege(), false)) {
-                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
+                if (!isGRSAccessAllowed(relAddr, dr.getProcessorPrivilege(), false)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
                 }
             }
             _scratchpad._operandIsGRS = true;

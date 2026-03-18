@@ -9,6 +9,7 @@ import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.TestFunction;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
+import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -56,7 +57,7 @@ public class TestLRFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_123, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(0)).getW());
+        assertEquals(0_123, _engine.getExecOrUserRRegister(0).getW());
     }
 
     @Test
@@ -80,7 +81,7 @@ public class TestLRFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_123, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(0)).getW());
+        assertEquals(0_123, _engine.getExecOrUserRRegister(0).getW());
     }
 
     @Test
@@ -120,7 +121,7 @@ public class TestLRFunction extends TestFunction {
 
         run();
 
-        assertEquals(3L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(2)).getW());
+        assertEquals(3L, _engine.getExecOrUserRRegister(2).getW());
     }
 
     @Test
@@ -157,13 +158,13 @@ public class TestLRFunction extends TestFunction {
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-        _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).setXI(0_01).setXM(0_03);
+        _engine.getExecOrUserXRegister(3).setXI(0_01).setXM(0_03);
 
         run();
 
-        assertEquals(0_15L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(5)).getW());
-        assertEquals(0_01L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXI());
-        assertEquals(0_03L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserXRegisterIndex(3)).getXM());
+        assertEquals(0_15L, _engine.getExecOrUserRRegister(5).getW());
+        assertEquals(0_01L, _engine.getExecOrUserXRegister(3).getXI());
+        assertEquals(0_03L, _engine.getExecOrUserXRegister(3).getXM());
     }
 
     @Test
@@ -200,6 +201,105 @@ public class TestLRFunction extends TestFunction {
 
         run();
 
-        assertEquals(0_445L, _engine.getGeneralRegisterSet().getRegister(_engine.getExecOrUserRRegisterIndex(15)).getW());
+        assertEquals(0_445L, _engine.getExecOrUserRRegister(15).getW());
+    }
+    @Test
+    public void testLR_GRS040_Priv3_BM_Violation() throws MachineInterrupt {
+        var code = new long[] {
+            lrBM(Constants.JFIELD_W, 0, 0, 0, 0, 040),
+            0,
+        };
+        var bank = new ArraySlice(code);
+        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
+                                     .setLowerLimit(0_22)
+                                     .setUpperLimit(0_22777)
+                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        _engine.getBaseRegister(14).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        try {
+            run();
+        } catch (ReferenceViolationInterrupt ex) {
+            assertEquals(ReferenceViolationInterrupt.ErrorType.GRSViolation, ex._errorType);
+            return;
+        }
+        throw new RuntimeException("Expected ReferenceViolationInterrupt");
+    }
+
+    @Test
+    public void testLR_GRS040_Priv0_BM_Success() throws MachineInterrupt {
+        var code = new long[] {
+            lrBM(Constants.JFIELD_W, 0, 0, 0, 0, 040),
+            0,
+        };
+        var bank = new ArraySlice(code);
+        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
+                                     .setLowerLimit(0_22)
+                                     .setUpperLimit(0_22777)
+                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        _engine.getBaseRegister(14).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)0)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getGeneralRegisterSet().getRegister(040).setW(0_765432_123456L);
+        run();
+        assertEquals(0_765432_123456L, _engine.getExecOrUserRRegister(0).getW());
+    }
+
+    @Test
+    public void testLR_GRS040_Priv3_EM_Violation() throws MachineInterrupt {
+        var code = new long[] {
+            lrEM(Constants.JFIELD_W, 0, 0, 0, 0, 0, 040),
+            0,
+        };
+        var bank = new ArraySlice(code);
+        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                     .setLowerLimit(0_1)
+                                     .setUpperLimit(0_1777)
+                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        try {
+            run();
+        } catch (ReferenceViolationInterrupt ex) {
+            assertEquals(ReferenceViolationInterrupt.ErrorType.GRSViolation, ex._errorType);
+            return;
+        }
+        throw new RuntimeException("Expected ReferenceViolationInterrupt");
+    }
+
+    @Test
+    public void testLR_GRS040_Priv0_EM_Success() throws MachineInterrupt {
+        var code = new long[] {
+            lrEM(Constants.JFIELD_W, 0, 0, 0, 0, 0, 040),
+            0,
+        };
+        var bank = new ArraySlice(code);
+        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                     .setLowerLimit(0_1)
+                                     .setUpperLimit(0_1777)
+                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)0)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getGeneralRegisterSet().getRegister(040).setW(0_123456_765432L);
+        run();
+        assertEquals(0_123456_765432L, _engine.getExecOrUserRRegister(0).getW());
     }
 }
