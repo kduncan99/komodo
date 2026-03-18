@@ -67,11 +67,11 @@ public abstract class FunctionTable {
         SZFunction.INSTANCE,
 
         // test
-        // CRFunction.INSTANCE,
+        CRFunction.INSTANCE,
         DTEFunction.INSTANCE,
         DTGMFunction.INSTANCE,
-        // MATGFunction.INSTANCE,
-        // MATLFunction.INSTANCE,
+        MATGFunction.INSTANCE,
+        MATLFunction.INSTANCE,
         MTEFunction.INSTANCE,
         MTGFunction.INSTANCE,
         MTLEFunction.INSTANCE,

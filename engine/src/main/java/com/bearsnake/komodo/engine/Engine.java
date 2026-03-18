@@ -116,6 +116,7 @@ public class Engine {
                                 .removeIf(entry -> entry.getValue() == this);
                 _lockIsHeldByUs = false;
             }
+            IO.println("Cleared held locks");//TODO remove eventually
         }
     }
 
@@ -132,6 +133,7 @@ public class Engine {
             if (_lockedAddresses.containsKey(address)) {
                 return false;
             } else {
+                IO.println("Locking address " + address.toString());//TODO remove eventually
                 _lockedAddresses.put(address, this);
                 _lockIsHeldByUs = true;
                 return true;
@@ -146,9 +148,13 @@ public class Engine {
      * @param address the address to lock
      */
     private void addressLockAndWait(
-        final AbsoluteAddress address
+        final AbsoluteAddress address,
+        final int offsetFromBase
     ) {
-        while (!addressLock(address)) {
+        var newAbsolute = new AbsoluteAddress(address.getUpiIndex(),
+                                              address.getSegment(),
+                                              address.getOffset() + offsetFromBase);
+        while (!addressLock(newAbsolute)) {
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
@@ -948,12 +954,13 @@ public class Engine {
                                           false, true, false, key);
 
         var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        if (lockStorage) {
-            addressLockAndWait(bReg.getBankDescriptor().getBaseAddress());
-        }
-
         var offset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
         var operand = bReg.getStorage().get(offset);
+
+        if (lockStorage) {
+            addressLockAndWait(bReg.getBankDescriptor().getBaseAddress(), offset);
+        }
+
         if (allowPartialWordTransfer) {
             operand = extractPartialWord(operand, jFIeld, dr.isQuarterWordModeEnabled());
         }
@@ -1084,6 +1091,7 @@ public class Engine {
         _preventProgramCounterUpdate = true;
         createJumpHistory(oldAddress);
     }
+
     /**
      * Polls to see if an interrupt is pending
      * @return the highest-priority interrupt currently pending, or null if none are pending
@@ -1441,5 +1449,25 @@ public class Engine {
         bReg.getStorage().set(offset, newValue);
 
         return true;
+    }
+
+    /**
+     * For CR and other instructions - we assume the relative address has already been resolved,
+     * and we just need to store the operand there.
+     */
+    public void storeToCachedAddress(
+        final long operand
+    ) throws ReferenceViolationInterrupt {
+        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
+        var offset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+
+        var ikr = _activityStatePacket.getIndicatorKeyRegister();
+        var key = ikr.getAccessKey();
+        checkAccessLimitsAndAccessibility(_activityStatePacket.getDesignatorRegister().isBasicModeEnabled(),
+                                          _scratchpad._operandBaseRegisterIndex,
+                                          _scratchpad._operandRelativeAddress,
+                                          false, false, true, key);
+
+        bReg.getStorage().set(offset, operand);
     }
 }
