@@ -78,7 +78,7 @@ public abstract class FunctionTable {
         MTNEFunction.INSTANCE,
         MTNWFunction.INSTANCE,
         MTWFunction.INSTANCE,
-        // TCSFunction.INSTANCE,
+        TCSFunction.INSTANCE,
         TEFunction.INSTANCE,
         TEPFunction.INSTANCE,
         TGFunction.INSTANCE,
@@ -102,12 +102,12 @@ public abstract class FunctionTable {
         TPFunction.INSTANCE,
         TPZFunction.INSTANCE,
         TPZLFunction.INSTANCE,
-        // TSFunction.INSTANCE,
+        TSFunction.INSTANCE,
         TSKPFunction.INSTANCE,
-        // TSSFunction.INSTANCE,
+        TSSFunction.INSTANCE,
         TWFunction.INSTANCE,
         TZFunction.INSTANCE,
-        // UNLKFunction.INSTANCE,
+        UNLKFunction.INSTANCE,
 
         // shift
         // jump

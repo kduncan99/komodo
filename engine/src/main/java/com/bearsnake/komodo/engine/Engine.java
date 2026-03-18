@@ -116,7 +116,6 @@ public class Engine {
                                 .removeIf(entry -> entry.getValue() == this);
                 _lockIsHeldByUs = false;
             }
-            IO.println("Cleared held locks");//TODO remove eventually
         }
     }
 
@@ -133,7 +132,6 @@ public class Engine {
             if (_lockedAddresses.containsKey(address)) {
                 return false;
             } else {
-                IO.println("Locking address " + address.toString());//TODO remove eventually
                 _lockedAddresses.put(address, this);
                 _lockIsHeldByUs = true;
                 return true;
@@ -300,7 +298,7 @@ public class Engine {
     }
 
     /**
-     * DoCycle executes one cycle
+     * Executes one cycle
      * Caller should disposition any pending interrupts before invoking this...
      * Since the engine is not specifically hardware (could be an executor for a native mode OS),
      * we don't actually know how to handle the interrupts.
@@ -408,10 +406,11 @@ public class Engine {
                 } else {
                     _preventProgramCounterUpdate = false;
                 }
-                addressClearLocks();
             }
         } catch (MachineInterrupt e) {
             postInterrupt(e);
+        } finally {
+            addressClearLocks();
         }
 
         return complete;
@@ -578,6 +577,14 @@ public class Engine {
             // TODO throw an exception
         }
         return _baseRegisters[registerNumber];
+    }
+
+    public int getCachedBaseRegisterIndex() {
+        return _scratchpad._operandBaseRegisterIndex;
+    }
+
+    public int getCachedRelativeAddress() {
+        return _scratchpad._operandRelativeAddress;
     }
 
     /**
