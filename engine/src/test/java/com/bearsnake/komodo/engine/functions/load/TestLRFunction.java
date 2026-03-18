@@ -204,7 +204,7 @@ public class TestLRFunction extends TestFunction {
         assertEquals(0_445L, _engine.getExecOrUserRRegister(15).getW());
     }
     @Test
-    public void testLR_GRS040_Priv3_BM_Violation() throws MachineInterrupt {
+    public void testLR_GRS0130_Priv3_BM_Violation() throws MachineInterrupt {
         var code = new long[] {
             lrBM(Constants.JFIELD_W, 0, 0, 0, 0, 040),
             0,
@@ -231,9 +231,9 @@ public class TestLRFunction extends TestFunction {
     }
 
     @Test
-    public void testLR_GRS040_Priv0_BM_Success() throws MachineInterrupt {
+    public void testLR_GRS0130_Priv0_BM_Success() throws MachineInterrupt {
         var code = new long[] {
-            lrBM(Constants.JFIELD_W, 0, 0, 0, 0, 040),
+            lrBM(Constants.JFIELD_W, 0, 0, 0, 0, 0130),
             0,
         };
         var bank = new ArraySlice(code);
@@ -248,15 +248,17 @@ public class TestLRFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegisterSet().getRegister(040).setW(0_765432_123456L);
+        _engine.getGeneralRegisterSet().getRegister(0130).setW(0_765432_123456L);
+
         run();
+
         assertEquals(0_765432_123456L, _engine.getExecOrUserRRegister(0).getW());
     }
 
     @Test
-    public void testLR_GRS040_Priv3_EM_Violation() throws MachineInterrupt {
+    public void testLR_GRS0130_Priv3_EM_Violation() throws MachineInterrupt {
         var code = new long[] {
-            lrEM(Constants.JFIELD_W, 0, 0, 0, 0, 0, 040),
+            lrEM(Constants.JFIELD_W, 0, 0, 0, 0, 0, 0130),
             0,
         };
         var bank = new ArraySlice(code);
@@ -281,9 +283,9 @@ public class TestLRFunction extends TestFunction {
     }
 
     @Test
-    public void testLR_GRS040_Priv0_EM_Success() throws MachineInterrupt {
+    public void testLR_GRS0130_Priv0_EM_Success() throws MachineInterrupt {
         var code = new long[] {
-            lrEM(Constants.JFIELD_W, 0, 0, 0, 0, 0, 040),
+            lrEM(Constants.JFIELD_W, 0, 0, 0, 0, 0, 0130),
             0,
         };
         var bank = new ArraySlice(code);
@@ -298,8 +300,10 @@ public class TestLRFunction extends TestFunction {
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
-        _engine.getGeneralRegisterSet().getRegister(040).setW(0_123456_765432L);
+        _engine.getGeneralRegisterSet().getRegister(0130).setW(0_123456_765432L);
+
         run();
+
         assertEquals(0_123456_765432L, _engine.getExecOrUserRRegister(0).getW());
     }
 }

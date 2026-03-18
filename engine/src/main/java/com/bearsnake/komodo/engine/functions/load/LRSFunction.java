@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions.load;
 
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.GeneralRegisterSet;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -52,7 +53,7 @@ public class LRSFunction extends Function {
                 grsIndex = 0;
             }
 
-            if (!Engine.isGRSAccessAllowed(grsIndex, pPriv, true)) {
+            if (!GeneralRegisterSet.isAccessAllowed(grsIndex, pPriv, true)) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
 

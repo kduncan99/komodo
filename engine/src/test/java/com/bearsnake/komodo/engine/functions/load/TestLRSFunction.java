@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 
 import static com.bearsnake.komodo.engine.Constants.*;
 import static com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt.ErrorType.GRSViolation;
-import static com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt.ErrorType.WriteAccessViolation;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestLRSFunction extends TestFunction {

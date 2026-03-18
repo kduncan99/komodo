@@ -6,6 +6,7 @@ package com.bearsnake.komodo.engine.functions.logical;
 
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.GeneralRegisterSet;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -50,7 +51,7 @@ public class MLUFunction extends Function {
         var dr = engine.getDesignatorRegister();
         var pPriv = dr.getProcessorPrivilege();
         var grsx = engine.getExecOrUserARegisterIndex((ci.getA() + 1) & 017);
-        if (!Engine.isGRSAccessAllowed(grsx, pPriv, true)) {
+        if (!GeneralRegisterSet.isAccessAllowed(grsx, pPriv, true)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
         }
 

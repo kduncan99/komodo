@@ -602,7 +602,7 @@ public class Engine {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
             for (int ox = 0; ox < count; ox++) {
-                if (!isGRSAccessAllowed(grsIndex, _activityStatePacket.getDesignatorRegister().getProcessorPrivilege(), false)) {
+                if (!GeneralRegisterSet.isAccessAllowed(grsIndex, _activityStatePacket.getDesignatorRegister().getProcessorPrivilege(), false)) {
                     throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
                 }
                 result[ox] = _generalRegisterSet.getRegister(grsIndex).getW();
@@ -720,7 +720,7 @@ public class Engine {
         final int registerIndex,
         final boolean writeAccessAllowed
     ) throws ReferenceViolationInterrupt {
-        if (!isGRSAccessAllowed(registerIndex, _activityStatePacket.getDesignatorRegister().getProcessorPrivilege(), writeAccessAllowed)) {
+        if (!GeneralRegisterSet.isAccessAllowed(registerIndex, _activityStatePacket.getDesignatorRegister().getProcessorPrivilege(), writeAccessAllowed)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
         }
         return _generalRegisterSet.getRegister(registerIndex);
@@ -977,8 +977,9 @@ public class Engine {
     }
 
     /**
-     * Specifically for the NOP instruction.  We go through the process of developing U,
-     * but we do not retrieve the operand therefrom. This means that we do no access checks except in the case of checking
+     * Specifically for the NOP instruction.  We DO NOT go through the process of developing U,
+     * we only do indirect addressing and X-register incrementation.
+     * This means that we do no access checks except in the case of checking
      * for read access during indirect address resolution.
      * Returns complete == false if we are in the middle of resolving addresses,
      * or an interrupt if we fail some sort of limits or access checking.
@@ -993,20 +994,6 @@ public class Engine {
         resolveRelativeAddress(false, true, true);
         if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
             return;
-        }
-
-        // For EM, we need to explicitly get _operandBaseRegister and _operandBaseRegisterIndex.
-        if (!basicMode) {
-            getEffectiveBaseRegisterIndex();
-        }
-
-        // If we're not GRS, do the following just for access checks
-        if ((_scratchpad._operandRelativeAddress > 0177) || (!basicMode && (_scratchpad._operandBaseRegisterIndex > 0))) {
-            var key = ikr.getAccessKey();
-            checkAccessLimitsAndAccessibility(basicMode,
-                                              _scratchpad._operandBaseRegisterIndex,
-                                              _scratchpad._operandRelativeAddress,
-                                              false, true, false, key);
         }
     }
 
@@ -1058,28 +1045,6 @@ public class Engine {
             case Constants.JFIELD_S6 -> Word36.setS6(source, partialWordValue);
             default -> source;
         };
-    }
-
-    /**
-     * Checks whether caller is allowed read (and possibly write) access to a particular GRS register.
-     * @param registerIndex GRS index of register
-     * @param processorPrivilege current processor privilege level
-     * @param writeAccess true if we are checking for write access
-     */
-    public static boolean isGRSAccessAllowed(
-        final int registerIndex,
-        final short processorPrivilege,
-        final boolean writeAccess
-    ) {
-        if (registerIndex < 040) {
-            return true;
-        } else if (registerIndex < 0100) {
-            return processorPrivilege == 0;
-        } else if (registerIndex < 0120) {
-            return true;
-        } else {
-            return (writeAccess && (processorPrivilege == 0)) || (!writeAccess && (processorPrivilege <= 2));
-        }
     }
 
     /**
@@ -1204,7 +1169,7 @@ public class Engine {
         if (grsCheck && (relAddr < 0200)) {
             // GRS address
             if (!ignoreAccessChecks) {
-                if (!isGRSAccessAllowed(relAddr, dr.getProcessorPrivilege(), false)) {
+                if (!GeneralRegisterSet.isAccessAllowed(relAddr, dr.getProcessorPrivilege(), false)) {
                     throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
                 }
             }
@@ -1279,7 +1244,7 @@ public class Engine {
         if (grsCheck && (brx == 0) && (relAddr < 0200)) {
             // GRS address
             if (!ignoreAccessChecks) {
-                if (!isGRSAccessAllowed(relAddr, dr.getProcessorPrivilege(), false)) {
+                if (!GeneralRegisterSet.isAccessAllowed(relAddr, dr.getProcessorPrivilege(), false)) {
                     throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
                 }
             }
@@ -1323,7 +1288,7 @@ public class Engine {
             // storing into the GRS
             for (int i = 0; i < count; i++) {
                 var addr = (_scratchpad._operandRelativeAddress + i) & 0177;
-                if (!isGRSAccessAllowed(addr, pPriv, true)) {
+                if (!GeneralRegisterSet.isAccessAllowed(addr, pPriv, true)) {
                     throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
                 }
                 _generalRegisterSet.setRegister(addr, operands[offset + i]);
@@ -1400,7 +1365,7 @@ public class Engine {
 
         if (grsCheck && (basicMode || (_scratchpad._operandBaseRegisterIndex == 0)) && (_scratchpad._operandRelativeAddress < 0200)) {
             // storing into the GRS
-            if (!isGRSAccessAllowed(_scratchpad._operandRelativeAddress, pPriv, true)) {
+            if (!GeneralRegisterSet.isAccessAllowed(_scratchpad._operandRelativeAddress, pPriv, true)) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
             }
 

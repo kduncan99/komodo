@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions.store;
 
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.GeneralRegisterSet;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -63,7 +64,7 @@ public class SRSFunction extends Function {
 
         for (int i = 0; i < r1Count; i++) {
             var grsIndex = (r1Index + i) & 0177;
-            if (!Engine.isGRSAccessAllowed(grsIndex, pPriv, false)) {
+            if (!GeneralRegisterSet.isAccessAllowed(grsIndex, pPriv, false)) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
             operands[opIdx++] = engine.getGeneralRegisterSet().getRegister(grsIndex).getW();
@@ -71,7 +72,7 @@ public class SRSFunction extends Function {
 
         for (int i = 0; i < r2Length; i++) {
             var grsIndex = (r2Index + i) & 0177;
-            if (!Engine.isGRSAccessAllowed(grsIndex, pPriv, false)) {
+            if (!GeneralRegisterSet.isAccessAllowed(grsIndex, pPriv, false)) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
             operands[opIdx++] = engine.getGeneralRegisterSet().getRegister(grsIndex).getW();
