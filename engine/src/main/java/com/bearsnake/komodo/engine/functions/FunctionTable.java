@@ -10,6 +10,9 @@ import com.bearsnake.komodo.engine.functions.jump.*;
 import com.bearsnake.komodo.engine.functions.load.*;
 import com.bearsnake.komodo.engine.functions.logical.*;
 import com.bearsnake.komodo.engine.functions.special.*;
+import com.bearsnake.komodo.engine.functions.test.TEPFunction;
+import com.bearsnake.komodo.engine.functions.test.TOPFunction;
+import com.bearsnake.komodo.engine.functions.test.TZFunction;
 import com.bearsnake.komodo.engine.functions.store.*;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 
@@ -68,6 +71,40 @@ public abstract class FunctionTable {
         // decimal
         // search
         // test
+        // CRFunction.INSTANCE,
+        // DTEFunction.INSTANCE,
+        // DTGMFunction.INSTANCE,
+        // MATGFunction.INSTANCE,
+        // MATLFunction.INSTANCE,
+        // MTEFunction.INSTANCE,
+        // MTGFunction.INSTANCE,
+        // MTLEFunction.INSTANCE,
+        // MTNEFunction.INSTANCE,
+        // MTNWFunction.INSTANCE,
+        // MTWFunction.INSTANCE,
+        // TCSFunction.INSTANCE,
+        // TEPFunction.INSTANCE,
+        TEPFunction.INSTANCE,
+        // TGFunction.INSTANCE,
+        // TGMFunction.INSTANCE,
+        // TGZFunction.INSTANCE,
+        // TLEFunction.INSTANCE,
+        // TLEMFunction.INSTANCE,
+        // TLZFunction.INSTANCE,
+        // TMZFunction.INSTANCE,
+        // TMZGFunction.INSTANCE,
+        // TNFunction.INSTANCE,
+        // TNEFunction.INSTANCE,
+        // TNGZFunction.INSTANCE,
+        // TNLZFunction.INSTANCE,
+        // TNOPFunction.INSTANCE,
+        // TNMZFunction.INSTANCE,
+        // TNPZFunction.INSTANCE,
+        // TNWFunction.INSTANCE,
+        // TNZFunction.INSTANCE,
+        TOPFunction.INSTANCE,
+        TZFunction.INSTANCE,
+        // UNLKFunction.INSTANCE,
         // shift
         // jump
         DJZFunction.INSTANCE,

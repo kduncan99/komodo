@@ -728,6 +728,32 @@ public class Word36 {
 
     //  Logical Operations ---------------------------------------------------------------------------------------------------------
 
+    public Word36 logicalAnd(
+        final long operand
+    ) {
+        _value = logicalAnd(_value, operand);
+        return this;
+    }
+
+    public Word36 logicalNot() {
+        _value = logicalNot(_value);
+        return this;
+    }
+
+    public Word36 logicalOr(
+        final long operand
+    ) {
+        _value = logicalOr(_value, operand);
+        return this;
+    }
+
+    public Word36 logicalXor(
+        final long operand
+    ) {
+        _value = logicalXor(_value, operand);
+        return this;
+    }
+
     /**
      * Logical AND operation (in this context, logical means bitwise)
      * @param operand1 left hand operand
