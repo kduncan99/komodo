@@ -22,4 +22,11 @@ public class ActivityStatePacket {
     public IndicatorKeyRegister getIndicatorKeyRegister() { return _indicatorKeyRegister; }
     public ProgramAddressRegister getProgramAddressRegister() { return _programAddressRegister; }
     public long getQuantumTimer() { return _quantumTimer; }
+
+    public ActivityStatePacket setCurrentInstruction(
+        final long instruction
+    ) {
+        _currentInstruction.setW(instruction);
+        return this;
+    }
 }

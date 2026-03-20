@@ -66,6 +66,67 @@ public abstract class FunctionTable {
         SXFunction.INSTANCE,
         SZFunction.INSTANCE,
 
+        // fixed
+        // AAFunction.INSTANCE,
+        // ADD1Function.INSTANCE,
+        // AHFunction.INSTANCE,
+        // AMAFunction.INSTANCE,
+        // ANAFunction.INSTANCE,
+        // ANHFunction.INSTANCE,
+        // ANMAFunction.INSTANCE,
+        // ANTFunction.INSTANCE,
+        // ANUFunction.INSTANCE,
+        // ANXFunction.INSTANCE,
+        // ATFunction.INSTANCE,
+        // AUFunction.INSTANCE,
+        // AXFunction.INSTANCE,
+        // BAOFunction.INSTANCE,
+        // DAFunction.INSTANCE,
+        // DANFunction.INSTANCE,
+        // DECFunction.INSTANCE,
+        // DEC2Function.INSTANCE,
+        // DFFunction.INSTANCE,
+        // DIFunction.INSTANCE,
+        // DSFFunction.INSTANCE,
+        // ENZFunction.INSTANCE,
+        // INCFunction.INSTANCE,
+        // INC2Function.INSTANCE,
+        // MFFunction.INSTANCE,
+        // MIFunction.INSTANCE,
+        // MSIFunction.INSTANCE,
+        // SUB1Function.INSTANCE,
+
+        // float
+        // CDUFunction.INSTANCE,
+        // DFAFunction.INSTANCE,
+        // DFANFunction.INSTANCE,
+        // DFDFunction.INSTANCE,
+        // DFMFunction.INSTANCE,
+        // DFUFunction.INSTANCE,
+        // DLCFFunction.INSTANCE, // (also DFP)
+        // FAFunction.INSTANCE,
+        // FANFunction.INSTANCE,
+        // FCLFunction.INSTANCE,
+        // FDFunction.INSTANCE,
+        // FELFunction.INSTANCE,
+        // FMFunction.INSTANCE,
+        // LCFFunction.INSTANCE,
+        // LUFFunction.INSTANCE,
+        // MCDUFunction.INSTANCE,
+
+        // decimal
+        // ADEFunction.INSTANCE,
+        // BDEFunction.INSTANCE,
+        // DADEFunction.INSTANCE,
+        // DDEIFunction.INSTANCE,
+        // DEBFunction.INSTANCE,
+        // DEIFunction.INSTANCE,
+        // DIDEFunction.INSTANCE,
+        // DSDEFunction.INSTANCE,
+        // EDDEFunction.INSTANCE,
+        // IDEFunction.INSTANCE,
+        // SDEFunction.INSTANCE,
+
         // test
         CRFunction.INSTANCE,
         DTEFunction.INSTANCE,
@@ -110,6 +171,19 @@ public abstract class FunctionTable {
         UNLKFunction.INSTANCE,
 
         // shift
+        // DLSCFunction.INSTANCE,
+        // DSAFunction.INSTANCE,
+        // DSCFunction.INSTANCE,
+        // DSLFunction.INSTANCE,
+        // LDSCFunction.INSTANCE,
+        // LDSLFunction.INSTANCE,
+        // LSCFunction.INSTANCE,
+        // LSSCFunction.INSTANCE,
+        // LSSLFunction.INSTANCE,
+        // SSAFunction.INSTANCE,
+        // SSCFunction.INSTANCE,
+        // SSLFunction.INSTANCE,
+
         // jump
         DJZFunction.INSTANCE,
         HJFunction.INSTANCE,
@@ -138,30 +212,118 @@ public abstract class FunctionTable {
         JZFunction.INSTANCE,
         LMJFunction.INSTANCE,
         SLJFunction.INSTANCE,
+
         // logical
         ANDFunction.INSTANCE,
         MLUFunction.INSTANCE,
         ORFunction.INSTANCE,
         XORFunction.INSTANCE,
+
         // storage
+        // BBNFunction.INSTANCE,
+        // BICFunction.INSTANCE,
+        // BICLFunction.INSTANCE,
+        // BIMFunction.INSTANCE,
+        // BIMLFunction.INSTANCE,
+        // BIMTFunction.INSTANCE,
+        // BNFunction.INSTANCE,
+        // BTFunction.INSTANCE,
+
         // string
+        // LSFunction.INSTANCE,
+        // LSAFunction.INSTANCE,
+        // SSFunction.INSTANCE,
+        // TESFunction.INSTANCE,
+        // TNESFunction.INSTANCE,
+
         // addressSpace
+        // DABTFunction.INSTANCE,
+        // LBEFunction.INSTANCE,
+        // LBEDFunction.INSTANCE,
+        // LBNFunction.INSTANCE,
+        // LBUFunction.INSTANCE,
+        // LBUDFunction.INSTANCE,
+        // SBEDFunction.INSTANCE,
+        // SBUFunction.INSTANCE,
+        // SBUDFunction.INSTANCE,
+        // TRAFunction.INSTANCE,
+        // TRARSFunction.INSTANCE,
+        // TVAFunction.INSTANCE,
+        // We do not support VIEW
+
         // procedureControl
+        // CALLFunction.INSTANCE,
+        // GOTOFunction.INSTANCE,
+        // LBJFunction.INSTANCE,
+        // LDJFunction.INSTANCE,
+        // LIJFunction.INSTANCE,
+        // LOCLFunction.INSTANCE,
+        // RTNFunction.INSTANCE,
+
         // queueing
+        // DEPOSITQBFFunction.INSTANCE,
+        // DEQFunction.INSTANCE,
+        // DEQWFunction.INSTANCE,
+        // ENQFunction.INSTANCE,
+        // ENQFFunction.INSTANCE,
+        // WITHDRAWQBFunction.INSTANCE,
+
         // activity
+        // ACELFunction.INSTANCE,
+        // DCELFunction.INSTANCE,
+        // KCHGFunction.INSTANCE,
+        // LAEFunction.INSTANCE,
+        // LDFunction.INSTANCE,
+        // LPDFunction.INSTANCE,
+        // LUDFunction.INSTANCE,
+        // SDFunction.INSTANCE,
+        // SKQTFunction.INSTANCE,
+        // SPDFunction.INSTANCE,
+        // SUDFunction.INSTANCE,
+        // URFunction.INSTANCE,
+
         // stack
+        // BUYFunction.INSTANCE,
+        // SELLFunction.INSTANCE,
+
         // interrupt
+        // AAIJFunction.INSTANCE,
+        // ERFunction.INSTANCE,
+        // PAIJFunction.INSTANCE,
+        // SGNLFunction.INSTANCE,
+
         // system
+        // IARFunction.INSTANCE,
+        // IPCFunction.INSTANCE,
+        // SPIDFunction.INSTANCE,
+        // SYSCFunction.INSTANCE,
+
         // dayclock
+        // LMCFunction.INSTANCE,
+        // LRDFunction.INSTANCE,
+        // RDCFunction.INSTANCE,
+        // RMDFunction.INSTANCE,
+        // SDMFFunction.INSTANCE,
+        // SDMNFunction.INSTANCE,
+        // SDMSFunction.INSTANCE,
+        // SMDFunction.INSTANCE,
+
         // upi
+        // ACKFunction.INSTANCE,
+        // SENDFunction.INSTANCE,
+
         // instrumentation
+        // CJHEFunction.INSTANCE,
+        // LBRXFunction.INSTANCE,
+        // SJHFunction.INSTANCE,
+
         // special
         DCBFunction.INSTANCE,
-        EXFunction.INSTANCE,// TODO implement
+        EXFunction.INSTANCE,
         EXRFunction.INSTANCE,// TODO implement
         NOPFunction.INSTANCE,
-        RNGBFunction.INSTANCE,// TODO implement
-        RNGIFunction.INSTANCE,// TODO implement
+        RNGBFunction.INSTANCE,
+        RNGIFunction.INSTANCE,
     };
 
 

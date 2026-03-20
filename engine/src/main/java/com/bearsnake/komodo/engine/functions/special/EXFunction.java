@@ -31,7 +31,8 @@ public class EXFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
-        return true;
+        var operand = engine.getOperand(false, false, false, false, false);
+        engine.getActivityStatePacket().setCurrentInstruction(operand);
+        return false;
     }
 }

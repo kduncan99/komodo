@@ -9,9 +9,12 @@ import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionTable;
+import com.bearsnake.komodo.engine.functions.special.EXFunction;
+import com.bearsnake.komodo.engine.functions.special.EXRFunction;
 import com.bearsnake.komodo.engine.interrupts.*;
 
 import java.util.HashMap;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
 
@@ -101,7 +104,11 @@ public class Engine {
     // Caller must poll for interrupts before calling cycle().
     private final TreeMap<MachineInterrupt.InterruptClass, MachineInterrupt> _interruptStack = new TreeMap<>();
 
+    // For support of random functions
+    private final Random _random = new Random();
+
     public Engine() {
+        _random.setSeed(System.currentTimeMillis());
         IntStream.range(0, 32).forEach(bx -> _baseRegisters[bx] = BaseRegister.createVoid());
         _scratchpad._instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
     }
@@ -450,7 +457,12 @@ public class Engine {
         if (dr.getProcessorPrivilege() > reqPP) {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
         }
-        return _scratchpad._cachedFunction.execute(this);
+
+        var func = _scratchpad._cachedFunction;
+        if ((func instanceof EXFunction) || func instanceof EXRFunction) {
+            _scratchpad._cachedFunction = null;
+        }
+        return func.execute(this);
     }
 
     /**
@@ -976,6 +988,10 @@ public class Engine {
 
     public ProgramAddressRegister getProgramAddressRegister() {
         return _activityStatePacket.getProgramAddressRegister();
+    }
+
+    public Random getRandom() {
+        return _random;
     }
 
     /**

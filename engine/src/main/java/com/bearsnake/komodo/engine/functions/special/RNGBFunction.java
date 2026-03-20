@@ -31,7 +31,17 @@ public class RNGBFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        // TODO
+        var operands = new long[4];
+        for (int wx = 0; wx < 4; wx++) {
+            var r = engine.getRandom().nextInt();
+            for (int qx = 0; qx < 4; qx++) {
+                operands[wx] <<= 9;
+                operands[wx] |= r & 0xFF;
+                r >>= 8;
+            }
+        }
+
+        engine.storeConsecutiveOperands(true, operands);
         return true;
     }
 }
