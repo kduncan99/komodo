@@ -4,6 +4,8 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
+import com.bearsnake.komodo.baselib.InstructionWord;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.GeneralRegisterSet;
 import com.bearsnake.komodo.engine.functions.Function;
@@ -58,5 +60,53 @@ public class JGDFunction extends Function {
     @Override
     public boolean isJumpInstruction() {
         return true;
+    }
+
+    /**
+     * Special version of interpret() for JGD
+     */
+    public static String interpret(
+        final Engine engine,
+        final InstructionWord iWord
+    ) {
+        var funcCode = new FunctionCode(070);
+        var sb = new StringBuilder("JGD       ");
+        var grsx = ((iWord.getJ() << 4) | iWord.getA()) & 0177;
+        sb.append(Constants.GRS_REGISTER_NAMES[grsx])
+          .append(",");
+
+        // Interpret u-field
+        var u18 = (funcCode.getJField() == null) && (iWord.getJ() >= 016) && (iWord.getX() == 0);
+        if (!u18 && (iWord.getI() > 0)) {
+            sb.append("*");
+        }
+        var u = iWord.getU();
+        if (u18) {
+            u |= (iWord.getI() << 16);
+            u |= (iWord.getH() << 17);
+        }
+        sb.append("0");
+        if (u != 0) {
+            sb.append(Integer.toOctalString(u));
+        }
+
+        if (iWord.getX() > 0) {
+            sb.append(",");
+            if (iWord.getH() > 0) {
+                sb.append("*");
+            }
+            sb.append("X")
+              .append(iWord.getX());
+
+            while (sb.length() < 25) {
+                sb.append(" ");
+            }
+            sb.append("");
+            var xReg = engine.getGeneralRegisterSet()
+                             .getRegister(engine.getExecOrUserXRegisterIndex(iWord.getX()));
+            sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
+        }
+
+        return sb.toString();
     }
 }

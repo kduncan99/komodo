@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions;
 
-import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 
@@ -33,7 +32,7 @@ public abstract class SubFunction extends Function {
     }
 
     abstract Function lookupFunction(
-        final InstructionWord iWord
+        final long instructionWord
     ) throws InvalidInstructionInterrupt;
 
     abstract boolean putFunction(

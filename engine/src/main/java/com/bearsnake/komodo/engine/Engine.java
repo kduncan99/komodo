@@ -371,35 +371,40 @@ public class Engine {
         var par = _activityStatePacket.getProgramAddressRegister();
         var r1Reg = getExecOrUserRRegister(1);
         boolean complete = false;
-        boolean isEXRF = ikr.isExecuteRepeatedInstruction();
 
         try {
+            // If there isn't an instruction fetched yet, do so.
+            // Clear scratchpad settings so we can start developing operator address.
             if (!ikr.getInstructionInF0()) {
                 fetchInstruction();
                 _scratchpad.clear();
             }
 
-            // pre-cycle check for EXR - was it executed with R1 already zero?
-            // If so, we're done before we even do a single cycle of it.
-            if (isEXRF) {
-                if (r1Reg.isZero()) {
-                    complete = true;
-                }
+            // Execute the cached instruction, and return now if the instruction hasn't yet
+            // finished its job.
+            complete = executeInstruction();
+            if (!complete) {
+                return false;
             }
 
-            if (!complete) {
-                complete = executeInstruction();
-                if (ikr.isExecuteRepeatedInstruction()) {
-                    if (isEXRF) {
-                        // R1 is the repeat counter for EXR instructions.
-                        // For Extended mode, use bits 12-35 as an unsigned counter.
-                        // For Basic mode, use bits 18-35. In either case, decrement the register.
-                        if (dr.isBasicModeEnabled()) {
-                            r1Reg.decrementCounter18();
-                        } else {
-                            r1Reg.decrementCounter24();
-                        }
-                    }
+            // The instruction completed, but if this is executed-repeated
+            // then we have additional work to do.
+            if (ikr.isExecuteRepeatedInstruction()) {
+                // First, decrement the repeat counter. R1 is the repeat counter for EXR instructions.
+                // For Extended mode, use bits 12-35 as an unsigned counter.
+                // For Basic mode, use bits 18-35. In either case, decrement the register.
+                if (dr.isBasicModeEnabled()) {
+                    r1Reg.decrementCounter18();
+                } else {
+                    r1Reg.decrementCounter24();
+                }
+
+                // If the repeat counter is now zero, clear the EXRF flag and drop through with
+                // the complete flag still set. Otherwise, set complete flag to false to keep looping.
+                if (r1Reg.isZero()) {
+                    ikr.setExecuteRepeatedInstruction(false);
+                } else {
+                    complete = false;
                 }
             }
 
@@ -407,7 +412,6 @@ public class Engine {
                 _scratchpad._instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
                 _scratchpad._cachedFunction = null;
                 ikr.setInstructionInF0(false);
-                ikr.setExecuteRepeatedInstruction(false);
                 if (!_preventProgramCounterUpdate) {
                     par.incrementProgramCounter();
                 } else {
@@ -447,7 +451,7 @@ public class Engine {
         }
 
         if (_scratchpad._cachedFunction == null) {
-            _scratchpad._cachedFunction = FunctionTable.lookupFunction(dr, ci);
+            _scratchpad._cachedFunction = FunctionTable.lookupFunction(dr, ci.getW());
         }
 
         var cf = _scratchpad._cachedFunction;

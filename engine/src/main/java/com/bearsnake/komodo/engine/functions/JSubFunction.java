@@ -32,16 +32,16 @@ public class JSubFunction extends SubFunction {
 
     @Override
     Function lookupFunction(
-        final InstructionWord iWord
+        final long instWord
     ) throws InvalidInstructionInterrupt {
-        var j = iWord.getJ();
+        var j = InstructionWord.getJ(instWord);
         var func = _functions.get(j);
         if (func == null) {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
         }
 
         if (func instanceof SubFunction sf) {
-            return sf.lookupFunction(iWord);
+            return sf.lookupFunction(instWord);
         }
         return func;
     }

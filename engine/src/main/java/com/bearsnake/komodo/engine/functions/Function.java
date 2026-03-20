@@ -15,7 +15,6 @@ import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 import java.util.HashMap;
-import java.util.NoSuchElementException;
 
 import static com.bearsnake.komodo.engine.functions.Function.AFieldSemantics.UNUSED;
 
@@ -110,11 +109,16 @@ public abstract class Function {
 
     public static Function lookup(
         final DesignatorRegister designatorRegister,
-        final InstructionWord instruction
+        final long instructionWord
     ) throws InvalidInstructionInterrupt,
              HardwareDefaultInterrupt {
-        return FunctionTable.lookupFunction(designatorRegister, instruction);
+        return FunctionTable.lookupFunction(designatorRegister, instructionWord);
     }
+
+    // --------------------------------------------------------------------------------------------
+
+    // TODO Somewhere, we need the following functions to check whether their operand straddles
+    //  ER15 and EX0 and throw a ReferenceViolationInterrupt if so.
 
     // --------------------------------------------------------------------------------------------
 
@@ -156,48 +160,14 @@ public abstract class Function {
         // looks normal, but the trick here is that a is a GRS index, created by concatenating the
         // j-field with the a-field (dropping the highest bit of the j-field) for 7 bits of GRS index.
         if (iWord.getF() == 070) {
-            var funcCode = new FunctionCode(070);
-            var sb = new StringBuilder("JGD       ");
-            var grsx = ((iWord.getJ() << 4) | iWord.getA()) & 0177;
-            sb.append(Constants.GRS_REGISTER_NAMES[grsx]).append(",");
-
-            // Interpret u-field
-            var u18 = (funcCode.getJField() == null) && (iWord.getJ() >= 016) && (iWord.getX() == 0);
-            if (!u18 && (iWord.getI() > 0)) {
-                sb.append("*");
-            }
-            var u = iWord.getU();
-            if (u18) {
-                u |= (iWord.getI() << 16);
-                u |= (iWord.getH() << 17);
-            }
-            sb.append("0");
-            if (u != 0) {
-                sb.append(Integer.toOctalString(u));
-            }
-
-            if (iWord.getX() > 0) {
-                sb.append(",");
-                if (iWord.getH() > 0) {
-                    sb.append("*");
-                }
-                sb.append("X").append(iWord.getX());
-
-                while (sb.length() < 25) {
-                    sb.append(" ");
-                }
-                sb.append("");
-                var xReg = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(iWord.getX()));
-                sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
-            }
-
-            return sb.toString();
+            return JGDFunction.interpret(engine, iWord);
         }
 
-        Function func;
+        // TODO Special code for BT
 
+        Function func;
         try {
-            func = lookup(dReg, iWord);
+            func = lookup(dReg, iWord.getW());
         } catch (InvalidInstructionInterrupt | HardwareDefaultInterrupt e) {
             return Word36.toOctal(iWord.getW());
         }
@@ -241,7 +211,6 @@ public abstract class Function {
             // and is == 016 or 017, AND the x-field is zero, then the u-field includes the hiu bits.
             // Otherwise, it includes only the u-bits.
             // If we're only using u-bits, then the i-bit is indirect addressing (and gets an asterisk).
-            // TODO interpret u < 0200 as GRS if not indirect addressing (and GRS allowed)
             var u18 = (funcCode.getJField() == null) && (iWord.getJ() >= 016) && (iWord.getX() == 0);
             if (!u18 && (iWord.getI() > 0)) {
                 sb.append("*");
@@ -251,22 +220,26 @@ public abstract class Function {
                 u |= (iWord.getI() << 16);
                 u |= (iWord.getH() << 17);
             }
-            sb.append("0");
-            if (u != 0) {
-                sb.append(Integer.toOctalString((int) u));
-            }
-            if (iWord.getX() > 0) {
-                sb.append(",");
-                if (iWord.getH() > 0) {
-                    sb.append("*");
+            if (func.isGRS() && (iWord.getD() < 0200)) {
+                sb.append(Constants.GRS_REGISTER_NAMES[iWord.getD()])
+                  .append(",");
+            } else {
+                sb.append("0");
+                if (u != 0) {
+                    sb.append(Integer.toOctalString(u));
                 }
-                sb.append("X")
-                  .append(iWord.getX());
-                xRegActive = true;
+                if (iWord.getX() > 0) {
+                    sb.append(",");
+                    if (iWord.getH() > 0) {
+                        sb.append("*");
+                    }
+                    sb.append("X")
+                      .append(iWord.getX());
+                    xRegActive = true;
+                }
             }
         } else {
             // extended mode.
-            // TODO interpret d as GRS for < 0200 if b is 0 (and GRS allowed)
             var jumpShiftImm = func.isJumpInstruction()
                                || func.isShiftInstruction()
                                || ((funcCode.getJField() == null) && (iWord.getJ() >= 016));
@@ -293,6 +266,9 @@ public abstract class Function {
                         sb.append(Integer.toOctalString(u));
                     }
                 }
+            } else if (func.isGRS() && (iWord.getB() == 0) && (iWord.getD() < 0200)) {
+                sb.append(Constants.GRS_REGISTER_NAMES[iWord.getD()])
+                  .append(",");
             } else {
                 // Interpret d-field
                 var d = iWord.getD();
@@ -328,8 +304,8 @@ public abstract class Function {
             while (sb.length() < 25) {
                 sb.append(" ");
             }
-            sb.append("");
-            var xReg = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(iWord.getX()));
+            var xReg = engine.getGeneralRegisterSet()
+                             .getRegister(engine.getExecOrUserXRegisterIndex(iWord.getX()));
             sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
         }
 

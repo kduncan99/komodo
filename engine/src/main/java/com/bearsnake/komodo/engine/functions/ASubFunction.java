@@ -32,14 +32,14 @@ public class ASubFunction extends SubFunction {
 
     @Override
     Function lookupFunction(
-        final InstructionWord iWord
+        final long instWord
     ) throws InvalidInstructionInterrupt {
-        var func = _functions.get(iWord.getA());
+        var func = _functions.get(InstructionWord.getA(instWord));
         if (func == null) {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
         }
         if (func instanceof SubFunction sf) {
-            return sf.lookupFunction(iWord);
+            return sf.lookupFunction(instWord);
         }
         return func;
     }

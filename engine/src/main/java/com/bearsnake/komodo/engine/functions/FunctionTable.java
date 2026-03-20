@@ -171,6 +171,7 @@ public abstract class FunctionTable {
         UNLKFunction.INSTANCE,
 
         // shift
+        ///     TODO don't forget to override isShiftInstruction()
         // DLSCFunction.INSTANCE,
         // DSAFunction.INSTANCE,
         // DSCFunction.INSTANCE,
@@ -423,7 +424,7 @@ public abstract class FunctionTable {
 
     public static Function lookupFunction(
         final DesignatorRegister dReg,
-        final InstructionWord iWord
+        final long instWord
     ) throws InvalidInstructionInterrupt {
         synchronized (FunctionTable.class) {
             if (!_isInitialized) {
@@ -431,13 +432,13 @@ public abstract class FunctionTable {
             }
 
             var topLevel = dReg.isBasicModeEnabled() ? BASIC_MODE_TOP_LEVEL : EXTENDED_MODE_TOP_LEVEL;
-            var func = topLevel.get(iWord.getF());
+            var func = topLevel.get(InstructionWord.getF(instWord));
             if (func == null) {
                 throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
             }
 
             if (func instanceof SubFunction sf) {
-                return sf.lookupFunction(iWord);
+                return sf.lookupFunction(instWord);
             }
             return func;
         }
