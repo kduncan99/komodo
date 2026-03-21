@@ -675,6 +675,48 @@ public class TestWord36 {
         assertEquals(0_000112_233445L, result);
     }
 
+    @Test
+    public void leftShiftAlgebraic_Instance() {
+        Word36 word = new Word36(0_3123_4537_0123L);
+        word.leftShiftAlgebraic(1);
+        assertEquals(0_2247_1276_0246L, word.getW());
+    }
+
+    @Test
+    public void leftShiftCircular_Instance() {
+        Word36 word = new Word36(0_111222_333444L);
+        word.leftShiftCircular(3);
+        assertEquals(0_112223_334441L, word.getW());
+    }
+
+    @Test
+    public void leftShiftLogical_Instance() {
+        Word36 word = new Word36(0_111222_333444L);
+        word.leftShiftLogical(3);
+        assertEquals(0_112223_334440L, word.getW());
+    }
+
+    @Test
+    public void rightShiftAlgebraic_Instance() {
+        Word36 word = new Word36(0_400000_112233L);
+        word.rightShiftAlgebraic(3);
+        assertEquals(0_740000_011223L, word.getW());
+    }
+
+    @Test
+    public void rightShiftCircular_Instance() {
+        Word36 word = new Word36(0_112233_445566L);
+        word.rightShiftCircular(6);
+        assertEquals(0_661122_334455L, word.getW());
+    }
+
+    @Test
+    public void rightShiftLogical_Instance() {
+        Word36 word = new Word36(0_112233_445566L);
+        word.rightShiftLogical(9);
+        assertEquals(0_000112_233445L, word.getW());
+    }
+
 
     //  Logic tests ----------------------------------------------------------------------------------------------------------------
 

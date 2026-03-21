@@ -246,4 +246,227 @@ public class TestDoubleWord36 {
         assertTrue(DoubleWord36.isNegativeZero(new long[]{0_777777_777777L, 0_777777_777777L}, 0));
         assertFalse(DoubleWord36.isNegativeZero(new long[]{0L, 0L}, 0));
     }
+
+    @Test
+    public void testLeftShiftCircular() {
+        Long[] result = new Long[2];
+
+        // 1-bit left circular shift
+        // 1 (0...001 0...000) -> 2 (0...010 0...000)
+        DoubleWord36.leftShiftCircular(1L, 0L, 1, result);
+        assertEquals(2L, result[0]);
+        assertEquals(0L, result[1]);
+
+        // Bit 0 to Bit 71
+        // 0_400000_000000L, 0 -> 0, 1
+        DoubleWord36.leftShiftCircular(0_400000_000000L, 0L, 1, result);
+        assertEquals(0L, result[0]);
+        assertEquals(1L, result[1]);
+
+        // Bit 36 to Bit 35
+        // 0, 0_400000_000000L -> 1, 0
+        DoubleWord36.leftShiftCircular(0L, 0_400000_000000L, 1, result);
+        assertEquals(1L, result[0]);
+        assertEquals(0L, result[1]);
+
+        // 36-bit shift (swap)
+        DoubleWord36.leftShiftCircular(0_123456_765432L, 0_000000_777777L, 36, result);
+        assertEquals(0_000000_777777L, result[0]);
+        assertEquals(0_123456_765432L, result[1]);
+
+        // 72-bit shift (identity)
+        DoubleWord36.leftShiftCircular(0_123456_765432L, 0_000000_777777L, 72, result);
+        assertEquals(0_123456_765432L, result[0]);
+        assertEquals(0_000000_777777L, result[1]);
+
+        DoubleWord36.leftShiftCircular(0_000000_000000L, 0_000000_700000L, 1, result);
+        assertEquals(0_000000_000000L, result[0]);
+        assertEquals(0_000001_600000L, result[1]);
+
+        // Negative count (right shift 1)
+        // 1, 0 -> 0_400000_000000L, 0
+        DoubleWord36.leftShiftCircular(1L, 0L, -1, result);
+        assertEquals(0_400000_000000L, result[1]);
+        assertEquals(0L, result[0]);
+    }
+
+    @Test
+    public void testRightShiftCircular() {
+        Long[] result = new Long[2];
+
+        // 1-bit right circular shift
+        // 2 (0...010 0...000) -> 1 (0...001 0...000)
+        DoubleWord36.rightShiftCircular(2L, 0L, 1, result);
+        assertEquals(1L, result[0]);
+        assertEquals(0L, result[1]);
+
+        // Bit 71 to Bit 0
+        // 0, 1 -> 0_400000_000000L, 0
+        DoubleWord36.rightShiftCircular(0L, 1L, 1, result);
+        assertEquals(0_400000_000000L, result[0]);
+        assertEquals(0L, result[1]);
+
+        // Bit 35 to Bit 36
+        // 1, 0 -> 0, 0_400000_000000L
+        DoubleWord36.rightShiftCircular(1L, 0L, 1, result);
+        assertEquals(0L, result[0]);
+        assertEquals(0_400000_000000L, result[1]);
+
+        // 36-bit shift (swap)
+        DoubleWord36.rightShiftCircular(0_123456_765432L, 0_000000_777777L, 36, result);
+        assertEquals(0_000000_777777L, result[0]);
+        assertEquals(0_123456_765432L, result[1]);
+
+        // 72-bit shift (identity)
+        DoubleWord36.rightShiftCircular(0_123456_765432L, 0_000000_777777L, 72, result);
+        assertEquals(0_123456_765432L, result[0]);
+        assertEquals(0_000000_777777L, result[1]);
+
+        // Negative count (left shift 1)
+        // 0_400000_000000L, 0 -> 0, 1
+        DoubleWord36.rightShiftCircular(0_400000_000000L, 0L, -1, result);
+        assertEquals(0L, result[0]);
+        assertEquals(1L, result[1]);
+    }
+    @Test
+    public void testLeftShiftLogical() {
+        Long[] result = new Long[2];
+
+        // 1-bit shift
+        DoubleWord36.leftShiftLogical(0_400000_000000L, 0_000000_000001L, 1, result);
+        assertEquals(0_000000_000000L, result[0].longValue());
+        assertEquals(0_000000_000002L, result[1].longValue());
+
+        // Shift bit from LSW to MSW
+        DoubleWord36.leftShiftLogical(0_000000_000000L, 0_400000_000000L, 1, result);
+        assertEquals(0_000000_000001L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+
+        // 36-bit shift
+        DoubleWord36.leftShiftLogical(0_123456_765432L, 0_000111_222333L, 36, result);
+        assertEquals(0_000111_222333L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+
+        // 37-bit shift (36 + 1)
+        // LSW 0_000000_000001L -> MSW 0_000000_000002L
+        DoubleWord36.leftShiftLogical(0_777777_777777L, 0_000000_000001L, 37, result);
+        assertEquals(0_000000_000002L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+
+        // 72-bit shift
+        DoubleWord36.leftShiftLogical(0_777777_777777L, 0_777777_777777L, 72, result);
+        assertEquals(0L, result[0].longValue());
+        assertEquals(0L, result[1].longValue());
+
+        // Negative shift count (calls right shift)
+        DoubleWord36.leftShiftLogical(0_000000_000001L, 0_000000_000000L, -1, result);
+        assertEquals(0_000000_000000L, result[0].longValue());
+        assertEquals(0_400000_000000L, result[1].longValue());
+    }
+
+    @Test
+    public void testRightShiftLogical() {
+        Long[] result = new Long[2];
+
+        // 1-bit shift
+        DoubleWord36.rightShiftLogical(0_000000_000002L, 0_000000_000000L, 1, result);
+        assertEquals(0_000000_000001L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+
+        // Shift bit from MSW to LSW
+        DoubleWord36.rightShiftLogical(0_000000_000001L, 0_000000_000000L, 1, result);
+        assertEquals(0_000000_000000L, result[0].longValue());
+        assertEquals(0_400000_000000L, result[1].longValue());
+
+        // 36-bit shift
+        DoubleWord36.rightShiftLogical(0_123456_765432L, 0_000111_222333L, 36, result);
+        assertEquals(0_000000_000000L, result[0].longValue());
+        assertEquals(0_123456_765432L, result[1].longValue());
+
+        // 37-bit shift (36 + 1)
+        // MSW 0_400000_000000L -> LSW 0_200000_000000L
+        DoubleWord36.rightShiftLogical(0_400000_000000L, 0_000000_000000L, 37, result);
+        assertEquals(0_000000_000000L, result[0].longValue());
+        assertEquals(0_200000_000000L, result[1].longValue());
+
+        // 72-bit shift
+        DoubleWord36.rightShiftLogical(0_777777_777777L, 0_777777_777777L, 72, result);
+        assertEquals(0L, result[0].longValue());
+        assertEquals(0L, result[1].longValue());
+
+        // Negative shift count (calls left shift)
+        DoubleWord36.rightShiftLogical(0_000000_000000L, 0_400000_000000L, -1, result);
+        assertEquals(0_000000_000001L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+    }
+
+    @Test
+    public void testLeftShiftAlgebraic() {
+        Long[] result = new Long[2];
+
+        // 1-bit shift positive
+        DoubleWord36.leftShiftAlgebraic(0_000000_000001L, 0_000000_000000L, 1, result);
+        assertEquals(0_000000_000002L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+
+        // 1-bit shift negative (sign preservation)
+        DoubleWord36.leftShiftAlgebraic(0_400000_000000L, 0_000000_000000L, 1, result);
+        assertEquals(0_400000_000000L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+
+        // 1-bit shift negative with data
+        DoubleWord36.leftShiftAlgebraic(0_600000_000000L, 0_000000_000000L, 1, result);
+        assertEquals(0_400000_000000L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+
+        // Multi-bit shift with data crossing boundary
+        DoubleWord36.leftShiftAlgebraic(0_400000_000000L, 0_000000_000001L, 35, result);
+        assertEquals(0_400000_000000L, result[0].longValue());
+        assertEquals(0_400000_000000L, result[1].longValue());
+
+        // 36-bit shift
+        DoubleWord36.leftShiftAlgebraic(0_400000_123456L, 0_765432_111222L, 36, result);
+        assertEquals(0_400000_000000L | 0_765432_111222L, result[0].longValue());
+        assertEquals(0L, result[1].longValue());
+
+        // 71-bit shift
+        DoubleWord36.leftShiftAlgebraic(0_400000_123456L, 0_765432_111222L, 71, result);
+        assertEquals(0_400000_000000L, result[0].longValue());
+        assertEquals(0L, result[1].longValue());
+    }
+
+    @Test
+    public void testRightShiftAlgebraic() {
+        Long[] result = new Long[2];
+
+        // 1-bit shift positive
+        DoubleWord36.rightShiftAlgebraic(0_000000_000002L, 0_000000_000000L, 1, result);
+        assertEquals(0_000000_000001L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+
+        // 1-bit shift negative (sign preservation)
+        DoubleWord36.rightShiftAlgebraic(0_400000_000000L, 0_000000_000000L, 1, result);
+        assertEquals(0_600000_000000L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+
+        // Crossing boundary
+        DoubleWord36.rightShiftAlgebraic(0_000000_000001L, 0_000000_000000L, 1, result);
+        assertEquals(0_000000_000000L, result[0].longValue());
+        assertEquals(0_400000_000000L, result[1].longValue());
+
+        // Crossing boundary negative
+        DoubleWord36.rightShiftAlgebraic(0_400000_000000L, 0_000000_000000L, 36, result);
+        assertEquals(0_777777_777777L, result[0].longValue());
+        assertEquals(0_400000_000000L, result[1].longValue());
+
+        // 71-bit shift negative
+        DoubleWord36.rightShiftAlgebraic(0_400000_000000L, 0_000000_000000L, 71, result);
+        assertEquals(0_777777_777777L, result[0].longValue());
+        assertEquals(0_777777_777777L, result[1].longValue());
+
+        // Negative shift count (calls left shift)
+        DoubleWord36.rightShiftAlgebraic(0_000000_000001L, 0_000000_000000L, -1, result);
+        assertEquals(0_000000_000002L, result[0].longValue());
+        assertEquals(0_000000_000000L, result[1].longValue());
+    }
 }

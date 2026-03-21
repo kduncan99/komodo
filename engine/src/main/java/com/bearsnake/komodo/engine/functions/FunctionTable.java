@@ -9,6 +9,7 @@ import com.bearsnake.komodo.engine.DesignatorRegister;
 import com.bearsnake.komodo.engine.functions.jump.*;
 import com.bearsnake.komodo.engine.functions.load.*;
 import com.bearsnake.komodo.engine.functions.logical.*;
+import com.bearsnake.komodo.engine.functions.shift.*;
 import com.bearsnake.komodo.engine.functions.special.*;
 import com.bearsnake.komodo.engine.functions.test.*;
 import com.bearsnake.komodo.engine.functions.store.*;
@@ -171,19 +172,18 @@ public abstract class FunctionTable {
         UNLKFunction.INSTANCE,
 
         // shift
-        ///     TODO don't forget to override isShiftInstruction()
-        // DLSCFunction.INSTANCE,
-        // DSAFunction.INSTANCE,
-        // DSCFunction.INSTANCE,
-        // DSLFunction.INSTANCE,
-        // LDSCFunction.INSTANCE,
-        // LDSLFunction.INSTANCE,
-        // LSCFunction.INSTANCE,
-        // LSSCFunction.INSTANCE,
-        // LSSLFunction.INSTANCE,
-        // SSAFunction.INSTANCE,
-        // SSCFunction.INSTANCE,
-        // SSLFunction.INSTANCE,
+        DLSCFunction.INSTANCE,
+        DSAFunction.INSTANCE,
+        DSCFunction.INSTANCE,
+        DSLFunction.INSTANCE,
+        LDSCFunction.INSTANCE,
+        LDSLFunction.INSTANCE,
+        LSCFunction.INSTANCE,
+        LSSCFunction.INSTANCE,
+        LSSLFunction.INSTANCE,
+        SSAFunction.INSTANCE,
+        SSCFunction.INSTANCE,
+        SSLFunction.INSTANCE,
 
         // jump
         DJZFunction.INSTANCE,
@@ -325,7 +325,7 @@ public abstract class FunctionTable {
         NOPFunction.INSTANCE,
         RNGBFunction.INSTANCE,
         RNGIFunction.INSTANCE,
-    };
+        };
 
 
     private static boolean _isInitialized = false;

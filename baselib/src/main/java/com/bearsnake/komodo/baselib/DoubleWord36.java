@@ -353,109 +353,6 @@ public class DoubleWord36 {
                           productOffset);
     }
 
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Overrides
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-//    @Override
-//    public boolean equals(
-//        final Object obj
-//    ) {
-//        if (obj instanceof DoubleWord36) {
-//            DoubleWord36 dw = (DoubleWord36) obj;
-//            return dw._value.equals(_value);
-//        } else {
-//            return false;
-//        }
-//    }
-//
-//    @Override
-//    public int hashCode() { return _value.hashCode(); }
-//
-//    @Override
-//    public String toString() {
-//        return String.format("%024o", _value);
-//    }
-
-
-    //  Getter(s) ------------------------------------------------------------------------------------------------------------------
-
-//    public BigInteger get()     { return _value; }
-//    public Word36[] getWords()  { return getWords(_value); }
-
-
-    //  Tests ----------------------------------------------------------------------------------------------------------------------
-
-//    public boolean isNegative()                 { return isNegative(_value); }
-//    public boolean isNegativeZero()             { return isNegativeZero(_value); }
-//    public boolean isPositive()                 { return isPositive(_value); }
-//    public boolean isPositiveZero()             { return isPositiveZero(_value); }
-//    public boolean isZero()                     { return isZero(_value); }
-
-
-    //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
-
-//    public AdditionResult add(DoubleWord36 addend)              { return new AdditionResult(add(_value, addend._value)); }
-//    public int compareTo(DoubleWord36 operand)                  { return compare(_value, operand._value); }
-//    public DivisionResult divide(DoubleWord36 divisor)          { return new DivisionResult(divide(_value, divisor._value)); }
-//    public DoubleWord36 extendSign(int fieldSize)               { return new DoubleWord36(extendSign(_value, fieldSize)); }
-//    public MultiplicationResult multiply(DoubleWord36 factor)   { return new MultiplicationResult(multiply(_value, factor._value)); }
-//    public DoubleWord36 negate()                                { return new DoubleWord36(negate(_value)); }
-
-
-    //  Logical Operations ---------------------------------------------------------------------------------------------------------
-
-//    public DoubleWord36 logicalAnd(DoubleWord36 operand)    { return new DoubleWord36(logicalAnd(_value, operand._value)); }
-//    public DoubleWord36 logicalNot()                        { return new DoubleWord36(logicalNot(_value)); }
-//    public DoubleWord36 logicalOr(DoubleWord36 operand)     { return new DoubleWord36(logicalOr(_value, operand._value)); }
-//    public DoubleWord36 logicalXor(DoubleWord36 operand)    { return new DoubleWord36(logicalXor(_value, operand._value)); }
-
-
-    //  Shift Operations -----------------------------------------------------------------------------------------------------------
-
-//    public DoubleWord36 leftShiftAlgebraic(int count)   { return new DoubleWord36(leftShiftAlgebraic(_value, count)); }
-//    public DoubleWord36 leftShiftCircular(int count)    { return new DoubleWord36(leftShiftCircular(_value, count)); }
-//    public DoubleWord36 leftShiftLogical(int count)     { return new DoubleWord36(leftShiftLogical(_value, count)); }
-//    public DoubleWord36 rightShiftAlgebraic(int count)  { return new DoubleWord36(rightShiftAlgebraic(_value, count)); }
-//    public DoubleWord36 rightShiftCircular(int count)   { return new DoubleWord36(rightShiftCircular(_value, count)); }
-//    public DoubleWord36 rightShiftLogical(int count)    { return new DoubleWord36(rightShiftLogical(_value, count)); }
-
-
-    //  Conversions ----------------------------------------------------------------------------------------------------------------
-
-//    public BigInteger getTwosComplement()   { return getTwosComplement(_value); }
-//    public String toOctal()                 { return toOctal(_value); }
-//    public String toStringFromASCII()       { return toStringFromASCII(_value); }
-//    public String toStringFromFieldata()    { return toStringFromFieldata(_value); }
-
-
-    //  ----------------------------------------------------------------------------------------------------------------------------
-    //  Static methods - these operate on and return long integers representing ones-complement values
-    //  ----------------------------------------------------------------------------------------------------------------------------
-
-    //  Tests ----------------------------------------------------------------------------------------------------------------------
-
-//    public static boolean isNegativeZero(BigInteger value)  { return value.equals(NEGATIVE_ZERO); }
-//    public static boolean isPositive(BigInteger value)      { return !isNegative(value); }
-//    public static boolean isPositiveZero(BigInteger value)  { return value.equals(POSITIVE_ZERO); }
-//    public static boolean isZero(BigInteger value)          { return isPositiveZero(value) || isNegativeZero(value); }
-
-//    public static boolean isNegative(BigInteger value) { return value.and(NEGATIVE_BIT).equals(NEGATIVE_BIT); }
-//    public static boolean isNegative(final long[] words, final int offset) { return isNegative(words[offset], words[offset + 1]); }
-//    public static boolean isNegative(final long msWord, final long lsWord) { return Word36.isNegative(msWord); }
-//
-//    public static boolean isNegativeZero(final long[] words, final int offset) { return isNegativeZero(words[offset], words[offset + 1]); }
-//    public static boolean isNegativeZero(final long msWord, final long lsWord) { return Word36.isNegativeZero(msWord) && Word36.isNegativeZero(lsWord); }
-//
-//    public static boolean isPositive(final long[] words, final int offset) { return !isNegative(words, offset); }
-//    public static boolean isPositive(final long msWord, final long lsWord) { return !isNegative(msWord, lsWord); }
-//
-//    public static boolean isPositiveZero(final long[] words, final int offset) { return words[offset] == 0 && words[offset + 1] == 0; }
-//    public static boolean isPositiveZero(final long msWord, final long lsWord) { return msWord == 0 && lsWord == 0; }
-//
-//    public static boolean isZero(final long[] words, final int offset) { return isPositiveZero(words, offset) || isNegativeZero(words, offset); }
-//    public static boolean isZero(final long msWord, final long lsWord) { return isPositiveZero(msWord, lsWord) || isNegativeZero(msWord, lsWord); }
-
     //  Arithmetic Operations ------------------------------------------------------------------------------------------------------
 
 //    /**
@@ -629,170 +526,216 @@ public class DoubleWord36 {
 //    ) {
 //        return operand1.xor(operand2);
 //    }
-//
-//
-//    //  Shift Operations -----------------------------------------------------------------------------------------------------------
-//
-//    /**
-//     * Does an algebraic shift left - the sign bit is never altered.
-//     * @param value 72-bit value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static BigInteger leftShiftAlgebraic(
-//        final BigInteger value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return rightShiftAlgebraic(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            BigInteger result = value.shiftLeft(count).and(BIT_MASK.shiftRight(1));
-//            if (isNegative(value)) {
-//                result = result.or(NEGATIVE_BIT);
-//            }
-//            return result;
-//        }
-//    }
-//
-//    /**
-//     * Shifts the given 72-bit value left, with bit[0] rotating to bit[71] at each iteration.
-//     * Actual implementation may not involve iterative shifting.
-//     * @param value value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static BigInteger leftShiftCircular(
-//        final BigInteger value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return rightShiftCircular(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            int actualCount = count % 72;
-//            BigInteger residue = value.shiftRight(72 - actualCount);  // end-around shifted portion
-//            return value.shiftLeft(actualCount).and(BIT_MASK).or(residue);
-//        }
-//    }
-//
-//    /**
-//     * Shifts the given 72-bit value left by a number of bits
-//     * @param value value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static BigInteger leftShiftLogical(
-//        final BigInteger value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return rightShiftLogical(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            return (count > 71) ? BigInteger.ZERO : value.shiftLeft(count).and(BIT_MASK);
-//        }
-//    }
-//
-//    /**
-//     * Does an algebraic shift right - this means the sign bit is always preserved as well as being shifted to the right.
-//     * @param value 72-bit value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static BigInteger rightShiftAlgebraic(
-//        final BigInteger value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return leftShiftAlgebraic(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            boolean isNegative = isNegative(value);
-//            if (count > 71) {
-//                return isNegative ? DoubleWord36.NEGATIVE_ZERO : DoubleWord36.POSITIVE_ZERO;
-//            } else {
-//                if (isNegative) {
-//                    int signBits = count;
-//                    BigInteger signMask = BigInteger.ONE.shiftLeft(signBits).subtract(BigInteger.ONE).shiftLeft(72 - signBits);
-//                    return value.shiftRight(count).or(signMask);
-//                } else {
-//                    return value.shiftRight(count);
-//                }
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Shifts the given 72-bit value right, with bit[71] rotating to bit[0] at each iteration.
-//     * Actual implementation may not involve iterative shifting.
-//     * @param value value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static BigInteger rightShiftCircular(
-//        final BigInteger value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return leftShiftCircular(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            int actualCount = (count % 72);
-//            BigInteger mask = BIT_MASK.shiftRight(72 - actualCount);
-//            BigInteger residue = (value.and(mask)).shiftLeft(72 - actualCount);
-//            return value.shiftRight(actualCount).or(residue);
-//        }
-//    }
-//
-//    /**
-//     * Shifts the given 72-bit value right by a number of bits
-//     * @param value value to be shifted
-//     * @param count number of bits to be shifted
-//     * @return resulting value
-//     */
-//    public static BigInteger rightShiftLogical(
-//        final BigInteger value,
-//        final int count
-//    ) {
-//        if (count < 0) {
-//            return leftShiftLogical(value, -count);
-//        } else if (count == 0) {
-//            return value;
-//        } else {
-//            return (count > 71) ? BigInteger.ZERO : value.shiftRight(count);
-//        }
-//    }
-//
-//
+
+
+    //  Shift Operations -----------------------------------------------------------------------------------------------------------
+
+    /**
+     * Does an algebraic shift left - the sign bit is never altered.
+     * @param operand1 most significant 36 bits of the value to be shifted
+     * @param operand2 least significant 36 bits of the value to be shifted
+     * @param count number of bits to be shifted
+     * @param result 2-element array containing the result of the shift operation.
+     */
+    public static void leftShiftAlgebraic(
+        final long operand1,
+        final long operand2,
+        final int count,
+        final Long[] result
+    ) {
+        if (count < 0) {
+            rightShiftAlgebraic(operand1, operand2, -count, result);
+        } else if (count == 0) {
+            result[0] = operand1;
+            result[1] = operand2;
+        } else if (count >= 71) {
+            result[0] = operand1 & 0_400000_000000L;
+            result[1] = 0L;
+        } else {
+            long res;
+            if (count < 36) {
+                res = (operand1 & 0_400000_000000L) | (((operand1 << count) | (operand2 >>> (36 - count))) & 0_377777_777777L);
+                result[0] = res;
+                res = (operand2 << count) & 0_777777_777777L;
+                result[1] = res;
+            } else {
+                res = (operand1 & 0_400000_000000L) | ((operand2 << (count - 36)) & 0_377777_777777L);
+                result[0] = res;
+                result[1] = 0L;
+            }
+        }
+    }
+
+    /**
+     * Shifts the given 72-bit value left, with bit[0] rotating to bit[71] at each iteration.
+     * @param operand1 most significant 36 bits of the value to be shifted
+     * @param operand2 least significant 36 bits of the value to be shifted
+     * @param count number of bits to be shifted
+     * @param result 2-element array containing the result of the shift operation.
+     */
+    public static void leftShiftCircular(
+        final long operand1,
+        final long operand2,
+        final int count,
+        final Long[] result
+    ) {
+        if (count < 0) {
+            rightShiftCircular(operand1, operand2, -count, result);
+        } else {
+            result[0] = operand1;
+            result[1] = operand2;
+            int actualCount = (count % 72);
+            while (actualCount > 0) {
+                var bit0 = (result[0] & 0_400000_000000L) == 0 ? 0 : 1;
+                var bit36 = (result[1] & 0_400000_000000L) == 0 ? 0 : 1;
+                result[0] = ((result[0] << 1) | bit36) & 0_777777_777777L;
+                result[1] = ((result[1] << 1) | bit0) & 0_777777_777777L;
+                actualCount--;
+            }
+        }
+    }
+
+    /**
+     * Shifts the given 72-bit value left by a number of bits
+     * @param operand1 most significant 36 bits of the value to be shifted
+     * @param operand2 least significant 36 bits of the value to be shifted
+     * @param count number of bits to be shifted
+     * @param result 2-element array containing the result of the shift operation.
+     */
+    public static void leftShiftLogical(
+        final long operand1,
+        final long operand2,
+        final int count,
+        final Long[] result
+    ) {
+        if (count < 0) {
+            rightShiftLogical(operand1, operand2, -count, result);
+        } else if (count == 0) {
+            result[0] = operand1;
+            result[1] = operand2;
+        } else if (count >= 72) {
+            result[0] = 0L;
+            result[1] = 0L;
+        } else {
+            long res;
+            if (count < 36) {
+                res = ((operand1 << count) | (operand2 >>> (36 - count))) & 0_777777_777777L;
+                result[0] = res;
+                res = (operand2 << count) & 0_777777_777777L;
+                result[1] = res;
+            } else {
+                res = (operand2 << (count - 36)) & 0_777777_777777L;
+                result[0] = res;
+                result[1] = 0L;
+            }
+        }
+    }
+
+    /**
+     * Does an algebraic shift right - this means the sign bit is always preserved as well as being shifted to the right.
+     * @param operand1 most significant 36 bits of the value to be shifted
+     * @param operand2 least significant 36 bits of the value to be shifted
+     * @param count number of bits to be shifted
+     */
+    public static void rightShiftAlgebraic(
+        final long operand1,
+        final long operand2,
+        final int count,
+        final Long[] result
+    ) {
+        if (count < 0) {
+            leftShiftAlgebraic(operand1, operand2, -count, result);
+        } else if (count == 0) {
+            result[0] = operand1;
+            result[1] = operand2;
+        } else if (count >= 71) {
+            long fill = (operand1 & 0_400000_000000L) != 0 ? 0_777777_777777L : 0L;
+            result[0] = fill;
+            result[1] = fill;
+        } else {
+            long fill = (operand1 & 0_400000_000000L) != 0 ? 0_777777_777777L : 0L;
+            long res;
+            if (count < 36) {
+                res = ((operand1 >> count) | (fill << (36 - count))) & 0_777777_777777L;
+                result[0] = res;
+                res = ((operand2 >>> count) | ((operand1 & 0_777777_777777L) << (36 - count))) & 0_777777_777777L;
+                result[1] = res;
+            } else {
+                res = fill;
+                result[0] = res;
+                res = ((operand1 >> (count - 36)) | (fill << (72 - count))) & 0_777777_777777L;
+                result[1] = res;
+            }
+        }
+    }
+
+    /**
+     * Shifts the given 72-bit value right, with bit[71] rotating to bit[0] at each iteration.
+     * @param operand1 most significant 36 bits of the value to be shifted
+     * @param operand2 least significant 36 bits of the value to be shifted
+     * @param count number of bits to be shifted
+     * @param result 2-element array containing the result of the shift operation.
+     */
+    public static void rightShiftCircular(
+        final long operand1,
+        final long operand2,
+        final int count,
+        final Long[] result
+    ) {
+        if (count < 0) {
+            leftShiftCircular(operand1, operand2, -count, result);
+        } else {
+            result[0] = operand1;
+            result[1] = operand2;
+            int actualCount = (count % 72);
+            while (actualCount > 0) {
+                var bit72 = result[1] & 0x1;
+                var bit36 = result[0] & 0x1;
+                result[0] = (result[0] >> 1) | (bit72 << 35);
+                result[1] = (result[1] >> 1) | (bit36 << 35);
+                actualCount--;
+            }
+        }
+    }
+
+    /**
+     * Shifts the given 72-bit value right by a number of bits
+     * @param operand1 most significant 36 bits of the value to be shifted
+     * @param operand2 least significant 36 bits of the value to be shifted
+     * @param count number of bits to be shifted
+     * @param result 2-element array containing the result of the shift operation.
+     */
+    public static void rightShiftLogical(
+        final long operand1,
+        final long operand2,
+        final int count,
+        final Long[] result
+    ) {
+        if (count < 0) {
+            leftShiftLogical(operand1, operand2, -count, result);
+        } else if (count == 0) {
+            result[0] = operand1;
+            result[1] = operand2;
+        } else if (count >= 72) {
+            result[0] = 0L;
+            result[1] = 0L;
+        } else {
+            long res;
+            if (count < 36) {
+                res = (operand1 >>> count) & 0_777777_777777L;
+                result[0] = res;
+                res = ((operand2 >>> count) | (operand1 << (36 - count))) & 0_777777_777777L;
+                result[1] = res;
+            } else {
+                res = (operand1 >>> (count - 36)) & 0_777777_777777L;
+                result[1] = res;
+                result[0] = 0L;
+            }
+        }
+    }
+
+
 //    //  Conversions ----------------------------------------------------------------------------------------------------------------
-//
-//    /**
-//     * Converts a twos-complement BigInteger operand to ones-complement
-//     */
-//    public static BigInteger getOnesComplement(
-//        final BigInteger operand
-//    ) {
-//        if (operand.compareTo(BigInteger.ZERO) >= 0) {
-//            return operand;
-//        } else {
-//            return operand.negate().not().and(BIT_MASK);
-//        }
-//    }
-//
-//    /**
-//     * As above, but conveniently for simple twos-complement integer operands
-//     */
-//    public static BigInteger getOnesComplement(
-//        final long operand
-//    ) {
-//        return getOnesComplement(BigInteger.valueOf(operand));
-//    }
 
 //    /**
 //     * Populates this object with quarter-words derived from the ASCII characters in the source string.

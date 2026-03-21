@@ -785,7 +785,7 @@ public class Engine {
      * In either case, the value will be left alone for j-field=016, and sign-extended for j-field=017.
      */
 
-    private long getImmediateOperand() {
+    public long getImmediateOperand() {
         long operand;
         var ci = _activityStatePacket.getCurrentInstruction();
         var dr = _activityStatePacket.getDesignatorRegister();

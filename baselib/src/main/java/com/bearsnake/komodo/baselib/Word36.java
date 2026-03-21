@@ -827,6 +827,48 @@ public class Word36 {
 
     //  Shift Operations -----------------------------------------------------------------------------------------------------------
 
+    public Word36 leftShiftAlgebraic(
+        final int count
+    ) {
+        _value = leftShiftAlgebraic(_value, count);
+        return this;
+    }
+
+    public Word36 leftShiftCircular(
+        final int count
+    ) {
+        _value = leftShiftCircular(_value, count);
+        return this;
+    }
+
+    public Word36 leftShiftLogical(
+        final int count
+    ) {
+        _value = leftShiftLogical(_value, count);
+        return this;
+    }
+
+    public Word36 rightShiftAlgebraic(
+        final int count
+    ) {
+        _value = rightShiftAlgebraic(_value, count);
+        return this;
+    }
+
+    public Word36 rightShiftCircular(
+        final int count
+    ) {
+        _value = rightShiftCircular(_value, count);
+        return this;
+    }
+
+    public Word36 rightShiftLogical(
+        final int count
+    ) {
+        _value = rightShiftLogical(_value, count);
+        return this;
+    }
+
     /**
      * Does an algebraic shift left - the sign bit is never altered.
      * @param value 36-bit value to be shifted
