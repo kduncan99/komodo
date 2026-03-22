@@ -290,7 +290,7 @@ public abstract class FunctionTable {
 
         // interrupt
         // AAIJFunction.INSTANCE,
-        // ERFunction.INSTANCE,
+        // ERFunction.INSTANCE, (Executive Return)
         // PAIJFunction.INSTANCE,   PP=0
         // SGNLFunction.INSTANCE,
 

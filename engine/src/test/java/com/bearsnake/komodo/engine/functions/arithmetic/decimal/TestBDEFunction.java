@@ -30,7 +30,7 @@ public class TestBDEFunction extends TestDecimalFunction {
     private static final int START_CHAR_Q4 = 3;
 
     private static final int CHAR_FORMAT_ASCII = 0;
-    private static final int CHAR_FORMAT_EXTERNAL_COMPUTATIONAL_3 = 1;
+    private static final int CHAR_FORMAT_COMPUTATIONAL = 1;
 
     private static final int ASCII_NO_SIGN = 0;
     private static final int ASCII_NO_SIGN_0 = 0;
@@ -64,6 +64,13 @@ public class TestBDEFunction extends TestDecimalFunction {
             | (q4 & 07777);
     }
 
+    private long comp(long c1, long c2, long c3, long c4, long c5, long c6, long c7, long c8) {
+        return ((c1 & 017) << 31) | ((c2 & 017) << 27)
+               | ((c3 & 017) << 22) | ((c4 & 017) << 18)
+               | ((c5 & 017) << 13) | ((c6 & 017) << 9)
+               | ((c7 & 017) << 4) | (c8 & 017);
+    }
+
     private long aParameter(
         long startCharLoc,
         long aReg,
@@ -91,13 +98,6 @@ public class TestBDEFunction extends TestDecimalFunction {
         return ((startChar & 03) << 30) | (modifier & 0_777777);
     }
 
-    private long xParameter24(
-        long startChar,
-        long modifier
-    ) {
-        return ((startChar & 03) << 30) | (modifier & 0_77_777777);
-    }
-
     @BeforeEach
     public void setup() {
         _engine = new Engine();
@@ -106,7 +106,7 @@ public class TestBDEFunction extends TestDecimalFunction {
     }
 
     @Test
-    public void testBDE_DigitCount0_EM() throws MachineInterrupt {
+    public void testBDE_ASCII_DigitCount0_EM() throws MachineInterrupt {
         var code = new long[]{
             bdeEM(02, 0, 02, 0),
             0,
@@ -149,51 +149,7 @@ public class TestBDEFunction extends TestDecimalFunction {
     }
 
     @Test
-    public void testBDE_Simple_EM() throws MachineInterrupt {
-        var code = new long[]{
-            bdeEM(02, 0, 02, 0),
-            0,
-            };
-
-        var data = new long[]{
-            qw('1', '2', '3', '4'),
-            0,
-            0,
-            0,
-            };
-
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
-
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
-        _engine.getDesignatorRegister()
-               .setBasicModeEnabled(false)
-               .setProcessorPrivilege((short)3)
-               .setExecRegisterSetSelected(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-
-        var aParam = aParameter(START_CHAR_IN_A, 6, START_CHAR_Q1, CHAR_FORMAT_ASCII, ASCII_NO_SIGN, 1, 4, 4);
-        _engine.getExecOrUserARegister(2).setW(aParam);
-        _engine.getExecOrUserARegister(6).setW(0_777777_777777L);
-
-        run();
-
-        assertEquals(decWord(0, 0, 0, 0, 1, 2, 3, 4, BDE_POSITIVE_SIGN), _engine.getExecOrUserARegister(6).getW());
-    }
-
-
-    @Test
-    public void testBDE_Simple_SCHInX_EM() throws MachineInterrupt {
+    public void testBDE_ASCII_Simple_EM() throws MachineInterrupt {
         var code = new long[]{
             bdeEM(02, 0, 02, 0),
             0,
@@ -236,7 +192,50 @@ public class TestBDEFunction extends TestDecimalFunction {
     }
 
     @Test
-    public void testBDE_Offset_LeadingSeparateNeg_OnePad_EM() throws MachineInterrupt {
+    public void testBDE_ASCII_Simple_SCHInX_EM() throws MachineInterrupt {
+        var code = new long[]{
+            bdeEM(02, 0, 02, 0),
+            0,
+            };
+
+        var data = new long[]{
+            qw('1', '2', '3', '4'),
+            0,
+            0,
+            0,
+            };
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0_1)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+
+        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
+        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        var aParam = aParameter(START_CHAR_IN_A, 6, START_CHAR_Q1, CHAR_FORMAT_ASCII, ASCII_NO_SIGN, 1, 4, 4);
+        _engine.getExecOrUserARegister(2).setW(aParam);
+        _engine.getExecOrUserARegister(6).setW(0_777777_777777L);
+
+        run();
+
+        assertEquals(decWord(0, 0, 0, 0, 1, 2, 3, 4, BDE_POSITIVE_SIGN), _engine.getExecOrUserARegister(6).getW());
+    }
+
+    @Test
+    public void testBDE_ASCII_Offset_LeadingSeparateNeg_OnePad_EM() throws MachineInterrupt {
         var code = new long[]{
             bdeEM(02, 3, 02, 0),
             0,
@@ -282,7 +281,7 @@ public class TestBDEFunction extends TestDecimalFunction {
     }
 
     @Test
-    public void testBDE_Offset_TrailingSeparateNeg_EM() throws MachineInterrupt {
+    public void testBDE_ASCII_Offset_TrailingSeparateNeg_EM() throws MachineInterrupt {
         var code = new long[]{
             bdeEM(02, 0, 02, 0),
             0,
@@ -325,5 +324,186 @@ public class TestBDEFunction extends TestDecimalFunction {
         System.out.printf("... %9x\n", _engine.getExecOrUserARegister(7).getW());
         assertEquals(decWord(0, 0, 0, 0, 0, 0, 1, 2, 3), _engine.getExecOrUserARegister(6).getW());
         assertEquals(decWord(4, 5, 6, 7, 8, 9, 0, 1, BDE_NEGATIVE_SIGN), _engine.getExecOrUserARegister(7).getW());
+    }
+
+    @Test
+    public void testBDE_Comp_DigitCount0_EM() throws MachineInterrupt {
+        var code = new long[]{
+            bdeEM(02, 0, 02, 0),
+            0,
+            };
+
+        var data = new long[]{
+            0,
+            0,
+            0,
+            0,
+            };
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0_1)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+
+        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
+        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        var aParam = aParameter(START_CHAR_IN_A, 6, START_CHAR_Q1,
+                                CHAR_FORMAT_COMPUTATIONAL, COMP_NO_SIGN, 1, 0, 0);
+        _engine.getExecOrUserARegister(2).setW(aParam);
+        _engine.getExecOrUserARegister(6).setW(0_777777_777777L);
+
+        run();
+
+        assertEquals(decWord(0, 0, 0, 0, 0, 0, 0, 0, BDE_POSITIVE_SIGN), _engine.getExecOrUserARegister(6).getW());
+    }
+
+    @Test
+    public void testBDE_Comp_Simple_EM() throws MachineInterrupt {
+        var code = new long[]{
+            bdeEM(02, 0, 02, 0),
+            0,
+            };
+
+        var data = new long[]{
+            comp(0, 1, 2, 3, 4, 5, 6, 0),
+            0,
+            0,
+            0,
+            };
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0_1)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+
+        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
+        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        var aParam = aParameter(START_CHAR_IN_A, 6, START_CHAR_Q2,
+                                CHAR_FORMAT_COMPUTATIONAL, COMP_NO_SIGN, 1, 1, 5);
+        _engine.getExecOrUserARegister(2).setW(aParam);
+        _engine.getExecOrUserARegister(6).setW(0_777777_777777L);
+
+        run();
+
+        assertEquals(decWord(0, 3, 4, 5, 6, 0, 0, 0, BDE_POSITIVE_SIGN), _engine.getExecOrUserARegister(6).getW());
+    }
+
+    @Test
+    public void testBDE_Comp_Simple_SCHInX_EM() throws MachineInterrupt {
+        var code = new long[]{
+            bdeEM(02, 3, 02, 0),
+            0,
+            };
+
+        var data = new long[]{
+            comp(0, 1, 2, 3, 4, 5, 6, 0),
+            0,
+            0,
+            0,
+            };
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0_1)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+
+        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
+        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        var aParam = aParameter(START_CHAR_IN_X, 6, 0,
+                                CHAR_FORMAT_COMPUTATIONAL, COMP_NO_SIGN, 1, 1, 5);
+        _engine.getExecOrUserARegister(2).setW(aParam);
+        var xParam = xParameter18(START_CHAR_Q2, 0);
+        _engine.getExecOrUserXRegister(3).setW(xParam);
+        _engine.getExecOrUserARegister(6).setW(0_777777_777777L);
+
+        run();
+
+        assertEquals(decWord(0, 3, 4, 5, 6, 0, 0, 0, BDE_POSITIVE_SIGN), _engine.getExecOrUserARegister(6).getW());
+    }
+
+    @Test
+    public void testBDE_Comp_Offset_LeadingSeparateNeg_OnePad_EM() throws MachineInterrupt {
+        var code = new long[]{
+            bdeEM(02, 3, 02, 0),
+            0,
+            };
+
+        var data = new long[]{
+            comp(1, 2, 3, 4, 5, 6, 7, 8),
+            comp(9, 0, 1, 2, 3, 4, 5, 015),
+            0,
+            };
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0_1)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
+                                      .setLowerLimit(0)
+                                      .setUpperLimit(0_1777)
+                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+
+        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
+        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        var aParam = aParameter(START_CHAR_IN_A, 6, START_CHAR_Q1,
+                                CHAR_FORMAT_COMPUTATIONAL, COMP_TRAILING_SEPARATE_SIGN, 3, 11, 16);
+        _engine.getExecOrUserARegister(2).setW(aParam);
+        _engine.getExecOrUserARegister(6).setW(0_777777_777777L);
+        _engine.getExecOrUserARegister(7).setW(0_777777_777777L);
+        _engine.getExecOrUserARegister(8).setW(0_777777_777777L);
+
+        run();
+
+        assertEquals(decWord(0, 0, 0, 0, 0, 0, 0, 0, 0), _engine.getExecOrUserARegister(6).getW());
+        assertEquals(decWord(0, 0, 1, 2, 3, 4, 5, 6, 7), _engine.getExecOrUserARegister(7).getW());
+        assertEquals(decWord(8, 9, 0, 1, 2, 3, 4, 5, BDE_NEGATIVE_SIGN), _engine.getExecOrUserARegister(8).getW());
     }
 }
