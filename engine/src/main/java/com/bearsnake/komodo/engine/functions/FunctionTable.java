@@ -239,17 +239,17 @@ public abstract class FunctionTable {
         // TNESFunction.INSTANCE,
 
         // addressSpace
-        // DABTFunction.INSTANCE,
-        // LBEFunction.INSTANCE,
-        // LBEDFunction.INSTANCE,
+        // DABTFunction.INSTANCE,   PP=0,1
+        // LBEFunction.INSTANCE,    PP=0
+        // LBEDFunction.INSTANCE,   PP=0
         // LBNFunction.INSTANCE,
         // LBUFunction.INSTANCE,
-        // LBUDFunction.INSTANCE,
-        // SBEDFunction.INSTANCE,
+        // LBUDFunction.INSTANCE,   PP=0
+        // SBEDFunction.INSTANCE,   PP=0
         // SBUFunction.INSTANCE,
-        // SBUDFunction.INSTANCE,
+        // SBUDFunction.INSTANCE,   PP=0
         // TRAFunction.INSTANCE,
-        // TRARSFunction.INSTANCE,
+        // TRARSFunction.INSTANCE,  PP=0
         // TVAFunction.INSTANCE,
         // We do not support VIEW
 
@@ -271,18 +271,18 @@ public abstract class FunctionTable {
         // WITHDRAWQBFunction.INSTANCE,
 
         // activity
-        // ACELFunction.INSTANCE,
-        // DCELFunction.INSTANCE,
-        // KCHGFunction.INSTANCE,
-        // LAEFunction.INSTANCE,
-        // LDFunction.INSTANCE,
+        // ACELFunction.INSTANCE,   PP=0,1,2
+        // DCELFunction.INSTANCE,   PP=0,1,2
+        // KCHGFunction.INSTANCE,   PP=0
+        // LAEFunction.INSTANCE,    PP=0
+        // LDFunction.INSTANCE,     PP=0
         // LPDFunction.INSTANCE,
         // LUDFunction.INSTANCE,
-        // SDFunction.INSTANCE,
-        // SKQTFunction.INSTANCE,
+        // SDFunction.INSTANCE,     PP=0,1
+        // SKQTFunction.INSTANCE,   PP=0,1
         // SPDFunction.INSTANCE,
         // SUDFunction.INSTANCE,
-        // URFunction.INSTANCE,
+        // URFunction.INSTANCE,     PP=0
 
         // stack
         // BUYFunction.INSTANCE,
@@ -291,38 +291,38 @@ public abstract class FunctionTable {
         // interrupt
         // AAIJFunction.INSTANCE,
         // ERFunction.INSTANCE,
-        // PAIJFunction.INSTANCE,
+        // PAIJFunction.INSTANCE,   PP=0
         // SGNLFunction.INSTANCE,
 
         // system
-        // IARFunction.INSTANCE,
-        // IPCFunction.INSTANCE,
-        // SPIDFunction.INSTANCE,
-        // SYSCFunction.INSTANCE,
+        // IARFunction.INSTANCE,    PP=0
+        // IPCFunction.INSTANCE,    PP=0
+        // SPIDFunction.INSTANCE,   PP=0,1,2
+        // SYSCFunction.INSTANCE,   PP=0
 
         // dayclock
-        // LMCFunction.INSTANCE,
-        // LRDFunction.INSTANCE,
-        // RDCFunction.INSTANCE,
+        // LMCFunction.INSTANCE,    PP=0
+        // LRDFunction.INSTANCE,    PP=0
+        // RDCFunction.INSTANCE,    PP=0
         // RMDFunction.INSTANCE,
-        // SDMFFunction.INSTANCE,
-        // SDMNFunction.INSTANCE,
-        // SDMSFunction.INSTANCE,
-        // SMDFunction.INSTANCE,
+        // SDMFFunction.INSTANCE,   PP=0
+        // SDMNFunction.INSTANCE,   PP=0
+        // SDMSFunction.INSTANCE,   PP=0
+        // SMDFunction.INSTANCE,    PP=0
 
         // upi
-        // ACKFunction.INSTANCE,
-        // SENDFunction.INSTANCE,
+        // ACKFunction.INSTANCE,    PP=0
+        // SENDFunction.INSTANCE,   PP=0
 
         // instrumentation
-        // CJHEFunction.INSTANCE,
-        // LBRXFunction.INSTANCE,
-        // SJHFunction.INSTANCE,
+        // CJHEFunction.INSTANCE,   PP=0
+        // LBRXFunction.INSTANCE,   PP=0
+        // SJHFunction.INSTANCE,    PP=0
 
         // special
         DCBFunction.INSTANCE,
         EXFunction.INSTANCE,
-        EXRFunction.INSTANCE,// TODO implement
+        EXRFunction.INSTANCE,
         NOPFunction.INSTANCE,
         RNGBFunction.INSTANCE,
         RNGIFunction.INSTANCE,
