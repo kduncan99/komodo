@@ -6,6 +6,7 @@ package com.bearsnake.komodo.engine.functions;
 
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.DesignatorRegister;
+import com.bearsnake.komodo.engine.functions.arithmetic.decimal.*;
 import com.bearsnake.komodo.engine.functions.jump.*;
 import com.bearsnake.komodo.engine.functions.load.*;
 import com.bearsnake.komodo.engine.functions.logical.*;
@@ -116,17 +117,17 @@ public abstract class FunctionTable {
         // MCDUFunction.INSTANCE,
 
         // decimal
-        // ADEFunction.INSTANCE,
-        // BDEFunction.INSTANCE,
-        // DADEFunction.INSTANCE,
-        // DDEIFunction.INSTANCE,
+        ADEFunction.INSTANCE,
+        BDEFunction.INSTANCE,
+        DADEFunction.INSTANCE,
+        DDEIFunction.INSTANCE,
         // DEBFunction.INSTANCE,
-        // DEIFunction.INSTANCE,
-        // DIDEFunction.INSTANCE,
-        // DSDEFunction.INSTANCE,
+        DEIFunction.INSTANCE,
+        DIDEFunction.INSTANCE,
+        DSDEFunction.INSTANCE,
         // EDDEFunction.INSTANCE,
-        // IDEFunction.INSTANCE,
-        // SDEFunction.INSTANCE,
+        IDEFunction.INSTANCE,
+        SDEFunction.INSTANCE,
 
         // test
         CRFunction.INSTANCE,
