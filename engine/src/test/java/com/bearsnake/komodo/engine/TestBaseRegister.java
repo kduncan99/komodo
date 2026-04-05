@@ -4,80 +4,11 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBaseRegister {
-
-    @Test
-    public void testDefaultConstructor() {
-        BankDescriptor bd = new BankDescriptor();
-        long[] storageArray = new long[100];
-        ArraySlice storage = new ArraySlice(storageArray);
-        BaseRegister br = new BaseRegister(bd, storage, 0400L);
-
-        assertSame(bd, br.getBankDescriptor());
-        assertSame(storage, br.getStorage());
-        assertEquals(0400L, br.getSubsetting());
-        assertFalse(br.isVoid());
-    }
-
-    @Test
-    public void testCreateVoid() {
-        BaseRegister br = BaseRegister.createVoid();
-        assertTrue(br.isVoid());
-        assertNull(br.getBankDescriptor());
-        assertNull(br.getStorage());
-        assertEquals(0, br.getSubsetting());
-    }
-
-    @Test
-    public void testSetters() {
-        BaseRegister br = BaseRegister.createVoid();
-        BankDescriptor bd = new BankDescriptor();
-        long[] storageArray = new long[100];
-        ArraySlice storage = new ArraySlice(storageArray);
-
-        br.setBankDescriptor(bd);
-        br.setStorage(storage);
-        br.setSubsetting(1234L);
-
-        assertSame(bd, br.getBankDescriptor());
-        assertSame(storage, br.getStorage());
-        assertEquals(1234L, br.getSubsetting());
-        assertFalse(br.isVoid());
-    }
-
-    @Test
-    public void testFromBankDescriptor() {
-        BaseRegister br = BaseRegister.createVoid();
-        BankDescriptor bd = new BankDescriptor();
-        long[] storageArray = new long[100];
-        ArraySlice storage = new ArraySlice(storageArray);
-
-        br.fromBankDescriptor(bd, storage);
-        assertSame(bd, br.getBankDescriptor());
-        assertSame(storage, br.getStorage());
-        assertEquals(0, br.getSubsetting());
-
-        br.fromBankDescriptor(bd, storage, 5678L);
-        assertEquals(5678L, br.getSubsetting());
-    }
-
-    @Test
-    public void testMakeVoid() {
-        BankDescriptor bd = new BankDescriptor();
-        BaseRegister br = new BaseRegister(bd, null, 100);
-        assertFalse(br.isVoid());
-
-        br.makeVoid();
-        assertTrue(br.isVoid());
-        assertNull(br.getBankDescriptor());
-        assertNull(br.getStorage());
-        assertEquals(0, br.getSubsetting());
-    }
 
     @Test
     public void testCheckAccessLimits() throws ReferenceViolationInterrupt {
@@ -90,7 +21,7 @@ public class TestBaseRegister {
                 .setLowerLimit(1)
                 .setUpperLimit(1000);
 
-        BaseRegister br = new BaseRegister(bd, null, 0);
+        BaseRegister br = new BaseRegister();
 
         // Within limits
         br.checkAccessLimits(512, false);
@@ -121,7 +52,7 @@ public class TestBaseRegister {
                 .setLowerLimit(2)
                 .setUpperLimit(10000);
 
-        BaseRegister br = new BaseRegister(bd, null, 0);
+        BaseRegister br = new BaseRegister();
 
         // Within limits
         br.checkAccessLimits(65536, false);
@@ -143,7 +74,7 @@ public class TestBaseRegister {
                 .setGeneralAccessPermissions(gen)
                 .setSpecialAccessPermissions(spec);
 
-        BaseRegister br = new BaseRegister(bd, null, 0);
+        BaseRegister br = new BaseRegister();
 
         // Master Key (ring 0, domain 0) -> ALL
         AccessKey masterKey = new AccessKey(0, (short) 0);

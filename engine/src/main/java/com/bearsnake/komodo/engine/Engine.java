@@ -207,9 +207,9 @@ public class Engine {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, fetchFlag);
         }
 
-        var bDesc = bReg.getBankDescriptor();
-        if ((relativeAddress < bDesc.getLowerLimitNormalized()) ||
-            (relativeAddress > bDesc.getUpperLimitNormalized())) {
+        // TODO can we use BaseRegister.checkAccessLimits() ?
+        if ((relativeAddress < bReg.getLowerLimitNormalized()) ||
+            (relativeAddress > bReg.getUpperLimitNormalized())) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, fetchFlag);
         }
     }
@@ -228,9 +228,9 @@ public class Engine {
         final boolean writeFlag,
         final AccessKey accessKey
     ) throws ReferenceViolationInterrupt {
-        var bDesc = bReg.getBankDescriptor();
-        if ((relativeAddress < bDesc.getLowerLimitNormalized()) ||
-            ((relativeAddress + addressCount - 1) > bDesc.getUpperLimitNormalized())) {
+        // TODO can we use BaseRegister.checkAccessLimits() ?
+        if ((relativeAddress < bReg.getLowerLimitNormalized()) ||
+            ((relativeAddress + addressCount - 1) > bReg.getUpperLimitNormalized())) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
         }
 
@@ -524,7 +524,7 @@ public class Engine {
             }
 
             bReg = _baseRegisters[_bmCachedBaseRegisterIndex];
-            if (bReg.isVoid() || bReg.getBankDescriptor().isLargeBank()) {
+            if (bReg.isVoid() || bReg.isLargeBank()) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
             }
             if (!isReadAllowed(bReg)) {
@@ -535,14 +535,14 @@ public class Engine {
                                 .setBasicModeBaseRegisterSelection((_bmCachedBaseRegisterIndex == 13) || (_bmCachedBaseRegisterIndex == 15));
         } else {
             // Extended Mode. Only check to ensure we don't go out of limits
+            // TODO can we use BaseRegister.checkAccessLimits() ?
             bReg = _baseRegisters[0];
-            var bd = bReg.getBankDescriptor();
-            if (programCounter < bd.getLowerLimitNormalized() || programCounter > bd.getUpperLimitNormalized()) {
+            if (programCounter < bReg.getLowerLimitNormalized() || programCounter > bReg.getUpperLimitNormalized()) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, true);
             }
         }
 
-        int offset = programCounter - (int)bReg.getBankDescriptor().getLowerLimitNormalized();
+        int offset = programCounter - bReg.getLowerLimitNormalized();
         _activityStatePacket.getCurrentInstruction().setW(bReg.getStorage().get(offset));
         _activityStatePacket.getIndicatorKeyRegister().setInstructionInF0(true);
         _activityStatePacket.getIndicatorKeyRegister().setExecuteRepeatedInstruction(false);
@@ -642,11 +642,11 @@ public class Engine {
         // Do a quick check for the length.
         var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
         var lastAddr = _scratchpad._operandRelativeAddress + count - 1;
-        if (lastAddr > bReg.getBankDescriptor().getUpperLimitNormalized()) {
+        if (lastAddr > bReg.getUpperLimitNormalized()) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
         }
 
-        var offset = (int)(_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        var offset = _scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized();
         return IntStream.range(0, count)
                         .mapToLong(ox -> bReg.getStorage().get(offset + ox))
                         .toArray();
@@ -900,8 +900,7 @@ public class Engine {
                                           .getAccessKey();
             checkAccessLimitsAndAccessibility(true, brx, operand, true, false, false, key);
             var bReg = _baseRegisters[brx];
-            var offset = (int) (operand - bReg.getBankDescriptor()
-                                              .getLowerLimitNormalized());
+            var offset = (int) (operand - bReg.getLowerLimitNormalized());
             var value = bReg.getStorage()
                             .get(offset);
             ci.setXHIU(value);
@@ -975,11 +974,11 @@ public class Engine {
                                           false, true, false, key);
 
         var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var offset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        var offset = _scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized();
         var operand = bReg.getStorage().get(offset);
 
         if (lockStorage) {
-            addressLockAndWait(bReg.getBankDescriptor().getBaseAddress(), offset);
+            addressLockAndWait(bReg.getBaseAddress(), offset);
         }
 
         if (allowPartialWordTransfer) {
@@ -1099,9 +1098,8 @@ public class Engine {
         final BaseRegister bReg,
         final long offset
     ) {
-        return !bReg.isVoid() &&
-                (offset >= bReg.getBankDescriptor().getLowerLimitNormalized()) &&
-                (offset <= bReg.getBankDescriptor().getUpperLimitNormalized());
+        // TODO can we use BaseRegister.checkAccessLimits() ?
+        return !bReg.isVoid() && (offset >= bReg.getLowerLimitNormalized()) && (offset <= bReg.getUpperLimitNormalized());
     }
 
     /**
@@ -1222,10 +1220,8 @@ public class Engine {
                                           .getAccessKey();
             checkAccessLimitsAndAccessibility(true, brx, relAddr, true, false, false, key);
             var bReg = _baseRegisters[brx];
-            var offset = (int) (relAddr - bReg.getBankDescriptor()
-                                              .getLowerLimitNormalized());
-            var value = bReg.getStorage()
-                            .get(offset);
+            var offset = relAddr - bReg.getLowerLimitNormalized();
+            var value = bReg.getStorage().get(offset);
             ci.setXHIU(value);
 
             _scratchpad._instructionPoint = InstructionPoint.RESOLVING_ADDRESS;
@@ -1338,7 +1334,7 @@ public class Engine {
                                false, true, key);
 
         var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var baseOffset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        var baseOffset = (int) (_scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized());
         for (int i = 0; i < count; i++) {
             bReg.getStorage().set(baseOffset + i, operands[offset + i]);
         }
@@ -1423,7 +1419,7 @@ public class Engine {
                                           false, false, true, key);
 
         var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var offset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        var offset = _scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized();
         if (allowPartial) {
             var qWord = dr.isQuarterWordModeEnabled();
             var origValue = bReg.getStorage().get(offset);
@@ -1467,7 +1463,7 @@ public class Engine {
                                           false, false, true, key);
 
         var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var offset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        var offset = _scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized();
         var qWord = dr.isQuarterWordModeEnabled();
         var origValue = bReg.getStorage().get(offset);
         var newValue = injectPartialWord(origValue, partialWordIndicator, partialWordValue, qWord);
@@ -1484,7 +1480,7 @@ public class Engine {
         final long operand
     ) throws ReferenceViolationInterrupt {
         var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var offset = (int) (_scratchpad._operandRelativeAddress - bReg.getBankDescriptor().getLowerLimitNormalized());
+        var offset = _scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized();
 
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var key = ikr.getAccessKey();
