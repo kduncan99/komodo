@@ -15,7 +15,6 @@ public class TestBankDescriptor {
         assertEquals(BankType.BasicMode, bd.getBankType());
         assertFalse(bd.isGeneralFault());
         assertFalse(bd.isLargeBank());
-        assertFalse(bd.isUpperLimitSuppression());
         assertEquals(0, bd.getLowerLimit());
         assertEquals(0, bd.getUpperLimit());
         assertTrue(bd.isInactive());
@@ -85,7 +84,6 @@ public class TestBankDescriptor {
         bd.setBankType(BankType.Queue)
           .setGeneralFault(true)
           .setLargeBank(true)
-          .setUpperLimitSuppression(true)
           .setInactive(false)
           .setDisplacement(1234)
           .setIndirectLevelAndBDI(0xABC)
@@ -100,7 +98,6 @@ public class TestBankDescriptor {
         assertEquals(BankType.Queue, bd.getBankType());
         assertTrue(bd.isGeneralFault());
         assertTrue(bd.isLargeBank());
-        assertTrue(bd.isUpperLimitSuppression());
         assertFalse(bd.isInactive());
         assertEquals(1234, bd.getDisplacement());
         assertEquals(0xABC, bd.getIndirectLevelAndBDI());
@@ -138,7 +135,6 @@ public class TestBankDescriptor {
         bd1.setBankType(BankType.ExtendedMode)
            .setGeneralFault(true)
            .setLargeBank(false)
-           .setUpperLimitSuppression(true)
            .setInactive(false)
            .setDisplacement(0x1234)
            .setLowerLimit(0x123)
@@ -156,7 +152,6 @@ public class TestBankDescriptor {
         assertEquals(bd1.getBankType(), bd2.getBankType());
         assertEquals(bd1.isGeneralFault(), bd2.isGeneralFault());
         assertEquals(bd1.isLargeBank(), bd2.isLargeBank());
-        assertEquals(bd1.isUpperLimitSuppression(), bd2.isUpperLimitSuppression());
         assertEquals(bd1.isInactive(), bd2.isInactive());
         assertEquals(bd1.getDisplacement(), bd2.getDisplacement());
         assertEquals(bd1.getLowerLimit(), bd2.getLowerLimit());

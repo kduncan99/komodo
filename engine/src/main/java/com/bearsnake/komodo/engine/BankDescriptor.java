@@ -13,7 +13,6 @@ public class BankDescriptor {
     private BankType _bankType;
     private boolean _generalFault;
     private boolean _largeBank;
-    private boolean _upperLimitSuppression;
     private final AccessLock _accessLock;
     private long _indirectLevelAndBDI;
     private long _lowerLimit;
@@ -29,7 +28,6 @@ public class BankDescriptor {
         _bankType = BankType.BasicMode;
         _generalFault = false;
         _largeBank = false;
-        _upperLimitSuppression = false;
         _accessLock = new AccessLock();
         _indirectLevelAndBDI = 0;
         _lowerLimit = 0;
@@ -54,7 +52,6 @@ public class BankDescriptor {
         _specialAccessPermissions = special;
         _generalFault = false;
         _largeBank = largeBank;
-        _upperLimitSuppression = false;
         _accessLock = lock;
         _baseAddress = baseAddress;
 
@@ -95,7 +92,6 @@ public class BankDescriptor {
         _bankType = BankType.get((int)((buffer[0] >> 24) & 0x0F));
         _generalFault = (buffer[0] & 0_000020_000000L) != 0;
         _largeBank = (buffer[0] & 0_000004_000000L) != 0;
-        _upperLimitSuppression = (buffer[0] & 0_000002_000000L) != 0;
         _accessLock = new AccessLock(buffer[0] & 0x3FFFF);
 
         if (_bankType == BankType.Indirect) {
@@ -125,7 +121,6 @@ public class BankDescriptor {
     public long getUpperLimitNormalized() { return _largeBank ? (_upperLimit << 6) : _upperLimit; }
     public boolean isGeneralFault() { return _generalFault; }
     public boolean isLargeBank() { return _largeBank; }
-    public boolean isUpperLimitSuppression() { return _upperLimitSuppression; }
     public boolean isInactive() { return _inactive; }
     public long getDisplacement() { return _displacement; }
     public long getInactiveQBDListNextPointer() { return _inactiveQBDListNextPointer; }
@@ -137,7 +132,6 @@ public class BankDescriptor {
     public BankDescriptor setSpecialAccessPermissions(final AccessPermissions perms) { _specialAccessPermissions.set(perms); return this; }
     public BankDescriptor setGeneralFault(final boolean flag) { _generalFault = flag; return this; }
     public BankDescriptor setLargeBank(final boolean flag) { _largeBank = flag; return this; }
-    public BankDescriptor setUpperLimitSuppression(final boolean flag) { _upperLimitSuppression = flag; return this; }
     public BankDescriptor setIndirectLevelAndBDI(final long value) { _indirectLevelAndBDI = value; return this; }
     public BankDescriptor setLowerLimit(final long value) { _lowerLimit = value; return this; }
     public BankDescriptor setUpperLimit(final long value) { _upperLimit = value; return this; }
@@ -155,9 +149,6 @@ public class BankDescriptor {
         }
         if (_largeBank) {
             value0 |= 0_000004_000000L;
-        }
-        if (_upperLimitSuppression) {
-            value0 |= 0_000002_000000L;
         }
         value0 |= _accessLock.toComposite();
 
