@@ -20,7 +20,7 @@ public class TestBankDescriptor {
         assertEquals(0, bd.getUpperLimit());
         assertTrue(bd.isInactive());
         assertEquals(0, bd.getDisplacement());
-        assertEquals(new AbsoluteAddress(0, 0, 0), bd.getBaseAddress());
+        assertEquals(new AbsoluteAddress(0, 0), bd.getBaseAddress());
         assertEquals(0, bd.getIndirectLevelAndBDI());
         assertEquals(0, bd.getInactiveQBDListNextPointer());
         assertEquals(new AccessPermissions(false, false, false), bd.getGeneralAccessPermissions());
@@ -33,7 +33,7 @@ public class TestBankDescriptor {
         AccessLock lock = new AccessLock(10, (short) 1);
         AccessPermissions general = new AccessPermissions(true, true, false);
         AccessPermissions special = new AccessPermissions(true, true, true);
-        AbsoluteAddress base = new AbsoluteAddress(1, 2, 3);
+        AbsoluteAddress base = new AbsoluteAddress(2, 3);
 
         // Not large bank. Lower limit is divided by 2^9 (512) and rounded up.
         // lower limit: 1000 -> 1000/512 = 1.95 -> 2
@@ -57,7 +57,7 @@ public class TestBankDescriptor {
         AccessLock lock = new AccessLock(10, (short) 1);
         AccessPermissions general = new AccessPermissions(true, true, false);
         AccessPermissions special = new AccessPermissions(true, true, true);
-        AbsoluteAddress base = new AbsoluteAddress(1, 2, 3);
+        AbsoluteAddress base = new AbsoluteAddress(2, 3);
 
         // Large bank.
         // Lower limit: actualLowerLimit >> 15. If (actualLowerLimit & 077777) != 0, increment.
@@ -93,7 +93,7 @@ public class TestBankDescriptor {
           .setUpperLimit(0x20)
           .setInactiveQBDListNextPointer(0xFEED)
           .setAccessLock(new AccessLock(5, (short) 2))
-          .setBaseAddress(new AbsoluteAddress(4, 5, 6))
+          .setBaseAddress(new AbsoluteAddress(5, 6))
           .setGeneralAccessPermissions(new AccessPermissions(true, false, true))
           .setSpecialAccessPermissions(new AccessPermissions(false, true, false));
 
@@ -108,7 +108,7 @@ public class TestBankDescriptor {
         assertEquals(0x20, bd.getUpperLimit());
         assertEquals(0xFEED, bd.getInactiveQBDListNextPointer());
         assertEquals(new AccessLock(5, (short) 2), bd.getAccessLock());
-        assertEquals(new AbsoluteAddress(4, 5, 6), bd.getBaseAddress());
+        assertEquals(new AbsoluteAddress(5, 6), bd.getBaseAddress());
         assertEquals(new AccessPermissions(true, false, true), bd.getGeneralAccessPermissions());
         assertEquals(new AccessPermissions(false, true, false), bd.getSpecialAccessPermissions());
     }
@@ -144,7 +144,7 @@ public class TestBankDescriptor {
            .setLowerLimit(0x123)
            .setUpperLimit(0x45678)
            .setAccessLock(new AccessLock(0x1234, (short) 3))
-           .setBaseAddress(new AbsoluteAddress(2, 0x123456, 0x789ABCDE))
+           .setBaseAddress(new AbsoluteAddress(0x123456, 0x789ABCDE))
            .setGeneralAccessPermissions(new AccessPermissions(true, false, true))
            .setSpecialAccessPermissions(new AccessPermissions(false, true, false));
 
@@ -187,7 +187,7 @@ public class TestBankDescriptor {
         bd1.setBankType(BankType.Queue)
            .setInactive(true)
            .setInactiveQBDListNextPointer(0x123456789L)
-           .setBaseAddress(new AbsoluteAddress(1, 2, 3));
+           .setBaseAddress(new AbsoluteAddress(2, 3));
 
         long[] buffer = new long[6];
         bd1.serialize(buffer);
@@ -203,6 +203,6 @@ public class TestBankDescriptor {
         // constructor: _baseAddress = new AbsoluteAddress(buffer[2], addrWord2);
         // buffer[2] was 0 in serialize.
         // So _baseAddress should have segment=0, upi=0, offset=0.
-        assertEquals(new AbsoluteAddress(0, 0, 0), bd2.getBaseAddress());
+        assertEquals(new AbsoluteAddress(0, 0), bd2.getBaseAddress());
     }
 }

@@ -36,7 +36,7 @@ public class TestDSLFunction extends TestFunction {
         var bd = new BankDescriptor().setBankType(BankType.BasicMode)
                                      .setLowerLimit(0_44)   // 044000
                                      .setUpperLimit(0_44777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(14).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -67,7 +67,7 @@ public class TestDSLFunction extends TestFunction {
         var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0_1)
                                      .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -99,7 +99,7 @@ public class TestDSLFunction extends TestFunction {
         var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0_1)
                                      .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

@@ -54,11 +54,11 @@ public class TestDLMFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                      .setLowerLimit(0_22)   // 022000
                                      .setUpperLimit(0_22777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_30)
                                       .setUpperLimit(0_30777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+                                      .setBaseAddress(new AbsoluteAddress(1, 0));
 
         _engine.getBaseRegister(13).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(14).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
@@ -99,11 +99,11 @@ public class TestDLMFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_1)       // 01000
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_01)
                                       .setUpperLimit(0_01777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+                                      .setBaseAddress(new AbsoluteAddress(1, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(5).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
@@ -148,11 +148,11 @@ public class TestDLMFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_22)   // 022000
                                       .setUpperLimit(0_22777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_30)
                                       .setUpperLimit(0_30777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+                                      .setBaseAddress(new AbsoluteAddress(1, 0));
 
         _engine.getBaseRegister(13).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(14).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);

@@ -35,7 +35,7 @@ public class TestTNOPFunction extends TestFunction {
         // TNOP, J=W, X=1, H=1 (increment), B=2, D=0
         var code = new long[]{tnopEM(Constants.JFIELD_W, 1, 1, 0, 2, 0), 0};
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         // Setup X1: XI=1, XM=100
@@ -45,7 +45,7 @@ public class TestTNOPFunction extends TestFunction {
         var data = new long[256];
         data[0100] = 0_123456_654321L;
         var bank2 = new ArraySlice(data);
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 2, 0));
+        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(2, 0));
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
@@ -65,20 +65,20 @@ public class TestTNOPFunction extends TestFunction {
         // Indirect at Bank 2 Offset 0 points to Bank 3 Offset 5
         var code = new long[]{tnopEM(Constants.JFIELD_W, 0, 0, 1, 2, 0), 0};
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         // Indirect word at Bank 2, Offset 0: G=0 (extended), B=3, D=5
         var indirectData = new long[]{ (3L << 12) | 5L };
         var bank2 = new ArraySlice(indirectData);
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 2, 0));
+        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(2, 0));
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
 
         // Target data at Bank 3, Offset 5
         var targetData = new long[10];
         targetData[5] = 0_777777_777777L;
         var bank3 = new ArraySlice(targetData);
-        var bd3 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 3, 0));
+        var bd3 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(3, 0));
         _engine.getBaseRegister(3).setBankDescriptor(bd3).setStorage(bank3).setSubsetting(0);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
@@ -95,12 +95,12 @@ public class TestTNOPFunction extends TestFunction {
         // TNOP, J=H1, B=2, D=0
         var code = new long[]{tnopEM(Constants.JFIELD_H1, 0, 0, 0, 2, 0), 0};
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         var data = new long[]{0_123456_654321L};
         var bank2 = new ArraySlice(data);
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 2, 0));
+        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(2, 0));
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
@@ -117,7 +117,7 @@ public class TestTNOPFunction extends TestFunction {
         // TNOP, J=XIU (immediate), U=0_123456
         var code = new long[]{tnopEMu(Constants.JFIELD_XU, 0, 0, 0, 0_123456L), 0};
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);

@@ -36,7 +36,7 @@ public class BankDescriptor {
         _upperLimit = 0;
         _inactive = true;
         _displacement = 0;
-        _baseAddress = new AbsoluteAddress(0, 0, 0);
+        _baseAddress = new AbsoluteAddress(0, 0);
         _inactiveQBDListNextPointer = 0;
     }
 

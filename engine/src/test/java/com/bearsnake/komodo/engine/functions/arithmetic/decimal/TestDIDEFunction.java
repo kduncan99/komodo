@@ -47,7 +47,7 @@ public class TestDIDEFunction extends TestDecimalFunction {
         var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0)
                                      .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         bd.setInactive(false);
         _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
@@ -81,7 +81,7 @@ public class TestDIDEFunction extends TestDecimalFunction {
         var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0)
                                      .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         bd.setInactive(false);
         _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
@@ -106,7 +106,7 @@ public class TestDIDEFunction extends TestDecimalFunction {
         var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0)
                                      .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         bd.setInactive(false);
         _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
@@ -132,7 +132,7 @@ public class TestDIDEFunction extends TestDecimalFunction {
         var bd = new BankDescriptor().setBankType(BankType.BasicMode)
                 .setLowerLimit(0)
                 .setUpperLimit(code.length - 1)
-                .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                .setBaseAddress(new AbsoluteAddress(0, 0));
         bd.setInactive(false);
         _engine.getBaseRegister(12).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister().setBasicModeEnabled(true);
@@ -159,7 +159,7 @@ public class TestDIDEFunction extends TestDecimalFunction {
         var bd = new BankDescriptor().setBankType(BankType.BasicMode)
                 .setLowerLimit(0)
                 .setUpperLimit(code.length - 1)
-                .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                .setBaseAddress(new AbsoluteAddress(0, 0));
         bd.setInactive(false);
         _engine.getBaseRegister(14).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister()
@@ -187,7 +187,7 @@ public class TestDIDEFunction extends TestDecimalFunction {
         var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
                 .setLowerLimit(0)
                 .setUpperLimit(code.length - 1)
-                .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                .setBaseAddress(new AbsoluteAddress(0, 0));
         bd.setInactive(false);
         _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister().setBasicModeEnabled(false);

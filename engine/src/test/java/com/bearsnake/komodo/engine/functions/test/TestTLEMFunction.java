@@ -38,7 +38,7 @@ public class TestTLEMFunction extends TestFunction {
         var code = new long[1024];
         code[0] = tlemBM(Constants.JFIELD_W, 1, 0, 0, 0, 01000);
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode).setLowerLimit(0).setUpperLimit(0777777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode).setLowerLimit(0).setUpperLimit(0777777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(12).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X1).setXI(0).setXM(02000);
@@ -64,12 +64,12 @@ public class TestTLEMFunction extends TestFunction {
         var code = new long[1024];
         code[0] = tlemEM(Constants.JFIELD_W, 1, 0, 0, 0, 2, 0);
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         var data = new long[]{03000};
         var bank2 = new ArraySlice(data);
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 2, 0));
+        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(2, 0));
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
 
         _engine.getGeneralRegisterSet().getRegister(1).setXI(0).setXM(02000);
@@ -95,13 +95,13 @@ public class TestTLEMFunction extends TestFunction {
         var code = new long[1024];
         code[0] = tlemEM(Constants.JFIELD_W, 1, 2, 0, 0, 2, 0);
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         var data = new long[10];
         data[5] = 01500;
         var bank2 = new ArraySlice(data);
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 2, 0));
+        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(2, 0));
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
 
         _engine.getGeneralRegisterSet().getRegister(1).setXI(10).setXM(02000);
@@ -127,7 +127,7 @@ public class TestTLEMFunction extends TestFunction {
         var code = new long[1024];
         code[0] = tlemEM(Constants.JFIELD_W, 1, 0, 0, 1, 2, 0);
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         // Indirect word at Bank 2, Offset 0: G=0 (extended), B=3, D=5
@@ -137,13 +137,13 @@ public class TestTLEMFunction extends TestFunction {
         var indirectData = new long[1024];
         indirectData[0] = 0_400000_000000L | (3L << 18) | 5L;
         var bank2 = new ArraySlice(indirectData);
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 2, 0));
+        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(2, 0));
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
 
         var targetData = new long[10];
         targetData[5] = 03000;
         var bank3 = new ArraySlice(targetData);
-        var bd3 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 3, 0));
+        var bd3 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(3, 0));
         _engine.getBaseRegister(3).setBankDescriptor(bd3).setStorage(bank3).setSubsetting(0);
 
         _engine.getGeneralRegisterSet().getRegister(1).setXI(0).setXM(04000);
@@ -165,7 +165,7 @@ public class TestTLEMFunction extends TestFunction {
         var code = new long[1024];
         code[0] = fjaxhiu(047, Constants.JFIELD_XU, 1, 0, 0, 0, 03000);
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         _engine.getGeneralRegisterSet().getRegister(1).setXI(5).setXM(03000);
@@ -184,12 +184,12 @@ public class TestTLEMFunction extends TestFunction {
         var code = new long[1024];
         code[0] = tlemEM(Constants.JFIELD_W, 5, 0, 0, 0, 2, 0);
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         var armData = new long[]{0_000135_471234L};
         var bank2 = new ArraySlice(armData);
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 2, 0));
+        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(2, 0));
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
 
         _engine.getGeneralRegisterSet().getRegister(5).setW(0_000002_061234L);
@@ -210,12 +210,12 @@ public class TestTLEMFunction extends TestFunction {
         var code = new long[1024];
         code[0] = tlemEM(Constants.JFIELD_S5, 5, 0, 0, 0, 2, 0);
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0, 0));
+        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 0));
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
         var armData = new long[]{0_000135_471234L};
         var bank2 = new ArraySlice(armData);
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(0, 2, 0));
+        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(0777).setBaseAddress(new AbsoluteAddress(2, 0));
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
 
         _engine.getGeneralRegisterSet().getRegister(5).setW(0_000002_061236L);

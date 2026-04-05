@@ -156,9 +156,7 @@ public class Engine {
         final AbsoluteAddress address,
         final int offsetFromBase
     ) {
-        var newAbsolute = new AbsoluteAddress(address.getUpiIndex(),
-                                              address.getSegment(),
-                                              address.getOffset() + offsetFromBase);
+        var newAbsolute = new AbsoluteAddress(address.getSegment(), address.getOffset() + offsetFromBase);
         while (!addressLock(newAbsolute)) {
             try {
                 Thread.sleep(1);

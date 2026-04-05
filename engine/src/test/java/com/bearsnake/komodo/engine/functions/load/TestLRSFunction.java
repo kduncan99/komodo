@@ -57,11 +57,11 @@ public class TestLRSFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+                                      .setBaseAddress(new AbsoluteAddress(1, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
@@ -106,11 +106,11 @@ public class TestLRSFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+                                      .setBaseAddress(new AbsoluteAddress(1, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
@@ -161,11 +161,11 @@ public class TestLRSFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+                                      .setBaseAddress(new AbsoluteAddress(1, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
@@ -205,11 +205,11 @@ public class TestLRSFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+                                      .setBaseAddress(new AbsoluteAddress(1, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
@@ -247,11 +247,11 @@ public class TestLRSFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+                                      .setBaseAddress(new AbsoluteAddress(1, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
@@ -296,11 +296,11 @@ public class TestLRSFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_22)
                                       .setUpperLimit(0_22777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_40)
                                       .setUpperLimit(0_40777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+                                      .setBaseAddress(new AbsoluteAddress(1, 0));
 
         _engine.getBaseRegister(14).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(15).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
@@ -339,11 +339,11 @@ public class TestLRSFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_22)
                                       .setUpperLimit(0_22777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_40)
                                       .setUpperLimit(0_40777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 1, 0));
+                                      .setBaseAddress(new AbsoluteAddress(1, 0));
 
         _engine.getBaseRegister(14).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(15).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);

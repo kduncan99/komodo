@@ -60,7 +60,7 @@ public class TestSLJFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(12)
                .setBankDescriptor(bd0)
@@ -96,7 +96,7 @@ public class TestSLJFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(12)
                .setBankDescriptor(bd0)
@@ -136,7 +136,7 @@ public class TestSLJFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(12)
                .setBankDescriptor(bd0)

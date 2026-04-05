@@ -59,11 +59,11 @@ public class TestMTLEFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)   // 01000 base address
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_22)
                                       .setUpperLimit(0_22777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
@@ -114,7 +114,7 @@ public class TestMTLEFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)   // 01000 base address
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
 
@@ -145,7 +145,7 @@ public class TestMTLEFunction extends TestFunction {
         var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0_1)   // 01000 base address
                                      .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister()
@@ -175,7 +175,7 @@ public class TestMTLEFunction extends TestFunction {
         var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0_1)   // 01000 base address
                                      .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister()
@@ -216,11 +216,11 @@ public class TestMTLEFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0_1)
                                      .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0)
                                       .setUpperLimit(0777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 2, 0));
+                                      .setBaseAddress(new AbsoluteAddress(2, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
@@ -261,11 +261,11 @@ public class TestMTLEFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0_1)
                                      .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0)
                                       .setUpperLimit(0777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 2, 0));
+                                      .setBaseAddress(new AbsoluteAddress(2, 0));
 
         _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);

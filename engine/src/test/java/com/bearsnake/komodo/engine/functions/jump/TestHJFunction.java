@@ -60,7 +60,7 @@ public class TestHJFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_1)   // 01000
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(12)
                .setBankDescriptor(bd0)
@@ -91,11 +91,11 @@ public class TestHJFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_1)   // 01000
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_3)
                                       .setUpperLimit(0_3777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(12)
                .setBankDescriptor(bd0)
@@ -130,11 +130,11 @@ public class TestHJFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_1)   // 01000
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_4)   // 04000
                                       .setUpperLimit(0_4777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(12)
                .setBankDescriptor(bd0)
@@ -169,11 +169,11 @@ public class TestHJFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_1)   // 01000
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_5)   // 05000
                                       .setUpperLimit(0_5777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(12)
                .setBankDescriptor(bd0)
@@ -210,7 +210,7 @@ public class TestHJFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_1)   // 01000
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(12)
                .setBankDescriptor(bd0)
@@ -251,7 +251,7 @@ public class TestHJFunction extends TestFunction {
         var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
                                       .setLowerLimit(0_1)   // 01000
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         _engine.getBaseRegister(12)
                .setBankDescriptor(bd0)

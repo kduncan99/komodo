@@ -43,7 +43,7 @@ public class TestJOFunction extends TestFunction {
         var bd = new BankDescriptor().setBankType(BankType.BasicMode)
                                      .setLowerLimit(0)
                                      .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         var bank = new ArraySlice(new long[0_2000]);
         _engine.getBaseRegister(12).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister()
@@ -58,7 +58,7 @@ public class TestJOFunction extends TestFunction {
         var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0)
                                      .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0, 0));
+                                     .setBaseAddress(new AbsoluteAddress(0, 0));
         var bank = new ArraySlice(new long[0_2000]);
         _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister()
