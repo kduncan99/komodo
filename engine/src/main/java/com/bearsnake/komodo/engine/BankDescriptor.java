@@ -8,6 +8,101 @@ import com.bearsnake.komodo.baselib.ArraySlice;
 
 public class BankDescriptor {
 
+    // static methods ----------------------------------------------------------
+
+    public static AccessPermissions getGeneralAccessPermissions(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return new AccessPermissions((int)(storage.get(offset) >> 33) & 03);
+    }
+
+    public static AccessPermissions getSpecialAccessPermissions(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return new AccessPermissions((int)(storage.get(offset) >> 30) & 07);
+    }
+
+    public static BankType getBankType(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return BankType.get((int)(storage.get(offset) >> 24) & 0_017);
+    }
+
+    public static boolean isGeneralFault(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return (storage.get(offset) & 0_000020_000000L) != 0;
+    }
+
+    public static boolean isLargeBank(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return (storage.get(offset) & 0_000004_000000L) != 0;
+    }
+
+    public static AccessLock getAccessLock(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return new AccessLock((int)(storage.get(offset) & 0_777777));
+    }
+
+    public static long getIndirectLevelAndBDI(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return (storage.get(offset + 1) >> 18) & 0_777777L;
+    }
+
+    public static long getLowerLimit(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return (storage.get(offset + 1) >> 27) & 0777L;
+    }
+
+    public static long getUpperLimit(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return storage.get(offset + 1) & 0_777777L;
+    }
+
+    public static AbsoluteAddress getBaseAddress(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return new AbsoluteAddress(storage, 2);
+    }
+
+    public static long getInactiveQBDListNextPointer(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return storage.get(offset + 3);
+    }
+
+    public static long getDisplacement(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return (storage.get(offset + 4) >> 18) & 0_077777L;
+    }
+
+    public static boolean isInactive(
+        final ArraySlice storage,
+        final int offset
+    ) {
+        return (storage.get(offset + 4) & 0_400000_000000L) != 0;
+    }
+
+    // instance methods --------------------------------------------------------
+
     private final AccessPermissions _generalAccessPermissions;
     private final AccessPermissions _specialAccessPermissions;
     private BankType _bankType;
@@ -98,15 +193,14 @@ public class BankDescriptor {
             _indirectLevelAndBDI = (buffer[1] >> 18) & 0_777777L;
         } else {
             _lowerLimit = (buffer[1] >> 27) & 0777L;
-            _upperLimit = buffer[1] & 0_777777777L;
+            _upperLimit = buffer[1] & 0_777777L;
         }
 
         _displacement = (buffer[4] >> 18) & 077777L;
         _inactive = (buffer[4] & 0_400000_000000L) != 0;
 
         _inactiveQBDListNextPointer = buffer[3];
-        long addrWord2 = (_bankType == BankType.Queue && _inactive) ? 0 : buffer[3];
-        _baseAddress = new AbsoluteAddress(buffer[2], addrWord2);
+        _baseAddress = new AbsoluteAddress(buffer, 2);
     }
 
     public AccessLock getAccessLock() { return _accessLock; }

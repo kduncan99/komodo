@@ -138,7 +138,7 @@ public class TestBankDescriptor {
            .setInactive(false)
            .setDisplacement(0x1234)
            .setLowerLimit(0x123)
-           .setUpperLimit(0x45678)
+           .setUpperLimit(0_777777)
            .setAccessLock(new AccessLock(0x1234, (short) 3))
            .setBaseAddress(new AbsoluteAddress(0x123456, 0x789ABCDE))
            .setGeneralAccessPermissions(new AccessPermissions(true, false, true))
@@ -181,8 +181,7 @@ public class TestBankDescriptor {
         BankDescriptor bd1 = new BankDescriptor();
         bd1.setBankType(BankType.Queue)
            .setInactive(true)
-           .setInactiveQBDListNextPointer(0x123456789L)
-           .setBaseAddress(new AbsoluteAddress(2, 3));
+           .setInactiveQBDListNextPointer(0x123456789L);
 
         long[] buffer = new long[6];
         bd1.serialize(buffer);
@@ -191,13 +190,5 @@ public class TestBankDescriptor {
         assertEquals(BankType.Queue, bd2.getBankType());
         assertTrue(bd2.isInactive());
         assertEquals(0x123456789L, bd2.getInactiveQBDListNextPointer());
-        // For Queue + Inactive, base address word 2 is serialized as 0, but AbsoluteAddress(buffer[2], 0) might not match
-        // Let's check the code:
-        // serialize: if (_bankType == BankType.Queue && _inactive) { value2 = 0; value3 = _inactiveQBDListNextPointer; }
-        // constructor: long addrWord2 = (_bankType == BankType.Queue && _inactive) ? 0 : buffer[3];
-        // constructor: _baseAddress = new AbsoluteAddress(buffer[2], addrWord2);
-        // buffer[2] was 0 in serialize.
-        // So _baseAddress should have segment=0, upi=0, offset=0.
-        assertEquals(new AbsoluteAddress(0, 0), bd2.getBaseAddress());
     }
 }

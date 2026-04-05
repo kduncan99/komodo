@@ -38,14 +38,8 @@ public class AbsoluteAddress {
         final int segment,
         final int offset
     ) {
-        _segment = segment;
-        _offset = offset;
-    }
-
-    public AbsoluteAddress(final long word1,
-                           final long word2) {
-        _segment = (int) (word1 & 0x7FFFFFFFL);
-        _offset = (int) (word2 & 0x7FFFFFFFL);
+        _segment = segment & 0x7FFFFFFF;
+        _offset = offset & 0x7FFFFFFF;
     }
 
     /**
@@ -53,9 +47,11 @@ public class AbsoluteAddress {
      * @param baseArray ArraySlice containing the 2-word absolute address (possibly as a proper subset of the array)
      * @param offset offset from the start of baseArray where the absolute address is located
      */
-    public AbsoluteAddress(final ArraySlice baseArray,
-                           final int offset) {
-        this(baseArray.get(offset), baseArray.get(offset + 1));
+    public AbsoluteAddress(
+        final ArraySlice baseArray,
+        final int offset
+    ) {
+        this((int)baseArray.get(offset), (int)baseArray.get(offset + 1));
     }
 
     /**
@@ -63,9 +59,11 @@ public class AbsoluteAddress {
      * @param baseArray long array
      * @param offset offset from the start of baseArray where the absolute address is located
      */
-    public AbsoluteAddress(final long[] baseArray,
-                           final int offset) {
-        this(baseArray[offset], baseArray[offset + 1]);
+    public AbsoluteAddress(
+        final long[] baseArray,
+        final int offset
+    ) {
+        this((int)baseArray[offset], (int)baseArray[offset + 1]);
     }
 
     public int getSegment() { return _segment; }
