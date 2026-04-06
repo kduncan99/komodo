@@ -6,20 +6,19 @@ package com.bearsnake.komodo.engine.functions.store;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static com.bearsnake.komodo.engine.Constants.GRS_EX0;
-import static com.bearsnake.komodo.engine.Constants.GRS_X1;
 import static com.bearsnake.komodo.engine.Constants.GRS_X2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestSXFunction extends TestFunction {
+public class TestSXFunction extends FunctionUnitTest {
 
     private long sxBM(long j, long a, long x, long h, long i, long u) {
         return fjaxhiu(006, j, a, x, h, i, u);

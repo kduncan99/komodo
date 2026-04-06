@@ -7,7 +7,7 @@ package com.bearsnake.komodo.engine.functions.store;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 import static com.bearsnake.komodo.engine.Constants.GRS_X3;
@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * For testing SZ, SNZ, SP1, SN1, SFS, FSZ, SAS, SAZ
  */
-public abstract class TestConstantFunction extends TestFunction {
+public abstract class TestConstantFunction extends FunctionUnitTest {
 
     private final int _aField;
     private final long _constant;

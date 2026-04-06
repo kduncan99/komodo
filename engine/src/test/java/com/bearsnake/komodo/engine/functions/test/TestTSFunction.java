@@ -6,7 +6,7 @@ package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import com.bearsnake.komodo.engine.interrupts.TestAndSetInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * (TS) If U:05 is set, take an interrupt. Otherwise, set U:05 and continue.
  * f=073, j=017, a=00
  */
-public class TestTSFunction extends TestFunction {
+public class TestTSFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {

@@ -6,7 +6,7 @@ package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Unit tests for UNLK function.
  */
-public class TestUNLKFunction extends TestFunction {
+public class TestUNLKFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {

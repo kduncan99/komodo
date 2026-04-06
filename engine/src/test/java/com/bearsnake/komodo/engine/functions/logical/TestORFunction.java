@@ -7,14 +7,14 @@ package com.bearsnake.komodo.engine.functions.logical;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestORFunction extends TestFunction {
+public class TestORFunction extends FunctionUnitTest {
 
     private long orBM(long a, long x, long h, long i, long u) {
         return fjaxhiu(0_40, 0, a, x, h, i, u);

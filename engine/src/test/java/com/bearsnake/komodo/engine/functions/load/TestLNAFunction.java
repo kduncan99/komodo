@@ -6,15 +6,14 @@ package com.bearsnake.komodo.engine.functions.load;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
-import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestLNAFunction extends TestFunction {
+public class TestLNAFunction extends FunctionUnitTest {
 
     private long lnaImm(long j, long a, long x, long u) {
         return fjaxu(011, j, a, x, u);

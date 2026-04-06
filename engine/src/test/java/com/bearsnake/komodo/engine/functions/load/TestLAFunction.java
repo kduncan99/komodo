@@ -6,7 +6,7 @@ package com.bearsnake.komodo.engine.functions.load;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestLAFunction extends TestFunction {
+public class TestLAFunction extends FunctionUnitTest {
 
     private long laImm(long j, long a, long x, long u) {
         return fjaxu(010, j, a, x, u);

@@ -7,14 +7,14 @@ package com.bearsnake.komodo.engine.functions.store;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestSAQWFunction extends TestFunction {
+public class TestSAQWFunction extends FunctionUnitTest {
 
     private void cycle() throws MachineInterrupt {
         try {

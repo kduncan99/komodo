@@ -7,7 +7,7 @@ package com.bearsnake.komodo.engine.functions.logical;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Bits in R2 = 1 => choose from operand (U)
  * Bits in R2 = 0 => choose from A(a)
  */
-public class TestMLUFunction extends TestFunction {
+public class TestMLUFunction extends FunctionUnitTest {
 
     private long mluBM(long a, long x, long h, long i, long u) {
         return fjaxhiu(0_43, 0, a, x, h, i, u);

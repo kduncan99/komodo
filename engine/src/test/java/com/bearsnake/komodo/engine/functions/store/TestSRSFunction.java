@@ -7,7 +7,7 @@ package com.bearsnake.komodo.engine.functions.store;
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.Constants;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import static com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt.ErrorType.GRSViolation;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestSRSFunction extends TestFunction {
+public class TestSRSFunction extends FunctionUnitTest {
 
     private long srsBM(long a, long x, long h, long i, long u) {
         return fjaxhibd(072, 016, a, x, h, i, 0, u);

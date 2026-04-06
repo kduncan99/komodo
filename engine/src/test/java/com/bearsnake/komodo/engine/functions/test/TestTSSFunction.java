@@ -6,7 +6,7 @@ package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import com.bearsnake.komodo.engine.interrupts.TestAndSetInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Unit tests for TSS and TS functions.
  */
-public class TestTSSFunction extends TestFunction {
+public class TestTSSFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {

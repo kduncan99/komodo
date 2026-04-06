@@ -9,14 +9,14 @@ import com.bearsnake.komodo.engine.AbsoluteAddress;
 import com.bearsnake.komodo.engine.BankDescriptor;
 import com.bearsnake.komodo.engine.BankType;
 import com.bearsnake.komodo.engine.Engine;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestDLMFunction extends TestFunction {
+public class TestDLMFunction extends FunctionUnitTest {
 
     private long dlmBM(long a, long x, long h, long i, long u) {
         return fjaxhiu(071, 015, a, x, h, i, u);

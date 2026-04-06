@@ -6,7 +6,7 @@ package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * (TMZ) skips if (U) = -0.
  * Extended Mode only, f=050, j=0, a=04.
  */
-public class TestTMZFunction extends TestFunction {
+public class TestTMZFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {

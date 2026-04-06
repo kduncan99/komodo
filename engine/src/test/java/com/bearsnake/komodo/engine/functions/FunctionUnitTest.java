@@ -1,10 +1,15 @@
+/*
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
+ */
+
 package com.bearsnake.komodo.engine.functions;
 
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.EngineUnitTest;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
-public abstract class TestFunction {
+public abstract class FunctionUnitTest extends EngineUnitTest {
 
     protected Engine _engine;
 

@@ -6,7 +6,7 @@ package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * If the test succeeds, skip the next instruction by incrementing the program counter.
  * f=071, j=001. Extended mode only.
  */
-public class TestMTNEFunction extends TestFunction {
+public class TestMTNEFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {

@@ -6,14 +6,14 @@ package com.bearsnake.komodo.engine.functions.store;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestDSFunction extends TestFunction {
+public class TestDSFunction extends FunctionUnitTest {
 
     private long dsBM(long a, long x, long h, long i, long u) {
         return fjaxhiu(071, 012, a, x, h, i, u);

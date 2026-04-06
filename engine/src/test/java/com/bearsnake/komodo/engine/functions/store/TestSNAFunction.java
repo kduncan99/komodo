@@ -5,9 +5,8 @@
 package com.bearsnake.komodo.engine.functions.store;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestSNAFunction extends TestFunction {
+public class TestSNAFunction extends FunctionUnitTest {
 
     private long snaBM(long j, long a, long x, long h, long i, long u) {
         return fjaxhiu(002, j, a, x, h, i, u);

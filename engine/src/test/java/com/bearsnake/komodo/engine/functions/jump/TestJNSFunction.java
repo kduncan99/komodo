@@ -9,14 +9,14 @@ import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestJNSFunction extends TestFunction {
+public class TestJNSFunction extends FunctionUnitTest {
 
     private long jnsBM(long a, long x, long h, long i, long u) {
         return fjaxhiu(0_72, 0_03, a, x, h, i, u);

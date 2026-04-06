@@ -9,7 +9,7 @@ import com.bearsnake.komodo.engine.AbsoluteAddress;
 import com.bearsnake.komodo.engine.BankDescriptor;
 import com.bearsnake.komodo.engine.BankType;
 import com.bearsnake.komodo.engine.Engine;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestHLTJFunction extends TestFunction {
+public class TestHLTJFunction extends FunctionUnitTest {
 
     private long hltjBM(
         long x,

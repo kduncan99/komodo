@@ -5,13 +5,13 @@
 package com.bearsnake.komodo.engine.functions.arithmetic.decimal;
 
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import org.junit.jupiter.api.Test;
 
 import static com.bearsnake.komodo.engine.functions.arithmetic.decimal.TestDecimalFunction.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestDecimalFunctions extends TestFunction {
+public class TestDecimalFunctions extends FunctionUnitTest {
 
     @Test
     public void testToBinary_Positive() {

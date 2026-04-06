@@ -6,7 +6,7 @@ package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * (DTE) skips if (U | U+1) = A(a) | A(a+1).
  * f=071, j=017 for both modes.
  */
-public class TestDTEFunction extends TestFunction {
+public class TestDTEFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {

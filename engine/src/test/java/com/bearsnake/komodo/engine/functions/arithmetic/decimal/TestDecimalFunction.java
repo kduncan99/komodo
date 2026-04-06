@@ -4,9 +4,9 @@
 
 package com.bearsnake.komodo.engine.functions.arithmetic.decimal;
 
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 
-public abstract class TestDecimalFunction extends TestFunction {
+public abstract class TestDecimalFunction extends FunctionUnitTest {
 
     // Single word decimal format consists of 9 4-bit cells.
     // Each cell is a digit from 0 to 9, most significant digit first.

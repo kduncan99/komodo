@@ -9,7 +9,7 @@ import com.bearsnake.komodo.engine.AbsoluteAddress;
 import com.bearsnake.komodo.engine.BankDescriptor;
 import com.bearsnake.komodo.engine.BankType;
 import com.bearsnake.komodo.engine.Engine;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +20,7 @@ import static com.bearsnake.komodo.engine.Constants.JFIELD_U;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TestEXRFunction extends TestFunction {
+public class TestEXRFunction extends FunctionUnitTest {
 
     private long exEM(long x, long h, long i, long b, long d) {
         return fjaxhibd(073, 014, 06, x, h, i, b, d);

@@ -9,9 +9,8 @@ import com.bearsnake.komodo.engine.AbsoluteAddress;
 import com.bearsnake.komodo.engine.BankDescriptor;
 import com.bearsnake.komodo.engine.BankType;
 import com.bearsnake.komodo.engine.Engine;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
-import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  *     ! ( (A(a) AND R2) < ((U) AND R2) <= (A(a+1) AND R2)) )
  * If the test succeeds, skip the next instruction by incrementing the program counter.
  */
-public class TestMTNWFunction extends TestFunction {
+public class TestMTNWFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {

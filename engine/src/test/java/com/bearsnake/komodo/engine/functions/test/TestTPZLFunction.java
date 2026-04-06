@@ -5,9 +5,8 @@
 package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.functions.FunctionTable;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * (TPZL) skips if (U) = +0 OR (U) < -0.
  * Extended Mode only, f=050, j=0, a=012.
  */
-public class TestTPZLFunction extends TestFunction {
+public class TestTPZLFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {

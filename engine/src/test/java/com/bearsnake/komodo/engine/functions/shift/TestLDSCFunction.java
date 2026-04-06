@@ -5,14 +5,14 @@ package com.bearsnake.komodo.engine.functions.shift;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.functions.TestFunction;
+import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestLDSCFunction extends TestFunction {
+public class TestLDSCFunction extends FunctionUnitTest {
 
     private long ldscImm(long a, long x, long u) {
         return fjaxu(0_73, 0_11, a, x, u);
