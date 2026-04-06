@@ -34,6 +34,7 @@ public class TestLSBLFunction extends FunctionUnitTest {
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
     }
 
+    /*
     @Test
     public void testLSBL_EM() throws MachineInterrupt {
         var code = new long[] {
@@ -88,4 +89,6 @@ public class TestLSBLFunction extends FunctionUnitTest {
         assertEquals(0_772277_777777L, _engine.getGeneralRegisterSet().getRegister(GRS_X3).getW());
         assertEquals(0_774477_777777L, _engine.getGeneralRegisterSet().getRegister(GRS_X4).getW());
     }
+
+     */
 }

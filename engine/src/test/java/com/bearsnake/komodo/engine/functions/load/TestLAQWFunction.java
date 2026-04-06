@@ -50,17 +50,9 @@ public class TestLAQWFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_22)
-                                      .setUpperLimit(0_22777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_40)
-                                      .setUpperLimit(0_40777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank0);
+        loadBaseRegister(15, false, 0_40000, 0_40777, null, bank1);
 
-        _engine.getBaseRegister(14).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(15).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short) 3)
@@ -106,32 +98,11 @@ public class TestLAQWFunction extends FunctionUnitTest {
         var bank3 = new ArraySlice(data2);
         var bank4 = new ArraySlice(data3);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_0)
-                                      .setUpperLimit(0_0777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_0)
-                                      .setUpperLimit(0_0777)
-                                      .setBaseAddress(new AbsoluteAddress(2, 0));
-        var bd3 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_0)
-                                      .setUpperLimit(0_0777)
-                                      .setBaseAddress(new AbsoluteAddress(3, 0));
-        var bd4 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_0)
-                                      .setUpperLimit(0_0777)
-                                      .setBaseAddress(new AbsoluteAddress(4, 0));
-
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(3).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
-        _engine.getBaseRegister(4).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
-        _engine.getBaseRegister(5).setBankDescriptor(bd3).setStorage(bank3).setSubsetting(0);
-        _engine.getBaseRegister(6).setBankDescriptor(bd4).setStorage(bank4).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(3, false, 0_0, 0_0777, null, bank1);
+        loadBaseRegister(4, false, 0_0, 0_0777, null, bank2);
+        loadBaseRegister(5, false, 0_0, 0_0777, null, bank3);
+        loadBaseRegister(6, false, 0_0, 0_0777, null, bank4);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
