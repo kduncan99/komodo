@@ -4,14 +4,11 @@
 
 package com.bearsnake.komodo.engine.functions;
 
-import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.EngineUnitTest;
 import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 public abstract class FunctionUnitTest extends EngineUnitTest {
-
-    protected Engine _engine;
 
     protected long fjaxhibd(long f, long j, long a, long x, long h, long i, long b, long d) {
         return ((f & 077) << 30) | ((j & 017) << 26) | ((a & 017) << 22) | ((x & 017) << 18)

@@ -57,7 +57,7 @@ public class ActiveBaseTable {
     }
 
     public Entry getEntry(final int index) {
-        if ((index < 0) || (index >= _entries.length)) {
+        if ((index < 1) || (index >= _entries.length)) {
             throw new RuntimeException(String.format("Invalid index=%d", index));
         }
         return _entries[index];

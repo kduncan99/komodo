@@ -28,6 +28,9 @@ public class BaseRegister {
      */
     public BaseRegister() {
         _isVoid = true;
+        _accessLock = new AccessLock();
+        _generalAccessPermissions = AccessPermissions.NONE;
+        _specialAccessPermissions = AccessPermissions.NONE;
     }
 
     public AccessPermissions getGeneralAccessPermissions() { return _generalAccessPermissions; }
@@ -102,6 +105,26 @@ public class BaseRegister {
         final ArraySlice storage
     ) {
         _storage = storage;
+        return this;
+    }
+
+    /**
+     * Mostly for convenience for unit tests
+     */
+    public BaseRegister setLimitsNormalized(
+        final boolean isLargeBank,
+        final int lowerLimitNormalized,
+        final int upperLimitNormalized
+    ) {
+        int lowerShift = isLargeBank ? 15 : 9;
+        int upperShift = isLargeBank ? 6 : 0;
+        assert((lowerLimitNormalized & (isLargeBank ? 077777 : 0777)) == 0);
+        assert(!isLargeBank || ((upperLimitNormalized & 077) == 0));
+
+        _isVoid = false;
+        _isLargeBank = isLargeBank;
+        _lowerLimit = lowerLimitNormalized >> (isLargeBank ? 15 : 9);
+        _upperLimit = upperLimitNormalized >> (isLargeBank ? 6 : 0);
         return this;
     }
 

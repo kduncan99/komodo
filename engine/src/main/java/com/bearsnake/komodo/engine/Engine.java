@@ -577,6 +577,12 @@ public class Engine {
         throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, isFetch);
     }
 
+    ActiveBaseTable.Entry getActiveBaseTableEntry(
+        final int registerNumber
+    ) {
+        return _activeBaseTable.getEntry(registerNumber);
+    }
+
     /**
      * For external callers to obtain the current ASP
      */
