@@ -50,7 +50,7 @@ public class MLUFunction extends Function {
 
         var dr = engine.getDesignatorRegister();
         var pPriv = dr.getProcessorPrivilege();
-        var grsx = engine.getExecOrUserARegisterIndex((ci.getA() + 1) & 017);
+        var grsx = engine.getExecOrUserARegisterIndex(ci.getA() + 1);
         if (!GeneralRegisterSet.isAccessAllowed(grsx, pPriv, true)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
         }
