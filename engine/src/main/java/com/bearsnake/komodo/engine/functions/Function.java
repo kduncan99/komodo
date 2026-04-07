@@ -221,8 +221,7 @@ public abstract class Function {
                 u |= (iWord.getH() << 17);
             }
             if (func.isGRS() && (iWord.getD() < 0200)) {
-                sb.append(Constants.GRS_REGISTER_NAMES[iWord.getD()])
-                  .append(",");
+                sb.append(Constants.GRS_REGISTER_NAMES[iWord.getD()]);
             } else {
                 sb.append("0");
                 if (u != 0) {
@@ -267,8 +266,7 @@ public abstract class Function {
                     }
                 }
             } else if (func.isGRS() && (iWord.getB() == 0) && (iWord.getD() < 0200)) {
-                sb.append(Constants.GRS_REGISTER_NAMES[iWord.getD()])
-                  .append(",");
+                sb.append(Constants.GRS_REGISTER_NAMES[iWord.getD()]);
             } else {
                 // Interpret d-field
                 var d = iWord.getD();
