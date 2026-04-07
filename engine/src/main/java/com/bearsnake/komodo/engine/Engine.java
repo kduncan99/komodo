@@ -698,7 +698,7 @@ public class Engine {
     }
 
     /**
-     * For general use. Do to the logic involved, it is not possible to access a register
+     * For general use. Due to the logic involved, it is not possible to access a register
      * for which access is not implicitly allowed.
      */
     public Register getExecOrUserARegister(
@@ -715,7 +715,7 @@ public class Engine {
     }
 
     /**
-     * For general use. Do to the logic involved, it is not possible to access a register
+     * For general use. Due to the logic involved, it is not possible to access a register
      * for which access is not implicitly allowed.
      */
     public Register getExecOrUserRRegister(
@@ -732,7 +732,7 @@ public class Engine {
     }
 
     /**
-     * For general use. Do to the logic involved, it is not possible to access a register
+     * For general use. Due to the logic involved, it is not possible to access a register
      * for which access is not implicitly allowed.
      */
     public Register getExecOrUserXRegister(
