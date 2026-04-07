@@ -33,7 +33,7 @@ public class TSKPFunction extends Function {
     ) throws MachineInterrupt {
         // TSKIP retrieves the operand, then always skips.
         engine.getOperand(false, true, true, true, false);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 

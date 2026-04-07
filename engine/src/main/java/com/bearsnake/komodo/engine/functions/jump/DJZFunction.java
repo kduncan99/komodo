@@ -9,7 +9,6 @@ import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
-import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 
 /**
  * Double Jump Zero instruction
@@ -35,7 +34,7 @@ public class DJZFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var jumpTarget = engine.getJumpOperand();
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 

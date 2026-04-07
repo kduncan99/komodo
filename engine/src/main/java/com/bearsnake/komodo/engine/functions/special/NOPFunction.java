@@ -32,6 +32,6 @@ public class NOPFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         engine.ignoreOperand();
-        return engine.getInstructionPoint() != Engine.InstructionPoint.RESOLVING_ADDRESS;
+        return engine.spGetInstructionPoint() != Engine.InstructionPoint.RESOLVING_ADDRESS;
     }
 }

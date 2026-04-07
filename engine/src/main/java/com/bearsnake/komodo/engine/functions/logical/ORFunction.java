@@ -6,11 +6,9 @@ package com.bearsnake.komodo.engine.functions.logical;
 
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
-import com.bearsnake.komodo.engine.GeneralRegisterSet;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
-import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 
 /**
  * Logical OR instruction
@@ -37,22 +35,14 @@ public class ORFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getOperand(true, true, true, true, false);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
         var ci = engine.getCurrentInstruction();
-        var regA = engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA()));
+        var regA = engine.getExecOrUserARegister(ci.getA());
         var result = Word36.logicalOr(regA.getW(), operand);
-
-        var dr = engine.getDesignatorRegister();
-        var pPriv = dr.getProcessorPrivilege();
-        var grsx = engine.getExecOrUserARegisterIndex(ci.getA() + 1);
-        if (!GeneralRegisterSet.isAccessAllowed(grsx, pPriv, true)) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
-        }
-
-        engine.getGeneralRegisterSet().getRegister(grsx).setW(result);
+        engine.getExecOrUserARegister(ci.getA() + 1).setW(result);
 
         return true;
     }

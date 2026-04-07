@@ -38,7 +38,7 @@ public class JGDFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getJumpOperand();
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
@@ -48,7 +48,7 @@ public class JGDFunction extends Function {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
         }
 
-        var reg = engine.getGeneralRegisterSet().getRegister(grsx);
+        var reg = engine.getGeneralRegister(grsx, false);
         if (reg.isPositive() && !reg.isZero()) {
             doJump(engine, operand);
         }
@@ -102,9 +102,12 @@ public class JGDFunction extends Function {
                 sb.append(" ");
             }
             sb.append("");
-            var xReg = engine.getGeneralRegisterSet()
-                             .getRegister(engine.getExecOrUserXRegisterIndex(iWord.getX()));
-            sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
+            try {
+                var xReg = engine.getGeneralRegister(engine.getExecOrUserXRegisterIndex(iWord.getX()), false);
+                sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
+            } catch (ReferenceViolationInterrupt e) {
+                sb.append(String.format("X%d=??????:??????", iWord.getX()));
+            }
         }
 
         return sb.toString();

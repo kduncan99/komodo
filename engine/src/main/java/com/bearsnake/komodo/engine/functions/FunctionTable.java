@@ -30,7 +30,7 @@ public abstract class FunctionTable {
         }
     }
 
-    private static final Function[] ALL_FUNCTIONS = new Function[]{
+    public static final Function[] ALL_FUNCTIONS = new Function[]{
         // load
         DLFunction.INSTANCE,
         DLMFunction.INSTANCE,
@@ -393,7 +393,10 @@ public abstract class FunctionTable {
 
     private static void initializeLookups() {
         try {
-            for (var func : ALL_FUNCTIONS) {
+            for (var fx = 0; fx < ALL_FUNCTIONS.length; fx++) {
+                var func = ALL_FUNCTIONS[fx];
+                func.setFunctionTableIndex(fx);
+
                 if (func.getBasicModeFunctionCode() != null) {
                     ingestFunction(BASIC_MODE_TOP_LEVEL, func, func.getBasicModeFunctionCode());
                 }

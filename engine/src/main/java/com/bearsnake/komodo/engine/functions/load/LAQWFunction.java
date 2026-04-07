@@ -5,7 +5,6 @@
 package com.bearsnake.komodo.engine.functions.load;
 
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.functions.Function;
@@ -44,7 +43,7 @@ public class LAQWFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getOperand(false, false, false, false, false);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
@@ -58,7 +57,7 @@ public class LAQWFunction extends Function {
             default -> throw new IllegalStateException("Unexpected value: " + (xReg.getS1() & 03)); // this isn't really possible
         };
 
-        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA())).setW(operand);
+        engine.getExecOrUserARegister(ci.getA()).setW(operand);
         return true;
     }
 }

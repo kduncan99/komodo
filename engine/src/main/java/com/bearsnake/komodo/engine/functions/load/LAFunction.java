@@ -33,7 +33,7 @@ public class LAFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getOperand(true, true, true, true, false);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 

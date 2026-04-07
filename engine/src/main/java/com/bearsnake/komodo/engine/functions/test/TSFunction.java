@@ -36,13 +36,13 @@ public class TSFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getOperand(false, false, false, false, true);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
         if ((Word36.getS1(operand) & 01) == 1) {
-            throw new TestAndSetInterrupt(engine.getCachedBaseRegisterIndex(),
-                                          engine.getCachedRelativeAddress());
+            throw new TestAndSetInterrupt(engine.spGetOperandBaseRegisterIndex(),
+                                          engine.spGetOperandRelativeAddress());
         }
 
         engine.storeToCachedAddress(operand | 0_010000_000000L);

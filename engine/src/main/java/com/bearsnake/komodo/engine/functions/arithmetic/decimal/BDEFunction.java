@@ -228,7 +228,7 @@ public class BDEFunction extends DecimalFunction {
         var uWords = uChars / 4 + (uChars % 4 == 0 ? 0 : 1);
 
         var operands = engine.getConsecutiveOperands(false, uWords);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
@@ -351,7 +351,7 @@ public class BDEFunction extends DecimalFunction {
         var uWords = uChars / 8 + (uChars % 8 == 0 ? 0 : 1);
 
         var operands = engine.getConsecutiveOperands(false, uWords);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 

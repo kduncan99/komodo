@@ -33,7 +33,7 @@ public class TNOPFunction extends Function {
     ) throws MachineInterrupt {
         // TNOP retrieves the operand, but does nothing with it and never skips.
         engine.getOperand(false, true, true, true, false);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 

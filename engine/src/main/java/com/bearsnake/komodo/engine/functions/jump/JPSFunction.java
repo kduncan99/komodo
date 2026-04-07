@@ -35,7 +35,7 @@ public class JPSFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getJumpOperand();
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 

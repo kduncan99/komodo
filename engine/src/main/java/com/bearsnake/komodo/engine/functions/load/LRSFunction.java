@@ -57,7 +57,7 @@ public class LRSFunction extends Function {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
 
-            engine.getGeneralRegisterSet().getRegister(grsIndex++).setW(operands[opIndex++]);
+            engine.getGeneralRegister(grsIndex++, true).setW(operands[opIndex++]);
             grsCount--;
         }
     }

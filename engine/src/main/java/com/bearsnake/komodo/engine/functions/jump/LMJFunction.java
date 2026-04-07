@@ -34,13 +34,13 @@ public class LMJFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getJumpOperand();
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
         var pc = engine.getProgramAddressRegister().getProgramCounter();
         var ci = engine.getCurrentInstruction();
-        engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserXRegisterIndex(ci.getA())).setXM(pc + 1);
+        engine.getExecOrUserXRegister(ci.getA()).setXM(pc + 1);
 
         doJump(engine, operand);
         return true;

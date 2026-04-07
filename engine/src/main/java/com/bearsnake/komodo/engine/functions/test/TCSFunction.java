@@ -34,7 +34,7 @@ public class TCSFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getOperand(false, false, false, false, true);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 

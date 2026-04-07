@@ -33,10 +33,9 @@ public class DSFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var ci = engine.getCurrentInstruction();
-        var ax = engine.getExecOrUserARegisterIndex(ci.getA());
         var operands = new long[2];
-        operands[0] = engine.getGeneralRegisterSet().getRegister(ax).getW();
-        operands[1] = engine.getGeneralRegisterSet().getRegister(ax + 1).getW();
+        operands[0] = engine.getExecOrUserARegister(ci.getA()).getW();
+        operands[1] = engine.getExecOrUserARegister(ci.getA() + 1).getW();
         return engine.storeConsecutiveOperands(true, operands);
     }
 }

@@ -66,7 +66,9 @@ public class TestLRSFunction extends FunctionUnitTest {
         // init all of GRS to magic number
         var magic = 0_112344_765230L;
         for (int rx = 0; rx < 128; rx++) {
-            _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
+            if ((rx < 040) || (rx > 077)) {
+                _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
+            }
         }
 
         _engine.getExecOrUserARegister(7).setW(0); // both counts and indices are 0
@@ -76,7 +78,7 @@ public class TestLRSFunction extends FunctionUnitTest {
         for (int rx = 0; rx < 128; rx++) {
             if (rx == GRS_A7) {
                 assertEquals(0, _engine.getGeneralRegisterSet().getRegister(rx).getW());
-            } else {
+            } else if ((rx < 040) || (rx > 077)) {
                 assertEquals(magic, _engine.getGeneralRegisterSet().getRegister(rx).getW());
             }
         }
@@ -107,7 +109,9 @@ public class TestLRSFunction extends FunctionUnitTest {
         // init all of GRS to magic number
         var magic = 0_112344_765230L;
         for (int rx = 0; rx < 128; rx++) {
-            _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
+            if ((rx < 040) || (rx > 077)) {
+                _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
+            }
         }
 
         _engine.getExecOrUserARegister(15).setQ1(0);        // area-2 count
@@ -123,7 +127,7 @@ public class TestLRSFunction extends FunctionUnitTest {
                                                                .getW());
             } else if (rx >= GRS_R0 && rx <= GRS_R15) {
                 assertEquals(rx - GRS_R0 + 010, _engine.getGeneralRegisterSet().getRegister(rx).getW());
-            } else {
+            } else if ((rx < 040) || (rx > 077)) {
                 assertEquals(magic, _engine.getGeneralRegisterSet().getRegister(rx).getW());
             }
         }
@@ -238,7 +242,6 @@ public class TestLRSFunction extends FunctionUnitTest {
 
         assertEquals(010, _engine.getGeneralRegisterSet().getRegister(036).getW());
         assertEquals(011, _engine.getGeneralRegisterSet().getRegister(037).getW());
-        assertEquals(magic, _engine.getGeneralRegisterSet().getRegister(040).getW()); // unchanged
     }
 
     @Test

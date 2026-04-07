@@ -30,9 +30,28 @@ public class Engine {
     private final Wrapper _wrapper;
 
     public enum InstructionPoint {
-        BETWEEN_INSTRUCTIONS,
-        RESOLVING_ADDRESS,
-        MID_INSTRUCTION,
+        BETWEEN_INSTRUCTIONS(0),
+        RESOLVING_ADDRESS(1),
+        MID_INSTRUCTION(2);
+
+        private final int code;
+
+        InstructionPoint(int code) {
+            this.code = code;
+        }
+
+        public int getCode() {
+            return code;
+        }
+
+        public static InstructionPoint fromCode(int code) {
+            for (InstructionPoint ip : values()) {
+                if (ip.getCode() == code) {
+                    return ip;
+                }
+            }
+            throw new IllegalArgumentException("Invalid instruction point code: " + code);
+        }
     }
 
     private final ActiveBaseTable _activeBaseTable = new ActiveBaseTable();
@@ -40,45 +59,9 @@ public class Engine {
     private final BaseRegister[] _baseRegisters = new BaseRegister[32];
     private final GeneralRegisterSet _generalRegisterSet = new GeneralRegisterSet();
 
-    // Normally PC is incremented at the end of instruction execution.
-    // Transfer instructions set this flag to prevent this behavior, as they have already
-    // set the PC to the desired value.
-    private boolean _preventProgramCounterUpdate = false;
-
-    // This only applies to basic mode - if it is set (12:15) it indicates the base register which contains
-    // the code we are currently executing. In this case, we do not try to resolve the next PAR.PC to a
-    // BM bank - we use this setting. It is recalculated when an instruction causes an entry to be made to
-    // the JUMP HISTORY table and results in the environment being BASIC mode.
-    private int _bmCachedBaseRegisterIndex = 0; // only applies to basic mode - if 0, it is not valid; otherwise it is 12:15
-
     // Set true if you want to log every instruction executed.
     // Don't do this if you want good performance.
     private boolean _traceInstructions = true;
-
-    private final long[] _jumpHistoryTable = new long[JUMP_HISTORY_TABLE_SIZE];
-    private int _jumpHistoryTableFirstIndex = 0;    // index of first existing entry in the jump history table
-    private int _jumpHistoryTableNextIndex = 0;     // where we put the next entry
-
-    // ScratchPad is a collection of related data items which are manipulated during the processes of
-    // developing an address for fetching, reading, and writing. They are kept here to remove the noise
-    // from the more basic data items in the Engine class.
-    public static class ScratchPad {
-        private Function _cachedFunction;
-        private InstructionPoint _instructionPoint;
-        public boolean _operandIsGRS;
-        public int _operandBaseRegisterIndex;
-        public int _operandRelativeAddress;
-
-        public void clear() {
-            _cachedFunction = null;
-            _instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
-            _operandIsGRS = false;
-            _operandBaseRegisterIndex = 0;
-            _operandRelativeAddress = 0;
-        }
-    }
-
-    public final ScratchPad _scratchpad = new ScratchPad();
 
     // Used while determining an appropriate bank for relative address resolution in basic mode.
     private static final HashMap<Boolean, int[]> BASE_REGISTER_CANDIDATES = new HashMap<>();
@@ -106,12 +89,124 @@ public class Engine {
 
         _random.setSeed(System.currentTimeMillis());
         IntStream.range(0, 32).forEach(bx -> _baseRegisters[bx] = BaseRegister.createVoid());
-        _scratchpad._instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
+        spClear();
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------------------
+    // Jump History Table things
+
+    private final long[] _jumpHistoryTable = new long[JUMP_HISTORY_TABLE_SIZE];
+    private int _jumpHistoryTableFirstIndex = 0;    // index of first existing entry in the jump history table
+    private int _jumpHistoryTableNextIndex = 0;     // where we put the next entry
+
+    public void clearJumpHistoryTable() {
+        IntStream.range(0, JUMP_HISTORY_TABLE_SIZE)
+                 .forEach(i -> _jumpHistoryTable[i] = 0);
+        _jumpHistoryTableFirstIndex = 0;
+        _jumpHistoryTableNextIndex = 0;
+    }
+
+    /**
+     * Creates a Jump History Entry.
+     * Since this can create a between-instructions interrupt, it should only be invoked just prior
+     * to the completion of the instruction which causes it.
+     */
+    public void createJumpHistoryEntry(final long entry) {
+        _jumpHistoryTable[_jumpHistoryTableNextIndex++] = entry;
+        if (_jumpHistoryTableNextIndex == JUMP_HISTORY_TABLE_SIZE) {
+            _jumpHistoryTableNextIndex = 0;
+            if (_jumpHistoryTableNextIndex == _jumpHistoryTableFirstIndex) {
+                postInterrupt(new JumpHistoryFullInterrupt());
+                _jumpHistoryTableFirstIndex++;
+                if (_jumpHistoryTableFirstIndex == JUMP_HISTORY_TABLE_SIZE) {
+                    _jumpHistoryTableFirstIndex = 0;
+                }
+            }
+        }
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
     // Scratch pad things
-    // TODO
+
+    public void spClear() {
+        spClearPreventProgramCounterUpdate();
+        spClearBasicModeCachedBaseRegisterIndex();
+        spClearInstructionPoint();
+        spClearOperandIsGRS();
+        spClearOperandBaseRegisterIndex();
+        spClearOperandRelativeAddress();
+        spClearCurrentFunction();
+    }
+
+    // Normally PC is incremented at the end of instruction execution.
+    // Transfer instructions set this flag to prevent this behavior, as they have already
+    // set the PC to the desired value.
+    private static final int SPX_PREVENT_PROGRAM_COUNTER_UPDATE = 040;
+
+    public void spClearPreventProgramCounterUpdate() { spSetPreventProgramCounterUpdate(false); }
+    public boolean spGetPreventProgramCounterUpdate() { return _generalRegisterSet.getRegister(SPX_PREVENT_PROGRAM_COUNTER_UPDATE).getW() == 1; }
+    public void spSetPreventProgramCounterUpdate(final boolean flag) { _generalRegisterSet.setRegister(SPX_PREVENT_PROGRAM_COUNTER_UPDATE, flag ? 1 : 0); }
+
+    // This only applies to basic mode - if it is set (12:15) it indicates the base register which contains
+    // the code we are currently executing. In this case, we do not try to resolve the next PAR.PC to a
+    // BM bank - we use this setting. It is recalculated when an instruction causes an entry to be made to
+    // the JUMP HISTORY table and results in the environment being BASIC mode.
+    private static final int SPX_BASIC_MODE_CACHED_BASE_REGISTER_INDEX = 041;
+
+    public void spClearBasicModeCachedBaseRegisterIndex() { spSetBasicModeCachedBaseRegisterIndex(0); }
+    public int spGetBasicModeCachedBaseRegisterIndex() { return (int)_generalRegisterSet.getRegister(SPX_BASIC_MODE_CACHED_BASE_REGISTER_INDEX).getW(); }
+    public void spSetBasicModeCachedBaseRegisterIndex(final int value) { _generalRegisterSet.setRegister(SPX_BASIC_MODE_CACHED_BASE_REGISTER_INDEX, value); }
+
+    // Indicates the current instruction point for the instruction-in-progress
+    private static final int SPX_INSTRUCTION_POINT = 042;
+
+    public void spClearInstructionPoint() { spSetInstructionPoint(InstructionPoint.BETWEEN_INSTRUCTIONS); }
+    public InstructionPoint spGetInstructionPoint() { return InstructionPoint.fromCode((int)_generalRegisterSet.getRegister(SPX_INSTRUCTION_POINT).getW()); }
+    public void spSetInstructionPoint(final InstructionPoint value) { _generalRegisterSet.setRegister(SPX_INSTRUCTION_POINT, value.getCode()); }
+
+    // Indicates whether the operand refers to a GRS location
+    private static final int SPX_OPERAND_IS_GRS = 043;
+
+    public void spClearOperandIsGRS() { spSetOperandIsGRS(false); }
+    public boolean spGetOperandIsGRS() { return _generalRegisterSet.getRegister(SPX_OPERAND_IS_GRS).getW() == 1; }
+    public void spSetOperandIsGRS(final boolean flag) { _generalRegisterSet.setRegister(SPX_OPERAND_IS_GRS, flag ? 1 : 0); }
+
+    // Indicates the calculated base register index which applies to the calculated operand.
+    private static final int SPX_OPERAND_BASE_REGISTER_INDEX = 044;
+
+    public void spClearOperandBaseRegisterIndex() { spSetOperandBaseRegisterIndex(0); }
+    public int spGetOperandBaseRegisterIndex() { return (int)_generalRegisterSet.getRegister(SPX_OPERAND_BASE_REGISTER_INDEX).getW(); }
+    public void spSetOperandBaseRegisterIndex(final int value) { _generalRegisterSet.setRegister(SPX_OPERAND_BASE_REGISTER_INDEX, value); }
+
+    // Indicates the calculated relative address which applies to the calculated operand.
+    private static final int SPX_OPERAND_RELATIVE_ADDRESS = 045;
+
+    public void spClearOperandRelativeAddress() { spSetOperandRelativeAddress(0); }
+    public int spGetOperandRelativeAddress() { return (int)_generalRegisterSet.getRegister(SPX_OPERAND_RELATIVE_ADDRESS).getW(); }
+    public void spSetOperandRelativeAddress(final int value) { _generalRegisterSet.setRegister(SPX_OPERAND_RELATIVE_ADDRESS, value); }
+
+    // Once we have determined the function for the current instruction cycle,
+    // this value is a reference to our static instance of that function class.
+    private static final int SPX_CURRENT_FUNCTION = 046;
+
+    public void spClearCurrentFunction() { spSetCurrentFunction(null); }
+
+    public Function spGetCurrentFunction() {
+        var w = (int)_generalRegisterSet.getRegister(SPX_CURRENT_FUNCTION).getW();
+        if (Word36.isNegative(w)) {
+            return null;
+        } else {
+            var ftx = _generalRegisterSet.getRegister(SPX_CURRENT_FUNCTION).getW();
+            return FunctionTable.ALL_FUNCTIONS[(int) ftx];
+        }
+    }
+
+    public void spSetCurrentFunction(
+        final Function function
+    ) {
+        _generalRegisterSet.setRegister(SPX_CURRENT_FUNCTION,
+                                        function == null ? Word36.NEGATIVE_ZERO : function.getFunctionTableIndex());
+    }
 
     // -----------------------------------------------------------------------------------------------------------------------------
     // Storage lock things
@@ -316,14 +411,6 @@ public class Engine {
         return _baseRegisters[registerNumber];
     }
 
-    public int getCachedBaseRegisterIndex() {
-        return _scratchpad._operandBaseRegisterIndex;
-    }
-
-    public int getCachedRelativeAddress() {
-        return _scratchpad._operandRelativeAddress;
-    }
-
     // -----------------------------------------------------------------------------------------------------------------------------
     // Useful miscellaneous methods
 
@@ -332,38 +419,8 @@ public class Engine {
         _activityStatePacket.getDesignatorRegister().setWord36(0);
         _activityStatePacket.getIndicatorKeyRegister().setWord36(0);
         _activityStatePacket.getProgramAddressRegister().setProgramCounter(0).setBankLevel((short)0).setBankDescriptorIndex(0);
-        IntStream.range(0, JUMP_HISTORY_TABLE_SIZE)
-                 .forEach(i -> _jumpHistoryTable[i] = 0);
-        _jumpHistoryTableFirstIndex = 0;
-        _jumpHistoryTableNextIndex = 0;
-        _scratchpad.clear();
-        // TODO anything else to clear?
-    }
-
-    /**
-     * For various jump-like operations, this is used to clear the cached base register index.
-     */
-    public void clearBMCachedBaseRegisterIndex() {
-        _bmCachedBaseRegisterIndex = 0;
-    }
-
-    /**
-     * Creates a Jump History Entry.
-     * Since this can create a between-instructions interrupt, it should only be invoked just prior
-     * to the completion of the instruction which causes it.
-     */
-    public void createJumpHistory(final long entry) {
-        _jumpHistoryTable[_jumpHistoryTableNextIndex++] = entry;
-        if (_jumpHistoryTableNextIndex == JUMP_HISTORY_TABLE_SIZE) {
-            _jumpHistoryTableNextIndex = 0;
-            if (_jumpHistoryTableNextIndex == _jumpHistoryTableFirstIndex) {
-                postInterrupt(new JumpHistoryFullInterrupt());
-                _jumpHistoryTableFirstIndex++;
-                if (_jumpHistoryTableFirstIndex == JUMP_HISTORY_TABLE_SIZE) {
-                    _jumpHistoryTableFirstIndex = 0;
-                }
-            }
-        }
+        clearJumpHistoryTable();
+        spClear();
     }
 
     /**
@@ -428,8 +485,8 @@ public class Engine {
             // If there isn't an instruction fetched yet, do so.
             // Clear scratchpad settings so we can start developing operator address.
             if (!ikr.getInstructionInF0()) {
+                spClear();
                 fetchInstruction();
-                _scratchpad.clear();
             }
 
             // Execute the cached instruction, and return now if the instruction hasn't yet
@@ -461,13 +518,13 @@ public class Engine {
             }
 
             if (complete) {
-                _scratchpad._instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
-                _scratchpad._cachedFunction = null;
+                spSetInstructionPoint(InstructionPoint.BETWEEN_INSTRUCTIONS);
+                spClearCurrentFunction();
                 ikr.setInstructionInF0(false);
-                if (!_preventProgramCounterUpdate) {
+                if (!spGetPreventProgramCounterUpdate()) {
                     par.incrementProgramCounter();
                 } else {
-                    _preventProgramCounterUpdate = false;
+                    spSetPreventProgramCounterUpdate(false);
                 }
             }
         } catch (MachineInterrupt e) {
@@ -495,18 +552,19 @@ public class Engine {
         if (_traceInstructions) {
             var str = Function.interpret(this, ci);
             // TODO log this, don't print it
-            if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+            if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
                 IO.println("   [" + str + "]");
             } else {
                 IO.println("--> " + str);
             }
         }
 
-        if (_scratchpad._cachedFunction == null) {
-            _scratchpad._cachedFunction = FunctionTable.lookupFunction(dr, ci.getW());
+        var cf = spGetCurrentFunction();
+        if (cf == null) {
+            cf = FunctionTable.lookupFunction(dr, ci.getW());
+            spSetCurrentFunction(cf);
         }
 
-        var cf = _scratchpad._cachedFunction;
         var reqPP = dr.isBasicModeEnabled()
                     ? cf.getBasicModeFunctionCode().getProcessorPrivilege()
                     : cf.getExtendedModeFunctionCode().getProcessorPrivilege();
@@ -514,11 +572,11 @@ public class Engine {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidProcessorPrivilege);
         }
 
-        var func = _scratchpad._cachedFunction;
-        if ((func instanceof EXFunction) || func instanceof EXRFunction) {
-            _scratchpad._cachedFunction = null;
+        if ((cf instanceof EXFunction) || (cf instanceof EXRFunction)) {
+            spClearCurrentFunction();
         }
-        return func.execute(this);
+
+        return cf.execute(this);
     }
 
     /**
@@ -573,11 +631,13 @@ public class Engine {
 
         if (basicMode) {
             // If we don't have a cached brx, develop one. Usually we will, though.
-            if (_bmCachedBaseRegisterIndex == 0) {
-                _bmCachedBaseRegisterIndex = findBasicModeBaseRegisterIndex(programCounter, true);
+            var brx = spGetBasicModeCachedBaseRegisterIndex();
+            if (brx == 0) {
+                brx = findBasicModeBaseRegisterIndex(programCounter, true);
+                spSetBasicModeCachedBaseRegisterIndex(brx);
             }
 
-            bReg = _baseRegisters[_bmCachedBaseRegisterIndex];
+            bReg = _baseRegisters[brx];
             if (bReg.isVoid() || bReg.isLargeBank()) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
             }
@@ -586,7 +646,7 @@ public class Engine {
             }
 
             _activityStatePacket.getDesignatorRegister()
-                                .setBasicModeBaseRegisterSelection((_bmCachedBaseRegisterIndex == 13) || (_bmCachedBaseRegisterIndex == 15));
+                                .setBasicModeBaseRegisterSelection((brx == 13) || (brx == 15));
         } else {
             // Extended Mode. Only check to ensure we don't go out of limits
             // TODO can we use BaseRegister.checkAccessLimits() ?
@@ -739,13 +799,6 @@ public class Engine {
         return _generalRegisterSet;
     }
 
-    /**
-     * Retrieves the current InstructionPoint
-     */
-    public InstructionPoint getInstructionPoint() {
-        return _scratchpad._instructionPoint;
-    }
-
     public ProgramAddressRegister getProgramAddressRegister() {
         return _activityStatePacket.getProgramAddressRegister();
     }
@@ -822,11 +875,11 @@ public class Engine {
     public void jumpToCachedAddressPlusOne() {
         var par = _activityStatePacket.getProgramAddressRegister();
         var oldAddress = par.getProgramCounter();
-        var newPC = _scratchpad._operandRelativeAddress + 1;
+        var newPC = spGetOperandRelativeAddress() + 1;
         par.setProgramCounter(newPC);
-        _bmCachedBaseRegisterIndex = 0;
-        _preventProgramCounterUpdate = true;
-        createJumpHistory(oldAddress);
+        spClearOperandBaseRegisterIndex();
+        spSetPreventProgramCounterUpdate(true);
+        createJumpHistoryEntry(oldAddress);
     }
 
     /**
@@ -836,12 +889,6 @@ public class Engine {
         final MachineInterrupt interrupt
     ) {
         _wrapper.postInterrupt(interrupt);
-    }
-
-    public void preventProgramCounterUpdate(
-        final boolean flag
-    ) {
-        _preventProgramCounterUpdate = flag;
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -909,10 +956,10 @@ public class Engine {
                 }
             }
 
-            _scratchpad._operandIsGRS = true;
-            _scratchpad._operandBaseRegisterIndex = 0;
-            _scratchpad._operandRelativeAddress = relAddr;
-            _scratchpad._instructionPoint = InstructionPoint.MID_INSTRUCTION;
+            spSetOperandIsGRS(true);
+            spSetOperandBaseRegisterIndex(0);
+            spSetOperandRelativeAddress(relAddr);
+            spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
             return;
         }
 
@@ -928,13 +975,13 @@ public class Engine {
             var value = bReg.getStorage().get(offset);
             ci.setXHIU(value);
 
-            _scratchpad._instructionPoint = InstructionPoint.RESOLVING_ADDRESS;
+            spSetInstructionPoint(InstructionPoint.RESOLVING_ADDRESS);
             return;
         }
 
-        _scratchpad._operandBaseRegisterIndex = brx;
-        _scratchpad._operandRelativeAddress = relAddr;
-        _scratchpad._instructionPoint = InstructionPoint.MID_INSTRUCTION;
+        spSetOperandBaseRegisterIndex(brx);
+        spSetOperandRelativeAddress(relAddr);
+        spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
     }
 
     /**
@@ -981,12 +1028,12 @@ public class Engine {
                     throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
                 }
             }
-            _scratchpad._operandIsGRS = true;
+            spSetOperandIsGRS(true);
         }
 
-        _scratchpad._operandBaseRegisterIndex = brx;
-        _scratchpad._operandRelativeAddress = relAddr;
-        _scratchpad._instructionPoint = InstructionPoint.MID_INSTRUCTION;
+        spSetOperandBaseRegisterIndex(brx);
+        spSetOperandRelativeAddress(relAddr);
+        spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -1008,14 +1055,14 @@ public class Engine {
         final int count
     ) throws MachineInterrupt {
         resolveRelativeAddress(false, grsCheck, false);
-        if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+        if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return null;
         }
 
         // Is this a GRS access? If so, we have to ensure we do not go beyond the 0177 limit.
-        if (_scratchpad._operandIsGRS) {
+        if (spGetOperandIsGRS()) {
             long[] result = new long[count];
-            var grsIndex = _scratchpad._operandRelativeAddress;
+            var grsIndex = spGetOperandRelativeAddress();
             if (grsIndex + count > 0200) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
@@ -1031,13 +1078,13 @@ public class Engine {
 
         // Storage reference. We've already checked limits and accessibility for the first word (and thus for the bank).
         // Do a quick check for the length.
-        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var lastAddr = _scratchpad._operandRelativeAddress + count - 1;
+        var bReg = _baseRegisters[spGetOperandBaseRegisterIndex()];
+        var lastAddr = spGetOperandRelativeAddress() + count - 1;
         if (lastAddr > bReg.getUpperLimitNormalized()) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
         }
 
-        var offset = _scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized();
+        var offset = spGetOperandRelativeAddress() - bReg.getLowerLimitNormalized();
         return IntStream.range(0, count)
                         .mapToLong(ox -> bReg.getStorage().get(offset + ox))
                         .toArray();
@@ -1177,11 +1224,11 @@ public class Engine {
                             .get(offset);
             ci.setXHIU(value);
 
-            _scratchpad._instructionPoint = InstructionPoint.RESOLVING_ADDRESS;
+            spSetInstructionPoint(InstructionPoint.RESOLVING_ADDRESS);
             return 0;
         }
 
-        _scratchpad._instructionPoint = InstructionPoint.MID_INSTRUCTION;
+        spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
         return operand & 0_777777;
     }
 
@@ -1218,7 +1265,7 @@ public class Engine {
         // Get the _operandRelativeAddress.
         // For BM, this also gets the _operandBaseRegister and _operandBaseRegisterIndex OR _operandIsGRS.
         resolveRelativeAddress(false, grsCheck, false);
-        if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+        if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return 0;
         }
 
@@ -1230,8 +1277,8 @@ public class Engine {
         // Loading from GRS? If so, go get the value.
         // If grsDest is true, get the full value. Otherwise, honor j-field for partial-word transfer.
         // (Any GRS-to-GRS transfer is full-word, regardless of j-field)
-        if (_scratchpad._operandIsGRS) {
-            var operand = _generalRegisterSet.getRegister(_scratchpad._operandRelativeAddress).getW();
+        if (spGetOperandIsGRS()) {
+            var operand = _generalRegisterSet.getRegister(spGetOperandRelativeAddress()).getW();
             if (!grsDestination && allowPartialWordTransfer) {
                 operand = extractPartialWord(operand, jFIeld, dr.isQuarterWordModeEnabled());
             }
@@ -1241,12 +1288,12 @@ public class Engine {
         // Loading from storage. Do so, then (maybe) honor partial word handling.
         var key = ikr.getAccessKey();
         checkAccessLimitsAndAccessibility(basicMode,
-                                          _scratchpad._operandBaseRegisterIndex,
-                                          _scratchpad._operandRelativeAddress,
+                                          spGetOperandBaseRegisterIndex(),
+                                          spGetOperandRelativeAddress(),
                                           false, true, false, key);
 
-        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var offset = _scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized();
+        var bReg = _baseRegisters[spGetOperandBaseRegisterIndex()];
+        var offset = spGetOperandRelativeAddress() - bReg.getLowerLimitNormalized();
         var operand = bReg.getStorage().get(offset);
 
         if (lockStorage) {
@@ -1289,7 +1336,7 @@ public class Engine {
         final int count
     ) throws MachineInterrupt {
         resolveRelativeAddress(false, grsCheck, false);
-        if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+        if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
@@ -1301,10 +1348,12 @@ public class Engine {
             getEffectiveBaseRegisterIndex();
         }
 
-        if (grsCheck && (basicMode || (_scratchpad._operandBaseRegisterIndex == 0)) && (_scratchpad._operandRelativeAddress < 0200)) {
+        var brx = spGetOperandBaseRegisterIndex();
+        var relAddr = spGetOperandRelativeAddress();
+        if (grsCheck && (basicMode || (brx == 0)) && (relAddr < 0200)) {
             // storing into the GRS
             for (int i = 0; i < count; i++) {
-                var addr = (_scratchpad._operandRelativeAddress + i) & 0177;
+                var addr = (relAddr + i) & 0177;
                 if (!GeneralRegisterSet.isAccessAllowed(addr, pPriv, true)) {
                     throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
                 }
@@ -1316,13 +1365,10 @@ public class Engine {
         // We're writing to storage...
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var key = ikr.getAccessKey();
-        checkAccessLimitsRange(_baseRegisters[_scratchpad._operandBaseRegisterIndex],
-                               _scratchpad._operandRelativeAddress,
-                               count,
-                               false, true, key);
+        checkAccessLimitsRange(_baseRegisters[brx], relAddr, count, false, true, key);
 
-        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var baseOffset = (int) (_scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized());
+        var bReg = _baseRegisters[brx];
+        var baseOffset = relAddr - bReg.getLowerLimitNormalized();
         for (int i = 0; i < count; i++) {
             bReg.getStorage().set(baseOffset + i, operands[offset + i]);
         }
@@ -1368,7 +1414,7 @@ public class Engine {
         }
 
         resolveRelativeAddress(false, grsCheck, false);
-        if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+        if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
@@ -1380,19 +1426,21 @@ public class Engine {
             getEffectiveBaseRegisterIndex();
         }
 
-        if (grsCheck && (basicMode || (_scratchpad._operandBaseRegisterIndex == 0)) && (_scratchpad._operandRelativeAddress < 0200)) {
+        var brx = spGetOperandBaseRegisterIndex();
+        var relAddr = spGetOperandRelativeAddress();
+        if (grsCheck && (basicMode || (brx == 0)) && (relAddr < 0200)) {
             // storing into the GRS
-            if (!GeneralRegisterSet.isAccessAllowed(_scratchpad._operandRelativeAddress, pPriv, true)) {
+            if (!GeneralRegisterSet.isAccessAllowed(relAddr, pPriv, true)) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
             }
 
             if (!grsSource && allowPartial) {
                 var qWord = dr.isQuarterWordModeEnabled();
-                var origValue = _generalRegisterSet.getRegister(_scratchpad._operandRelativeAddress).getW();
+                var origValue = _generalRegisterSet.getRegister(relAddr).getW();
                 var newValue = injectPartialWord(origValue, jField, operand, qWord);
-                _generalRegisterSet.setRegister(_scratchpad._operandRelativeAddress, newValue);
+                _generalRegisterSet.setRegister(relAddr, newValue);
             } else {
-                _generalRegisterSet.setRegister(_scratchpad._operandRelativeAddress, operand);
+                _generalRegisterSet.setRegister(relAddr, operand);
             }
 
             return true;
@@ -1401,13 +1449,10 @@ public class Engine {
         // We're writing to storage...
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var key = ikr.getAccessKey();
-        checkAccessLimitsAndAccessibility(basicMode,
-                                          _scratchpad._operandBaseRegisterIndex,
-                                          _scratchpad._operandRelativeAddress,
-                                          false, false, true, key);
+        checkAccessLimitsAndAccessibility(basicMode, brx, relAddr, false, true, false, key);
 
-        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var offset = _scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized();
+        var bReg = _baseRegisters[brx];
+        var offset = relAddr - bReg.getLowerLimitNormalized();
         if (allowPartial) {
             var qWord = dr.isQuarterWordModeEnabled();
             var origValue = bReg.getStorage().get(offset);
@@ -1432,7 +1477,7 @@ public class Engine {
         final int partialWordIndicator
     ) throws MachineInterrupt {
         resolveRelativeAddress(false, false, false);
-        if (_scratchpad._instructionPoint == InstructionPoint.RESOLVING_ADDRESS) {
+        if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
@@ -1445,13 +1490,12 @@ public class Engine {
 
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var key = ikr.getAccessKey();
-        checkAccessLimitsAndAccessibility(basicMode,
-                                          _scratchpad._operandBaseRegisterIndex,
-                                          _scratchpad._operandRelativeAddress,
-                                          false, false, true, key);
+        var brx = spGetOperandBaseRegisterIndex();
+        var relAddr = spGetOperandRelativeAddress();
+        checkAccessLimitsAndAccessibility(basicMode, brx, relAddr, false, false, true, key);
 
-        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var offset = _scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized();
+        var bReg = _baseRegisters[brx];
+        var offset = relAddr - bReg.getLowerLimitNormalized();
         var qWord = dr.isQuarterWordModeEnabled();
         var origValue = bReg.getStorage().get(offset);
         var newValue = injectPartialWord(origValue, partialWordIndicator, partialWordValue, qWord);
@@ -1467,15 +1511,16 @@ public class Engine {
     public void storeToCachedAddress(
         final long operand
     ) throws ReferenceViolationInterrupt {
-        var bReg = _baseRegisters[_scratchpad._operandBaseRegisterIndex];
-        var offset = _scratchpad._operandRelativeAddress - bReg.getLowerLimitNormalized();
+        var brx = spGetOperandBaseRegisterIndex();
+        var relAddr = spGetOperandRelativeAddress();
+
+        var bReg = _baseRegisters[brx];
+        var offset = relAddr - bReg.getLowerLimitNormalized();
 
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var key = ikr.getAccessKey();
         checkAccessLimitsAndAccessibility(_activityStatePacket.getDesignatorRegister().isBasicModeEnabled(),
-                                          _scratchpad._operandBaseRegisterIndex,
-                                          _scratchpad._operandRelativeAddress,
-                                          false, false, true, key);
+                                          brx, relAddr, false, false, true, key);
 
         bReg.getStorage().set(offset, operand);
     }

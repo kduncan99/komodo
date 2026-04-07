@@ -33,17 +33,28 @@ public abstract class Function {
     private static final HashMap<Integer, Function> BM_FUNCTIONS_BY_F_CODE = new HashMap<>();
     private static final HashMap<Integer, Function> EM_FUNCTIONS_BY_F_CODE = new HashMap<>();
 
+    private int _functionTableIndex;        // index into the FunctionTable where the static instance of this function exists
     private AFieldSemantics _aFieldSemantics = UNUSED;
     private FunctionCode _basicModeFunctionCode = null;
     private FunctionCode _extendedModeFunctionCode = null;
-    private boolean _immediateMode = false;     // U and XU partial words are supported for this function
-    private boolean _isGRS = false;            // addresses < 0200 are GRS locations
+    private boolean _immediateMode = false; // U and XU partial words are supported for this function
+    private boolean _isGRS = false;         // addresses < 0200 are GRS locations
     private final String _mnemonic;
 
     protected Function(
         final String mnemonic
     ) {
         _mnemonic = mnemonic;
+    }
+
+    public int getFunctionTableIndex() {
+        return _functionTableIndex;
+    }
+
+    public void setFunctionTableIndex(
+        final int index
+    ) {
+        _functionTableIndex = index;
     }
 
     public AFieldSemantics getAFieldSemantics() {
@@ -130,7 +141,7 @@ public abstract class Function {
         final Engine engine,
         final long jumpTarget
     ) {
-        engine.preventProgramCounterUpdate(true);
+        engine.spSetPreventProgramCounterUpdate(true);
 
         var par = engine.getProgramAddressRegister();
         var oldAddress = par.getProgramCounter();
@@ -138,10 +149,10 @@ public abstract class Function {
 
         var dr = engine.getDesignatorRegister();
         if (dr.isBasicModeEnabled()) {
-            engine.clearBMCachedBaseRegisterIndex();
+            engine.spClearBasicModeCachedBaseRegisterIndex();
         }
 
-        engine.createJumpHistory(oldAddress);
+        engine.createJumpHistoryEntry(oldAddress);
     }
 
     // --------------------------------------------------------------------------------------------
@@ -302,8 +313,7 @@ public abstract class Function {
             while (sb.length() < 25) {
                 sb.append(" ");
             }
-            var xReg = engine.getGeneralRegisterSet()
-                             .getRegister(engine.getExecOrUserXRegisterIndex(iWord.getX()));
+            var xReg = engine.getExecOrUserXRegister(iWord.getX());
             sb.append(String.format("X%d=%06o:%06o", iWord.getX(), xReg.getXI(), xReg.getXM()));
         }
 

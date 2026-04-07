@@ -33,12 +33,12 @@ public class JNZFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getJumpOperand();
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
         var ci = engine.getCurrentInstruction();
-        if (!engine.getGeneralRegisterSet().getRegister(engine.getExecOrUserARegisterIndex(ci.getA())).isZero()) {
+        if (!engine.getExecOrUserARegister(ci.getA()).isZero()) {
             doJump(engine, operand);
         }
         return true;

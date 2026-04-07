@@ -32,7 +32,7 @@ public class DSDEFunction extends DecimalFunction {
         final Engine engine
     ) throws MachineInterrupt {
         var operands = engine.getConsecutiveOperands(true, 2);
-        if (engine.getInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
