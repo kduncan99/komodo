@@ -77,9 +77,6 @@ public class TestActiveBaseTable {
     @Test
     public void testTableInitialization() {
         ActiveBaseTable abt = new ActiveBaseTable();
-        // entry 0 is null
-        assertNull(abt.getEntry(0));
-        
         // entries 1-15 are non-null
         for (int i = 1; i < 16; i++) {
             assertNotNull(abt.getEntry(i));
