@@ -116,8 +116,6 @@ public class BaseRegister {
         final int lowerLimitNormalized,
         final int upperLimitNormalized
     ) {
-        int lowerShift = isLargeBank ? 15 : 9;
-        int upperShift = isLargeBank ? 6 : 0;
         assert((lowerLimitNormalized & (isLargeBank ? 077777 : 0777)) == 0);
         assert(!isLargeBank || ((upperLimitNormalized & 077) == 0));
 

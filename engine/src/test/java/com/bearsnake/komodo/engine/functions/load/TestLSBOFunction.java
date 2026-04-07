@@ -26,7 +26,7 @@ public class TestLSBOFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
+        _engine =  new Engine(this, this);
         _engine.getDesignatorRegister().clear();
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
     }

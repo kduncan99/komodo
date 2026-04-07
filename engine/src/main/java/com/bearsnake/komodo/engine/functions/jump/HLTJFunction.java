@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions.jump;
 
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.HaltCode;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -38,7 +39,7 @@ public class HLTJFunction extends Function {
         }
 
         doJump(engine, operand);
-        engine.halt(Engine.HaltCode.HLTJ_INSTRUCTION);
+        engine.halt(HaltCode.HLTJ_INSTRUCTION);
         return true;
     }
 

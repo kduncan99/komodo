@@ -6,7 +6,6 @@ package com.bearsnake.komodo.engine.functions.logical;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,12 +32,12 @@ public class TestORFunction extends FunctionUnitTest {
     @BeforeEach
     public void setup() {
         com.bearsnake.komodo.engine.functions.FunctionTable.clear();
-        _engine = new Engine();
+        _engine =  new Engine(this, this);
         _engine.clear();
     }
 
     @Test
-    public void testOR_BM_Immediate() throws MachineInterrupt, EngineHaltedException {
+    public void testOR_BM_Immediate() throws MachineInterrupt {
         var code = new long[]{
             orImm(0, 0_123456),    // OR,U     A0,0123456
             0,
@@ -62,7 +61,7 @@ public class TestORFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testOR_EM_Immediate() throws MachineInterrupt, EngineHaltedException {
+    public void testOR_EM_Immediate() throws MachineInterrupt {
         var code = new long[]{
             orImm(0, 0_123456),    // OR,U     A0,0123456
             0,
@@ -85,7 +84,7 @@ public class TestORFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testOR_A15_EM() throws MachineInterrupt, EngineHaltedException {
+    public void testOR_A15_EM() throws MachineInterrupt {
         var code = new long[] {
             orEM(JFIELD_W, 15, 0, 0, 0, 2, 0_03000),
             0,
@@ -112,7 +111,7 @@ public class TestORFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testOR_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
+    public void testOR_Indexed_EM() throws MachineInterrupt {
         var code = new long[0700];
         code[0] = orEM(JFIELD_W, 2, 1, 1, 0, 0, 0_500); // OR A2, [0_500 + X1] = [0_600]
         code[1] = 0; // stop
@@ -136,7 +135,7 @@ public class TestORFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testOR_Indirect_BM() throws MachineInterrupt, EngineHaltedException {
+    public void testOR_Indirect_BM() throws MachineInterrupt {
         var code = new long[02000];
         code[0] = orBM(JFIELD_W, 4, 0, 0, 1, 0_1010);
         code[010] = 0_000000_001020L;// indirect to 0_1020
@@ -159,7 +158,7 @@ public class TestORFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testOR_PartialWord_BM() throws MachineInterrupt, EngineHaltedException {
+    public void testOR_PartialWord_BM() throws MachineInterrupt {
         var code = new long[]{
             orBM(JFIELD_S2, 6, 0, 0, 0, 0_500 + 0_2000),
             0,

@@ -6,7 +6,6 @@ package com.bearsnake.komodo.engine;
 
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.baselib.Word36;
-import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionTable;
 import com.bearsnake.komodo.engine.functions.special.EXFunction;
@@ -15,7 +14,6 @@ import com.bearsnake.komodo.engine.interrupts.*;
 
 import java.util.HashMap;
 import java.util.Random;
-import java.util.TreeMap;
 import java.util.stream.IntStream;
 
 import static com.bearsnake.komodo.engine.Constants.JFIELD_U;
@@ -26,11 +24,10 @@ import static com.bearsnake.komodo.engine.Constants.JFIELD_XU;
  */
 public class Engine {
 
-    public enum HaltCode {
-        HLTJ_INSTRUCTION,
-    }
-
     private static final int JUMP_HISTORY_TABLE_SIZE = 512;
+
+    private final Storage _storage;
+    private final Wrapper _wrapper;
 
     public enum InstructionPoint {
         BETWEEN_INSTRUCTIONS,
@@ -42,8 +39,6 @@ public class Engine {
     private final ActivityStatePacket _activityStatePacket = new ActivityStatePacket();
     private final BaseRegister[] _baseRegisters = new BaseRegister[32];
     private final GeneralRegisterSet _generalRegisterSet = new GeneralRegisterSet();
-
-    private HaltCode _haltCode = null;
 
     // Normally PC is incremented at the end of instruction execution.
     // Transfer instructions set this flag to prevent this behavior, as they have already
@@ -99,15 +94,16 @@ public class Engine {
     private static final HashMap<AbsoluteAddress, Engine> _lockedAddresses = new HashMap<>();
     private static boolean _lockIsHeldByUs = false;
 
-    // Interrupt Stack - there may be at most one of each class of interrupt posted on the stack.
-    // In practice there will rarely be more than one or two.
-    // Caller must poll for interrupts before calling cycle().
-    private final TreeMap<MachineInterrupt.InterruptClass, MachineInterrupt> _interruptStack = new TreeMap<>();
-
     // For support of random functions
     private final Random _random = new Random();
 
-    public Engine() {
+    public Engine(
+        final Storage storage,
+        final Wrapper wrapper
+    ) {
+        _storage = storage;
+        _wrapper = wrapper;
+
         _random.setSeed(System.currentTimeMillis());
         IntStream.range(0, 32).forEach(bx -> _baseRegisters[bx] = BaseRegister.createVoid());
         _scratchpad._instructionPoint = InstructionPoint.BETWEEN_INSTRUCTIONS;
@@ -332,12 +328,10 @@ public class Engine {
     // Useful miscellaneous methods
 
     public void clear() {
-        _haltCode = null;
         _activityStatePacket.getCurrentInstruction().setW(0);
         _activityStatePacket.getDesignatorRegister().setWord36(0);
         _activityStatePacket.getIndicatorKeyRegister().setWord36(0);
         _activityStatePacket.getProgramAddressRegister().setProgramCounter(0).setBankLevel((short)0).setBankDescriptorIndex(0);
-        _interruptStack.clear();
         IntStream.range(0, JUMP_HISTORY_TABLE_SIZE)
                  .forEach(i -> _jumpHistoryTable[i] = 0);
         _jumpHistoryTableFirstIndex = 0;
@@ -422,18 +416,8 @@ public class Engine {
      *      otherwise. Having INF and EXRF already set, we won't waste time re-evaluating the EXR instruction, we'll
      *      just (re-)execute the target instruction.
      * @return true between instructions
-     * @throws EngineHaltedException if the engine is halted
-     * @throws MachineInterrupt if at least one interrupt is pending (that interrupt is pulled from the stack and thrown here)
      */
-    public boolean cycle()
-        throws EngineHaltedException,
-               MachineInterrupt {
-        if (_haltCode != null) {
-            throw new EngineHaltedException(_haltCode);
-        } else if (!_interruptStack.isEmpty()) {
-            throw _interruptStack.pollFirstEntry().getValue();
-        }
-
+    public boolean cycle() {
         var dr = _activityStatePacket.getDesignatorRegister();
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var par = _activityStatePacket.getProgramAddressRegister();
@@ -755,10 +739,6 @@ public class Engine {
         return _generalRegisterSet;
     }
 
-    public HaltCode getHaltCode() {
-        return _haltCode;
-    }
-
     /**
      * Retrieves the current InstructionPoint
      */
@@ -777,13 +757,13 @@ public class Engine {
     /**
      * Sets the halt code for the engine.
      * Subsequent invocations of cycle() will throw HaltedException until this is cleared.
-     * @param haltCode
+     * @param haltCode the halt code to set
      */
     public void halt(
         final HaltCode haltCode
     ) {
         // TODO LOG THIS
-        _haltCode = haltCode;
+        _wrapper.setHalted(haltCode);
     }
 
     /**
@@ -850,25 +830,12 @@ public class Engine {
     }
 
     /**
-     * Polls to see if an interrupt is pending
-     * @return the highest-priority interrupt currently pending, or null if none are pending
-     */
-    public MachineInterrupt pollInterrupt() {
-        synchronized (_interruptStack) {
-            var entry = _interruptStack.pollFirstEntry();
-            return entry == null ? null : entry.getValue();
-        }
-    }
-
-    /**
      * Posts an interrupt to be processed by the interrupt handler.
      */
     public void postInterrupt(
         final MachineInterrupt interrupt
     ) {
-        synchronized (_interruptStack) {
-            _interruptStack.put(interrupt.getInterruptClass(), interrupt);
-        }
+        _wrapper.postInterrupt(interrupt);
     }
 
     public void preventProgramCounterUpdate(

@@ -6,7 +6,6 @@ package com.bearsnake.komodo.engine.functions.logical;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,12 +32,12 @@ public class TestANDFunction extends FunctionUnitTest {
     @BeforeEach
     public void setup() {
         com.bearsnake.komodo.engine.functions.FunctionTable.clear();
-        _engine = new Engine();
+        _engine =  new Engine(this, this);
         _engine.clear();
     }
 
     @Test
-    public void testAND_BM_Immediate() throws MachineInterrupt, EngineHaltedException {
+    public void testAND_BM_Immediate() throws MachineInterrupt {
         var code = new long[]{
             andImm(0, 0_123456),    // AND,U     A0,0123456
             0,
@@ -62,7 +61,7 @@ public class TestANDFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testAND_EM_Immediate() throws MachineInterrupt, EngineHaltedException {
+    public void testAND_EM_Immediate() throws MachineInterrupt {
         var code = new long[]{
             andImm(0, 0_123456),    // AND,U     A0,0123456
             0,
@@ -85,7 +84,7 @@ public class TestANDFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testAND_A15_EM() throws MachineInterrupt, EngineHaltedException {
+    public void testAND_A15_EM() throws MachineInterrupt {
         var code = new long[] {
             andEM(JFIELD_W, 15, 0, 0, 0, 2, 0_03000),
             0,
@@ -112,7 +111,7 @@ public class TestANDFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testAND_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
+    public void testAND_Indexed_EM() throws MachineInterrupt {
         var code = new long[0700];
         code[0] = andEM(JFIELD_W, 2, 1, 1, 0, 0, 0_500); // AND A2, [0_500 + X1] = [0_600]
         code[1] = 0; // stop
@@ -136,7 +135,7 @@ public class TestANDFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testAND_Indirect_BM() throws MachineInterrupt, EngineHaltedException {
+    public void testAND_Indirect_BM() throws MachineInterrupt {
         var code = new long[02000];
         code[0] = andBM(JFIELD_W, 4, 0, 0, 1, 0_1010);
         code[010] = 0_000000_001020L;// indirect to 0_1020
@@ -159,7 +158,7 @@ public class TestANDFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testAND_PartialWord_BM() throws MachineInterrupt, EngineHaltedException {
+    public void testAND_PartialWord_BM() throws MachineInterrupt {
         var code = new long[]{
             andBM(JFIELD_S2, 6, 0, 0, 0, 0_500 + 0_2000),
             0,

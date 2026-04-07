@@ -5,8 +5,13 @@
 package com.bearsnake.komodo.engine;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
+import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
-public abstract class EngineUnitTest {
+import java.util.HashMap;
+import java.util.TreeMap;
+
+public abstract class EngineUnitTest implements Storage, Wrapper {
 
     protected Engine _engine;
 
@@ -47,5 +52,162 @@ public abstract class EngineUnitTest {
         abte.setBankLevel((short)bankLevel);
         abte.setBankDescriptorIndex((short)bankIndex);
         abte.setSubsetSpecification(subsetting);
+    }
+
+    // Storage implementation ------------------------------------------------------------------------------------------------------
+
+    private HashMap<Integer, ArraySlice> _segments = new HashMap<>();
+
+    @Override
+    public synchronized int allocateSegment(
+        final int size
+    ) throws HardwareCheckInterrupt {
+        if (_segments.size() == 0x7FFFFFFF) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, 0, 0);
+        }
+        if (size < 0) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, 0, 0);
+        }
+
+        for (int i = 0; ; ++i) {
+            if (!_segments.containsKey(i)) {
+                _segments.put(i, new ArraySlice(new long[size]));
+                return i;
+            }
+        }
+    }
+
+    @Override
+    public synchronized void clearSegments() {
+        _segments.clear();
+    }
+
+    @Override
+    public synchronized ArraySlice getSegment(
+        final int segment
+    ) throws HardwareCheckInterrupt {
+        if (!_segments.containsKey(segment)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        }
+        return _segments.get(segment);
+    }
+
+    @Override
+    public synchronized ArraySlice getSlice(
+        final int segment,
+        final int offset,
+        final int length
+    ) throws HardwareCheckInterrupt {
+        if (!_segments.containsKey(segment)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        }
+        var slice = _segments.get(segment);
+        if ((offset < 0) || (length < 0) || (offset + length > slice.getSize())) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        }
+        return slice;
+    }
+
+    /**
+     * Retrieves a word from the indicated segment.
+     * @param segment The segment index, from 0 to 0x7FFFFFFF.
+     * @param offset The offset within the segment, from 0 to segment size - 1.
+     * @return The word at the specified offset, or 0 if the segment is invalid or the offset is out of bounds.
+     */
+    @Override
+    public synchronized long getWord(
+        final int segment,
+        final int offset
+    ) throws HardwareCheckInterrupt {
+        if (!_segments.containsKey(segment)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        }
+        var slice = _segments.get(segment);
+        if ((offset < 0) || (offset >= slice.getSize())) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        }
+        return slice.get(offset);
+    }
+
+    /**
+     * Releases the indicated segment.  The segment will no longer be accessible.
+     * @param segment The segment index, from 0 to 0x7FFFFFFF.
+     */
+    @Override
+    public synchronized void releaseSegment(
+        final int segment
+    ) throws HardwareCheckInterrupt {
+        if (!_segments.containsKey(segment)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        }
+        _segments.remove(segment);
+    }
+
+    /**
+     * Sets a word in the indicated segment.
+     * @param segment The segment index, from 0 to 0x7FFFFFFF.
+     * @param offset The offset within the segment, from 0 to segment size - 1.
+     * @param value The word value to set.
+     */
+    @Override
+    public synchronized void setWord(
+        final int segment,
+        final int offset,
+        final long value
+    ) throws HardwareCheckInterrupt {
+        if (!_segments.containsKey(segment)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        }
+        var slice = _segments.get(segment);
+        if ((offset < 0) || (offset >= slice.getSize())) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        }
+        slice.set(offset, value);
+    }
+
+    // Wrapper implementation ------------------------------------------------------------------------------------------------------
+
+    // most recent halt code
+    private HaltCode _haltCode = null;
+
+    // Interrupt Stack - there may be at most one of each class of interrupt posted on the stack.
+    // In practice there will rarely be more than one or two.
+    // Caller must poll for interrupts before calling cycle().
+    private final TreeMap<MachineInterrupt.InterruptClass, MachineInterrupt> _interruptStack = new TreeMap<>();
+
+    @Override
+    public synchronized MachineInterrupt getInterrupt() {
+        return _interruptStack.isEmpty() ? null : _interruptStack.pollFirstEntry().getValue();
+    }
+
+    @Override
+    public synchronized void postInterrupt(
+        final MachineInterrupt interrupt
+    ) {
+        _interruptStack.put(interrupt.getInterruptClass(), interrupt);
+    }
+
+    @Override
+    public synchronized HaltCode getHaltCode() {
+        return _haltCode;
+    }
+
+    /**
+     * Indicates whether the engine is currently halted.
+     */
+    @Override
+    public synchronized boolean isHalted() {
+        return _haltCode != null;
+    }
+
+    /**
+     * Sets the halt code. The wrapper should take any necessary action.
+     * Unless the halt is cleared, the wrapper should not invoke the engine's cycle.
+     */
+    @Override
+    public synchronized void setHalted(
+        final HaltCode haltCode
+    ) {
+        _haltCode = haltCode;
     }
 }
