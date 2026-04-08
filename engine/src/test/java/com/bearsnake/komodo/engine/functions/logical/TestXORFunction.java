@@ -43,7 +43,7 @@ public class TestXORFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0, 0_1777, null, bank);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -52,7 +52,7 @@ public class TestXORFunction extends FunctionUnitTest {
                .setBasicModeBaseRegisterSelection(false);
 
         _engine.getExecOrUserARegister(0).setW(0_123456_654321L);
-        _engine.getProgramAddressRegister().setProgramCounter(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         run();
 

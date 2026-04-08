@@ -56,12 +56,7 @@ public class TestMLUFunction extends FunctionUnitTest {
             0,
             };
         var bank = new ArraySlice(code);
-
-        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-                                     .setLowerLimit(0)
-                                     .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        loadBaseRegister(12, false, 0, 0_1777, null, bank);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -71,7 +66,7 @@ public class TestMLUFunction extends FunctionUnitTest {
 
         _engine.getExecOrUserARegister(0).setW(0_123456_654321L);
         _engine.getExecOrUserRRegister(2).setW(0_525252_252525L);
-        _engine.getProgramAddressRegister().setProgramCounter(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         run();
 
