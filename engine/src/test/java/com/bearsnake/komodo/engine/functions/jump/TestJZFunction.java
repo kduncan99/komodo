@@ -5,7 +5,6 @@
 package com.bearsnake.komodo.engine.functions.jump;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -37,122 +36,199 @@ public class TestJZFunction extends FunctionUnitTest {
         _engine = new Engine(this, this);
     }
 
-//    private void setupBM() {
-//        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-//                                     .setLowerLimit(0)
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//        var bank = new ArraySlice(new long[0_2000]);
-//        _engine.getBaseRegister(12).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(true)
-//               .setProcessorPrivilege((short)0)
-//               .setExecRegisterSetSelected(false)
-//               .setBasicModeBaseRegisterSelection(false);
-//        _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
-//    }
-//
-//    private void setupEM() {
-//        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                     .setLowerLimit(0)
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//        var bank = new ArraySlice(new long[0_2000]);
-//        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)0)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
-//    }
-//
-//    @Test
-//    public void testJZ_BM() throws MachineInterrupt, EngineHaltedException {
-//        setupBM();
-//        var bank = _engine.getBaseRegister(12).getStorage();
-//        bank.set(0, jzBM(5, 0_100)); // JZ if A5 is zero, jump to 0_100
-//
-//        // Case 1: A5 is positive zero -> Should jump
-//        _engine.getExecOrUserARegister(5).setW(0);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_440000_000100L, _engine.getProgramAddressRegister().getCompositeValue());
-//
-//        // Case 2: A5 is negative zero -> Should jump
-//        _engine.getExecOrUserARegister(5).setW(Word36.NEGATIVE_ZERO);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_440000_000100L, _engine.getProgramAddressRegister().getCompositeValue());
-//
-//        // Case 3: A5 is non-zero -> Should NOT jump
-//        _engine.getExecOrUserARegister(5).setW(1);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_440000_000001L, _engine.getProgramAddressRegister().getCompositeValue());
-//    }
-//
-//    @Test
-//    public void testJZ_EM() throws MachineInterrupt, EngineHaltedException {
-//        setupEM();
-//        var bank = _engine.getBaseRegister(0).getStorage();
-//        bank.set(0, jzEM(5, 0_100)); // JZ if A5 is zero, jump to 0_100
-//
-//        // Case 1: A5 is positive zero -> Should jump
-//        _engine.getExecOrUserARegister(5).setW(0);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_100, _engine.getProgramAddressRegister().getProgramCounter());
-//
-//        // Case 2: A5 is negative zero -> Should jump
-//        _engine.getExecOrUserARegister(5).setW(Word36.NEGATIVE_ZERO);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_100, _engine.getProgramAddressRegister().getProgramCounter());
-//
-//        // Case 3: A5 is non-zero -> Should NOT jump
-//        _engine.getExecOrUserARegister(5).setW(0_777777_777776L);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testJZ_Indexed_BM() throws MachineInterrupt, EngineHaltedException {
-//        setupBM();
-//        _engine.getExecOrUserXRegister(3).setXM(0_10);
-//        _engine.getExecOrUserARegister(5).setW(0);
-//        var bank = _engine.getBaseRegister(12).getStorage();
-//        bank.set(0, jzBM(5, 3, 0, 0, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
-//
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_440000_000110L, _engine.getProgramAddressRegister().getCompositeValue());
-//    }
-//
-//    @Test
-//    public void testJZ_Indirect_BM() throws MachineInterrupt, EngineHaltedException {
-//        setupBM();
-//        _engine.getExecOrUserARegister(5).setW(0);
-//        var bank = _engine.getBaseRegister(12).getStorage();
-//        bank.set(0, jzBM(5, 0, 0, 1, 0_100)); // jump indirect via 0_100
-//        bank.set(0_100, fjaxu(0_74, 0_04, 0, 0, 0_200)); // second stage: J to 0_200
-//        bank.set(0_200, 0); // halt
-//
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        run();
-//        assertEquals(0_200, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testJZ_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
-//        setupEM();
-//        _engine.getExecOrUserXRegister(3).setXM(0_10);
-//        _engine.getExecOrUserARegister(5).setW(0);
-//        var bank = _engine.getBaseRegister(0).getStorage();
-//        bank.set(0, jzEM(5, 3, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
-//
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_110, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
+    @Test
+    public void testJZ_BM_1() throws MachineInterrupt {
+        var code = new long[] {
+            jzBM(5, 0_1005),
+            0, 0, 0, 0, 0
+        };
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getExecOrUserARegister(5).setW(0_0L);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+        run();
+        assertEquals(0_1005L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJZ_BM_2() throws MachineInterrupt {
+        var code = new long[] {
+            jzBM(5, 0_1005),
+            0, 0, 0, 0, 0
+        };
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getExecOrUserARegister(5).setW(0_777777_777777L);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+        run();
+        assertEquals(0_1005L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJZ_BM_3() throws MachineInterrupt {
+        var code = new long[] {
+            jzBM(5, 0_1005),
+            0, 0, 0, 0, 0
+        };
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getExecOrUserARegister(5).setW(0_01L);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+        setHalted(null);
+        run();
+        assertEquals(0_1001L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJZ_EM_1() throws MachineInterrupt {
+        var code = new long[] {
+            jzEM(5, 0_1005),
+            0, 0, 0, 0, 0
+        };
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getExecOrUserARegister(5).setW(0_0L);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+        run();
+        assertEquals(0_1005L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJZ_EM_2() throws MachineInterrupt {
+        var code = new long[] {
+            jzEM(5, 0_1005),
+            0, 0, 0, 0, 0
+        };
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getExecOrUserARegister(5).setW(0_777777_777777L);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+        run();
+        assertEquals(0_1005L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJZ_EM_3() throws MachineInterrupt {
+        var code = new long[] {
+            jzEM(5, 0_1005),
+            0, 0, 0, 0, 0
+        };
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getExecOrUserARegister(5).setW(0_777777_777776L);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+        setHalted(null);
+        run();
+        assertEquals(0_1001L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJZ_Indexed_BM() throws MachineInterrupt {
+        var code = new long[] {
+            jzBM(5, 3, 0, 0, 0_1000),
+            0, 0, 0, 0, 0
+        };
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(14, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getExecOrUserXRegister(3).setXM(0_5);
+        _engine.getExecOrUserARegister(5).setW(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+
+        run();
+
+        assertEquals(0_1005L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJZ_Indexed_EM() throws MachineInterrupt {
+        var code = new long[] {
+            jzEM(5, 3, 0_1000),
+            0, 0, 0, 0, 0
+        };
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getExecOrUserXRegister(3).setXM(0_5);
+        _engine.getExecOrUserARegister(5).setW(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+
+        run();
+
+        assertEquals(0_1005L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJZ_Indirect_BM() throws MachineInterrupt {
+        var code = new long[] {
+            jzBM(5, 0, 0, 1, 0_1005),
+            0, 0, 0, 0,
+            fjaxhiu(0, 0, 0, 0, 0, 1, 0_1010),
+            0, 0,
+            fjaxhiu(0, 0, 0, 0, 0, 0, 0_1015),
+            0, 0, 0, 0, 0,
+            };
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(14, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getExecOrUserARegister(5).setW(0_777777_777777L);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+
+        run();
+
+        assertEquals(0_1015, _engine.getProgramAddressRegister().getProgramCounter());
+    }
 }
