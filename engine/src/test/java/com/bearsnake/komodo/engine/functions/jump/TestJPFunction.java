@@ -230,6 +230,7 @@ public class TestJPFunction extends FunctionUnitTest {
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
+        _engine.getExecOrUserARegister(5).setW(0_344444_444444L);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         run();
