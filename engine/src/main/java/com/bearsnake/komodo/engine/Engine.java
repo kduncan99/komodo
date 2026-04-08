@@ -1172,63 +1172,66 @@ public class Engine {
     public long getJumpOperand() throws MachineInterrupt {
         var ci = _activityStatePacket.getCurrentInstruction();
         var dr = _activityStatePacket.getDesignatorRegister();
-        var exec24Index = dr.isExecutive24BitIndexingEnabled();
         var privilege = dr.getProcessorPrivilege();
-        var valueIs24Bits = ((privilege < 2) && exec24Index) || ((privilege > 1) && (ci.getI() != 0));
         long operand;
 
-        if ((ci.getX() == 0) && (!dr.isBasicModeEnabled())) {
-            // No indexing (x-field is zero and EM).  Value is derived from h, i, and u fields.
-            operand = ci.getHIU();
-        } else {
-            // Value is taken only from the u field
+        // U is never GRS, regardless of mode, value, etc
+        if (dr.isBasicModeEnabled()) {
+            // Basic mode - The book says if f.x is zero, then h,i,u are used as U, but what about indirect addressing?
+            // We have proven through comparative testing that X==0, i bit means indirect addressing, so we're going to
+            // assume that U is only u regardless of the x-field, and that indirect addressing is always indicated by f.i.
             operand = ci.getU();
-        }
 
-        // Add the contents of Xx(m) if F0.x is non-zero
-        if (ci.getX() != 0) {
-            var xReg = getExecOrUserXRegister(ci.getX());
-            if (!dr.isBasicModeEnabled() && (privilege < 2) && exec24Index) {
-                operand = Word36.addSimple(operand, xReg.getXM24());
-            } else {
-                operand = Word36.addSimple(operand, xReg.getXM());
+            // indexing?
+            if (ci.getX() != 0) {
+                var xReg = getExecOrUserXRegister(ci.getX());
+                operand += xReg.getXM();
+                if (ci.getH() == 1) {
+                    xReg.incrementModifier18();
+                }
             }
-            incrementIndexRegisterInF0();
-        }
 
-        // Truncate the result to the proper size, then sign-extend if appropriate to do so.
-        var extend = ci.getJ() == 0_17;
-        if (valueIs24Bits) {
-            operand &= 077_777777;
-            if (extend && (operand & 040_000000) != 0) {
-                operand |= 0_777700_000000L;
+            spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
+
+            // indirect addressing?
+            if ((ci.getI() != 0) && (privilege > 1)) {
+                var brx = findBasicModeBaseRegisterIndex((int) operand, false);
+                // Indirect addressing is indicated - we need to go find the actual word of storage
+                // and load a new XHIU from there, into the current instruction.
+                var key = _activityStatePacket.getIndicatorKeyRegister()
+                                              .getAccessKey();
+                checkAccessLimitsAndAccessibility(true, brx, operand, true, false, false, key);
+                var bReg = _baseRegisters[brx];
+                var offset = (int) (operand - bReg.getLowerLimitNormalized());
+                var value = bReg.getStorage()
+                                .get(offset);
+                ci.setXHIU(value);
+
+                spSetInstructionPoint(InstructionPoint.RESOLVING_ADDRESS);
+                operand = 0;
             }
         } else {
-            operand &= 0_777777;
-            if (extend && (operand & 0_400000) != 0) {
-                operand |= 0_777777_000000L;
+            // Extended mode
+            if (ci.getX() == 0) {
+                // no indexing, so U field is 18 bits
+                operand = ci.getHIU();
+            } else {
+                // indexing enabled, which means U field is 16 bits
+                operand = ci.getU();
+                var xReg = getExecOrUserXRegister(ci.getX());
+                var use24 = ((privilege < 2) && (dr.isExecutive24BitIndexingEnabled()))
+                            || ((privilege > 1) && (ci.getI() == 1));
+                if (use24) {
+                    operand += xReg.getXM24();
+                    xReg.incrementModifier24();
+                } else {
+                    operand += xReg.getXM();
+                    xReg.incrementModifier18();
+                }
             }
+            spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
         }
 
-        // Are we doing indirect addressing?
-        if (dr.isBasicModeEnabled() && (ci.getI() != 0) && (dr.getProcessorPrivilege() > 1)) {
-            var brx = findBasicModeBaseRegisterIndex((int) operand, false);
-            // Indirect addressing is indicated - we need to go find the actual word of storage
-            // and load a new XHIU from there, into the current instruction.
-            var key = _activityStatePacket.getIndicatorKeyRegister()
-                                          .getAccessKey();
-            checkAccessLimitsAndAccessibility(true, brx, operand, true, false, false, key);
-            var bReg = _baseRegisters[brx];
-            var offset = (int) (operand - bReg.getLowerLimitNormalized());
-            var value = bReg.getStorage()
-                            .get(offset);
-            ci.setXHIU(value);
-
-            spSetInstructionPoint(InstructionPoint.RESOLVING_ADDRESS);
-            return 0;
-        }
-
-        spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
         return operand & 0_777777;
     }
 

@@ -5,9 +5,6 @@
 package com.bearsnake.komodo.engine.functions.jump;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.engine.AbsoluteAddress;
-import com.bearsnake.komodo.engine.BankDescriptor;
-import com.bearsnake.komodo.engine.BankType;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -19,30 +16,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestSLJFunction extends FunctionUnitTest {
 
-    private long sljBM(
-        long x,
-        long h,
-        long i,
-        long u
-    ) {
+    private long sljBM(long x, long h, long i, long u) {
         return fjaxhiu(072, 001, 0, x, h, i, u);
     }
 
-    private long sljBM(
-        long u
-    ) {
+    private long sljBM(long u) {
         return fjaxu(072, 001, 0, 0, u);
     }
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
-        _engine.getDesignatorRegister()
-               .clear();
-        _engine.getProgramAddressRegister()
-               .setProgramCounter(0)
-               .setBankDescriptorIndex(0)
-               .setBankLevel((short) 0);
+        _engine = new Engine(this, this);
     }
 
     @Test
@@ -56,16 +40,8 @@ public class TestSLJFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(12)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short) 3)
@@ -92,16 +68,8 @@ public class TestSLJFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(12)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short) 3)
@@ -132,16 +100,8 @@ public class TestSLJFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(12)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short) 3)

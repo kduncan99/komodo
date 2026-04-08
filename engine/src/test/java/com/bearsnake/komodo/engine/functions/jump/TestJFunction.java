@@ -5,9 +5,6 @@
 package com.bearsnake.komodo.engine.functions.jump;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.engine.AbsoluteAddress;
-import com.bearsnake.komodo.engine.BankDescriptor;
-import com.bearsnake.komodo.engine.BankType;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -18,67 +15,35 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestJFunction extends FunctionUnitTest {
 
-    private long jBM(
-        long x,
-        long h,
-        long i,
-        long u
-    ) {
+    private long jBM(long x, long h, long i, long u) {
         return fjaxhiu(074, 004, 000, x, h, i, u);
     }
 
-    private long jBM(
-        long u
-    ) {
+    private long jBM(long u) {
         return fjaxu(074, 004, 000, 0, u);
     }
 
-    private long jEM(
-        long x,
-        long h,
-        long i,
-        long u
-    ) {
+    private long jEM(long x, long h, long i, long u) {
         return fjaxhiu(074, 015, 004, x, h, i, u);
     }
 
-    private long jEM(
-        long u
-    ) {
+    private long jEM(long u) {
         return fjaxu(074, 015, 004, 0, u);
     }
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
-        _engine.getDesignatorRegister()
-               .clear();
-        _engine.getProgramAddressRegister()
-               .setProgramCounter(0)
-               .setBankDescriptorIndex(0)
-               .setBankLevel((short) 0);
+        _engine = new Engine(this, this);
     }
 
     @Test
     public void testJ_Simple_BM() throws MachineInterrupt {
-        var code = new long[]{
-            jBM(01003),
-            0,
-            0,
-            0,
-            };
+        var code = new long[01000];
+        code[0] = jBM(01003);   // J 01003
 
         var bank0 = new ArraySlice(code);
+          loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_1)   // 01000
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(12)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short) 3)
@@ -101,23 +66,9 @@ public class TestJFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_1)   // 01000
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_3)
-                                      .setUpperLimit(0_3777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(13, false, 0_3000, 0_3777, null, bank1);
 
-        _engine.getBaseRegister(12)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
-        _engine.getBaseRegister(13)
-               .setBankDescriptor(bd1)
-               .setStorage(bank1)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short) 3)
@@ -140,23 +91,9 @@ public class TestJFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(other);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_1)   // 01000
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_4)   // 04000
-                                      .setUpperLimit(0_4777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(14, false, 0_4000, 0_4777, null, bank1);
 
-        _engine.getBaseRegister(12)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
-        _engine.getBaseRegister(14)
-               .setBankDescriptor(bd1)
-               .setStorage(bank1)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short) 3)
@@ -179,23 +116,9 @@ public class TestJFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(other);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_1)   // 01000
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_5)   // 05000
-                                      .setUpperLimit(0_5777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(15, false, 0_5000, 0_5777, null, bank1);
 
-        _engine.getBaseRegister(12)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
-        _engine.getBaseRegister(15)
-               .setBankDescriptor(bd1)
-               .setStorage(bank1)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short) 3)
@@ -219,16 +142,8 @@ public class TestJFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_1)   // 01000
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(12)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short) 3)
@@ -260,16 +175,8 @@ public class TestJFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_1)   // 01000
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(12)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short) 3)
@@ -294,16 +201,8 @@ public class TestJFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)   // 01000
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(0)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short) 3)
@@ -324,15 +223,8 @@ public class TestJFunction extends FunctionUnitTest {
         code[0] = jEM(0400005);
 
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)   // 01000
-                                      .setUpperLimit(0_400777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
+        loadBaseRegister(0, false, 0_1000, 0_400777, null, bank0);
 
-        _engine.getBaseRegister(0)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short) 3)
@@ -353,16 +245,8 @@ public class TestJFunction extends FunctionUnitTest {
         code[0] = jEM(0200000);
 
         var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_201777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)   // 01000
-                                      .setUpperLimit(0_200000)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(0)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short) 3)
@@ -387,16 +271,8 @@ public class TestJFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)   // 01000
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(0)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0)
-               .setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short) 3)
