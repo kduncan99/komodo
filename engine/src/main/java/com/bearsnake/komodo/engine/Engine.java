@@ -553,9 +553,11 @@ public class Engine {
             var str = Function.interpret(this, ci);
             // TODO log this, don't print it
             if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
-                IO.println("   [" + str + "]");
+                IO.println("                 [" + str + "]");
             } else {
-                IO.println("--> " + str);
+                System.out.printf("--|%s:%06o| --> %s\n",
+                                  dr.isBasicModeEnabled() ? "BM" : "EM",
+                                  _activityStatePacket.getProgramAddressRegister().getProgramCounter(), str);
             }
         }
 

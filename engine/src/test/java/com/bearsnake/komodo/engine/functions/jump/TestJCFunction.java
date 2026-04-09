@@ -36,108 +36,181 @@ public class TestJCFunction extends FunctionUnitTest {
         _engine = new Engine(this, this);
     }
 
-//    private void setupBM() {
-//        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-//                                     .setLowerLimit(0)
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//        var bank = new ArraySlice(new long[0_2000]);
-//        _engine.getBaseRegister(12).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(true)
-//               .setProcessorPrivilege((short)0)
-//               .setExecRegisterSetSelected(false)
-//               .setBasicModeBaseRegisterSelection(false);
-//        _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
-//    }
-//
-//    private void setupEM() {
-//        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                     .setLowerLimit(0)
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//        var bank = new ArraySlice(new long[0_2000]);
-//        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)0)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
-//    }
-//
-//    @Test
-//    public void testJC_BM() throws MachineInterrupt, EngineHaltedException {
-//        setupBM();
-//        var bank = _engine.getBaseRegister(12).getStorage();
-//        bank.set(0, jcBM(0_100));
-//
-//        // Case 1: Carry set -> Should jump
-//        _engine.getDesignatorRegister().setCarry(true);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_440000_000100L, _engine.getProgramAddressRegister().getCompositeValue());
-//
-//        // Case 2: Carry clear -> Should NOT jump
-//        _engine.getDesignatorRegister().setCarry(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_440000_000001L, _engine.getProgramAddressRegister().getCompositeValue());
-//    }
-//
-//    @Test
-//    public void testJC_EM() throws MachineInterrupt, EngineHaltedException {
-//        setupEM();
-//        var bank = _engine.getBaseRegister(0).getStorage();
-//        bank.set(0, jcEM(0_100));
-//
-//        // Case 1: Carry set -> Should jump
-//        _engine.getDesignatorRegister().setCarry(true);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_100, _engine.getProgramAddressRegister().getProgramCounter());
-//
-//        // Case 2: Carry clear -> Should NOT jump
-//        _engine.getDesignatorRegister().setCarry(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(1, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//    @Test
-//    public void testJC_Indexed_BM() throws MachineInterrupt, EngineHaltedException {
-//        setupBM();
-//        _engine.getExecOrUserXRegister(3).setXM(0_10);
-//        var bank = _engine.getBaseRegister(12).getStorage();
-//        bank.set(0, jcBM(3, 0, 0, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
-//
-//        _engine.getDesignatorRegister().setCarry(true);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        _engine.cycle();
-//        assertEquals(0_440000_000110L, _engine.getProgramAddressRegister().getCompositeValue());
-//    }
-//
-//    @Test
-//    public void testJC_Indirect_BM() throws MachineInterrupt, EngineHaltedException {
-//        setupBM();
-//        var bank = _engine.getBaseRegister(12).getStorage();
-//        bank.set(0, jcBM(0, 0, 1, 0_100)); // jump indirect via 0_100
-//        bank.set(0_100, fjaxu(0_74, 0_04, 0, 0, 0_200)); // second stage: J to 0_200
-//        bank.set(0_200, 0); // halt
-//
-//        _engine.getDesignatorRegister().setCarry(true);
-//        _engine.getProgramAddressRegister().setProgramCounter(0);
-//        run();
-//        assertEquals(0_200, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testJC_Indexed_EM() throws MachineInterrupt, EngineHaltedException {
-//        setupEM();
-//        _engine.getExecOrUserXRegister(3).setXM(0_10);
-//        var bank = _engine.getBaseRegister(0).getStorage();
-//        bank.set(0, jcEM(3, 0_100)); // jump to 0_100 + X3.m (0_10) = 0_110
-//
-//        _engine.getDesignatorRegister().setCarry(true);
-//        _engine.cycle();
-//        assertEquals(0_110, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
+    @Test
+    public void testJC_BM() throws MachineInterrupt {
+        var code = new long[01000];
+        code[0] = jcBM(0_1005);
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short) 3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister()
+               .setProgramCounter(0_1000)
+               .setBankDescriptorIndex(0_000004)
+               .setBankLevel((short) 0_7);
+
+        _engine.getDesignatorRegister().setCarry(true);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+
+        run();
+
+        assertEquals(0_1005L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJC_BM_NoJump() throws MachineInterrupt {
+        var code = new long[01000];
+        code[0] = jcBM(0_1005);
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short) 3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister()
+               .setProgramCounter(0_1000)
+               .setBankDescriptorIndex(0_000004)
+               .setBankLevel((short) 0_7);
+
+        _engine.getDesignatorRegister().setCarry(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+
+        run();
+
+        assertEquals(0_1001L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJC_EM() throws MachineInterrupt {
+        var code = new long[01000];
+        code[0] = jcEM(0_1005);
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short) 3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister()
+               .setProgramCounter(0_1000)
+               .setBankDescriptorIndex(0_000004)
+               .setBankLevel((short) 0_7);
+
+        _engine.getDesignatorRegister().setCarry(true);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+
+        run();
+
+        assertEquals(0_1005L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJC_EM_NoJump() throws MachineInterrupt {
+        var code = new long[01000];
+        code[0] = jcEM(0_1005);
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short) 3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister()
+               .setProgramCounter(0_1000)
+               .setBankDescriptorIndex(0_000004)
+               .setBankLevel((short) 0_7);
+
+        _engine.getDesignatorRegister().setCarry(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+
+        run();
+
+        assertEquals(0_1001L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJC_Indexed_BM() throws MachineInterrupt {
+        var code = new long[01000];
+        code[0] = jcBM(3, 0, 0, 0_1005); // jump to 0_1005 + X3.m (0_10) = 0_1015
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short) 3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister()
+               .setProgramCounter(0_1000)
+               .setBankDescriptorIndex(0_000004)
+               .setBankLevel((short) 0_7);
+
+        _engine.getExecOrUserXRegister(3).setXM(0_10);
+        _engine.getDesignatorRegister().setCarry(true);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+
+        run();
+
+        assertEquals(0_1015L, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJC_Indirect_BM() throws MachineInterrupt {
+        var code = new long[03000];
+        code[0] = jcBM(0, 0, 1, 0_2000); // jump indirect via 0_1000
+        code[0_1000] = fjaxu(0, 0, 0, 0, 0_1200); // second stage: J to 0_1200
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_3777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short) 3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister()
+               .setProgramCounter(0_1000)
+               .setBankDescriptorIndex(0_000004)
+               .setBankLevel((short) 0_7);
+
+        _engine.getDesignatorRegister().setCarry(true);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+
+        run();
+
+        assertEquals(0_1200, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testJC_Indexed_EM() throws MachineInterrupt {
+        var code = new long[01000];
+        code[0] = jcEM(3, 0_1100); // jump to 0_1100 + X3.m (0_10) = 0_1100
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short) 3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister()
+               .setProgramCounter(0_1000)
+               .setBankDescriptorIndex(0_000004)
+               .setBankLevel((short) 0_7);
+
+        _engine.getExecOrUserXRegister(3).setXM(0_10);
+        _engine.getDesignatorRegister().setCarry(true);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
+
+        run();
+
+        assertEquals(0_1110, _engine.getProgramAddressRegister().getProgramCounter());
+    }
 }
