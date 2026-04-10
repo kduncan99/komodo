@@ -89,7 +89,14 @@ public class Engine {
 
         _random.setSeed(System.currentTimeMillis());
         IntStream.range(0, 32).forEach(bx -> _baseRegisters[bx] = BaseRegister.createVoid());
-        spClear();
+
+        spClearPreventProgramCounterUpdate();
+        spClearBasicModeCachedBaseRegisterIndex();
+        spClearInstructionPoint();
+        spClearOperandIsGRS();
+        spClearOperandBaseRegisterIndex();
+        spClearOperandRelativeAddress();
+        spClearCurrentFunction();
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -128,15 +135,9 @@ public class Engine {
     // -----------------------------------------------------------------------------------------------------------------------------
     // Scratch pad things
 
-    public void spClear() {
-        spClearPreventProgramCounterUpdate();
-        spClearBasicModeCachedBaseRegisterIndex();
-        spClearInstructionPoint();
-        spClearOperandIsGRS();
-        spClearOperandBaseRegisterIndex();
-        spClearOperandRelativeAddress();
-        spClearCurrentFunction();
-    }
+    // There should never be a case where ALL the fields need to be cleared at the same time.
+    // Well, when the engine starts up, and when we clear the engine. BUT NEVER ANY OTHER TIME.
+    // So there is no spClear() method.
 
     // Normally PC is incremented at the end of instruction execution.
     // Transfer instructions set this flag to prevent this behavior, as they have already
@@ -420,7 +421,14 @@ public class Engine {
         _activityStatePacket.getIndicatorKeyRegister().setWord36(0);
         _activityStatePacket.getProgramAddressRegister().setProgramCounter(0).setBankLevel((short)0).setBankDescriptorIndex(0);
         clearJumpHistoryTable();
-        spClear();
+
+        spClearPreventProgramCounterUpdate();
+        spClearBasicModeCachedBaseRegisterIndex();
+        spClearInstructionPoint();
+        spClearOperandIsGRS();
+        spClearOperandBaseRegisterIndex();
+        spClearOperandRelativeAddress();
+        spClearCurrentFunction();
     }
 
     /**
@@ -485,7 +493,10 @@ public class Engine {
             // If there isn't an instruction fetched yet, do so.
             // Clear scratchpad settings so we can start developing operator address.
             if (!ikr.getInstructionInF0()) {
-                spClear();
+                spClearCurrentFunction();
+                spClearOperandIsGRS();
+                spClearOperandBaseRegisterIndex();
+                spClearOperandRelativeAddress();
                 fetchInstruction();
             }
 
@@ -659,6 +670,7 @@ public class Engine {
         }
 
         int offset = programCounter - bReg.getLowerLimitNormalized();
+
         _activityStatePacket.getCurrentInstruction().setW(bReg.getStorage().get(offset));
         _activityStatePacket.getIndicatorKeyRegister().setInstructionInF0(true);
         _activityStatePacket.getIndicatorKeyRegister().setExecuteRepeatedInstruction(false);
@@ -1340,6 +1352,9 @@ public class Engine {
         final int offset,
         final int count
     ) throws MachineInterrupt {
+        // TODO THIS IS SUB-OPTIMAL BECAUSE EACH FUNCTION WHICH USES THIS, WHEN IN INDIRECT ADDRESSING MODE,
+        //  MUST  FIGURE OUT AND DEAL WITH THE VALUE-TO-STORE ON EVERY ITERATION.
+        //  THE STORE OPERATIONS MUST CALCULATE VALUE-TO-STORE ONLY ONCE AND PRESERVE IT IN SCRATCHPAD.
         resolveRelativeAddress(false, grsCheck, false);
         if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
@@ -1408,6 +1423,10 @@ public class Engine {
         final boolean allowPartial,
         final long operand
     ) throws MachineInterrupt {
+        // TODO THIS IS SUB-OPTIMAL BECAUSE EACH FUNCTION WHICH USES THIS, WHEN IN INDIRECT ADDRESSING MODE,
+        //  MUST  FIGURE OUT AND DEAL WITH THE VALUE-TO-STORE ON EVERY ITERATION.
+        //  THE STORE OPERATIONS MUST CALCULATE VALUE-TO-STORE ONLY ONCE AND PRESERVE IT IN SCRATCHPAD.
+
         // If we allow immediate addressing and j-field is U or XU, there's not much to be done.
         var ci = _activityStatePacket.getCurrentInstruction();
         var jField = ci.getJ();
@@ -1474,13 +1493,19 @@ public class Engine {
      * Stores an operand in the specific partial-word after developing U where it is stored.
      * @param partialWordValue the value to store (the lower {n} bits are stored, according to the partial word size)
      * @param partialWordIndicator the partial word indicator (use j-field constants)
+     * @param forceQuarterWordMode if true, force quarter-word mode for this operation
      * @return true if the operation is complete; false if we are doing indirect addressing
      * @throws MachineInterrupt in any case where an interrupt is generated
      */
     public boolean storePartialWordOperand(
         final long partialWordValue,
-        final int partialWordIndicator
+        final int partialWordIndicator,
+        final boolean forceQuarterWordMode
     ) throws MachineInterrupt {
+        // TODO THIS IS SUB-OPTIMAL BECAUSE EACH FUNCTION WHICH USES THIS, WHEN IN INDIRECT ADDRESSING MODE,
+        //  MUST  FIGURE OUT AND DEAL WITH THE VALUE-TO-STORE ON EVERY ITERATION.
+        //  THE STORE OPERATIONS MUST CALCULATE VALUE-TO-STORE ONLY ONCE AND PRESERVE IT IN SCRATCHPAD.
+
         resolveRelativeAddress(false, false, false);
         if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
@@ -1503,7 +1528,7 @@ public class Engine {
         var offset = relAddr - bReg.getLowerLimitNormalized();
         var qWord = dr.isQuarterWordModeEnabled();
         var origValue = bReg.getStorage().get(offset);
-        var newValue = injectPartialWord(origValue, partialWordIndicator, partialWordValue, qWord);
+        var newValue = injectPartialWord(origValue, partialWordIndicator, partialWordValue, qWord || forceQuarterWordMode);
         bReg.getStorage().set(offset, newValue);
 
         return true;

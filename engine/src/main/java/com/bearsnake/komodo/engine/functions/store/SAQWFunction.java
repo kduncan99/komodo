@@ -48,10 +48,7 @@ public class SAQWFunction extends Function {
             default -> JFIELD_U;// should never happen, but default to do-nothing
         };
 
-        var aRegIndex = engine.getExecOrUserARegisterIndex(ic.getA());
-        var valueToStore = engine.getExecOrUserARegister(aRegIndex).getW();
-
-        boolean result = engine.storePartialWordOperand(valueToStore, jField);
-        return result;
+        var value = engine.getExecOrUserARegister(ic.getA()).getW();
+        return engine.storePartialWordOperand(value, jField, true);
     }
 }
