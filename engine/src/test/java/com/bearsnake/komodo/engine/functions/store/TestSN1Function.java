@@ -8,7 +8,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class TestSN1Function extends TestConstantFunction {
+public class TestSN1Function extends StoreConstantFunctionUnitTest {
 
     public TestSN1Function() {
         super(3, 0_777777_777776L);

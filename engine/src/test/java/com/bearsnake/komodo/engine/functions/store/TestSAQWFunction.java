@@ -6,7 +6,6 @@ package com.bearsnake.komodo.engine.functions.store;
 
 import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
-import com.bearsnake.komodo.engine.exceptions.EngineHaltedException;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,14 +14,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestSAQWFunction extends FunctionUnitTest {
-
-    private void cycle() throws MachineInterrupt {
-        try {
-            _engine.cycle();
-        } catch (EngineHaltedException e) {
-            // ignore
-        }
-    }
 
     private long saqwBM(long a, long x, long h, long i, long u) {
         return ((0_07L & 077) << 30) | (0_05L << 26) | ((a & 017) << 22) | ((x & 017) << 18)
@@ -36,68 +27,46 @@ public class TestSAQWFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {
-        com.bearsnake.komodo.engine.functions.FunctionTable.clear();
-        _engine = new Engine();
-        _engine.clear();
-        _engine.getDesignatorRegister().setBasicModeEnabled(true);
+        _engine = new Engine(this, this);
     }
 
     @Test
     public void testSAQW_BasicMode() throws MachineInterrupt {
         var code = new long[] {
             saqwBM(1, 1, 0, 0, 0_1000), // SAQW A1, 01000, X1
-            saqwBM(1, 1, 0, 0, 0_1000), // SAQW A1, 01000, X1
-            saqwBM(1, 1, 0, 0, 0_1000), // SAQW A1, 01000, X1
-            saqwBM(1, 1, 0, 0, 0_1000), // SAQW A1, 01000, X1
-            0,
+            saqwBM(2, 2, 0, 0, 0_1000), // SAQW A2, 01000, X1
+            saqwBM(3, 3, 0, 0, 0_1000), // SAQW A3, 01000, X1
+            saqwBM(4, 4, 0, 0, 0_1000), // SAQW A4, 01000, X1
+            0, 0, 0, 0,
         };
 
-        var bank0 = new ArraySlice(new long[0_2000]);
-        bank0.load(code, 0, code.length, 0);
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(12).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short)0)
                .setExecRegisterSetSelected(false)
                .setBasicModeBaseRegisterSelection(false);
-        _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
+        _engine.getProgramAddressRegister().fromComposite(0_1000L);
 
-        // A1 contains 0x1FF (all 9 bits set)
-        _engine.getExecOrUserARegister(1).setW(0x1FFL);
-        
-        // Q1: bits 4,5 of X1 = 0
-        _engine.getExecOrUserXRegister(1).setS1(0);
-        cycle();
+        _engine.getExecOrUserARegister(1).setW(0777);
+        _engine.getExecOrUserARegister(2).setW(0333);
+        _engine.getExecOrUserARegister(3).setW(0222);
+        _engine.getExecOrUserARegister(4).setW(0111);
 
-        // Q2: bits 4,5 of X1 = 1
-        _engine.getExecOrUserXRegister(1).setS1(1);
-        cycle();
+        _engine.getExecOrUserXRegister(1).setXI(0_000000).setXM(0_000007);
+        _engine.getExecOrUserXRegister(2).setXI(0_010000).setXM(0_000007);
+        _engine.getExecOrUserXRegister(3).setXI(0_020000).setXM(0_000007);
+        _engine.getExecOrUserXRegister(4).setXI(0_030000).setXM(0_000007);
 
-        // Q3: bits 4,5 of X1 = 2
-        _engine.getExecOrUserXRegister(1).setS1(2);
-        cycle();
+        run();
 
-        // Q4: bits 4,5 of X1 = 3
-        _engine.getExecOrUserXRegister(1).setS1(3);
-        cycle();
-
-        // In 36-bit word: Q1 Q2 Q3 Q4
-        // Each 9 bits. 0x1FF is all 1s.
-        // Q1 is bits 27-35: 0x1FF << 27 = 0x1FF_00000000
-        // Q2 is bits 18-26: 0x1FF << 18 = 0x000_7FC0000 -> wait
-        // 0x1FF << 27 = 0377000000000L
-        // 0x1FF << 18 = 0000777000000L
-        // 0x1FF << 9  = 0000000777000L
-        // 0x1FF       = 0000000000777L
-        // Sum         = 0777777777777L
-        long expected = 0_777777_777777L;
-        assertEquals(expected, bank0.get(0_1000));
+        long expected = 0_777333_222111L;
+        for (var v = 0; v < code.length; v ++) {
+            System.out.printf("%04o : %012o\n", v, code[v]);
+        }
+        assertEquals(expected, bank0.get(0_7));
     }
 
     @Test
@@ -110,17 +79,9 @@ public class TestSAQWFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(new long[10]);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(2, 0));
+        loadBaseRegister(0, false, 0_0, 0_1777, null, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, null, bank2);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)0)
@@ -149,16 +110,12 @@ public class TestSAQWFunction extends FunctionUnitTest {
 
         var bank0 = new ArraySlice(new long[0_2000]);
         bank0.load(code, 0, code.length, 0);
-        
+
         // Pointer at 01000 pointing to 01005
         bank0.set(0_1000, 0_1005L);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
+        loadBaseRegister(12, false, 0_0, 0_1777, null, bank0);
 
-        _engine.getBaseRegister(12).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short)0_2) // User privilege 2 allows indirect

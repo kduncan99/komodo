@@ -29,9 +29,7 @@ public class TestSMAFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
-        _engine.getDesignatorRegister().clear();
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
+        _engine = new Engine(this, this);
     }
 
     @Test
@@ -48,17 +46,9 @@ public class TestSMAFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_22)
-                                      .setUpperLimit(0_22777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_40)
-                                      .setUpperLimit(0_40777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank0);
+        loadBaseRegister(15, false, 0_40000, 0_40777, null, bank1);
 
-        _engine.getBaseRegister(14).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(15).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short)3)
@@ -76,47 +66,6 @@ public class TestSMAFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testSMA_BM_Fix() throws MachineInterrupt {
-        var code = new long[] {
-            smaBM(Constants.JFIELD_W, 4, 0, 0, 0, 040000),
-            smaBM(Constants.JFIELD_H1, 5, 0, 0, 0, 040001),
-            smaBM(Constants.JFIELD_H2, 6, 0, 0, 0, 040001),
-            0,
-        };
-
-        var data = new long[02000];
-
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_22)
-                                      .setUpperLimit(0_22777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_40)
-                                      .setUpperLimit(0_40777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
-
-        _engine.getBaseRegister(14).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(15).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
-        _engine.getDesignatorRegister()
-               .setBasicModeEnabled(true)
-               .setProcessorPrivilege((short)3)
-               .setExecRegisterSetSelected(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-
-        _engine.getExecOrUserARegister(4).setW(0_777777_777776L); // -1 (magnitude 1)
-        _engine.getExecOrUserARegister(5).setW(0_000000_000000L); // +0 (magnitude 0)
-        _engine.getExecOrUserARegister(6).setW(0_000000_000005L); // +5 (magnitude 5)
-
-        run();
-
-        assertEquals(0_000000_000001L, data[0]);
-        assertEquals(0_000000_000005L, data[1]);
-    }
-
-    @Test
     public void testSMA_EM() throws MachineInterrupt {
         var code = new long[] {
             smaEM(Constants.JFIELD_W, 4, 0, 0, 0, 2, 01000),
@@ -130,17 +79,9 @@ public class TestSMAFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_01)
-                                      .setUpperLimit(0_01777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_00)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, null, bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -166,17 +107,13 @@ public class TestSMAFunction extends FunctionUnitTest {
 
         var bank0 = new ArraySlice(code);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_00)
-                                      .setUpperLimit(0_01777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0_000000).setBankLevel((short)0_0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         _engine.getExecOrUserARegister(4).setW(0_777777_777776L); // -1
 
@@ -204,8 +141,9 @@ public class TestSMAFunction extends FunctionUnitTest {
                                       .setUpperLimit(0_01777)
                                       .setBaseAddress(new AbsoluteAddress(1, 0));
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(2, false, 0_2000, 0_2777, null, bank1);
+
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)

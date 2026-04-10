@@ -8,10 +8,10 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class TestSFSFunction extends TestConstantFunction {
+public class TestSASFunction extends StoreConstantFunctionUnitTest {
 
-    public TestSFSFunction() {
-        super(04, 0_050505_050505L);
+    public TestSASFunction() {
+        super(06, 0_040040_040040L);
     }
 
     @BeforeEach
@@ -20,42 +20,42 @@ public class TestSFSFunction extends TestConstantFunction {
     }
 
     @Test
-    public void testSFS_Simple_BM() throws MachineInterrupt {
+    public void testSAS_Simple_BM() throws MachineInterrupt {
         test_Simple_BM();
     }
 
     @Test
-    public void testSFS_Simple_EM() throws MachineInterrupt {
+    public void testSAS_Simple_EM() throws MachineInterrupt {
         test_Simple_EM();
     }
 
     @Test
-    public void testSFS_H_BM() throws MachineInterrupt {
+    public void testSAS_H_BM() throws MachineInterrupt {
         test_H_BM();
     }
 
     @Test
-    public void testSFS_T_EM() throws MachineInterrupt {
+    public void testSAS_T_EM() throws MachineInterrupt {
         test_T_EM();
     }
 
     @Test
-    public void testSFS_S_Indirect_Indexed_BM() throws MachineInterrupt {
+    public void testSAS_S_Indirect_Indexed_BM() throws MachineInterrupt {
         test_S_Indirect_Indexed_BM();
     }
 
     @Test
-    public void testSFS_U_EM() throws MachineInterrupt {
+    public void testSAS_U_EM() throws MachineInterrupt {
         test_U_EM();
     }
 
     @Test
-    public void testSFS_XU_BM() throws MachineInterrupt {
+    public void testSAS_XU_BM() throws MachineInterrupt {
         test_XU_BM();
     }
 
     @Test
-    public void testSFS_GRS_EM() throws MachineInterrupt {
+    public void testSAS_GRS_EM() throws MachineInterrupt {
         test_GRS_EM();
     }
 }

@@ -30,9 +30,7 @@ public class TestSXFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
-        _engine.getDesignatorRegister().clear();
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
+        _engine = new Engine(this, this);
     }
 
     @Test
@@ -47,11 +45,9 @@ public class TestSXFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode).setLowerLimit(0_22).setUpperLimit(0_22777).setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.BasicMode).setLowerLimit(0_40).setUpperLimit(0_40777).setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank0);
+        loadBaseRegister(15, false, 0_40000, 0_40777, null, bank1);
 
-        _engine.getBaseRegister(14).setBankDescriptor(bd0).setStorage(bank0);
-        _engine.getBaseRegister(15).setBankDescriptor(bd1).setStorage(bank1);
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short)3).setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
@@ -67,7 +63,7 @@ public class TestSXFunction extends FunctionUnitTest {
     @Test
     public void testSX_EM() throws MachineInterrupt {
         var code = new long[] {
-            sxEM(Constants.JFIELD_W, 1, 0, 0, 0, 2, 01000),
+            sxEM(Constants.JFIELD_W, 1, 0, 0, 0, 2, 0_2000),
             0,
         };
 
@@ -75,13 +71,11 @@ public class TestSXFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(01777).setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(01777).setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(2, false, 0_01000, 0_02777, null, bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1);
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
-        _engine.getProgramAddressRegister().setProgramCounter(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         _engine.getExecOrUserXRegister(1).setW(0_000000_111222L);
 
@@ -98,10 +92,10 @@ public class TestSXFunction extends FunctionUnitTest {
         };
 
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(01777).setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
-        _engine.getProgramAddressRegister().setProgramCounter(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         _engine.getExecOrUserXRegister(1).setW(0_000000_333444L);
 
@@ -113,32 +107,20 @@ public class TestSXFunction extends FunctionUnitTest {
     @Test
     public void testSX_ReferenceViolation_EM() {
         var code = new long[] {
-            sxEM(Constants.JFIELD_W, 1, 0, 0, 0, 2, 02000),
+            sxEM(Constants.JFIELD_W, 1, 0, 0, 0, 2, 03000),
             0,
         };
 
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(new long[02000]);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(01777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(01777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(2, false, 0_02000, 0_02777, null, bank1);
 
-        _engine.getBaseRegister(0)
-               .setBankDescriptor(bd0)
-               .setStorage(bank0);
-        _engine.getBaseRegister(2)
-               .setBankDescriptor(bd1)
-               .setStorage(bank1);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3);
-        _engine.getProgramAddressRegister().setProgramCounter(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         var ex = assertThrows(ReferenceViolationInterrupt.class, this::run);
 
@@ -153,10 +135,10 @@ public class TestSXFunction extends FunctionUnitTest {
         };
 
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0).setUpperLimit(01777).setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
-        _engine.getProgramAddressRegister().setProgramCounter(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         var ex = assertThrows(ReferenceViolationInterrupt.class, this::run);
         assertTrue(ex._errorType == ReferenceViolationInterrupt.ErrorType.GRSViolation ||

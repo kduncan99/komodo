@@ -228,7 +228,11 @@ public class TestLRSFunction extends FunctionUnitTest {
         // init all of GRS to magic number
         var magic = 0_112344_765230L;
         for (int rx = 0; rx < 128; rx++) {
-            _engine.getGeneralRegisterSet().getRegister(rx).setW(magic);
+            if ((rx < 040) || (rx > 077)) {
+                _engine.getGeneralRegisterSet()
+                       .getRegister(rx)
+                       .setW(magic);
+            }
         }
 
         _engine.getExecOrUserARegister(15).setQ1(0);    // area-2 count

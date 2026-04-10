@@ -29,33 +29,25 @@ public class TestSRSFunction extends FunctionUnitTest {
     @BeforeEach
     public void setup() {
         com.bearsnake.komodo.engine.functions.FunctionTable.clear();
-        _engine = new Engine();
+        _engine = new Engine(this, this);
         _engine.clear();
     }
 
     @Test
     public void testSRS_Simple_BM() throws MachineInterrupt {
-        var code = new long[] {
-            srsBM(1, 0, 0, 0, 0_1000), // store SRS starting at offset 01000 relative to B0
-            0,
-            };
+        var code = new long[02000];
+        code[0] = srsBM(1, 0, 0, 0, 0_1005); // store SRS starting at offset 05
 
-        var bank0 = new ArraySlice(new long[0_2000]);
-        bank0.load(code, 0, code.length, 0);
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777) // 1024 words
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(12).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short)0)
                .setExecRegisterSetSelected(false)
                .setBasicModeBaseRegisterSelection(false);
         // BM PC: E=1, L=1 (level 0), BDI=0, offset=0
-        _engine.getProgramAddressRegister().fromComposite(0_440000_000000L);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         // Setup GRS values
         _engine.getGeneralRegisterSet().getRegister(0100).setW(0111);
@@ -69,36 +61,26 @@ public class TestSRSFunction extends FunctionUnitTest {
 
         run();
 
-        assertEquals(0111, bank0.get(0_1000));
-        assertEquals(0222, bank0.get(0_1001));
+        assertEquals(0111, bank0.get(05));
+        assertEquals(0222, bank0.get(06));
     }
 
     @Test
     public void testSRS_Simple_EM() throws MachineInterrupt {
-        var code = new long[] {
-            srsEM(1, 0, 0, 0, 2, 0),// store SRS starting at bank 2, offset 0
-            0,
-            };
+        var code = new long[02000];
+        code[0] = srsEM(1, 0, 0, 0, 2, 0);
 
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(new long[10]); // buffer for storage
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(2, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, null, bank2);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)0)
                .setExecRegisterSetSelected(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         // Setup GRS values (using user registers 0100-0117)
         _engine.getGeneralRegisterSet().getRegister(0100).setW(0100);
@@ -132,22 +114,14 @@ public class TestSRSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(new long[10]);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(2, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, null, bank2);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)0)
                .setExecRegisterSetSelected(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         _engine.getGeneralRegisterSet().getRegister(127).setW(0777);
         _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X0).setW(01000);
@@ -173,22 +147,14 @@ public class TestSRSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(new long[10]);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(2, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, null, bank2);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3) // User mode
                .setExecRegisterSetSelected(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
         _engine.getExecOrUserARegister(1).setQ1(0);
         _engine.getExecOrUserARegister(1).setQ2(0);
