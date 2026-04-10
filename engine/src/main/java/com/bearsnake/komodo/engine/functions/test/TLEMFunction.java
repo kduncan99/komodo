@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -41,7 +42,7 @@ public class TLEMFunction extends Function {
     ) throws MachineInterrupt {
         // Fetch the operand U under F0.j control.
         var operand = engine.getOperand(false, true, true, true, false);
-        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 

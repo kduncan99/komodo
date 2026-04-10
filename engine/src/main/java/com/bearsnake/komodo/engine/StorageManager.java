@@ -11,7 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
  * A storage manager which manages access to main storage,
  * which is presented and consumed as a set of uniquely identified segments.
  */
-public interface Storage {
+public interface StorageManager {
 
     /**
      * Allocates a new segment of storage

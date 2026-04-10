@@ -7,4 +7,5 @@ package com.bearsnake.komodo.engine;
 public enum HaltCode {
     NONE,
     HLTJ_INSTRUCTION,
+    UNIT_TEST_STOP,
 }

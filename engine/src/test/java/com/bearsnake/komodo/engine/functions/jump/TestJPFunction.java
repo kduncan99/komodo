@@ -95,7 +95,6 @@ public class TestJPFunction extends FunctionUnitTest {
         // Case 3: A5 is negative -> Should NOT jump
         _engine.getExecOrUserARegister(5).setW(0_400000_000000L);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
-        setHalted(null);
         run();
         assertEquals(0_1001L, _engine.getProgramAddressRegister().getProgramCounter());
     }
@@ -159,7 +158,6 @@ public class TestJPFunction extends FunctionUnitTest {
         // Case 3: A5 is negative -> Should NOT jump
         _engine.getExecOrUserARegister(5).setW(0_400000_000000L);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
-        setHalted(null);
         run();
         assertEquals(0_1001L, _engine.getProgramAddressRegister().getProgramCounter());
     }

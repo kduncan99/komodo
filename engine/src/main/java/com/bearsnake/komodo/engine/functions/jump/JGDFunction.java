@@ -8,6 +8,7 @@ import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.GeneralRegisterSet;
+import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -38,7 +39,7 @@ public class JGDFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getJumpOperand();
-        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 

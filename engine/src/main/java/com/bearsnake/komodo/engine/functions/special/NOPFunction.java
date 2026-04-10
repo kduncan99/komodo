@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions.special;
 
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -32,6 +33,6 @@ public class NOPFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         engine.ignoreOperand();
-        return engine.spGetInstructionPoint() != Engine.InstructionPoint.RESOLVING_ADDRESS;
+        return engine.spGetInstructionPoint() != InstructionPoint.RESOLVING_ADDRESS;
     }
 }

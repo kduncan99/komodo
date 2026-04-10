@@ -11,7 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import java.util.HashMap;
 import java.util.TreeMap;
 
-public abstract class EngineUnitTest implements Storage, Wrapper {
+public abstract class EngineUnitTest implements StorageManager, InterruptHandler {
 
     protected Engine _engine;
 
@@ -54,7 +54,7 @@ public abstract class EngineUnitTest implements Storage, Wrapper {
         abte.setSubsetSpecification(subsetting);
     }
 
-    // Storage implementation ------------------------------------------------------------------------------------------------------
+    // StorageManager implementation -----------------------------------------------------------------------------------------------
 
     private HashMap<Integer, ArraySlice> _segments = new HashMap<>();
 
@@ -165,49 +165,18 @@ public abstract class EngineUnitTest implements Storage, Wrapper {
         slice.set(offset, value);
     }
 
-    // Wrapper implementation ------------------------------------------------------------------------------------------------------
+    // Interrupt Handler implementation --------------------------------------------------------------------------------------------
 
-    // most recent halt code
-    private HaltCode _haltCode = null;
-
-    // Interrupt Stack - there may be at most one of each class of interrupt posted on the stack.
-    // In practice there will rarely be more than one or two.
-    // Caller must poll for interrupts before calling cycle().
-    private final TreeMap<MachineInterrupt.InterruptClass, MachineInterrupt> _interruptStack = new TreeMap<>();
-
+    /**
+     * Default handler for interrupts.
+     * Implementing subclass should override this and handle any interrupts it is interested in,
+     * and call back here for any others.
+     */
     @Override
-    public synchronized MachineInterrupt getInterrupt() {
-        return _interruptStack.isEmpty() ? null : _interruptStack.pollFirstEntry().getValue();
-    }
-
-    @Override
-    public synchronized void postInterrupt(
+    public void handleInterrupt(
         final MachineInterrupt interrupt
     ) {
-        _interruptStack.put(interrupt.getInterruptClass(), interrupt);
-    }
-
-    @Override
-    public synchronized HaltCode getHaltCode() {
-        return _haltCode;
-    }
-
-    /**
-     * Indicates whether the engine is currently halted.
-     */
-    @Override
-    public synchronized boolean isHalted() {
-        return _haltCode != null;
-    }
-
-    /**
-     * Sets the halt code. The wrapper should take any necessary action.
-     * Unless the halt is cleared, the wrapper should not invoke the engine's cycle.
-     */
-    @Override
-    public synchronized void setHalted(
-        final HaltCode haltCode
-    ) {
-        _haltCode = haltCode;
+        System.out.println("Unhandled interrupt: " + interrupt.toString());
+        _engine.halt(HaltCode.UNIT_TEST_STOP);
     }
 }

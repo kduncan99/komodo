@@ -50,7 +50,7 @@ public class TestHLTJFunction extends FunctionUnitTest {
         run();
 
         assertEquals(0_001000L, _engine.getProgramAddressRegister().getProgramCounter());
-        assertEquals(HaltCode.HLTJ_INSTRUCTION, getHaltCode());
+        assertEquals(HaltCode.HLTJ_INSTRUCTION, _engine.getHaltCode());
     }
 
     @Test

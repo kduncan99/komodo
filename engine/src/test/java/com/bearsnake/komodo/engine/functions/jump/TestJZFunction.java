@@ -92,7 +92,6 @@ public class TestJZFunction extends FunctionUnitTest {
 
         _engine.getExecOrUserARegister(5).setW(0_01L);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
-        setHalted(null);
         run();
         assertEquals(0_1001L, _engine.getProgramAddressRegister().getProgramCounter());
     }
@@ -153,7 +152,6 @@ public class TestJZFunction extends FunctionUnitTest {
 
         _engine.getExecOrUserARegister(5).setW(0_777777_777776L);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
-        setHalted(null);
         run();
         assertEquals(0_1001L, _engine.getProgramAddressRegister().getProgramCounter());
     }

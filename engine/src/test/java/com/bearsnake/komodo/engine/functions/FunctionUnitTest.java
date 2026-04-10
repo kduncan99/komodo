@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions;
 
 import com.bearsnake.komodo.engine.EngineUnitTest;
+import com.bearsnake.komodo.engine.HaltCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 public abstract class FunctionUnitTest extends EngineUnitTest {
@@ -43,21 +44,29 @@ public abstract class FunctionUnitTest extends EngineUnitTest {
         return ((s1 & 077) << 30) | ((s2 & 077) << 24) | ((s3 & 077) << 18) | ((s4 & 077) << 12) | ((s5 & 077) << 6) | (s6 & 077);
     }
 
-    protected void run() throws MachineInterrupt {
-        while (!isHalted()) {
-            var interrupt = getInterrupt();
-            if (interrupt != null) {
-                if (interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.InvalidInstruction) {
-                    var ci = _engine.getCurrentInstruction();
-                    if (ci.getW() == 0) {
-                        return;
-                    }
-                }
+    protected MachineInterrupt _interrupt = null;
 
-                throw interrupt;
-            }
+    protected void run() throws MachineInterrupt {
+        _interrupt = null;
+        while (!_engine.isHalted()) {
             _engine.cycle();
         }
-        IO.println("Engine Halted");
+
+        if (_interrupt != null) {
+            if ((_interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.InvalidInstruction)
+                && (_engine.getCurrentInstruction().getW() == 0)) {
+                // this is normal...ish. Anyway, it's how all the unit tests halt the engine.
+            } else {
+                throw _interrupt;
+            }
+        }
+    }
+
+    @Override
+    public void handleInterrupt(
+        final MachineInterrupt interrupt
+    ) {
+        _interrupt = interrupt;
+        _engine.halt(HaltCode.UNIT_TEST_STOP);
     }
 }

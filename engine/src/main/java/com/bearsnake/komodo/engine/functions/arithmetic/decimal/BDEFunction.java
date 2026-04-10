@@ -6,6 +6,7 @@ package com.bearsnake.komodo.engine.functions.arithmetic.decimal;
 
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.Register;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -228,7 +229,7 @@ public class BDEFunction extends DecimalFunction {
         var uWords = uChars / 4 + (uChars % 4 == 0 ? 0 : 1);
 
         var operands = engine.getConsecutiveOperands(false, uWords);
-        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
@@ -351,7 +352,7 @@ public class BDEFunction extends DecimalFunction {
         var uWords = uChars / 8 + (uChars % 8 == 0 ? 0 : 1);
 
         var operands = engine.getConsecutiveOperands(false, uWords);
-        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 

@@ -14,6 +14,7 @@ import com.bearsnake.komodo.engine.interrupts.*;
 
 import java.util.HashMap;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.stream.IntStream;
 
 import static com.bearsnake.komodo.engine.Constants.JFIELD_U;
@@ -26,34 +27,15 @@ public class Engine {
 
     private static final int JUMP_HISTORY_TABLE_SIZE = 512;
 
-    private final Storage _storage;
-    private final Wrapper _wrapper;
+    // This is how we talk directly to storage.
+    // Generally, we try to maintain ArraySlice objects through which we can access storage without
+    // actually bothering the manager. However, we do need the manager whenever we need to allocate new storage
+    // (in the context of internal operating systems), and when we need to load base registers (in any mode).
+    private final StorageManager _storageManager;
 
-    public enum InstructionPoint {
-        BETWEEN_INSTRUCTIONS(0),
-        RESOLVING_ADDRESS(1),
-        MID_INSTRUCTION(2);
-
-        private final int code;
-
-        InstructionPoint(int code) {
-            this.code = code;
-        }
-
-        public int getCode() {
-            return code;
-        }
-
-        public static InstructionPoint fromCode(int code) {
-            for (InstructionPoint ip : values()) {
-                if (ip.getCode() == code) {
-                    return ip;
-                }
-            }
-            throw new IllegalArgumentException("Invalid instruction point code: " + code);
-        }
-    }
-
+    // Machine state (apart from scratch pad things)
+    // These are the things which need to be preserved during activity switching.
+    // It is up to the operating system to direct this process, however.
     private final ActiveBaseTable _activeBaseTable = new ActiveBaseTable();
     private final ActivityStatePacket _activityStatePacket = new ActivityStatePacket();
     private final BaseRegister[] _baseRegisters = new BaseRegister[32];
@@ -63,6 +45,9 @@ public class Engine {
     // Don't do this if you want good performance.
     private boolean _traceInstructions = true;
 
+    // If this value is set to anything other than NONE, the engine is halted.
+    private HaltCode _haltCode = HaltCode.NONE;
+
     // Used while determining an appropriate bank for relative address resolution in basic mode.
     private static final HashMap<Boolean, int[]> BASE_REGISTER_CANDIDATES = new HashMap<>();
     static {
@@ -70,22 +55,16 @@ public class Engine {
         BASE_REGISTER_CANDIDATES.put(false, new int[]{12, 14, 13, 15});
     }
 
-    // Inventory of temporarily-locked addresses - this is used when necessary, to lock a particular
-    // memory location for purposes including (but maybe not limited to) instructions which read AND write
-    // to a memory location across interrupt points. It is static because it is most needed when we have
-    // multiple active Engine objects.
-    private static final HashMap<AbsoluteAddress, Engine> _lockedAddresses = new HashMap<>();
-    private static boolean _lockIsHeldByUs = false;
-
     // For support of random functions
     private final Random _random = new Random();
 
+    /**
+     * This constructor is for use with an internal operating system.
+     */
     public Engine(
-        final Storage storage,
-        final Wrapper wrapper
+        final StorageManager storageManager
     ) {
-        _storage = storage;
-        _wrapper = wrapper;
+        _storageManager = storageManager;
 
         _random.setSeed(System.currentTimeMillis());
         IntStream.range(0, 32).forEach(bx -> _baseRegisters[bx] = BaseRegister.createVoid());
@@ -97,6 +76,87 @@ public class Engine {
         spClearOperandBaseRegisterIndex();
         spClearOperandRelativeAddress();
         spClearCurrentFunction();
+    }
+
+    /**
+     * This constructor is for use by external operating systems.
+     * @param storageManager storage manager for this engine. Could be the external operating system.
+     * @param interruptHandler interrupt handler for this engine. This is part of the external operating system.
+     */
+    public Engine(
+        final StorageManager storageManager,
+        final InterruptHandler interruptHandler
+    ) {
+        this(storageManager);
+        _interruptHandler = interruptHandler;
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------------------
+    // Interrupt handling
+    // We operate in one of two modes.
+    //  1) Conventional Operating System - the entire operating environment is contained within the virtualized hardware.
+    //  all code is 36-bit conventional code, including the libraries and the OS, and importantly, the interrupt handlers.
+    //  In this mode, we handle interrupts conventionally - that is to say, when we are at an interrupt point, we look for
+    //  pending interrupts, and process the highest-priority interrupt which is not deferred by transferring control
+    //  through the appropriate interrupt table vector.
+    //  2) Externalized Operating System - we act as an application-level engine, never running operating system code.
+    //  In this mode, we still collect interrupts, but when it is time to handle one, we instead pass it to the external
+    //  operating system, which disposes of the interrupt in whatever many it sees fit.
+    // In either case, we collect interrupts as follows:
+    //  Fatal interrupts must be thrown as exceptions. The cycle() method then catches them and places them at the
+    //  appropriate location in the pending interrupt queue. Upon the next invocation of cycle(), instead of doing an
+    //  actual instruction cycle, we process the appropriate next interrupt.
+    //  Non-fatal interrups may be posted to the queue manually so that the current instruction flow may complete,
+    //  at least to the next interrupt point. Such interrupts *can* be thrown, but they do not have to be.
+
+    // Interrupt Stack - there may be at most one of each class of interrupt posted on the stack.
+    // In practice there will rarely be more than one or two.
+    // Caller must poll for interrupts before calling cycle().
+    private InterruptHandler _interruptHandler = null;
+
+    private final TreeMap<MachineInterrupt.InterruptClass, MachineInterrupt> _interruptStack = new TreeMap<>();
+
+    /**
+     * Checks whether there are any interrupts pending which can be serviced.
+     * If so, the interrupt is processed according to operating system mode, and we return true when done.
+     * @return true if we processed a pending interrupt, false if none were pending, or the pending interrupts are all deferrable
+     * and interrupts are prevented.
+     */
+    private boolean checkForInterrupts() {
+        var result = false;
+        var dr = _activityStatePacket.getDesignatorRegister();
+        var iter = _interruptStack.entrySet().iterator();
+        if (iter.hasNext()) {
+            var interrupt = iter.next().getValue();
+            if ((interrupt.getDeferrability() == MachineInterrupt.Deferrability.Deferrable) && (dr.isDeferrableInterruptEnabled())) {
+                // Any interrupts from this point onward are deferrable, so if *this* interrupt should be deferred,
+                // then all subsequent interrupts should also be deferred.
+                // Do nothing here...
+            } else {
+
+                iter.remove();
+                if (_interruptHandler != null) {
+                    _interruptHandler.handleInterrupt(interrupt);
+                } else {
+                    // process the thing internally
+                    processInterrupt(interrupt);
+                }
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    public void postInterrupt(
+        final MachineInterrupt interrupt
+    ) {
+        _interruptStack.put(interrupt.getInterruptClass(), interrupt);
+    }
+
+    private void processInterrupt(
+        final MachineInterrupt interrupt
+    ) {
+        // TODO (a lot of complicated shenanigans)
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -211,6 +271,13 @@ public class Engine {
 
     // -----------------------------------------------------------------------------------------------------------------------------
     // Storage lock things
+
+    // Inventory of temporarily-locked addresses - this is used when necessary, to lock a particular
+    // memory location for purposes including (but maybe not limited to) instructions which read AND write
+    // to a memory location across interrupt points. It is static because it is most needed when we have
+    // multiple active Engine objects.
+    private static final HashMap<AbsoluteAddress, Engine> _lockedAddresses = new HashMap<>();
+    private static boolean _lockIsHeldByUs = false;
 
     /**
      * Clears all the locks held by this engine.
@@ -433,10 +500,10 @@ public class Engine {
 
     /**
      * Executes one cycle
-     * Caller should disposition any pending interrupts before invoking this...
-     * Since the engine is not specifically hardware (could be an executor for a native mode OS),
-     * we don't actually know how to handle the interrupts.
-     * In any event, we are driven by the following two flags in the indicator key register:
+     * Caller should handle any halt condition before invoking this.
+     * At the top-most level, we disposition one interrupt if any exist and can be handled.
+     * Otherwise, we proceed with instruction execution.
+     * We are driven by the following two flags in the indicator key register:
      * ---
      * INF: Indicates that a valid instruction is in F0.
      *      If we are returning from an interrupt, the instruction in F0 was interrupted.
@@ -480,9 +547,17 @@ public class Engine {
      *      If R1 is NOT zero, we simply return to the caller *without* incrementing PAR.PC even if we could have done so
      *      otherwise. Having INF and EXRF already set, we won't waste time re-evaluating the EXR instruction, we'll
      *      just (re-)execute the target instruction.
-     * @return true between instructions
+     * @return true between instructions and not halted
      */
     public boolean cycle() {
+        if (_haltCode != HaltCode.NONE) {
+            return false;
+        }
+
+        if (checkForInterrupts()) {
+            return spGetInstructionPoint() == InstructionPoint.BETWEEN_INSTRUCTIONS;
+        }
+
         var dr = _activityStatePacket.getDesignatorRegister();
         var ikr = _activityStatePacket.getIndicatorKeyRegister();
         var par = _activityStatePacket.getProgramAddressRegister();
@@ -830,7 +905,15 @@ public class Engine {
         final HaltCode haltCode
     ) {
         // TODO LOG THIS
-        _wrapper.setHalted(haltCode);
+        _haltCode = haltCode;
+    }
+
+    public HaltCode getHaltCode() {
+        return _haltCode;
+    }
+
+    public boolean isHalted() {
+        return _haltCode != HaltCode.NONE;
     }
 
     /**
@@ -894,15 +977,6 @@ public class Engine {
         spClearOperandBaseRegisterIndex();
         spSetPreventProgramCounterUpdate(true);
         createJumpHistoryEntry(oldAddress);
-    }
-
-    /**
-     * Posts an interrupt to be processed by the interrupt handler.
-     */
-    public void postInterrupt(
-        final MachineInterrupt interrupt
-    ) {
-        _wrapper.postInterrupt(interrupt);
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------

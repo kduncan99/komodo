@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions.arithmetic.decimal;
 
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
@@ -32,7 +33,7 @@ public class DADEFunction extends DecimalFunction {
         final Engine engine
     ) throws MachineInterrupt {
         var operands = engine.getConsecutiveOperands(true, 2);
-        if (engine.spGetInstructionPoint() == Engine.InstructionPoint.RESOLVING_ADDRESS) {
+        if (engine.spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
