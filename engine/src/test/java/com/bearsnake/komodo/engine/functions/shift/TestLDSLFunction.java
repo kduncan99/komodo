@@ -20,9 +20,7 @@ public class TestLDSLFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
-        _engine.getDesignatorRegister().clear();
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
+        _engine = new Engine(this, this);
     }
 
     @Test
@@ -33,11 +31,8 @@ public class TestLDSLFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-                                     .setLowerLimit(0_44)
-                                     .setUpperLimit(0_44777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(14).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(14, false, 0_44000, 0_44777, null, bank);
+
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short)3)
@@ -46,7 +41,9 @@ public class TestLDSLFunction extends FunctionUnitTest {
 
         _engine.getExecOrUserARegister(0).setW(0_000000_000000L);
         _engine.getExecOrUserARegister(1).setW(0_400000_000000L); // Bit 35 set
+
         run();
+
         // Left Shift Logical 1.
         // Combined (72 bits): 000...000 100...000
         // Left 1: 000...001 000...000
@@ -62,11 +59,8 @@ public class TestLDSLFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0_1)
-                                     .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -75,7 +69,9 @@ public class TestLDSLFunction extends FunctionUnitTest {
 
         _engine.getExecOrUserARegister(2).setW(0_000000_000000L);
         _engine.getExecOrUserARegister(3).setW(0_123456_765432L);
+
         run();
+
         // Left Shift Logical 9.
         // A2: 000 000 000 000
         // A3: 123 456 765 432
@@ -87,18 +83,15 @@ public class TestLDSLFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testLDSL_ShiftAll() throws MachineInterrupt {
+    public void testLDSL_ShiftAll_EM() throws MachineInterrupt {
         var code = new long[] {
             ldslImm(5, 0, 72),
             0,
         };
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0_1)
-                                     .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -107,7 +100,9 @@ public class TestLDSLFunction extends FunctionUnitTest {
 
         _engine.getExecOrUserARegister(5).setW(0_777777_777777L);
         _engine.getExecOrUserARegister(6).setW(0_777777_777777L);
+
         run();
+
         // Left Shift Logical 72 results in zero.
         assertEquals(0L, _engine.getExecOrUserARegister(5).getW());
         assertEquals(0L, _engine.getExecOrUserARegister(6).getW());

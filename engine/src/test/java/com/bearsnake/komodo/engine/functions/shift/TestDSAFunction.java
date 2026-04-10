@@ -20,24 +20,21 @@ public class TestDSAFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
+        _engine = new Engine(this, this);
         _engine.getDesignatorRegister().clear();
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
     }
 
     @Test
-    public void testDSA_Positive() throws MachineInterrupt {
+    public void testDSA_Positive_EM() throws MachineInterrupt {
         var code = new long[] {
             dsaImm(0, 0, 1),
             0,
         };
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0_1)
-                                     .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -60,18 +57,15 @@ public class TestDSAFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testDSA_Negative() throws MachineInterrupt {
+    public void testDSA_Negative_EM() throws MachineInterrupt {
         var code = new long[] {
             dsaImm(2, 0, 1),
             0,
         };
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0_1)
-                                     .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -90,18 +84,15 @@ public class TestDSAFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testDSA_ShiftAll() throws MachineInterrupt {
+    public void testDSA_ShiftAll_EM() throws MachineInterrupt {
         var code = new long[] {
             dsaImm(4, 0, 72),
             0,
         };
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0_1)
-                                     .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)

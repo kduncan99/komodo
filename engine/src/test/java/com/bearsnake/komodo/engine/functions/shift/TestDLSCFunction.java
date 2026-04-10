@@ -20,35 +20,31 @@ public class TestDLSCFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
+        _engine = new Engine(this, this);
         _engine.getDesignatorRegister().clear();
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
     }
 
-    private void setupEM(long[] code, int bdi) {
-        var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0)
-                                     .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(bdi).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-        _engine.getDesignatorRegister().setBasicModeEnabled(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(bdi);
-    }
-
     @Test
-    public void testDLSC_Basic() throws MachineInterrupt {
+    public void testDLSC_BM() throws MachineInterrupt {
         var code = new long[0_1000];
-        code[0] = dlsc(4, 0, 0_400); // Address > 0200
+        code[0] = dlsc(4, 0, 0_1400); // Address > 0200
         code[1] = 0; // NOP
+        code[0_400] = 0_123400_000000L;
+        code[0_401] = 0_123400_000000L;
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(13, false, 0_1000, 0_1777, null, bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short) 3);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(4);
+
         // 0_123400_000000_123400_000000L = 001 010 011 100 ... (72 bits)
         // Bit 0,1 are 0,0.
         // Shift 1: 010 100 111 000 ... (Bit 0=0, Bit 1=1 - STOP)
         // Count 1.
-        code[0_400] = 0_123400_000000L;
-        code[0_401] = 0_123400_000000L;
-        setupEM(code, 0);
 
         run();
 
@@ -61,13 +57,20 @@ public class TestDLSCFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testDLSC_Typical() throws MachineInterrupt {
+    public void testDLSC_Typical_EM() throws MachineInterrupt {
         var code = new long[0_4000];
-        code[0] = dlsc(10, 0, 0_2000);
-        code[1] = 0; // NOP
+        code[0] = dlsc(10, 0, 0_3000);
+        code[1] = 0;
         code[0_2000] = 0;
         code[0_2001] = 0_000007_000000L;
-        setupEM(code, 0);
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_3777, null, bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short) 3);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(4);
 
         run();
 
@@ -77,13 +80,20 @@ public class TestDLSCFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testDLSC_AllZeros() throws MachineInterrupt {
+    public void testDLSC_AllZeros_EM() throws MachineInterrupt {
         var code = new long[0_1000];
-        code[0] = dlsc(2, 0, 0_400);
+        code[0] = dlsc(2, 0, 0_1400);
         code[1] = 0;
         code[0_400] = 0;
         code[0_401] = 0;
-        setupEM(code, 0);
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short) 3);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(4);
 
         run();
 
@@ -93,13 +103,20 @@ public class TestDLSCFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testDLSC_AllOnes() throws MachineInterrupt {
+    public void testDLSC_AllOnes_EM() throws MachineInterrupt {
         var code = new long[0_1000];
-        code[0] = dlsc(6, 0, 0_400);
+        code[0] = dlsc(6, 0, 0_1400);
         code[1] = 0;
         code[0_400] = 0_777777_777777L;
         code[0_401] = 0_777777_777777L;
-        setupEM(code, 0);
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short) 3);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(4);
 
         run();
 
@@ -109,17 +126,24 @@ public class TestDLSCFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testDLSC_NoShift() throws MachineInterrupt {
+    public void testDLSC_NoShift_EM() throws MachineInterrupt {
         var code = new long[0_1000];
-        code[0] = dlsc(0, 0, 0_400);
+        code[0] = dlsc(0, 0, 0_1400);
         code[1] = 0;
-        // 0_200000_000000, 0 = 010 000 ... Bit 0=0, Bit 1=1. No shift.
         code[0_400] = 0_200000_000000L;
         code[0_401] = 0;
-        setupEM(code, 0);
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short) 3);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(4);
 
         run();
 
+        // 0_200000_000000, 0 = 010 000 ... Bit 0=0, Bit 1=1. No shift.
         assertEquals(0_200000_000000L, _engine.getExecOrUserARegister(0).getW());
         assertEquals(0L, _engine.getExecOrUserARegister(1).getW());
         assertEquals(0L, _engine.getExecOrUserARegister(2).getW());

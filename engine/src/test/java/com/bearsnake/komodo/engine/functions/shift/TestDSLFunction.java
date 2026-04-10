@@ -20,9 +20,7 @@ public class TestDSLFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
-        _engine.getDesignatorRegister().clear();
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
+        _engine = new Engine(this, this);
     }
 
     @Test
@@ -33,11 +31,8 @@ public class TestDSLFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-                                     .setLowerLimit(0_44)   // 044000
-                                     .setUpperLimit(0_44777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(14).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(14, false, 0_44000, 0_44777, null, bank);
+
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short)3)
@@ -46,7 +41,9 @@ public class TestDSLFunction extends FunctionUnitTest {
 
         _engine.getExecOrUserARegister(0).setW(0_000000_000001L);
         _engine.getExecOrUserARegister(1).setW(0_000000_000000L);
+
         run();
+
         // Shift right logical 1.
         // A0: 000...001
         // A1: 000...000
@@ -64,11 +61,8 @@ public class TestDSLFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0_1)
-                                     .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -89,18 +83,15 @@ public class TestDSLFunction extends FunctionUnitTest {
     }
 
     @Test
-    public void testDSL_ShiftAll() throws MachineInterrupt {
+    public void testDSL_ShiftAll_EM() throws MachineInterrupt {
         var code = new long[] {
             dslImm(5, 0, 72),
             0,
         };
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0_1)
-                                     .setUpperLimit(0_1777)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
