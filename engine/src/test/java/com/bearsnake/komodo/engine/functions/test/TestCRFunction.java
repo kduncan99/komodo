@@ -25,10 +25,7 @@ public class TestCRFunction extends FunctionUnitTest {
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
-        _engine.getDesignatorRegister().clear();
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
-        _engine.getDesignatorRegister().setQuarterWordModeEnabled(false);
+        _engine = new Engine(this, this);
     }
 
     private long crEM(long a, long x, long h, long i, long b, long d) {
@@ -53,26 +50,15 @@ public class TestCRFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_777777)
-                                      .setGeneralAccessPermissions(AccessPermissions.ALL)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_777777)
-                                      .setGeneralAccessPermissions(AccessPermissions.ALL)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, new AbsoluteAddress(1, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
 
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0).setBankLevel((short)0);
         _engine.getExecOrUserARegister(2).setW(0_123456_777777L); // A(2) matches (U)
         _engine.getExecOrUserARegister(3).setW(0_777777_654321L); // A(3) new value
         _engine.getExecOrUserXRegister(0).setXM(0);
@@ -82,7 +68,7 @@ public class TestCRFunction extends FunctionUnitTest {
         // Check if (U) was replaced
         assertEquals(0_777777_654321L, bank1.get(42));
         // Check if next instruction was skipped
-        assertEquals(0_2, _engine.getProgramAddressRegister().getProgramCounter());
+        assertEquals(0_1002, _engine.getProgramAddressRegister().getProgramCounter());
     }
 
     @Test
@@ -100,26 +86,15 @@ public class TestCRFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_777777)
-                                      .setGeneralAccessPermissions(AccessPermissions.ALL)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_777777)
-                                      .setGeneralAccessPermissions(AccessPermissions.ALL)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, new AbsoluteAddress(1, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false);
 
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0).setBankLevel((short)0);
         _engine.getExecOrUserARegister(2).setW(0_000000_000000L); // A(2) does NOT match (U)
         _engine.getExecOrUserARegister(3).setW(0_777777_654321L); // A(3) new value
         _engine.getExecOrUserXRegister(0).setXM(0);
@@ -129,7 +104,7 @@ public class TestCRFunction extends FunctionUnitTest {
         // Check if (U) was NOT replaced
         assertEquals(0_123456_777777L, bank1.get(0));
         // Check if next instruction was NOT skipped
-        assertEquals(0_1, _engine.getProgramAddressRegister().getProgramCounter());
+        assertEquals(0_1001, _engine.getProgramAddressRegister().getProgramCounter());
     }
 
     @Test
@@ -157,8 +132,8 @@ public class TestCRFunction extends FunctionUnitTest {
                                       .setGeneralAccessPermissions(AccessPermissions.ALL)
                                       .setBaseAddress(new AbsoluteAddress(0, 0));
 
-        _engine.getBaseRegister(12).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(14).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(14, false, 0_22000, 0_25777, new AbsoluteAddress(1, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -186,13 +161,7 @@ public class TestCRFunction extends FunctionUnitTest {
         };
 
         var bank0 = new ArraySlice(code);
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_777777)
-                                      .setGeneralAccessPermissions(AccessPermissions.ALL)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-
-        _engine.getBaseRegister(12).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
+        loadBaseRegister(12, false, 0, 0_777777, new AbsoluteAddress(0, 0), bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
