@@ -40,271 +40,227 @@ public class TestTGFunction extends FunctionUnitTest {
         return fjaxhibd(0_55, j, a, x, h, i, b, d);
     }
 
-//    @Test
-//    public void testTG_Immediate_BM() throws MachineInterrupt {
-//        var code = new long[] {
-//            tgImm(Constants.JFIELD_U, 2, 0, 0404041),
-//            0,
-//            tgImm(Constants.JFIELD_XU, 2, 0, 0404040),
-//            0,
-//            0,
-//            };
-//
-//        var bank = new ArraySlice(code);
-//        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-//                                     .setLowerLimit(0_1)   // 01000 base address
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(12).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(true)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_404040L);
-//
-//        run();
-//
-//        assertEquals(0_01003, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTG_Immediate_EM() throws MachineInterrupt {
-//        var code = new long[] {
-//            tgImm(Constants.JFIELD_U, 2, 0, 0404042),
-//            0,
-//            tgImm(Constants.JFIELD_XU, 2, 0, 0404041),
-//            0,
-//            0,
-//            };
-//
-//        var bank = new ArraySlice(code);
-//        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                     .setLowerLimit(0_1)   // 01000 base address
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_404040L);
-//
-//        run();
-//
-//        assertEquals(0_01003, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTG_W_EM() throws MachineInterrupt {
-//        var code = new long[] {
-//            tgEM(Constants.JFIELD_W, 2, 3, 0, 0, 2, 0),
-//            0,
-//            tgEM(Constants.JFIELD_W, 2, 3, 0, 0, 2, 01),
-//            0,
-//            0,
-//            };
-//
-//        var data = new long[] {
-//            0_000000_000000L,
-//            0_777777_777776L,
-//            };
-//
-//        var bank0 = new ArraySlice(code);
-//        var bank1 = new ArraySlice(data);
-//
-//        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0_1)   // 01000 base address
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-//        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0_22)
-//                                      .setUpperLimit(0_22777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-//        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//        _engine.getExecOrUserARegister(2).setW(0_777777_777777L);
-//        _engine.getExecOrUserXRegister(3).setXM(0_22000);
-//
-//        run();
-//
-//        assertEquals(0_01003, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTG_ReferenceViolation_EM() throws MachineInterrupt {
-//        var code = new long[] {
-//            tgEM(Constants.JFIELD_W, 2, 3, 0, 0, 2, 0),
-//            0,
-//            tgEM(Constants.JFIELD_W, 2, 3, 0, 0, 2, 01),
-//            0,
-//            0,
-//            };
-//
-//        var bank0 = new ArraySlice(code);
-//
-//        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0_1)   // 01000 base address
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//        _engine.getExecOrUserARegister(2).setW(0_000001_000123L);
-//        _engine.getExecOrUserXRegister(3).setXM(0_22000);
-//
-//        assertThrows(ReferenceViolationInterrupt.class, () -> run());
-//
-//        assertEquals(0_01000, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTG_GRS_EM() throws MachineInterrupt {
-//        var code = new long[] {
-//            tgEM(Constants.JFIELD_W, 2, 0, 0, 0, 0, GRS_A5),
-//            0,
-//            0,
-//            };
-//
-//        var bank = new ArraySlice(code);
-//        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                     .setLowerLimit(0_1)   // 01000 base address
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_400000_000000L);
-//        _engine.getExecOrUserARegister(5).setW(0_000003_000003L);
-//
-//        run();
-//
-//        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTG_GRS_ReferenceViolation_EM() throws MachineInterrupt {
-//        var code = new long[] {
-//            tgEM(Constants.JFIELD_W, 2, 0, 0, 0, 0, 040),
-//            0,
-//            0,
-//            };
-//
-//        var bank = new ArraySlice(code);
-//        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                     .setLowerLimit(0_1)   // 01000 base address
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_000003_000003L);
-//        _engine.getExecOrUserARegister(5).setW(0_000003_000003L);
-//
-//        ReferenceViolationInterrupt i = assertThrows(ReferenceViolationInterrupt.class, () -> run());
-//        assertEquals(ReferenceViolationInterrupt.ErrorType.GRSViolation, i._errorType);
-//
-//        assertEquals(0_01000, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTG_Q3_EM() throws MachineInterrupt {
-//        var code = new long[] {
-//            tgEM(Constants.JFIELD_Q3, 2, 0, 0, 0, 2, 0),
-//            0,
-//            0,
-//            };
-//
-//        var data = new long[]{ 0_111111_111111L };
-//
-//        var bank0 = new ArraySlice(code);
-//        var bank2 = new ArraySlice(data);
-//
-//        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0_1)   // 01000 base address
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-//        var bd2 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0)
-//                                      .setUpperLimit(0777)
-//                                      .setBaseAddress(new AbsoluteAddress(2, 0));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-//        _engine.getBaseRegister(2).setBankDescriptor(bd2).setStorage(bank2).setSubsetting(0);
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setQuarterWordModeEnabled(true)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_101L);
-//
-//        run();
-//
-//        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTGIndirect_BM() throws MachineInterrupt {
-//        var code = new long[] {
-//            tgBM(Constants.JFIELD_W, 2, 0, 0, 1, 022004),
-//            0,
-//            0,
-//            fjaxhiu(0, 0, 0, 0, 0, 0, 022005),
-//            fjaxhiu(0, 0, 0, 0, 0, 1, 022003),
-//            077004,
-//            0,
-//            0,
-//            };
-//
-//        var bank = new ArraySlice(code);
-//        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                     .setLowerLimit(0_22)   // 022000 base address
-//                                     .setUpperLimit(0_22777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(13).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(true)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_77003L);
-//
-//        run();
-//
-//        assertEquals(0_022002, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
+    @Test
+    public void testTG_Immediate_BM() throws MachineInterrupt {
+        var code = new long[] {
+            tgImm(Constants.JFIELD_U, 2, 0, 0404041),
+            0,
+            tgImm(Constants.JFIELD_XU, 2, 0, 0404040),
+            0,
+            0,
+            };
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_404040L);
+
+        run();
+
+        assertEquals(0_01003, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTG_Immediate_EM() throws MachineInterrupt {
+        var code = new long[] {
+            tgImm(Constants.JFIELD_U, 2, 0, 0404042),
+            0,
+            tgImm(Constants.JFIELD_XU, 2, 0, 0404041),
+            0,
+            0,
+            };
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_404040L);
+
+        run();
+
+        assertEquals(0_01003, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTG_W_EM() throws MachineInterrupt {
+        var code = new long[] {
+            tgEM(Constants.JFIELD_W, 2, 3, 0, 0, 2, 0),
+            0,
+            tgEM(Constants.JFIELD_W, 2, 3, 0, 0, 2, 01),
+            0,
+            0,
+            };
+
+        var data = new long[] {
+            0_000000_000000L,
+            0_777777_777776L,
+            };
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0_22000, 0_22777, new AbsoluteAddress(0, 0), bank1);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+        _engine.getExecOrUserARegister(2).setW(0_777777_777777L);
+        _engine.getExecOrUserXRegister(3).setXM(0_22000);
+
+        run();
+
+        assertEquals(0_01003, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTG_ReferenceViolation_EM() throws MachineInterrupt {
+        var code = new long[] {
+            tgEM(Constants.JFIELD_W, 2, 3, 0, 0, 2, 0),
+            0,
+            tgEM(Constants.JFIELD_W, 2, 3, 0, 0, 2, 01),
+            0,
+            0,
+            };
+
+        var bank0 = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+        _engine.getExecOrUserARegister(2).setW(0_000001_000123L);
+        _engine.getExecOrUserXRegister(3).setXM(0_22000);
+
+        assertThrows(ReferenceViolationInterrupt.class, this::run);
+
+        assertEquals(0_01000, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTG_GRS_EM() throws MachineInterrupt {
+        var code = new long[] {
+            tgEM(Constants.JFIELD_W, 2, 0, 0, 0, 0, GRS_A5),
+            0,
+            0,
+            };
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_400000_000000L);
+        _engine.getExecOrUserARegister(5).setW(0_000003_000003L);
+
+        run();
+
+        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTG_GRS_ReferenceViolation_EM() throws MachineInterrupt {
+        var code = new long[] {
+            tgEM(Constants.JFIELD_W, 2, 0, 0, 0, 0, 040),
+            0,
+            0,
+            };
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_000003_000003L);
+        _engine.getExecOrUserARegister(5).setW(0_000003_000003L);
+
+        ReferenceViolationInterrupt i = assertThrows(ReferenceViolationInterrupt.class, this::run);
+        assertEquals(ReferenceViolationInterrupt.ErrorType.GRSViolation, i._errorType);
+
+        assertEquals(0_01000, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTG_Q3_EM() throws MachineInterrupt {
+        var code = new long[] {
+            tgEM(Constants.JFIELD_Q3, 2, 0, 0, 0, 2, 0),
+            0,
+            0,
+            };
+
+        var data = new long[]{ 0_111111_111111L };
+
+        var bank0 = new ArraySlice(code);
+        var bank2 = new ArraySlice(data);
+
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0777, new AbsoluteAddress(2, 0), bank2);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setQuarterWordModeEnabled(true)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_101L);
+
+        run();
+
+        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTGIndirect_BM() throws MachineInterrupt {
+        var code = new long[] {
+            tgBM(Constants.JFIELD_W, 2, 0, 0, 1, 022004),
+            0,
+            0,
+            fjaxhiu(0, 0, 0, 0, 0, 0, 022005),
+            fjaxhiu(0, 0, 0, 0, 0, 1, 022003),
+            077004,
+            0,
+            0,
+            };
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_22000, 0_22777, new AbsoluteAddress(0, 0), bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_77003L);
+
+        run();
+
+        assertEquals(0_022002, _engine.getProgramAddressRegister().getProgramCounter());
+    }
 }
