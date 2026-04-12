@@ -100,9 +100,7 @@ public class TestBDEFunction extends TestDecimalFunction {
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
-        _engine.getDesignatorRegister().clear();
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
+        _engine = new Engine(this, this);
     }
 
     @Test
@@ -122,17 +120,9 @@ public class TestBDEFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -165,17 +155,9 @@ public class TestBDEFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -208,17 +190,9 @@ public class TestBDEFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -251,17 +225,9 @@ public class TestBDEFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -297,17 +263,9 @@ public class TestBDEFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -343,17 +301,9 @@ public class TestBDEFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -387,17 +337,9 @@ public class TestBDEFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -431,17 +373,9 @@ public class TestBDEFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -476,17 +410,9 @@ public class TestBDEFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank1);
 
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)

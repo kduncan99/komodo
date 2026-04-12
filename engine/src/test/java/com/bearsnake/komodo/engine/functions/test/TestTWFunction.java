@@ -37,291 +37,235 @@ public class TestTWFunction extends FunctionUnitTest {
         return fjaxhibd(0_56, j, a, x, h, i, b, d);
     }
 
-//    @Test
-//    public void testTW_BM_Immediate_Skip() throws MachineInterrupt {
-//        var code = new long[] {
-//            twImm(Constants.JFIELD_U, 2, 0, 010),
-//            0,
-//            0,
-//            };
-//
-//        var bank = new ArraySlice(code);
-//        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-//                                     .setLowerLimit(0_1)
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(12).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(true)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
-//        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
-//
-//        run();
-//
-//        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTW_BM_Immediate_NoSkip_Below() throws MachineInterrupt {
-//        var code = new long[] {
-//            twImm(Constants.JFIELD_U, 2, 0, 005),
-//            0,
-//            0,
-//            };
-//
-//        var bank = new ArraySlice(code);
-//        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-//                                     .setLowerLimit(0_1)
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(12).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(true)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
-//        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
-//
-//        run();
-//
-//        assertEquals(0_01001, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTW_EM_Memory_Skip_Boundary() throws MachineInterrupt {
-//        var code = new long[] {
-//            twEM(Constants.JFIELD_W, 2, 0, 0, 0, 2, 0),
-//            0,
-//            0,
-//            };
-//
-//        var data = new long[] {
-//            0_000000_000015L,
-//        };
-//
-//        var bank0 = new ArraySlice(code);
-//        var bank1 = new ArraySlice(data);
-//
-//        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0_1)
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-//        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0)
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0x22000));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-//        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
-//        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
-//
-//        run();
-//
-//        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTW_EM_Memory_NoSkip_Above() throws MachineInterrupt {
-//        var code = new long[] {
-//            twEM(Constants.JFIELD_W, 2, 0, 0, 0, 2, 0),
-//            0,
-//            0,
-//            };
-//
-//        var data = new long[] {
-//            0_000000_000016L,
-//        };
-//
-//        var bank0 = new ArraySlice(code);
-//        var bank1 = new ArraySlice(data);
-//
-//        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0_1)
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-//        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0)
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0x22000));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-//        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
-//        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
-//
-//        run();
-//
-//        assertEquals(0_01001, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTW_BM_Immediate_NoSkip_Boundary_Below() throws MachineInterrupt {
-//        var code = new long[] {
-//            twImm(Constants.JFIELD_U, 2, 0, 005),
-//            0,
-//            0,
-//            };
-//
-//        var bank = new ArraySlice(code);
-//        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-//                                     .setLowerLimit(0_1)
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(12).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(true)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
-//        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
-//
-//        run();
-//
-//        assertEquals(0_01001, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTW_EM_Immediate_Skip_Between() throws MachineInterrupt {
-//        var code = new long[] {
-//            twImm(Constants.JFIELD_U, 2, 0, 010),
-//            0,
-//            0,
-//            };
-//
-//        var bank = new ArraySlice(code);
-//        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                     .setLowerLimit(0_1)
-//                                     .setUpperLimit(0_1777)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
-//        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
-//
-//        run();
-//
-//        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTW_EM_Memory_NoSkip_Below() throws MachineInterrupt {
-//        var code = new long[] {
-//            twEM(Constants.JFIELD_W, 2, 0, 0, 0, 2, 0),
-//            0,
-//            0,
-//            };
-//
-//        var data = new long[] {
-//            0_000000_000004L,
-//        };
-//
-//        var bank0 = new ArraySlice(code);
-//        var bank1 = new ArraySlice(data);
-//
-//        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0_1)
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-//        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0)
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0x22000));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-//        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
-//        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
-//
-//        run();
-//
-//        assertEquals(0_01001, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
-//
-//    @Test
-//    public void testTW_EM_Memory_Skip_Boundary_High() throws MachineInterrupt {
-//        var code = new long[] {
-//            twEM(Constants.JFIELD_W, 2, 0, 0, 0, 2, 0),
-//            0,
-//            0,
-//            };
-//
-//        var data = new long[] {
-//            0_000000_000015L,
-//        };
-//
-//        var bank0 = new ArraySlice(code);
-//        var bank1 = new ArraySlice(data);
-//
-//        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0_1)
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-//        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-//                                      .setLowerLimit(0)
-//                                      .setUpperLimit(0_1777)
-//                                      .setBaseAddress(new AbsoluteAddress(0, 0x22000));
-//
-//        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-//        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
-//
-//        _engine.getDesignatorRegister()
-//               .setBasicModeEnabled(false)
-//               .setProcessorPrivilege((short)3)
-//               .setExecRegisterSetSelected(false);
-//
-//        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
-//
-//        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
-//        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
-//
-//        run();
-//
-//        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
-//    }
+    @Test
+    public void testTW_BM_Immediate_Skip() throws MachineInterrupt {
+        var code = new long[] {
+            twImm(Constants.JFIELD_U, 2, 0, 010),
+            0,
+            0
+        };
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
+        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
+
+        run();
+
+        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTW_BM_Immediate_NoSkip_Below() throws MachineInterrupt {
+        var code = new long[] {
+            twImm(Constants.JFIELD_U, 2, 0, 005),
+            0,
+            0
+        };
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
+        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
+
+        run();
+
+        assertEquals(0_01001, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTW_EM_Memory_Skip_Boundary() throws MachineInterrupt {
+        var code = new long[] {
+            twEM(Constants.JFIELD_W, 2, 0, 0, 0, 2, 0),
+            0,
+            0
+        };
+
+        var data = new long[] {
+            0_000000_000015L,
+        };
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_777, new AbsoluteAddress(1, 0), bank1);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
+        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
+
+        run();
+
+        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTW_EM_Memory_NoSkip_Above() throws MachineInterrupt {
+        var code = new long[] {
+            twEM(Constants.JFIELD_W, 2, 0, 0, 0, 2, 0),
+            0,
+            0
+        };
+
+        var data = new long[] {
+            0_000000_000016L,
+        };
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_777, new AbsoluteAddress(1, 0), bank1);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
+        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
+
+        run();
+
+        assertEquals(0_01001, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTW_BM_Immediate_NoSkip_Boundary_Below() throws MachineInterrupt {
+        var code = new long[] {
+            twImm(Constants.JFIELD_U, 2, 0, 005),
+            0,
+            0
+        };
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
+        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
+
+        run();
+
+        assertEquals(0_01001, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTW_EM_Immediate_Skip_Between() throws MachineInterrupt {
+        var code = new long[] {
+            twImm(Constants.JFIELD_U, 2, 0, 010),
+            0,
+            0
+        };
+
+        var bank = new ArraySlice(code);
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
+        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
+
+        run();
+
+        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTW_EM_Memory_NoSkip_Below() throws MachineInterrupt {
+        var code = new long[] {
+            twEM(Constants.JFIELD_W, 2, 0, 0, 0, 2, 0),
+            0,
+            0
+        };
+
+        var data = new long[] {
+            0_000000_000004L,
+        };
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_777, new AbsoluteAddress(1, 0), bank1);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
+        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
+
+        run();
+
+        assertEquals(0_01001, _engine.getProgramAddressRegister().getProgramCounter());
+    }
+
+    @Test
+    public void testTW_EM_Memory_Skip_Boundary_High() throws MachineInterrupt {
+        var code = new long[] {
+            twEM(Constants.JFIELD_W, 2, 0, 0, 0, 2, 0),
+            0,
+            0,
+            };
+
+        var data = new long[] {
+            0_000000_000015L,
+        };
+
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_777, new AbsoluteAddress(1, 0), bank1);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(false)
+               .setProcessorPrivilege((short)3)
+               .setExecRegisterSetSelected(false);
+
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
+
+        _engine.getExecOrUserARegister(2).setW(0_000000_000005L);
+        _engine.getExecOrUserARegister(3).setW(0_000000_000015L);
+
+        run();
+
+        assertEquals(0_01002, _engine.getProgramAddressRegister().getProgramCounter());
+    }
 }

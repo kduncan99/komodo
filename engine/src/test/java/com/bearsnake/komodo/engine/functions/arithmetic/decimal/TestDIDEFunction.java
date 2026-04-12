@@ -19,39 +19,41 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class TestDIDEFunction extends TestDecimalFunction {
 
-    private long dide(long a, long x, long u) {
-        return fjaxu(0_07, 0_11, a, x, u);
+    private long dideBM(long a, long x, long h, long i, long u) {
+        return fjaxhiu(0_07, 0_11, a, x, h, i, u);
+    }
+
+    private long dideEM(long a, long x, long h, long i, long b, long d) {
+        return fjaxhibd(0_07, 0_11, a, x, h, i, b, d);
     }
 
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
-        _engine.getDesignatorRegister().clear();
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
+        _engine = new Engine(this, this);
     }
-
 
     @Test
     public void testDIDE_Positive_EM() throws MachineInterrupt {
         var code = new long[0_1000];
-        code[0] = dide(4, 0, 0_400);
+        code[0] = dideEM(4, 0, 0, 0, 2, 0_400);
         code[1] = 0;
+
         // Value: 12,345,678,901,234,567
         // Binary (72-bit 1's complement):
         // MSW: 0_536705L
         // LSW: 0_213532645607L
-        code[0_400] = 0_536705L;
-        code[0_401] = 0_213532645607L;
+        var data = new long[0_1000];
+        data[0_400] = 0_536705L;
+        data[0_401] = 0_213532645607L;
 
-        var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0)
-                                     .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        var bank0 = new ArraySlice(code);
+        var bank2 = new ArraySlice(data);
+
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank2);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
 
         run();
 
@@ -69,23 +71,24 @@ public class TestDIDEFunction extends TestDecimalFunction {
     @Test
     public void testDIDE_Negative_EM() throws MachineInterrupt {
         var code = new long[0_1000];
-        code[0] = dide(4, 0, 0_400);
+        code[0] = dideEM(4, 0, 0, 0, 2, 0_400);
         code[1] = 0;
+
         // Negative 12,345,678,901,234,567
         // MSW: 0_777777241072L
         // LSW: 0_564245132170L
-        code[0_400] = 0_777777241072L;
-        code[0_401] = 0_564245132170L;
+        var data = new long[0_1000];
+        data[0_400] = 0_777777241072L;
+        data[0_401] = 0_564245132170L;
 
-        var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0)
-                                     .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        var bank0 = new ArraySlice(code);
+        var bank2 = new ArraySlice(data);
+
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank2);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
 
         run();
 
@@ -97,20 +100,21 @@ public class TestDIDEFunction extends TestDecimalFunction {
     @Test
     public void testDIDE_Zero_EM() throws MachineInterrupt {
         var code = new long[0_1000];
-        code[0] = dide(4, 0, 0_400);
+        code[0] = dideEM(4, 0, 0, 0, 2, 0_400);
         code[1] = 0;
+
+        var data = new long[0_1000];
         code[0_400] = 0;
         code[0_401] = 0;
 
-        var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0)
-                                     .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        var bank0 = new ArraySlice(code);
+        var bank2 = new ArraySlice(data);
+
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank2);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
 
         run();
 
@@ -122,21 +126,22 @@ public class TestDIDEFunction extends TestDecimalFunction {
     @Test
     public void testDIDE_Positive_BM() throws MachineInterrupt {
         var code = new long[0_1000];
-        code[0] = dide(4, 0, 0_400);
+        code[0] = dideBM(4, 0, 0, 0, 0_22400);
         code[1] = 0;
-        // Value: 12,345,678,901,234,567
-        code[0_400] = 0_536705L;
-        code[0_401] = 0_213532645607L;
 
-        var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-                .setLowerLimit(0)
-                .setUpperLimit(code.length - 1)
-                .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(12).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        // Value: 12,345,678,901,234,567
+        var data = new long[0_1000];
+        data[0_400] = 0_536705L;
+        data[0_401] = 0_213532645607L;
+
+        var bank0 = new ArraySlice(code);
+        var bank2 = new ArraySlice(data);
+
+        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(15, false, 0_22000, 0_22777, new AbsoluteAddress(1, 0), bank2);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(true);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
 
         run();
 
@@ -149,23 +154,19 @@ public class TestDIDEFunction extends TestDecimalFunction {
     public void testDIDE_Indirect_BM() throws MachineInterrupt {
         var code = new long[0_1000];
         // DIDE A4, *0_400
-        code[0] = fjaxu(0_07, 0_11, 4, 0, 0_200400); // I=1, U=400
+        code[0] = dideBM(4, 0, 0, 1, 0_1400);
         code[1] = 0;
-        code[0_400] = 0_600;
+        code[0_400] = 0_1600;
         code[0_600] = 0_536705L;
         code[0_601] = 0_213532645607L;
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-                .setLowerLimit(0)
-                .setUpperLimit(code.length - 1)
-                .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(14).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
         _engine.getDesignatorRegister()
                 .setBasicModeEnabled(true)
                 .setProcessorPrivilege((short)2);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0_4);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_4);
 
         run();
 
@@ -177,28 +178,30 @@ public class TestDIDEFunction extends TestDecimalFunction {
     @Test
     public void testDIDE_Indexed_EM() throws MachineInterrupt {
         var code = new long[0_1000];
-        // DIDE A4, 0_300, X1
-        code[0] = dide(4, 1, 0_300);
+        // DIDE A4, 0_300, *X1
+        code[0] = dideEM(4, 1, 1, 0, 2, 0_300);
         code[1] = 0;
-        code[0_400] = 0_536705L;
-        code[0_401] = 0_213532645607L;
 
-        var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                .setLowerLimit(0)
-                .setUpperLimit(code.length - 1)
-                .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        var data = new long[0_1000];
+        data[0_400] = 0_536705L;
+        data[0_401] = 0_213532645607L;
+
+        var bank0 = new ArraySlice(code);
+        var bank2 = new ArraySlice(data);
+
+        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank2);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
 
-        _engine.getExecOrUserXRegister(1).setW(0_100);
+        _engine.getExecOrUserXRegister(1).setXI(010).setXM(0_100);
 
         run();
 
         assertEquals(0L, _engine.getExecOrUserARegister(4).getW());
         assertEquals(0x123456789L, _engine.getExecOrUserARegister(5).getW());
         assertEquals(0x012345670L | POSITIVE_SIGN, _engine.getExecOrUserARegister(6).getW());
+        assertEquals(0_110, _engine.getExecOrUserXRegister(1).getXM());
     }
 }

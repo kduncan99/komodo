@@ -22,11 +22,13 @@ public class TestADEFunction extends TestDecimalFunction {
         return fjaxu(0_07, 0_00, a, x, u);
     }
 
+    private long ade(long a, long x, long h, long i, long u) {
+        return fjaxhiu(0_07, 0_00, a, x, h, i, u);
+    }
+
     @BeforeEach
     public void setup() {
-        _engine = new Engine();
-        _engine.getDesignatorRegister().clear();
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
+        _engine = new Engine(this, this);
     }
 
     @Test
@@ -39,12 +41,8 @@ public class TestADEFunction extends TestDecimalFunction {
         _engine.getExecOrUserARegister(4).setW(decWord(1, 2, 3, 4, 5, 6, 7, 8, POSITIVE_SIGN));
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0)
-                                     .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0, 0_777, new AbsoluteAddress(0, 0), bank);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
 
@@ -63,12 +61,8 @@ public class TestADEFunction extends TestDecimalFunction {
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 0, 1, 0, 0, POSITIVE_SIGN));
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0)
-                                     .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0, 0_777, new AbsoluteAddress(0, 0), bank);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
 
@@ -86,12 +80,8 @@ public class TestADEFunction extends TestDecimalFunction {
         _engine.getExecOrUserARegister(4).setW(decWord(1, 2, 3, 4, 5, 6, 7, 8, POSITIVE_SIGN));
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                     .setLowerLimit(0)
-                                     .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0, 0_777, new AbsoluteAddress(0, 0), bank);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
 
@@ -104,20 +94,16 @@ public class TestADEFunction extends TestDecimalFunction {
     public void testADE_Positive_BM() throws MachineInterrupt {
         var code = new long[0_1000];
         // 10 + 20 = 30
-        code[0] = ade(4, 0, 0_400);
+        code[0] = ade(4, 0, 0_1400);
         code[1] = 0;
         code[0_400] = decWord(0, 0, 0, 0, 0, 0, 2, 0, POSITIVE_SIGN);
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 0, 0, 1, 0, POSITIVE_SIGN));
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-                .setLowerLimit(0)
-                .setUpperLimit(code.length - 1)
-                .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(12).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
         _engine.getDesignatorRegister().setBasicModeEnabled(true);
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
 
         run();
 
@@ -128,23 +114,19 @@ public class TestADEFunction extends TestDecimalFunction {
     public void testADE_Indirect_BM() throws MachineInterrupt {
         var code = new long[0_1000];
         // ADE A4, *0_400
-        code[0] = fjaxu(0_07, 0_00, 4, 0, 0_200400); // I=1, U=400
+        code[0] = ade(4, 0, 0, 1, 0_1400);//fjaxu(0_07, 0_00, 4, 0, 0_200400); // I=1, U=400
         code[1] = 0;
-        code[0_400] = 0_600; 
+        code[0_400] = 0_1600;
         code[0_600] = decWord(0, 0, 0, 0, 0, 0, 0, 5, POSITIVE_SIGN);
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 0, 0, 0, 5, POSITIVE_SIGN));
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.BasicMode)
-                .setLowerLimit(0)
-                .setUpperLimit(code.length - 1)
-                .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(14).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(14, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+
         _engine.getDesignatorRegister()
                 .setBasicModeEnabled(true)
                 .setProcessorPrivilege((short)2); 
-        _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0_4); // bank 14 is BDI 4
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_4); // bank 14 is BDI 4
 
         run();
 
@@ -158,18 +140,13 @@ public class TestADEFunction extends TestDecimalFunction {
         code[0] = ade(4, 1, 0_300);
         code[1] = 0;
         code[0_400] = decWord(0, 0, 0, 0, 1, 1, 1, 1, POSITIVE_SIGN);
-        _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 2, 2, 2, 2, POSITIVE_SIGN));
 
         var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                .setLowerLimit(0)
-                .setUpperLimit(code.length - 1)
-                .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
+        loadBaseRegister(0, false, 0, 0_777, new AbsoluteAddress(0, 0), bank);
+
+        _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 2, 2, 2, 2, POSITIVE_SIGN));
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
-
         _engine.getExecOrUserXRegister(1).setW(0_100);
 
         run();
@@ -184,16 +161,12 @@ public class TestADEFunction extends TestDecimalFunction {
         code[0] = ade(4, 0, 0_100);
         code[1] = 0;
 
+        var bank = new ArraySlice(code);
+        loadBaseRegister(0, false, 0, 0_777, new AbsoluteAddress(0, 0), bank);
+
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 2, 2, 2, 2, POSITIVE_SIGN));
         _engine.getExecOrUserRRegister(0).setW(decWord(0, 0, 0, 0, 1, 1, 1, 1, POSITIVE_SIGN));
 
-        var bank = new ArraySlice(code);
-        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                .setLowerLimit(0)
-                .setUpperLimit(code.length - 1)
-                .setBaseAddress(new AbsoluteAddress(0, 0));
-        bd.setInactive(false);
-        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
 

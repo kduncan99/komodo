@@ -1167,7 +1167,11 @@ public class Engine {
         // Storage reference. We've already checked limits and accessibility for the first word (and thus for the bank).
         // Do a quick check for the length.
         var bReg = _baseRegisters[spGetOperandBaseRegisterIndex()];
-        var lastAddr = spGetOperandRelativeAddress() + count - 1;
+        var relAddr = spGetOperandRelativeAddress();
+        if (relAddr < bReg.getLowerLimitNormalized()) {
+            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
+        }
+        var lastAddr = relAddr + count - 1;
         if (lastAddr > bReg.getUpperLimitNormalized()) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
         }
