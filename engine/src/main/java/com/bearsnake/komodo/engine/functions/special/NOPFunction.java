@@ -32,7 +32,7 @@ public class NOPFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        engine.ignoreOperand();
-        return engine.spGetInstructionPoint() != InstructionPoint.RESOLVING_ADDRESS;
+        // Resolve addressing (including index register incrementation) but do not try to read the operand.
+        return engine.resolveRelativeAddress(false, true, true);
     }
 }

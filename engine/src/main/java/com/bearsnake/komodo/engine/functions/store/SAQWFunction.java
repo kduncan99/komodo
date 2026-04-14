@@ -51,7 +51,7 @@ public class SAQWFunction extends Function {
             };
 
             var value = engine.getExecOrUserARegister(ic.getA()).getW();
-            engine.storeToCachedAddress(value, jField, true);
+            engine.storeToCachedAddress(value, true, jField, true);
         }
         return result;
     }

@@ -39,7 +39,7 @@ public class UNLKFunction extends Function {
             return false;
         }
 
-        engine.storeToCachedAddress(0, Constants.JFIELD_S1, false);
+        engine.storeToCachedAddress(0, false, Constants.JFIELD_S1, false);
         return true;
     }
 }

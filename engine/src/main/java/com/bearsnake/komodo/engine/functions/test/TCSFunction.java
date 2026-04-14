@@ -41,7 +41,7 @@ public class TCSFunction extends Function {
         }
 
         if ((Word36.getS1(operand) & 01) == 1) {
-            engine.storeToCachedAddress(0, Constants.JFIELD_S1, false);
+            engine.storeToCachedAddress(0, false, Constants.JFIELD_S1, false);
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 

@@ -47,7 +47,7 @@ public class TSFunction extends Function {
                                           engine.spGetOperandRelativeAddress());
         }
 
-        engine.storeToCachedAddress((operand >> 30) | 0_01, Constants.JFIELD_S1, false);
+        engine.storeToCachedAddress((operand >> 30) | 0_01, false, Constants.JFIELD_S1, false);
         return true;
     }
 }

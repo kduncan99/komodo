@@ -33,11 +33,16 @@ public class SMAFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        var ci = engine.getCurrentInstruction();
-        var operand = engine.getExecOrUserARegister(ci.getA()).getW();
-        if (Word36.isNegative(operand)) {
-            operand = Word36.negate(operand);
+        boolean result = engine.resolveRelativeAddress(false, true, false);
+        if (result) {
+            var ci = engine.getCurrentInstruction();
+            var operand = engine.getExecOrUserARegister(ci.getA())
+                                .getW();
+            if (Word36.isNegative(operand)) {
+                operand = Word36.negate(operand);
+            }
+            engine.storeToCachedAddress(operand, true, ci.getJ(), false);
         }
-        return engine.storeOperand(true, true, true, true, operand);
+        return result;
     }
 }

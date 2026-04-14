@@ -46,7 +46,7 @@ public class CRFunction extends Function {
         var aValue1 = engine.getExecOrUserARegister(ci.getA() + 1).getW();
 
         if (Word36.compare(operand, aValue0) == 0) {
-            engine.storeToCachedAddress(aValue1, Constants.JFIELD_W, false);
+            engine.storeToCachedAddress(aValue1, true, Constants.JFIELD_W, false);
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 

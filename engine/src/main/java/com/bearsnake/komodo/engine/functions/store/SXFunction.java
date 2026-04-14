@@ -32,8 +32,12 @@ public class SXFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        var ci = engine.getCurrentInstruction();
-        var operand = engine.getExecOrUserXRegister(ci.getA()).getW();
-        return engine.storeOperand(true, true, true, true, operand);
+        boolean result = engine.resolveRelativeAddress(false, true, false);
+        if (result) {
+            var ci = engine.getCurrentInstruction();
+            var operand = engine.getExecOrUserXRegister(ci.getA()).getW();
+            engine.storeToCachedAddress(operand, true, ci.getJ(), false);
+        }
+        return result;
     }
 }

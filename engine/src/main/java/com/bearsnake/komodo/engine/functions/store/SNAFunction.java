@@ -33,9 +33,13 @@ public class SNAFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        var ci = engine.getCurrentInstruction();
-        var operand = engine.getExecOrUserARegister(ci.getA()).getW();
-        operand = Word36.negate(operand);
-        return engine.storeOperand(true, true, true, true, operand);
+        boolean result = engine.resolveRelativeAddress(false, true, false);
+        if (result) {
+            var ci = engine.getCurrentInstruction();
+            var operand = engine.getExecOrUserARegister(ci.getA()).getW();
+            operand = Word36.negate(operand);
+            engine.storeToCachedAddress(operand, true, ci.getJ(), false);
+        }
+        return result;
     }
 }

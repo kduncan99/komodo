@@ -1418,20 +1418,6 @@ public class Engine {
     }
 
     /**
-     * Specifically for the NOP instruction.  We DO NOT go through the process of developing U,
-     * we only do indirect addressing and X-register incrementation.
-     * This means that we do no access checks except in the case of checking
-     * for read access during indirect address resolution.
-     * Returns complete == false if we are in the middle of resolving addresses,
-     * or an interrupt if we fail some sort of limits or access checking.
-     */
-    public void ignoreOperand() throws MachineInterrupt {
-        // Get the _operandRelativeAddress.
-        // For BM, this also gets the _operandBaseRegister and _operandBaseRegisterIndex.
-        resolveRelativeAddress(false, true, true);
-    }
-
-    /**
      * Stores consecutive operands into memory starting at the address indicated by U.
      * The destination address(es) start with the address which is currently cached in scratchpad locations.
      * All code (primarily function implementations) which need to store values to storage (partial words or otherwise)
@@ -1486,101 +1472,20 @@ public class Engine {
     }
 
     /**
-     * Stores an operand at the address indicated by U
-     * @param grsSource true if we are reading from GRS
-     * @param grsCheck true if we are checking GRS destination access
-     * @param checkImmediate true if we are allowing immediate addressing
-     * @param allowPartial true if we are allowing partial addressing
-     * @param operand value to be stored
-     * @return true if the operation is complete; false if we are doing indirect addressing
-     * @throws MachineInterrupt in any case where an interrupt is generated
-     */
-    public boolean storeOperand(
-        final boolean grsSource,
-        final boolean grsCheck,
-        final boolean checkImmediate,
-        final boolean allowPartial,
-        final long operand
-    ) throws MachineInterrupt {
-        // TODO THIS IS SUB-OPTIMAL BECAUSE EACH FUNCTION WHICH USES THIS, WHEN IN INDIRECT ADDRESSING MODE,
-        //  MUST  FIGURE OUT AND DEAL WITH THE VALUE-TO-STORE ON EVERY ITERATION.
-        //  THE STORE OPERATIONS MUST CALCULATE VALUE-TO-STORE ONLY ONCE AND PRESERVE IT IN SCRATCHPAD.
-
-        // If we allow immediate addressing and j-field is U or XU, there's not much to be done.
-        var ci = _activityStatePacket.getCurrentInstruction();
-        var jField = ci.getJ();
-        if (checkImmediate && ((jField == JFIELD_U) || (jField == JFIELD_XU))) {
-            if (ci.getX() != 0) {
-                incrementIndexRegisterInF0();
-            }
-            return true;
-        }
-
-        resolveRelativeAddress(false, grsCheck, false);
-        if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
-            return false;
-        }
-
-        var dr = _activityStatePacket.getDesignatorRegister();
-        var basicMode = dr.isBasicModeEnabled();
-        var pPriv = dr.getProcessorPrivilege();
-
-        if (!basicMode) {
-            getEffectiveBaseRegisterIndex();
-        }
-
-        var brx = spGetOperandBaseRegisterIndex();
-        var relAddr = spGetOperandRelativeAddress();
-        if (grsCheck && (basicMode || (brx == 0)) && (relAddr < 0200)) {
-            // storing into the GRS
-            if (!GeneralRegisterSet.isAccessAllowed(relAddr, pPriv, true)) {
-                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
-            }
-
-            if (!grsSource && allowPartial) {
-                var qWord = dr.isQuarterWordModeEnabled();
-                var origValue = _generalRegisterSet.getRegister(relAddr).getW();
-                var newValue = injectPartialWord(origValue, jField, operand, qWord);
-                _generalRegisterSet.setRegister(relAddr, newValue);
-            } else {
-                _generalRegisterSet.setRegister(relAddr, operand);
-            }
-
-            return true;
-        }
-
-        // We're writing to storage...
-        var ikr = _activityStatePacket.getIndicatorKeyRegister();
-        var key = ikr.getAccessKey();
-        checkAccessLimitsAndAccessibility(basicMode, brx, relAddr, false, true, false, key);
-
-        var bReg = _baseRegisters[brx];
-        var offset = relAddr - bReg.getLowerLimitNormalized();
-        if (allowPartial) {
-            var qWord = dr.isQuarterWordModeEnabled();
-            var origValue = bReg.getStorage().get(offset);
-            var newValue = injectPartialWord(origValue, jField, operand, qWord);
-            bReg.getStorage().set(offset, newValue);
-        } else {
-            bReg.getStorage().set(offset, operand);
-        }
-
-        return true;
-    }
-
-    /**
      * For essentially all store instructions - stores the given operand to the previously resolved address
      * which could be in storage, or in the GRS. Accessibility is checked for both GRS and storage.
      * All code (primarily function implementations) which need to store values to storage (partial words or otherwise)
      * or GRS (full-words only) should follow the alogirhtm of invoking resolveRelativeAddress() until it returns true,
      * and only afterward should they develop the value to be stored, invoking *this* method to accomplish that store.
      * @param operand the value to store
+     * @param sourceIsGRS true if the source of the operand is the GRS (prevents partial word GRS-to-GRS transfers)
      * @param partialWordIndicator the partial word indicator. Ignored for GRS locations.
      * @param forceQuarterWordMode if true, force quarter-word mode for this operation
      * @throws ReferenceViolationInterrupt if the operation violates access limits or accessibility
      */
     public void storeToCachedAddress(
         final long operand,
+        final boolean sourceIsGRS,
         final int partialWordIndicator,
         final boolean forceQuarterWordMode
     ) throws ReferenceViolationInterrupt {
@@ -1593,7 +1498,14 @@ public class Engine {
             if (!GeneralRegisterSet.isAccessAllowed(relAddr, privilege, true)) {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
             }
-            _generalRegisterSet.setRegister(relAddr, operand);
+            if (sourceIsGRS) {
+                _generalRegisterSet.setRegister(relAddr, operand);
+            } else {
+                var qWord = dr.isQuarterWordModeEnabled();
+                var origValue = _generalRegisterSet.getRegister(relAddr).getW();
+                var newValue = injectPartialWord(origValue, partialWordIndicator, operand, qWord || forceQuarterWordMode);
+                _generalRegisterSet.setRegister(relAddr, newValue);
+            }
         } else {
             var bReg = _baseRegisters[brx];
             var offset = relAddr - bReg.getLowerLimitNormalized();

@@ -269,11 +269,12 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
+               .setQuarterWordModeEnabled(true)
                .setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
 
         run();
 
-        assertEquals(_constant, _engine.getGeneralRegisterSet().getRegister(GRS_X3).getW());
+        assertEquals((_constant & 0_777), _engine.getGeneralRegisterSet().getRegister(GRS_X3).getQ2());
     }
 }

@@ -16,7 +16,6 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 public abstract class StoreConstantFunction extends Function {
 
-    private final int _aField;
     private final long _constant;
 
     protected StoreConstantFunction(
@@ -26,7 +25,6 @@ public abstract class StoreConstantFunction extends Function {
     ) {
         super(mnemonic);
 
-        _aField = aField;
         _constant = constant;
 
         var fc = new FunctionCode(0_05).setAField(aField);
@@ -42,6 +40,11 @@ public abstract class StoreConstantFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        return engine.storeOperand(true, true, true, true, _constant);
+        var result = engine.resolveRelativeAddress(false, true, false);
+        if (result) {
+            var ci = engine.getCurrentInstruction();
+            engine.storeToCachedAddress(_constant, false, ci.getJ(), false);
+        }
+        return result;
     }
 }
