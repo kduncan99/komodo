@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.functions.Function;
@@ -46,7 +47,7 @@ public class TSFunction extends Function {
                                           engine.spGetOperandRelativeAddress());
         }
 
-        engine.storeToCachedAddress(operand | 0_010000_000000L);
+        engine.storeToCachedAddress((operand >> 30) | 0_01, Constants.JFIELD_S1, false);
         return true;
     }
 }

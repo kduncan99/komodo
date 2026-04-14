@@ -37,18 +37,22 @@ public class SAQWFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        var ic = engine.getCurrentInstruction();
-        var xIndex = ic.getX();
-        var xReg = engine.getExecOrUserXRegister(xIndex);
-        var jField = switch (xReg.getS1() & 0x03) {
-            case 0 -> JFIELD_Q1;
-            case 1 -> JFIELD_Q2;
-            case 2 -> JFIELD_Q3;
-            case 3 -> JFIELD_Q4;
-            default -> JFIELD_U;// should never happen, but default to do-nothing
-        };
+        boolean result = engine.resolveRelativeAddress(false, false, false);
+        if (result) {
+            var ic = engine.getCurrentInstruction();
+            var xIndex = ic.getX();
+            var xReg = engine.getExecOrUserXRegister(xIndex);
+            var jField = switch (xReg.getS1() & 0x03) {
+                case 0 -> JFIELD_Q1;
+                case 1 -> JFIELD_Q2;
+                case 2 -> JFIELD_Q3;
+                case 3 -> JFIELD_Q4;
+                default -> JFIELD_U;// should never happen, but default to do-nothing
+            };
 
-        var value = engine.getExecOrUserARegister(ic.getA()).getW();
-        return engine.storePartialWordOperand(value, jField, true);
+            var value = engine.getExecOrUserARegister(ic.getA()).getW();
+            engine.storeToCachedAddress(value, jField, true);
+        }
+        return result;
     }
 }

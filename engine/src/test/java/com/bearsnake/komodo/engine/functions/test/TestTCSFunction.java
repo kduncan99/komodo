@@ -95,33 +95,32 @@ public class TestTCSFunction extends FunctionUnitTest {
     @Test
     public void testTCS_Skip_BM() throws MachineInterrupt {
         var code = new long[] {
-            tcsBM(0, 42),               // TCS (U)
-            0,                           // Skipped if bit 5 is 1
-            0,                           // Normal stop
+            tcsBM(0, 0_22042),
+            0,
+            0
         };
 
         var data = new long[100];
-        data[42] = 0_010000_654321L;    // Bit 5 is 1
+        data[0_42] = 0_010000_654321L;    // Bit 5 is 1
 
-        var bank0 = new ArraySlice(data);
+        var bank0 = new ArraySlice(code);
+        var bank1 = new ArraySlice(data);
+        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(14, false, 0_22000, 0_22777, new AbsoluteAddress(0, 0), bank1);
 
-        loadBaseRegister(12, false, 0, 0_17777, new AbsoluteAddress(0, 0), bank0);
-
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
                .setProcessorPrivilege((short)3)
                .setExecRegisterSetSelected(false)
                .setBasicModeBaseRegisterSelection(false);
 
-        bank0.set(0, code[0]);
-        bank0.set(1, code[1]);
-        bank0.set(2, code[2]);
-
         run();
 
         // Check if S1 was cleared
-        assertEquals(0_000000_654321L, bank0.get(42));
+        System.out.printf("%012o", data[0_42]);//TODO remove
+        assertEquals(0_000000_654321L, data[0_42]);
         // Check if next instruction was skipped
-        assertEquals(0_2, _engine.getProgramAddressRegister().getProgramCounter());
+        assertEquals(0_1002, _engine.getProgramAddressRegister().getProgramCounter());
     }
 }

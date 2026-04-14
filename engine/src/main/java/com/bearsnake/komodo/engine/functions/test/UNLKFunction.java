@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.functions.Function;
@@ -38,7 +39,7 @@ public class UNLKFunction extends Function {
             return false;
         }
 
-        engine.storeToCachedAddress(operand & 0_007777_777777);
+        engine.storeToCachedAddress(0, Constants.JFIELD_S1, false);
         return true;
     }
 }

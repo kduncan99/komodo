@@ -606,6 +606,9 @@ public class Engine {
             if (complete) {
                 spSetInstructionPoint(InstructionPoint.BETWEEN_INSTRUCTIONS);
                 spClearCurrentFunction();
+                spClearOperandIsGRS();
+                spClearOperandBaseRegisterIndex();
+                spClearOperandRelativeAddress();
                 ikr.setInstructionInF0(false);
                 if (!spGetPreventProgramCounterUpdate()) {
                     par.incrementProgramCounter();
@@ -984,16 +987,24 @@ public class Engine {
 
     /**
      * Wrapper for the two methods which provide this service for basic and extended modes, respectively.
+     * When it returns true, the address is fully resolved. This will usually occur after a single invocation.
+     * However, if indirect addressing is being used, it may be necessary to call this method multiple times.
+     * @param useHIU indicates an Extended Mode Jump instruction which uses the entire U (or HIU) fields for the relative address.
+     *             basic mode always uses the u field.
+     * @param grsCheck indicates whether to perform GRS access checks
+     * @param ignoreAccessChecks indicates whether to ignore access checks during address resolution (for ignoreOperand())
+     * @return true if the address is fully resolved, false otherwise
      */
-    public void resolveRelativeAddress(
-        final boolean useU,
+    public boolean resolveRelativeAddress(
+        final boolean useHIU,
         final boolean grsCheck,
         final boolean ignoreAccessChecks
     ) throws MachineInterrupt {
         if (_activityStatePacket.getDesignatorRegister().isBasicModeEnabled()) {
-            resolveBasicModeRelativeAddress(useU, grsCheck, ignoreAccessChecks);
+            return resolveBasicModeRelativeAddress(grsCheck, ignoreAccessChecks);
         } else {
-            resolveExtendedModeRelativeAddress(useU, grsCheck, ignoreAccessChecks);
+            resolveExtendedModeRelativeAddress(useHIU, grsCheck, ignoreAccessChecks);
+            return true;
         }
     }
 
@@ -1009,20 +1020,18 @@ public class Engine {
      *      _operandRelativeAddress to the calculated relative address
      *      _operandBaseRegisterIndex to indicate the containing base register
      *      _instructionPoint to MID_INSTRUCTION.
-     * @param useU indicates an Extended Mode Jump instruction which uses the entire U (or HIU) fields for the relative address.
-     *             basic mode always uses the u field.
      * @param grsCheck indicates whether to perform GRS access checks
      * @param ignoreAccessChecks indicates whether to ignore access checks during address resolution (for ignoreOperand())
+     * @return true if the address is fully resolved, false otherwise
      */
-    private void resolveBasicModeRelativeAddress(
-        final boolean useU,
+    private boolean resolveBasicModeRelativeAddress(
         final boolean grsCheck,
         final boolean ignoreAccessChecks
     ) throws MachineInterrupt {
         var ci = _activityStatePacket.getCurrentInstruction();
         var dr = _activityStatePacket.getDesignatorRegister();
 
-        int relAddr = (dr.isBasicModeEnabled() || useU) ? ci.getU() : ci.getD();
+        int relAddr = ci.getU();
         var x = ci.getX();
         if (x != 0) {
             long addend;
@@ -1048,7 +1057,7 @@ public class Engine {
             spSetOperandBaseRegisterIndex(0);
             spSetOperandRelativeAddress(relAddr);
             spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
-            return;
+            return true;
         }
 
         var brx = findBasicModeBaseRegisterIndex(relAddr, false);
@@ -1064,12 +1073,14 @@ public class Engine {
             ci.setXHIU(value);
 
             spSetInstructionPoint(InstructionPoint.RESOLVING_ADDRESS);
-            return;
+            return false;
         }
 
+        spSetOperandIsGRS(false);
         spSetOperandBaseRegisterIndex(brx);
         spSetOperandRelativeAddress(relAddr);
         spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
+        return true;
     }
 
     /**
@@ -1117,8 +1128,13 @@ public class Engine {
                 }
             }
             spSetOperandIsGRS(true);
+            spSetOperandBaseRegisterIndex(0);
+            spSetOperandRelativeAddress(relAddr);
+            spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
+            return;
         }
 
+        spSetOperandIsGRS(false);
         spSetOperandBaseRegisterIndex(brx);
         spSetOperandRelativeAddress(relAddr);
         spSetInstructionPoint(InstructionPoint.MID_INSTRUCTION);
@@ -1417,38 +1433,25 @@ public class Engine {
 
     /**
      * Stores consecutive operands into memory starting at the address indicated by U.
-     * @param grsCheck true if we are checking GRS destination access
+     * The destination address(es) start with the address which is currently cached in scratchpad locations.
+     * All code (primarily function implementations) which need to store values to storage (partial words or otherwise)
+     * or GRS (full-words only) should follow the alogirhtm of invoking resolveRelativeAddress() until it returns true,
+     * and only afterward should they develop the value to be stored, invoking *this* method to accomplish that store.
      * @param operands values to be stored
      * @param offset starting index in the operands array
      * @param count number of operands to store from the array
-     * @return true if the operation is complete; false if we are doing indirect addressing
      * @throws MachineInterrupt in any case where an interrupt is generated
      */
-    public boolean storeConsecutiveOperands(
-        final boolean grsCheck,
+    public void storeConsecutiveOperandsToCachedAddress(
         final long[] operands,
         final int offset,
         final int count
     ) throws MachineInterrupt {
-        // TODO THIS IS SUB-OPTIMAL BECAUSE EACH FUNCTION WHICH USES THIS, WHEN IN INDIRECT ADDRESSING MODE,
-        //  MUST  FIGURE OUT AND DEAL WITH THE VALUE-TO-STORE ON EVERY ITERATION.
-        //  THE STORE OPERATIONS MUST CALCULATE VALUE-TO-STORE ONLY ONCE AND PRESERVE IT IN SCRATCHPAD.
-        resolveRelativeAddress(false, grsCheck, false);
-        if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
-            return false;
-        }
-
         var dr = _activityStatePacket.getDesignatorRegister();
-        var basicMode = dr.isBasicModeEnabled();
         var pPriv = dr.getProcessorPrivilege();
-
-        if (!basicMode) {
-            getEffectiveBaseRegisterIndex();
-        }
-
         var brx = spGetOperandBaseRegisterIndex();
         var relAddr = spGetOperandRelativeAddress();
-        if (grsCheck && (basicMode || (brx == 0)) && (relAddr < 0200)) {
+        if (spGetOperandIsGRS()) {
             // storing into the GRS
             for (int i = 0; i < count; i++) {
                 var addr = (relAddr + i) & 0177;
@@ -1457,31 +1460,29 @@ public class Engine {
                 }
                 _generalRegisterSet.setRegister(addr, operands[offset + i]);
             }
-            return true;
+        } else {
+
+            // We're writing to storage...
+            var ikr = _activityStatePacket.getIndicatorKeyRegister();
+            var key = ikr.getAccessKey();
+            checkAccessLimitsRange(_baseRegisters[brx], relAddr, count, false, true, key);
+
+            var bReg = _baseRegisters[brx];
+            var baseOffset = relAddr - bReg.getLowerLimitNormalized();
+            for (int i = 0; i < count; i++) {
+                bReg.getStorage()
+                    .set(baseOffset + i, operands[offset + i]);
+            }
         }
-
-        // We're writing to storage...
-        var ikr = _activityStatePacket.getIndicatorKeyRegister();
-        var key = ikr.getAccessKey();
-        checkAccessLimitsRange(_baseRegisters[brx], relAddr, count, false, true, key);
-
-        var bReg = _baseRegisters[brx];
-        var baseOffset = relAddr - bReg.getLowerLimitNormalized();
-        for (int i = 0; i < count; i++) {
-            bReg.getStorage().set(baseOffset + i, operands[offset + i]);
-        }
-
-        return true;
     }
 
     /**
      * Wrapper for the above method which specifies the entire array.
      */
-    public boolean storeConsecutiveOperands(
-        final boolean grsCheck,
+    public void storeConsecutiveOperandsToCachedAddress(
         final long[] operands
     ) throws MachineInterrupt {
-        return storeConsecutiveOperands(grsCheck, operands, 0, operands.length);
+        storeConsecutiveOperandsToCachedAddress(operands, 0, operands.length);
     }
 
     /**
@@ -1568,68 +1569,44 @@ public class Engine {
     }
 
     /**
-     * Stores an operand in the specific partial-word after developing U where it is stored.
-     * @param partialWordValue the value to store (the lower {n} bits are stored, according to the partial word size)
-     * @param partialWordIndicator the partial word indicator (use j-field constants)
+     * For essentially all store instructions - stores the given operand to the previously resolved address
+     * which could be in storage, or in the GRS. Accessibility is checked for both GRS and storage.
+     * All code (primarily function implementations) which need to store values to storage (partial words or otherwise)
+     * or GRS (full-words only) should follow the alogirhtm of invoking resolveRelativeAddress() until it returns true,
+     * and only afterward should they develop the value to be stored, invoking *this* method to accomplish that store.
+     * @param operand the value to store
+     * @param partialWordIndicator the partial word indicator. Ignored for GRS locations.
      * @param forceQuarterWordMode if true, force quarter-word mode for this operation
-     * @return true if the operation is complete; false if we are doing indirect addressing
-     * @throws MachineInterrupt in any case where an interrupt is generated
-     */
-    public boolean storePartialWordOperand(
-        final long partialWordValue,
-        final int partialWordIndicator,
-        final boolean forceQuarterWordMode
-    ) throws MachineInterrupt {
-        // TODO THIS IS SUB-OPTIMAL BECAUSE EACH FUNCTION WHICH USES THIS, WHEN IN INDIRECT ADDRESSING MODE,
-        //  MUST  FIGURE OUT AND DEAL WITH THE VALUE-TO-STORE ON EVERY ITERATION.
-        //  THE STORE OPERATIONS MUST CALCULATE VALUE-TO-STORE ONLY ONCE AND PRESERVE IT IN SCRATCHPAD.
-
-        resolveRelativeAddress(false, false, false);
-        if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
-            return false;
-        }
-
-        var dr = _activityStatePacket.getDesignatorRegister();
-        var basicMode = dr.isBasicModeEnabled();
-
-        if (!basicMode) {
-            getEffectiveBaseRegisterIndex();
-        }
-
-        var ikr = _activityStatePacket.getIndicatorKeyRegister();
-        var key = ikr.getAccessKey();
-        var brx = spGetOperandBaseRegisterIndex();
-        var relAddr = spGetOperandRelativeAddress();
-        checkAccessLimitsAndAccessibility(basicMode, brx, relAddr, false, false, true, key);
-
-        var bReg = _baseRegisters[brx];
-        var offset = relAddr - bReg.getLowerLimitNormalized();
-        var qWord = dr.isQuarterWordModeEnabled();
-        var origValue = bReg.getStorage().get(offset);
-        var newValue = injectPartialWord(origValue, partialWordIndicator, partialWordValue, qWord || forceQuarterWordMode);
-        bReg.getStorage().set(offset, newValue);
-
-        return true;
-    }
-
-    /**
-     * For CR and other instructions - we assume the relative address has already been resolved,
-     * and we just need to store the operand there.
+     * @throws ReferenceViolationInterrupt if the operation violates access limits or accessibility
      */
     public void storeToCachedAddress(
-        final long operand
+        final long operand,
+        final int partialWordIndicator,
+        final boolean forceQuarterWordMode
     ) throws ReferenceViolationInterrupt {
         var brx = spGetOperandBaseRegisterIndex();
         var relAddr = spGetOperandRelativeAddress();
+        var dr = _activityStatePacket.getDesignatorRegister();
 
-        var bReg = _baseRegisters[brx];
-        var offset = relAddr - bReg.getLowerLimitNormalized();
+        if (spGetOperandIsGRS()) {
+            var privilege = dr.getProcessorPrivilege();
+            if (!GeneralRegisterSet.isAccessAllowed(relAddr, privilege, true)) {
+                throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
+            }
+            _generalRegisterSet.setRegister(relAddr, operand);
+        } else {
+            var bReg = _baseRegisters[brx];
+            var offset = relAddr - bReg.getLowerLimitNormalized();
 
-        var ikr = _activityStatePacket.getIndicatorKeyRegister();
-        var key = ikr.getAccessKey();
-        checkAccessLimitsAndAccessibility(_activityStatePacket.getDesignatorRegister().isBasicModeEnabled(),
-                                          brx, relAddr, false, false, true, key);
+            var ikr = _activityStatePacket.getIndicatorKeyRegister();
+            var key = ikr.getAccessKey();
+            checkAccessLimitsAndAccessibility(_activityStatePacket.getDesignatorRegister().isBasicModeEnabled(),
+                                              brx, relAddr, false, false, true, key);
 
-        bReg.getStorage().set(offset, operand);
+            var qWord = dr.isQuarterWordModeEnabled();
+            var origValue = bReg.getStorage().get(offset);
+            var newValue = injectPartialWord(origValue, partialWordIndicator, operand, qWord || forceQuarterWordMode);
+            bReg.getStorage().set(offset, newValue);
+        }
     }
 }

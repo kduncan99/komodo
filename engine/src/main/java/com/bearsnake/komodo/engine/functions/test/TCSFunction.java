@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.functions.Function;
@@ -40,7 +41,7 @@ public class TCSFunction extends Function {
         }
 
         if ((Word36.getS1(operand) & 01) == 1) {
-            engine.storeToCachedAddress(operand & 0_007777_777777L);
+            engine.storeToCachedAddress(0, Constants.JFIELD_S1, false);
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 

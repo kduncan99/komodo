@@ -32,10 +32,14 @@ public class DSFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        var ci = engine.getCurrentInstruction();
-        var operands = new long[2];
-        operands[0] = engine.getExecOrUserARegister(ci.getA()).getW();
-        operands[1] = engine.getExecOrUserARegister(ci.getA() + 1).getW();
-        return engine.storeConsecutiveOperands(true, operands);
+        boolean result = engine.resolveRelativeAddress(false, true, false);
+        if (result) {
+            var ci = engine.getCurrentInstruction();
+            var operands = new long[2];
+            operands[0] = engine.getExecOrUserARegister(ci.getA()).getW();
+            operands[1] = engine.getExecOrUserARegister(ci.getA() + 1).getW();
+            engine.storeConsecutiveOperandsToCachedAddress(operands);
+        }
+        return result;
     }
 }

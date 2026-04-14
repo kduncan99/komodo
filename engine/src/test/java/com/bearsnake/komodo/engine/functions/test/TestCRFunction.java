@@ -110,9 +110,9 @@ public class TestCRFunction extends FunctionUnitTest {
     @Test
     public void testCR_Success_BM() throws MachineInterrupt {
         var code = new long[] {
-            crBM(2, 0, 0_24000),          // CR (U) == A(2)? Yes. Replace (U) with A(3), Skip.
-            0,                           // Skipped
-            0,                           // Normal stop
+            crBM(2, 0, 0_24000), // CR (U) == A(2)? Yes. Replace (U) with A(3), Skip.
+            0,                             // Skipped
+            0,                             // Normal stop
         };
 
         var data = new long[0_3000];
@@ -120,17 +120,6 @@ public class TestCRFunction extends FunctionUnitTest {
 
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
-
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setGeneralAccessPermissions(AccessPermissions.ALL)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_22)
-                                      .setUpperLimit(0_24777)
-                                      .setGeneralAccessPermissions(AccessPermissions.ALL)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
 
         loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
         loadBaseRegister(14, false, 0_22000, 0_25777, new AbsoluteAddress(1, 0), bank1);

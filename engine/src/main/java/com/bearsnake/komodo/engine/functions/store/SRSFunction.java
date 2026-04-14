@@ -44,6 +44,10 @@ public class SRSFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
+        if (!engine.resolveRelativeAddress(false, true, false)) {
+            return false;
+        }
+
         var ci = engine.getCurrentInstruction();
         var dr = engine.getDesignatorRegister();
         var pPriv = dr.getProcessorPrivilege();
@@ -78,6 +82,7 @@ public class SRSFunction extends Function {
             operands[opIdx++] = engine.getGeneralRegister(grsIndex, false).getW();
         }
 
-        return engine.storeConsecutiveOperands(true, operands);
+        engine.storeConsecutiveOperandsToCachedAddress(operands);
+        return true;
     }
 }

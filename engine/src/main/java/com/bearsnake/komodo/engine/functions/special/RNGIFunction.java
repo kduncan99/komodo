@@ -31,12 +31,16 @@ public class RNGIFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        var operands = new long[4];
-        for (int wx = 0; wx < 4; wx++) {
-            operands[wx] = engine.getRandom().nextInt();
+        boolean result = engine.resolveRelativeAddress(false, true, false);
+        if (result) {
+            var operands = new long[4];
+            for (int wx = 0; wx < 4; wx++) {
+                operands[wx] = engine.getRandom().nextInt();
+            }
+
+            engine.storeConsecutiveOperandsToCachedAddress(operands);
         }
 
-        engine.storeConsecutiveOperands(true, operands);
-        return true;
+        return result;
     }
 }

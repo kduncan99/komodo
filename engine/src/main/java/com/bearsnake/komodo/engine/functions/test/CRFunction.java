@@ -5,6 +5,7 @@
 package com.bearsnake.komodo.engine.functions.test;
 
 import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.functions.Function;
@@ -45,7 +46,7 @@ public class CRFunction extends Function {
         var aValue1 = engine.getExecOrUserARegister(ci.getA() + 1).getW();
 
         if (Word36.compare(operand, aValue0) == 0) {
-            engine.storeToCachedAddress(aValue1);
+            engine.storeToCachedAddress(aValue1, Constants.JFIELD_W, false);
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 
