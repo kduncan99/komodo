@@ -4,8 +4,8 @@
 
 package com.bearsnake.komodo.engine.functions;
 
-import com.bearsnake.komodo.engine.EngineUnitTest;
-import com.bearsnake.komodo.engine.HaltCode;
+import com.bearsnake.komodo.engine.*;
+import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 public abstract class FunctionUnitTest extends EngineUnitTest {

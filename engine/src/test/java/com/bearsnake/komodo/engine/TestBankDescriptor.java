@@ -4,7 +4,11 @@
 
 package com.bearsnake.komodo.engine;
 
+import com.bearsnake.komodo.baselib.ArraySlice;
 import org.junit.jupiter.api.Test;
+
+import java.sql.Array;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBankDescriptor {
@@ -144,8 +148,9 @@ public class TestBankDescriptor {
            .setGeneralAccessPermissions(new AccessPermissions(true, false, true))
            .setSpecialAccessPermissions(new AccessPermissions(false, true, false));
 
-        long[] buffer = new long[6];
-        bd1.serialize(buffer);
+        long[] buffer = new long[8];
+        var slice = new ArraySlice(buffer);
+        bd1.serialize(slice, 0);
 
         BankDescriptor bd2 = new BankDescriptor(buffer);
 
@@ -168,8 +173,9 @@ public class TestBankDescriptor {
         bd1.setBankType(BankType.Indirect)
            .setIndirectLevelAndBDI(0x3FFFF);
 
-        long[] buffer = new long[6];
-        bd1.serialize(buffer);
+        long[] buffer = new long[8];
+        var slice = new ArraySlice(buffer);
+        bd1.serialize(slice, 0);
 
         BankDescriptor bd2 = new BankDescriptor(buffer);
         assertEquals(BankType.Indirect, bd2.getBankType());
@@ -183,8 +189,9 @@ public class TestBankDescriptor {
            .setInactive(true)
            .setInactiveQBDListNextPointer(0x123456789L);
 
-        long[] buffer = new long[6];
-        bd1.serialize(buffer);
+        long[] buffer = new long[8];
+        var slice = new ArraySlice(buffer);
+        bd1.serialize(slice, 0);
 
         BankDescriptor bd2 = new BankDescriptor(buffer);
         assertEquals(BankType.Queue, bd2.getBankType());

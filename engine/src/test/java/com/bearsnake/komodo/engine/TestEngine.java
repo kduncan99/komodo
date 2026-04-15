@@ -1,0 +1,99 @@
+/*
+ * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
+ */
+
+package com.bearsnake.komodo.engine;
+
+import com.bearsnake.komodo.engine.interrupts.AddressingExceptionInterrupt;
+import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Unit tests for InstructionWord class
+ */
+public class TestEngine extends EngineUnitTest {
+
+    @Test
+    public void testLoadBank() throws HardwareCheckInterrupt, AddressingExceptionInterrupt {
+        _engine = new Engine(this, this);
+
+        var bankSize = 1024;
+        var segIndex = allocateSegment(bankSize);
+        var bank = getSegment(segIndex);
+        bank.set(042, 0_1234);
+
+        var bd = new BankDescriptor(false,
+                                    new AccessLock(),
+                                    AccessPermissions.ALL,
+                                    AccessPermissions.ALL,
+                                    new AbsoluteAddress(segIndex, 0),
+                                    false,
+                                    0,
+                                    bankSize - 1,
+                                    0);
+
+        var bdtId = createBankDescriptorTable(32);
+        var bankLevel = 1;
+        var bdi = 05;
+
+        loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
+        registerBankDescriptorViaLevelAndBDI(bankLevel, bdi, bd);
+        _engine.loadBank(0, bankLevel, bdi);
+
+        assertFalse(_engine.getBaseRegister(0).isVoid());
+        assertEquals(bankSize - 1, _engine.getBaseRegister(0).getUpperLimitNormalized());
+        assertEquals(0_1234, _engine.getBaseRegister(0).getStorage().get(0_42));
+    }
+
+    @Test
+    public void testLoadBank_Fail_Level0_BDI0() throws HardwareCheckInterrupt {
+        _engine = new Engine(this, this);
+
+        var bankSize = 1024;
+        var segIndex = allocateSegment(bankSize);
+        var bd = new BankDescriptor(false,
+                                    new AccessLock(),
+                                    AccessPermissions.ALL,
+                                    AccessPermissions.ALL,
+                                    new AbsoluteAddress(segIndex, 0),
+                                    false,
+                                    0,
+                                    bankSize - 1,
+                                    0);
+
+        var bdtId = createBankDescriptorTable(32);
+        var bankLevel = 0;
+        var bdi = 0;
+
+        loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
+        registerBankDescriptorViaLevelAndBDI(bankLevel, bdi, bd);
+        assertThrows(AddressingExceptionInterrupt.class, () -> _engine.loadBank(0, bankLevel, bdi));
+    }
+
+    @Test
+    public void testLoadBank_Fail_Bad_BaseReg() throws HardwareCheckInterrupt {
+        _engine = new Engine(this, this);
+
+        var bankSize = 1024;
+        var segIndex = allocateSegment(bankSize);
+        var bd = new BankDescriptor(false,
+                                    new AccessLock(),
+                                    AccessPermissions.ALL,
+                                    AccessPermissions.ALL,
+                                    new AbsoluteAddress(segIndex, 0),
+                                    false,
+                                    0,
+                                    bankSize - 1,
+                                    0);
+
+        var bdtId = createBankDescriptorTable(32);
+        var bankLevel = 01;
+        var bdi = 05;
+
+        loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
+        registerBankDescriptorViaLevelAndBDI(bankLevel, bdi, bd);
+        assertThrows(AddressingExceptionInterrupt.class, () -> _engine.loadBank(32, bankLevel, bdi));
+    }
+}

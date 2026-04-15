@@ -982,6 +982,46 @@ public class Engine {
         createJumpHistoryEntry(oldAddress);
     }
 
+    public void loadBank(
+        final int baseRegisterIndex,
+        final int bankLevel,
+        final int bankDescriptorIndex
+    ) throws HardwareCheckInterrupt, AddressingExceptionInterrupt {
+        if ((baseRegisterIndex < 0) || (baseRegisterIndex > 31)) {
+            // invalid base register index - this is really bad.
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI, bankLevel, bankDescriptorIndex);
+        }
+
+        if ((bankLevel < 0) || (bankLevel > 7) || (bankDescriptorIndex < 0)) {
+            // Invalid bank level or BDI
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI, bankLevel, bankDescriptorIndex);
+        }
+
+        if ((bankLevel == 0) && (bankDescriptorIndex < 32)) {
+            // Invalid bank level or BDI
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI, bankLevel, bankDescriptorIndex);
+        }
+
+        var bdtReg = _baseRegisters[bankLevel + 16];
+        if (bdtReg.isVoid()) {
+            // No BDT exists for the indicated level
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException, bankLevel, bankDescriptorIndex);
+        }
+
+        var bReg = _baseRegisters[baseRegisterIndex];
+        var offset = bankDescriptorIndex * 8;
+        bReg.setLimitsNormalized(BankDescriptor.isLargeBank(bdtReg.getStorage(), offset),
+                                 (int) BankDescriptor.getLowerLimit(bdtReg.getStorage(), offset),
+                                 (int) BankDescriptor.getUpperLimit(bdtReg.getStorage(), offset));
+        bReg.setAccessLock(BankDescriptor.getAccessLock(bdtReg.getStorage(), offset));
+        bReg.setGeneralAccessPermissions(BankDescriptor.getGeneralAccessPermissions(bdtReg.getStorage(), offset));
+        bReg.setSpecialAccessPermissions(BankDescriptor.getSpecialAccessPermissions(bdtReg.getStorage(), offset));
+        var baseAddr = BankDescriptor.getBaseAddress(bdtReg.getStorage(), offset);
+        bReg.setBaseAddress(baseAddr);
+        var bankLength = bReg.getUpperLimitNormalized() - bReg.getLowerLimitNormalized() + 1;
+        bReg.setStorage(_storageManager.getSlice(baseAddr.getSegment(), baseAddr.getOffset(), bankLength));
+    }
+
     // -----------------------------------------------------------------------------------------------------------------------------
     // Address resolution
 

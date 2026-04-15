@@ -9,7 +9,6 @@ import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 import java.util.HashMap;
-import java.util.TreeMap;
 
 public abstract class EngineUnitTest implements StorageManager, InterruptHandler {
 
@@ -163,6 +162,82 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
         }
         slice.set(offset, value);
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------------------
+    // Bank descriptor tables for testing
+    // We manage bank descriptor tables here, creating them in storage, and providing methods for setting up configurations
+    // for unit testing of functions (instructions).
+    // Bank descriptor tables are identified to a the hardware by levels of 0 to 7 (which do not imply any particular
+    // precedence of privilege or priority, so far as the hardware is concerned). However, the hardware has visibility to
+    // a particular bank descriptor via its level, only insofar as that BDT is defined on the current content of B16-B23.
+    // Thus, it is possible for many BDTs to exist; it's just that a max of eight are visible at any given point in time.
+    // SO... the user's interaction with us is:
+    //  Create a BDT to contain some number of BDs. We create that BDT and assign it some particular identifier.
+    //      This identifier is most definitely NOT a bank level, nor a bank descriptor; it is arbitrary.
+    //  Optionally load the BDT into the BaseRegister corresponding to the desired bank level.
+    //  If the BDT is loaded:
+    //      [ create a bank in storage ]
+    //      [ create a BankDescriptor object to describe the bank in storage ]
+    //      register the bank descriptor via the bank level and bank descriptor index
+    // The bank can now be loaded into one of the Base Registers from B0 - B15 via the typical instructions.
+
+    /**
+     * Creates a bank descriptor table, assigning it a unique identifier.
+     * We create storage to back the BDT, and we use the corresponding segment identifier as the BDT identifier.
+     * @return identifier of the newly created BDT.
+     */
+    public int createBankDescriptorTable(
+        final int bankDescriptorCount
+    ) {
+        try {
+            return allocateSegment(8 * bankDescriptorCount);
+        } catch (HardwareCheckInterrupt e) {
+            assert(false):"Caught hardware check interrupt:" + e;
+            return -1;
+        }
+    }
+
+    /**
+     * Loads a bank descriptor table into the base register corresponding to the specified bank level.
+     * This will make the BDT visible to the hardware, as the BDT at the given bankLevel.
+     * @param bankDescriptorTableIdentifier The unique identifier of the BDT to load.
+     * @param bankLevel The bank level to load the BDT into (this determines which BaseRegister is selected).
+     */
+    public void loadBankDescriptorTableToBaseRegister(
+        final int bankDescriptorTableIdentifier,
+        final int bankLevel
+    ) {
+        try {
+            assert ((bankLevel >= 0) && (bankLevel <= 7));
+            var segment = getSegment(bankDescriptorTableIdentifier);
+            var bReg = _engine.getBaseRegister(bankLevel + 16);
+            bReg.setStorage(segment);
+            bReg.setSpecialAccessPermissions(AccessPermissions.NONE);
+            bReg.setGeneralAccessPermissions(AccessPermissions.NONE);
+            bReg.setAccessLock(new AccessLock());
+            bReg.setBaseAddress(new AbsoluteAddress(bankDescriptorTableIdentifier, 0));
+            bReg.setLimitsNormalized(false, 0, segment.getSize() | 0777);
+        } catch (HardwareCheckInterrupt e) {
+            assert(false):"Caught hardware check interrupt:" + e;
+        }
+    }
+
+    /**
+     * Registers a bank descriptor via the bank level and bank descriptor index.
+     * @param bankLevel The bank level to register the descriptor into.
+     * @param bankDescriptorIndex The index of the descriptor within the bank.
+     * @param bankDescriptor The descriptor to register.
+     */
+    public void registerBankDescriptorViaLevelAndBDI(
+        final int bankLevel,
+        final int bankDescriptorIndex,
+        final BankDescriptor bankDescriptor
+    ) {
+        assert ((bankLevel >= 0) && (bankLevel <= 7)):"Invalid bank level: " + bankLevel;
+        var bReg = _engine.getBaseRegister(bankLevel + 16);
+        assert(bankDescriptorIndex < bReg.getUpperLimitNormalized()):"BDI " + bankDescriptorIndex + " exceeds BDT size for level " + bankLevel;
+        bankDescriptor.serialize(bReg.getStorage(), 8 * bankDescriptorIndex);
     }
 
     // Interrupt Handler implementation --------------------------------------------------------------------------------------------

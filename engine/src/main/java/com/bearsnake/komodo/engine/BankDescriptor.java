@@ -233,7 +233,10 @@ public class BankDescriptor {
     public BankDescriptor setDisplacement(final long value) { _displacement = value; return this; }
     public BankDescriptor setInactiveQBDListNextPointer(final long value) { _inactiveQBDListNextPointer = value; return this; }
 
-    public void serialize(final long[] buffer) {
+    public void serialize(
+        final ArraySlice slice,
+        final int offset
+    ) {
         long value0 = 0;
         value0 |= (long) _generalAccessPermissions.toComposite() << 33;
         value0 |= (long) _specialAccessPermissions.toComposite() << 30;
@@ -272,11 +275,13 @@ public class BankDescriptor {
         }
         value4 |= (_displacement & 077777L) << 18;
 
-        buffer[0] = value0;
-        buffer[1] = value1;
-        buffer[2] = value2;
-        buffer[3] = value3;
-        buffer[4] = value4;
-        buffer[5] = 0;
+        slice.set(offset, value0);
+        slice.set(offset + 1, value1);
+        slice.set(offset + 2, value2);
+        slice.set(offset + 3, value3);
+        slice.set(offset + 4, value4);
+        slice.set(offset + 5, 0);
+        slice.set(offset + 6, 0);
+        slice.set(offset + 7, 0);
     }
 }
