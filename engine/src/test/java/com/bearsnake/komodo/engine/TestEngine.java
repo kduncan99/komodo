@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestEngine extends EngineUnitTest {
 
     @Test
-    public void testLoadBank() throws HardwareCheckInterrupt, AddressingExceptionInterrupt {
+    public void testLoadBank_B0() throws HardwareCheckInterrupt, AddressingExceptionInterrupt {
         _engine = new Engine(this, this);
 
         var bankSize = 1024;
@@ -40,11 +40,47 @@ public class TestEngine extends EngineUnitTest {
 
         loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
         registerBankDescriptorViaLevelAndBDI(bankLevel, bdi, bd);
-        _engine.loadBank(0, bankLevel, bdi);
+        _engine.loadBank(0, bankLevel, bdi, 0);
 
         assertFalse(_engine.getBaseRegister(0).isVoid());
         assertEquals(bankSize - 1, _engine.getBaseRegister(0).getUpperLimitNormalized());
         assertEquals(0_1234, _engine.getBaseRegister(0).getStorage().get(0_42));
+        assertEquals(bankLevel, _engine.getProgramAddressRegister().getBankLevel());
+        assertEquals(bdi, _engine.getProgramAddressRegister().getBankDescriptorIndex());
+    }
+
+    @Test
+    public void testLoadBank_B15() throws HardwareCheckInterrupt, AddressingExceptionInterrupt {
+        _engine = new Engine(this, this);
+
+        var bankSize = 1024;
+        var segIndex = allocateSegment(bankSize);
+        var bank = getSegment(segIndex);
+        bank.set(042, 0_1234);
+
+        var bd = new BankDescriptor(false,
+                                    new AccessLock(),
+                                    AccessPermissions.ALL,
+                                    AccessPermissions.ALL,
+                                    new AbsoluteAddress(segIndex, 0),
+                                    false,
+                                    0,
+                                    bankSize - 1,
+                                    0);
+
+        var bdtId = createBankDescriptorTable(32);
+        var bankLevel = 3;
+        var bdi = 010;
+
+        loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
+        registerBankDescriptorViaLevelAndBDI(bankLevel, bdi, bd);
+        _engine.loadBank(15, bankLevel, bdi, 0);
+
+        assertFalse(_engine.getBaseRegister(15).isVoid());
+        assertEquals(bankSize - 1, _engine.getBaseRegister(15).getUpperLimitNormalized());
+        assertEquals(0_1234, _engine.getBaseRegister(15).getStorage().get(0_42));
+        assertEquals(bankLevel, _engine.getActiveBaseTableEntry(15).getBankLevel());
+        assertEquals(bdi, _engine.getActiveBaseTableEntry(15).getBankDescriptorIndex());
     }
 
     @Test
@@ -69,7 +105,7 @@ public class TestEngine extends EngineUnitTest {
 
         loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
         registerBankDescriptorViaLevelAndBDI(bankLevel, bdi, bd);
-        assertThrows(AddressingExceptionInterrupt.class, () -> _engine.loadBank(0, bankLevel, bdi));
+        assertThrows(AddressingExceptionInterrupt.class, () -> _engine.loadBank(0, bankLevel, bdi, 0));
     }
 
     @Test
@@ -94,6 +130,6 @@ public class TestEngine extends EngineUnitTest {
 
         loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
         registerBankDescriptorViaLevelAndBDI(bankLevel, bdi, bd);
-        assertThrows(AddressingExceptionInterrupt.class, () -> _engine.loadBank(32, bankLevel, bdi));
+        assertThrows(AddressingExceptionInterrupt.class, () -> _engine.loadBank(32, bankLevel, bdi, 0));
     }
 }

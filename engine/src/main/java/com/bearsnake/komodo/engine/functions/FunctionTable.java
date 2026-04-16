@@ -6,10 +6,12 @@ package com.bearsnake.komodo.engine.functions;
 
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.DesignatorRegister;
+import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.decimal.*;
 import com.bearsnake.komodo.engine.functions.jump.*;
 import com.bearsnake.komodo.engine.functions.load.*;
 import com.bearsnake.komodo.engine.functions.logical.*;
+import com.bearsnake.komodo.engine.functions.procControl.*;
 import com.bearsnake.komodo.engine.functions.shift.*;
 import com.bearsnake.komodo.engine.functions.special.*;
 import com.bearsnake.komodo.engine.functions.test.*;
@@ -244,7 +246,7 @@ public abstract class FunctionTable {
         // LBEFunction.INSTANCE,    PP=0
         // LBEDFunction.INSTANCE,   PP=0
         // LBNFunction.INSTANCE,
-        // LBUFunction.INSTANCE,
+        LBUFunction.INSTANCE,// TODO
         // LBUDFunction.INSTANCE,   PP=0
         // SBEDFunction.INSTANCE,   PP=0
         // SBUFunction.INSTANCE,
@@ -255,13 +257,13 @@ public abstract class FunctionTable {
         // We do not support VIEW
 
         // procedureControl
-        // CALLFunction.INSTANCE,
-        // GOTOFunction.INSTANCE,
-        // LBJFunction.INSTANCE,
-        // LDJFunction.INSTANCE,
-        // LIJFunction.INSTANCE,
-        // LOCLFunction.INSTANCE,
-        // RTNFunction.INSTANCE,
+        CALLFunction.INSTANCE,// TODO
+        GOTOFunction.INSTANCE,// TODO
+        LBJFunction.INSTANCE,// TODO
+        LDJFunction.INSTANCE,// TODO
+        LIJFunction.INSTANCE,// TODO
+        LOCLFunction.INSTANCE,// TODO
+        RTNFunction.INSTANCE,// TODO
 
         // queueing
         // DEPOSITQBFFunction.INSTANCE,

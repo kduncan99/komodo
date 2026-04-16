@@ -8,6 +8,8 @@ import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionTable;
+import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
+import com.bearsnake.komodo.engine.functions.procControl.*;
 import com.bearsnake.komodo.engine.functions.special.EXFunction;
 import com.bearsnake.komodo.engine.functions.special.EXRFunction;
 import com.bearsnake.komodo.engine.interrupts.*;
@@ -982,10 +984,20 @@ public class Engine {
         createJumpHistoryEntry(oldAddress);
     }
 
+    /**
+     * Loads a bank register with the bank indicated by the given level/BDI.
+     * @param baseRegisterIndex the index of the bank register to be loaded
+     * @param bankLevel the level of the bank to be loaded
+     * @param bankDescriptorIndex the index of the bank descriptor
+     * @param offset the offset within the bank to be loaded (for subsetting, and only for B1-B15)
+     * @throws HardwareCheckInterrupt if the base register index is invalid
+     * @throws AddressingExceptionInterrupt if the bank level or BDI is invalid
+     */
     public void loadBank(
         final int baseRegisterIndex,
         final int bankLevel,
-        final int bankDescriptorIndex
+        final int bankDescriptorIndex,
+        final int offset
     ) throws HardwareCheckInterrupt, AddressingExceptionInterrupt {
         if ((baseRegisterIndex < 0) || (baseRegisterIndex > 31)) {
             // invalid base register index - this is really bad.
@@ -1009,17 +1021,73 @@ public class Engine {
         }
 
         var bReg = _baseRegisters[baseRegisterIndex];
-        var offset = bankDescriptorIndex * 8;
-        bReg.setLimitsNormalized(BankDescriptor.isLargeBank(bdtReg.getStorage(), offset),
-                                 (int) BankDescriptor.getLowerLimit(bdtReg.getStorage(), offset),
-                                 (int) BankDescriptor.getUpperLimit(bdtReg.getStorage(), offset));
-        bReg.setAccessLock(BankDescriptor.getAccessLock(bdtReg.getStorage(), offset));
-        bReg.setGeneralAccessPermissions(BankDescriptor.getGeneralAccessPermissions(bdtReg.getStorage(), offset));
-        bReg.setSpecialAccessPermissions(BankDescriptor.getSpecialAccessPermissions(bdtReg.getStorage(), offset));
-        var baseAddr = BankDescriptor.getBaseAddress(bdtReg.getStorage(), offset);
+        var bdtOffset = bankDescriptorIndex * 8;
+        bReg.setLimitsNormalized(BankDescriptor.isLargeBank(bdtReg.getStorage(), bdtOffset),
+                                 (int) BankDescriptor.getLowerLimit(bdtReg.getStorage(), bdtOffset),
+                                 (int) BankDescriptor.getUpperLimit(bdtReg.getStorage(), bdtOffset));
+        bReg.setAccessLock(BankDescriptor.getAccessLock(bdtReg.getStorage(), bdtOffset));
+        bReg.setGeneralAccessPermissions(BankDescriptor.getGeneralAccessPermissions(bdtReg.getStorage(), bdtOffset));
+        bReg.setSpecialAccessPermissions(BankDescriptor.getSpecialAccessPermissions(bdtReg.getStorage(), bdtOffset));
+        var baseAddr = BankDescriptor.getBaseAddress(bdtReg.getStorage(), bdtOffset);
         bReg.setBaseAddress(baseAddr);
         var bankLength = bReg.getUpperLimitNormalized() - bReg.getLowerLimitNormalized() + 1;
         bReg.setStorage(_storageManager.getSlice(baseAddr.getSegment(), baseAddr.getOffset(), bankLength));
+
+        if (baseRegisterIndex == 0) {
+            // Update hard-held PAR
+            _activityStatePacket.getProgramAddressRegister()
+                                .setBankLevel((short)bankLevel)
+                                .setBankDescriptorIndex(bankDescriptorIndex);
+        } else if (baseRegisterIndex < 16) {
+            _activeBaseTable.getEntry(baseRegisterIndex)
+                            .setBankLevel((short)bankLevel)
+                            .setBankDescriptorIndex(bankDescriptorIndex)
+                            .setSubsetSpecification(offset);
+        }
+    }
+
+    /**
+     * This is the canonical bank manipulation algorithm, used by many clients, including certain instructions
+     * as well as interrupt handling and maybe one or two other things. See the embedded comments.
+     * We *could* use purpose-specific versions of this to improve performance in the various individual cases;
+     * however, that would require that we redo a lot of logic over and over, with small differences.
+     * @param function the function which is invoking use; null for interrupt processing
+     * @param baseRegister the base register which we will load (if we load a bank)
+     * @param ifSpec for LBJ only, indicates functionality in the case of BM->EM transfer
+     */
+    public void manipulateBanks(
+        final Function function,
+        final int baseRegister,
+        final int ifSpec
+    ) throws AddressingExceptionInterrupt,
+             InvalidInstructionInterrupt {
+        // Convenience variables
+        var isCALL = function instanceof CALLFunction;
+        var isGOTO = function instanceof GOTOFunction;
+        var isLOCL = function instanceof LOCLFunction;
+        var isRTN = function instanceof RTNFunction;
+
+        var isLBU = function instanceof LBUFunction;
+        var isLxJ = (function instanceof LBJFunction) || (function instanceof LDJFunction) || (function instanceof LIJFunction);
+
+        var isInterrupt = function == null;
+        var isLoad = isLBU; // TODO or LBE or LAE
+
+        // Step 1 - Prevent nonsense
+        if (isLBU && ((baseRegister == 0) || (baseRegister == 1))) {
+            throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidBaseRegister);
+        } else if (isLxJ && (ifSpec == 3)) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidISValue, 0, 0);
+        }
+
+        // Step 2
+        // Prior L,BDI Fetch: For CALL only, the name of the Bank currently loaded into B0 is obtained
+        // from hard-held L,BDI. For LXJ and LXJ/CALL only, the name of the Bank currently loaded into
+        // the Base_Register to be altered is obtained from the appropriate ABT entry: For LBJ,
+        // specified by Xa.BDR (BDR+12). For LDJ, B14 if DB31 = 0; B15 if DB31 = 1. For LIJ, B12 if
+        // DB31 = 0; B13 if DB31 = 1.
+
+        // TODO
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
