@@ -77,7 +77,7 @@ public class BankDescriptor {
         final ArraySlice storage,
         final int offset
     ) {
-        return new AbsoluteAddress(storage, 2);
+        return new AbsoluteAddress(storage, offset + 2);
     }
 
     public static long getInactiveQBDListNextPointer(
