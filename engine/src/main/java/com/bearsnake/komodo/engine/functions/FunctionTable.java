@@ -14,6 +14,8 @@ import com.bearsnake.komodo.engine.functions.logical.*;
 import com.bearsnake.komodo.engine.functions.procControl.*;
 import com.bearsnake.komodo.engine.functions.shift.*;
 import com.bearsnake.komodo.engine.functions.special.*;
+import com.bearsnake.komodo.engine.functions.stack.BUYFunction;
+import com.bearsnake.komodo.engine.functions.stack.SELLFunction;
 import com.bearsnake.komodo.engine.functions.test.*;
 import com.bearsnake.komodo.engine.functions.store.*;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
@@ -288,8 +290,8 @@ public abstract class FunctionTable {
         // URFunction.INSTANCE,     PP=0
 
         // stack
-        // BUYFunction.INSTANCE,
-        // SELLFunction.INSTANCE,
+        BUYFunction.INSTANCE,   // TODO unit tests
+        SELLFunction.INSTANCE,  // TODO unit tests
 
         // interrupt
         // AAIJFunction.INSTANCE,

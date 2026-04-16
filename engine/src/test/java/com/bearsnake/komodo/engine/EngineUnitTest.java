@@ -55,7 +55,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
 
     // StorageManager implementation -----------------------------------------------------------------------------------------------
 
-    private HashMap<Integer, ArraySlice> _segments = new HashMap<>();
+    private final HashMap<Integer, ArraySlice> _segments = new HashMap<>();
 
     @Override
     public synchronized int allocateSegment(
@@ -162,6 +162,41 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
         }
         slice.set(offset, value);
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------------------
+    // Stack things
+
+    /**
+     * Allocates a segment of memory of the specified size and creates a stack in it.
+     * The indicated base register becomes the stack descriptor,
+     * while the indicated index register becomes the stack pointer.
+     * @param baseRegisterNumber indicates which BaseRegister is used as the stack descriptor
+     * @param stackPointerRegisterNumber indicates which X register is used as the stack pointer
+     * @param stackLowerLimit Lower limit of the stack (usually 0, but whatever)
+     * @param stackFrameSize Default frame size (modified by U on BUY and SELL)
+     * @param stackSize Total stack size
+     */
+    protected void createStack(
+        final int baseRegisterNumber,
+        final int stackPointerRegisterNumber,
+        final int stackLowerLimit,
+        final int stackFrameSize,
+        final int stackSize
+    ) throws HardwareCheckInterrupt {
+        var segx = allocateSegment(stackSize);
+        var upperLimit = stackLowerLimit + stackSize - 1;
+        var bReg = _engine.getBaseRegister(baseRegisterNumber);
+        var xReg = _engine.getExecOrUserXRegister(stackPointerRegisterNumber);
+
+        bReg.setStorage(getSegment(segx))
+            .setLimitsNormalized(false, stackLowerLimit, upperLimit)
+            .setAccessLock(new AccessLock())
+            .setGeneralAccessPermissions(AccessPermissions.ALL)
+            .setSpecialAccessPermissions(AccessPermissions.ALL)
+            .setBaseAddress(new AbsoluteAddress(segx, 0));
+
+        xReg.setXI(stackFrameSize).setXM(upperLimit + 1);
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
