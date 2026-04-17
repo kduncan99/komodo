@@ -263,13 +263,13 @@ public abstract class FunctionTable {
         // We do not support VIEW
 
         // procedureControl
-        CALLFunction.INSTANCE,// TODO
-        GOTOFunction.INSTANCE,// TODO
-        LBJFunction.INSTANCE,// TODO
-        LDJFunction.INSTANCE,// TODO
-        LIJFunction.INSTANCE,// TODO
-        LOCLFunction.INSTANCE,// TODO
-        RTNFunction.INSTANCE,// TODO
+        CALLFunction.INSTANCE,  // TODO
+        GOTOFunction.INSTANCE,  // TODO
+        LBJFunction.INSTANCE,   // TODO
+        LDJFunction.INSTANCE,   // TODO
+        LIJFunction.INSTANCE,   // TODO
+        LOCLFunction.INSTANCE,  // TODO
+        RTNFunction.INSTANCE,   // TODO
 
         // queueing
         // DEPOSITQBFFunction.INSTANCE,
@@ -299,9 +299,9 @@ public abstract class FunctionTable {
 
         // interruptControl
         AAIJFunction.INSTANCE,
-        ERFunction.INSTANCE,    // TODO unit tests
+        ERFunction.INSTANCE,
         PAIJFunction.INSTANCE,
-        SGNLFunction.INSTANCE,  // TODO unit tests
+        SGNLFunction.INSTANCE,
 
         // system
         // IARFunction.INSTANCE,    PP=0
