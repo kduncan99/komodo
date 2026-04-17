@@ -11,23 +11,23 @@ import com.bearsnake.komodo.baselib.Word36;
  */
 public class DesignatorRegister {
 
-    private static final long MASK_ActivityLevelQueueMonitorEnabled = Word36.MASK_B0;
-    private static final long MASK_FaultHandlingInProgress          = Word36.MASK_B6;
-    private static final long MASK_Executive24BitIndexingEnabled    = Word36.MASK_B11;
-    private static final long MASK_QuantumTimerEnabled              = Word36.MASK_B12;
-    private static final long MASK_DeferrableInterruptEnabled       = Word36.MASK_B13;
-    private static final long MASK_ProcessorPrivilege               = Word36.MASK_B14 | Word36.MASK_B15;
-    private static final long MASK_BasicModeEnabled                 = Word36.MASK_B16;
-    private static final long MASK_ExecRegisterSetSelected          = Word36.MASK_B17;
-    private static final long MASK_Carry                            = Word36.MASK_B18;
-    private static final long MASK_Overflow                         = Word36.MASK_B19;
-    private static final long MASK_CharacteristicUnderflow          = Word36.MASK_B21;
-    private static final long MASK_CharacteristicOverflow           = Word36.MASK_B22;
-    private static final long MASK_DivideCheck                      = Word36.MASK_B23;
-    private static final long MASK_OperationTrapEnabled             = Word36.MASK_B27;
-    private static final long MASK_ArithmeticExceptionEnabled       = Word36.MASK_B29;
-    private static final long MASK_BasicModeBaseRegisterSelection   = Word36.MASK_B31;
-    private static final long MASK_QuarterWordModeEnabled           = Word36.MASK_B32;
+    static final long MASK_ActivityLevelQueueMonitorEnabled = Word36.MASK_B0;
+    static final long MASK_FaultHandlingInProgress          = Word36.MASK_B6;
+    static final long MASK_Executive24BitIndexingEnabled    = Word36.MASK_B11;
+    static final long MASK_QuantumTimerEnabled              = Word36.MASK_B12;
+    static final long MASK_DeferrableInterruptEnabled       = Word36.MASK_B13;
+    static final long MASK_ProcessorPrivilege               = Word36.MASK_B14 | Word36.MASK_B15;
+    static final long MASK_BasicModeEnabled                 = Word36.MASK_B16;
+    static final long MASK_ExecRegisterSetSelected          = Word36.MASK_B17;
+    static final long MASK_Carry                            = Word36.MASK_B18;
+    static final long MASK_Overflow                         = Word36.MASK_B19;
+    static final long MASK_CharacteristicUnderflow          = Word36.MASK_B21;
+    static final long MASK_CharacteristicOverflow           = Word36.MASK_B22;
+    static final long MASK_DivideCheck                      = Word36.MASK_B23;
+    static final long MASK_OperationTrapEnabled             = Word36.MASK_B27;
+    static final long MASK_ArithmeticExceptionEnabled       = Word36.MASK_B29;
+    static final long MASK_BasicModeBaseRegisterSelection   = Word36.MASK_B31;
+    static final long MASK_QuarterWordModeEnabled           = Word36.MASK_B32;
 
     private boolean _activityLevelQueueMonitorEnabled;
     private boolean _faultHandlingInProgress;
@@ -69,7 +69,7 @@ public class DesignatorRegister {
         return this;
     }
 
-    public long getWord36() {
+    public long getCompositeValue() {
         long result = 0;
         result |= (_activityLevelQueueMonitorEnabled ? MASK_ActivityLevelQueueMonitorEnabled : 0);
         result |= (_faultHandlingInProgress ? MASK_FaultHandlingInProgress : 0);
