@@ -4,9 +4,8 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.engine.interrupts.AddressingExceptionInterrupt;
-import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
-import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
+import com.bearsnake.komodo.baselib.ArraySlice;
+import com.bearsnake.komodo.engine.interrupts.*;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -139,7 +138,7 @@ public class TestEngine extends EngineUnitTest {
         _engine = new Engine(this, null);
 
         var codeBankDescriptor = new BankDescriptor();
-        var codeBank = createBank(BankType.ExtendedMode, 0_1000, 0_1000, codeBankDescriptor);
+        createBank(BankType.ExtendedMode, 0_1000, 0_1000, codeBankDescriptor);
         // codeBank is all zeroes, so no matter where we jump to, we'll get an invalid instruction interrupt.
 
         var codeBankLevel = 0;
@@ -171,5 +170,24 @@ public class TestEngine extends EngineUnitTest {
 
     // TODO we should do some interrupt processing testing where the process fails for various reasons
     //  Also need to check priority of processing
-    //  Also need to ensure that DB13 prevents deferrable interrupt processing
+
+    @Test
+    public void testEnsureInterruptsAreNotProcessed() throws HardwareCheckInterrupt {
+        _engine = new Engine(this, null);
+
+        var bdtID = createBankDescriptorTable(64);
+        loadBankDescriptorTableToBaseRegister(bdtID, 0);
+
+        MachineInterrupt interrupt = new UPINormalInterrupt(MachineInterrupt.Synchrony.Pended, 0);
+        createInterruptControlStack(0, 16, 512);
+
+        var code = new long[]{ 0 };
+        var codeBank = new ArraySlice(code);
+        _engine.getDesignatorRegister().setBasicModeEnabled(false).setDeferrableInterruptEnabled(false);
+        _engine.postInterrupt(interrupt);
+        loadBaseRegister(0, false, 0_1000, 0_1777, null, codeBank);
+
+        _engine.cycle();
+        assertEquals(HaltCode.NONE, _engine.getHaltCode());
+    }
 }

@@ -136,12 +136,11 @@ public class Engine {
         var iter = _interruptStack.entrySet().iterator();
         if (iter.hasNext()) {
             var interrupt = iter.next().getValue();
-            if ((interrupt.getDeferrability() == MachineInterrupt.Deferrability.Deferrable) && (dr.isDeferrableInterruptEnabled())) {
+            if ((interrupt.getDeferrability() == MachineInterrupt.Deferrability.Deferrable) && (!dr.isDeferrableInterruptEnabled())) {
                 // Any interrupts from this point onward are deferrable, so if *this* interrupt should be deferred,
                 // then all subsequent interrupts should also be deferred.
                 // Do nothing here...
             } else {
-
                 iter.remove();
                 if (_interruptHandler != null) {
                     _interruptHandler.handleInterrupt(interrupt);
@@ -1409,7 +1408,6 @@ public class Engine {
      * ---
      * In either case, the value will be left alone for j-field=016, and sign-extended for j-field=017.
      */
-
     public long getImmediateOperand() {
         long operand;
         var ci = _activityStatePacket.getCurrentInstruction();
