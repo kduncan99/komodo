@@ -1017,6 +1017,7 @@ public class Engine {
         final HaltCode haltCode
     ) {
         // TODO LOG THIS
+        System.out.printf("*** HALT: %s\n", haltCode);
         _haltCode = haltCode;
     }
 
@@ -1149,9 +1150,10 @@ public class Engine {
     ) throws HardwareCheckInterrupt {
         var bReg = _baseRegisters[baseRegisterIndex];
 
-        bReg.setLimitsNormalized(BankDescriptor.isLargeBank(bdtStorage, bdtOffset),
-                                 (int) BankDescriptor.getLowerLimit(bdtStorage, bdtOffset),
-                                 (int) BankDescriptor.getUpperLimit(bdtStorage, bdtOffset));
+        var large = BankDescriptor.isLargeBank(bdtStorage, bdtOffset);
+        var normLower = BankDescriptor.getLowerLimit(bdtStorage, bdtOffset) << (large ? 15 : 9);
+        var normUpper = BankDescriptor.getUpperLimit(bdtStorage, bdtOffset) << (large ? 6 : 0);
+        bReg.setLimitsNormalized(large, (int) normLower, (int) normUpper);
         bReg.setAccessLock(BankDescriptor.getAccessLock(bdtStorage, bdtOffset));
         bReg.setGeneralAccessPermissions(BankDescriptor.getGeneralAccessPermissions(bdtStorage, bdtOffset));
         bReg.setSpecialAccessPermissions(BankDescriptor.getSpecialAccessPermissions(bdtStorage, bdtOffset));

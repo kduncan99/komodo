@@ -168,6 +168,33 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
     // Stack things
 
     /**
+     * Creates an ICS for testing internal mode interrupts
+     * @param stackLowerLimit Lower limit of the stack (usually 0, but whatever)
+     * @param stackFrameSize Size of the stack frame (should be a non-zero multiple of 16)
+     * @param stackSize Total size of the stack in words
+     * @throws HardwareCheckInterrupt
+     */
+    protected void createInterruptControlStack(
+        final int stackLowerLimit,
+        final int stackFrameSize,
+        final int stackSize
+    ) throws HardwareCheckInterrupt {
+        var segx = allocateSegment(stackSize);
+        var upperLimit = stackLowerLimit + stackSize - 1;
+        var bReg = _engine.getBaseRegister(Engine.ICS_BASE_REGISTER);
+        var xReg = _engine.getExecOrUserXRegister(Engine.ICS_STACK_POINTER);
+
+        bReg.setStorage(getSegment(segx))
+            .setLimitsNormalized(false, stackLowerLimit, upperLimit)
+            .setAccessLock(new AccessLock())
+            .setGeneralAccessPermissions(AccessPermissions.ALL)
+            .setSpecialAccessPermissions(AccessPermissions.ALL)
+            .setBaseAddress(new AbsoluteAddress(segx, 0));
+
+        xReg.setXI(stackFrameSize).setXM(upperLimit + 1);
+    }
+
+    /**
      * Allocates a segment of memory of the specified size and creates a stack in it.
      * The indicated base register becomes the stack descriptor,
      * while the indicated index register becomes the stack pointer.
@@ -216,6 +243,32 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
     //      [ create a BankDescriptor object to describe the bank in storage ]
     //      register the bank descriptor via the bank level and bank descriptor index
     // The bank can now be loaded into one of the Base Registers from B0 - B15 via the typical instructions.
+
+    /**
+     * Creates a bank of the indicated size, loading the given BankDescriptor object with the appropriate values,
+     * and allocating storage for the bank, returning an ArraySlice containing the storage.
+     * @return ArraySlice containing the storage for the newly created bank
+     */
+    public ArraySlice createBank(
+        final BankType bankType,
+        final int lowerLimitNormalized,
+        final int bankSize,
+        final BankDescriptor bd
+    ) throws HardwareCheckInterrupt {
+        var segx = allocateSegment(bankSize);
+        bd.setBankType(bankType);
+        bd.setLargeBank(false);
+        bd.setGeneralFault(false);
+        bd.setInactive(false);
+        bd.setDisplacement(0);
+        bd.getBaseAddress().setSegment(segx).setOffset(0);
+        bd.setAccessLock(new AccessLock());
+        bd.setGeneralAccessPermissions(AccessPermissions.ALL);
+        bd.setSpecialAccessPermissions(AccessPermissions.ALL);
+        bd.setLowerLimit(lowerLimitNormalized >> 9);
+        bd.setUpperLimit(lowerLimitNormalized + bankSize - 1);
+        return getSegment(segx);
+    }
 
     /**
      * Creates a bank descriptor table, assigning it a unique identifier.

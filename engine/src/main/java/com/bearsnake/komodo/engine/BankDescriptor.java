@@ -117,6 +117,9 @@ public class BankDescriptor {
     private final AbsoluteAddress _baseAddress;
     private long _inactiveQBDListNextPointer;
 
+    /**
+     * Create a default (void) bank descriptor
+     */
     public BankDescriptor() {
         _generalAccessPermissions = new AccessPermissions();
         _specialAccessPermissions = new AccessPermissions();
@@ -125,14 +128,26 @@ public class BankDescriptor {
         _largeBank = false;
         _accessLock = new AccessLock();
         _indirectLevelAndBDI = 0;
-        _lowerLimit = 0;
-        _upperLimit = 0;
+        _lowerLimit = 0_1000;
+        _upperLimit = 0_0777;
         _inactive = true;
         _displacement = 0;
         _baseAddress = new AbsoluteAddress(0, 0);
         _inactiveQBDListNextPointer = 0;
     }
 
+    /**
+     * Create a BankDescriptor using the given parameters
+     * @param basicMode
+     * @param lock
+     * @param general
+     * @param special
+     * @param baseAddress
+     * @param largeBank
+     * @param actualLowerLimit
+     * @param actualUpperLimit
+     * @param displacement
+     */
     public BankDescriptor(final boolean basicMode,
                           final AccessLock lock,
                           final AccessPermissions general,
@@ -175,6 +190,10 @@ public class BankDescriptor {
         _displacement = displacement;
     }
 
+    /**
+     * Loads a BankDescriptor from a buffer containing the serialized form of a BD.
+     * @param buffer 8-word buffer containing the serialized form of a BD.
+     */
     public BankDescriptor(final long[] buffer) {
         _generalAccessPermissions = new AccessPermissions(
             (buffer[0] & 0_400000_000000L) != 0,
@@ -233,6 +252,11 @@ public class BankDescriptor {
     public BankDescriptor setDisplacement(final long value) { _displacement = value; return this; }
     public BankDescriptor setInactiveQBDListNextPointer(final long value) { _inactiveQBDListNextPointer = value; return this; }
 
+    /**
+     * Serializes this BankDescriptor into the given buffer at the given offset.
+     * @param slice slice containing the contiguous array to which we serialize this object
+     * @param offset offset from the start of the slice at which we should start writing this object's data
+     */
     public void serialize(
         final ArraySlice slice,
         final int offset

@@ -6,6 +6,8 @@ package com.bearsnake.komodo.engine;
 
 import com.bearsnake.komodo.engine.interrupts.AddressingExceptionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
+import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
+import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -132,4 +134,41 @@ public class TestEngine extends EngineUnitTest {
         registerBankDescriptorViaLevelAndBDI(bankLevel, bdi, bd);
         assertThrows(AddressingExceptionInterrupt.class, () -> _engine.loadBank(32, bankLevel, bdi, 0));
     }
+
+    @Test
+    public void testInternalInterruptProcessing() throws HardwareCheckInterrupt {
+        _engine = new Engine(this, null);
+
+        var codeBankDescriptor = new BankDescriptor();
+        var codeBank = createBank(BankType.ExtendedMode, 0_1000, 0_1000, codeBankDescriptor);
+        // codeBank is all zeroes, so no matter where we jump to, we'll get an invalid instruction interrupt.
+
+        var codeBankLevel = 0;
+        var codeBankIndex = 32;
+        var codeBankOffset = 0_20; // arbitrary choice for offset
+        var codeBankVirtualAddress = ((long)codeBankLevel << 33) | ((long)codeBankIndex << 18) | codeBankOffset;
+
+        // Set up level 0 BDT, then load an interrupt vector for the interrupt,
+        // and a BDT for the code bank.
+        var bdtID = createBankDescriptorTable(64);
+        var bdt = getSegment(bdtID);
+        loadBankDescriptorTableToBaseRegister(bdtID, 0);
+
+        // Create an interrupt, use the interrupt class value to establish the interrupt vector,
+        // register the code bank as the interrupt handler, then post the interrupt.
+        var interrupt = new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
+        bdt.set(interrupt.getInterruptClass().getCode(), codeBankVirtualAddress);
+        registerBankDescriptorViaLevelAndBDI(codeBankLevel, codeBankIndex, codeBankDescriptor);
+        _engine.postInterrupt(new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction));
+
+        // Create an ICS
+        createInterruptControlStack(0, 16, 256);
+
+        // Now see what happens.
+        _engine.cycle();
+        assertFalse(_engine.isHalted());
+        assertEquals(0_000040_000020L, _engine.getProgramAddressRegister().getCompositeValue());
+    }
+
+    // TODO we should do some interrupt processing testing where the process fails for various reasons
 }
