@@ -117,7 +117,7 @@ public class TestDesignatorRegister {
            .setBasicModeBaseRegisterSelection(true)
            .setQuarterWordModeEnabled(false);
 
-        long word = dr1.getWord36();
+        long word = dr1.getCompositeValue();
 
         DesignatorRegister dr2 = new DesignatorRegister();
         dr2.setWord36(word);
@@ -148,41 +148,41 @@ public class TestDesignatorRegister {
         // ActivityLevelQueueMonitorEnabled: MASK_B0 = 1L << 35
         dr.setWord36(Word36.MASK_B0);
         assertTrue(dr.isActivityLevelQueueMonitorEnabled());
-        assertEquals(Word36.MASK_B0, dr.getWord36());
+        assertEquals(Word36.MASK_B0, dr.getCompositeValue());
 
         dr.clear();
         // FaultHandlingInProgress: MASK_B6 = 1L << 29
         dr.setWord36(Word36.MASK_B6);
         assertTrue(dr.isFaultHandlingInProgress());
-        assertEquals(Word36.MASK_B6, dr.getWord36());
+        assertEquals(Word36.MASK_B6, dr.getCompositeValue());
 
         dr.clear();
         // ProcessorPrivilege: MASK_B14 | MASK_B15 = (1L << 21) | (1L << 20)
         // Shifted by 20 in code
         dr.setProcessorPrivilege((short) 2);
-        assertEquals(2L << 20, dr.getWord36());
-        assertEquals(Word36.MASK_B14, dr.getWord36());
+        assertEquals(2L << 20, dr.getCompositeValue());
+        assertEquals(Word36.MASK_B14, dr.getCompositeValue());
 
         dr.clear();
         dr.setProcessorPrivilege((short) 1);
-        assertEquals(1L << 20, dr.getWord36());
-        assertEquals(Word36.MASK_B15, dr.getWord36());
+        assertEquals(1L << 20, dr.getCompositeValue());
+        assertEquals(Word36.MASK_B15, dr.getCompositeValue());
 
         dr.clear();
         dr.setProcessorPrivilege((short) 3);
-        assertEquals(3L << 20, dr.getWord36());
-        assertEquals(Word36.MASK_B14 | Word36.MASK_B15, dr.getWord36());
+        assertEquals(3L << 20, dr.getCompositeValue());
+        assertEquals(Word36.MASK_B14 | Word36.MASK_B15, dr.getCompositeValue());
 
         dr.clear();
         // BasicModeBaseRegisterSelection: MASK_B31 = 1L << 4
         dr.setWord36(Word36.MASK_B31);
         assertTrue(dr.getBasicModeBaseRegisterSelection());
-        assertEquals(Word36.MASK_B31, dr.getWord36());
+        assertEquals(Word36.MASK_B31, dr.getCompositeValue());
 
         dr.clear();
         // QuarterWordModeEnabled: MASK_B32 = 1L << 3
         dr.setWord36(Word36.MASK_B32);
         assertTrue(dr.isQuarterWordModeEnabled());
-        assertEquals(Word36.MASK_B32, dr.getWord36());
+        assertEquals(Word36.MASK_B32, dr.getCompositeValue());
     }
 }

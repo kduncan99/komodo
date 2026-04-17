@@ -4,12 +4,11 @@
 
 package com.bearsnake.komodo.engine;
 
+import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionTable;
-import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
-import com.bearsnake.komodo.engine.functions.procControl.*;
 import com.bearsnake.komodo.engine.functions.special.EXFunction;
 import com.bearsnake.komodo.engine.functions.special.EXRFunction;
 import com.bearsnake.komodo.engine.interrupts.*;
@@ -19,8 +18,7 @@ import java.util.Random;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
 
-import static com.bearsnake.komodo.engine.Constants.JFIELD_U;
-import static com.bearsnake.komodo.engine.Constants.JFIELD_XU;
+import static com.bearsnake.komodo.engine.Constants.*;
 
 /**
  * Our design specifies the possibility of using multiple Engine objects, all sharing the same memory.
@@ -28,6 +26,11 @@ import static com.bearsnake.komodo.engine.Constants.JFIELD_XU;
 public class Engine {
 
     private static final int JUMP_HISTORY_TABLE_SIZE = 512;
+    public static final int RCS_BASE_REGISTER = 25;
+    public static final int RCS_STACK_POINTER = GRS_EX0;
+    public static final int RCS_FRAME_SIZE = 2;
+    public static final int ICS_BASE_REGISTER = 26;
+    public static final int ICS_STACK_POINTER = GRS_EX1;
 
     // This is how we talk directly to storage.
     // Generally, we try to maintain ArraySlice objects through which we can access storage without
@@ -46,6 +49,9 @@ public class Engine {
     // Set true if you want to log every instruction executed.
     // Don't do this if you want good performance.
     private boolean _traceInstructions = true;
+
+    // reset indicator (not sure I can describe this accurately at the moment)
+    private boolean _resetIndicator = false;
 
     // If this value is set to anything other than NONE, the engine is halted.
     private HaltCode _haltCode = HaltCode.NONE;
@@ -155,10 +161,111 @@ public class Engine {
         _interruptStack.put(interrupt.getInterruptClass(), interrupt);
     }
 
+    /**
+     * Process an interrupt for internal operating system mode.
+     * This boils down to the following steps:
+     *  a) preserve the current ASP (in case we want to come back to it)
+     *  b) set up addressing structures to refer to the appropriate interrupt handler
+     * @param interrupt the interrupt to process
+     */
     private void processInterrupt(
         final MachineInterrupt interrupt
     ) {
-        // TODO (a lot of complicated shenanigans)
+        // If the reset indicator is true and this is non-initial exigent, error halt.
+        if (_resetIndicator
+            && (interrupt.getInterruptClass().getCode() < 29)
+            && (interrupt.getDeferrability() == MachineInterrupt.Deferrability.Exigent)) {
+            halt(HaltCode.INTERRUPT_DURING_RESET);
+            return;
+        }
+
+        // Allocate ICS frame - use B26:EX1
+        // For stack overflow, halt with an appropriate code.
+        // Write ICS frame and jump history entry.
+        var bReg = _baseRegisters[ICS_BASE_REGISTER];
+        var stackPtr = _generalRegisterSet.getRegister(ICS_STACK_POINTER);
+        var newPtr = stackPtr.getXM() - stackPtr.getXI();
+        if (bReg.isVoid()) {
+            halt(HaltCode.ICS_OVERFLOW);
+            return;
+        }
+        try {
+            bReg.checkAccessLimits(newPtr, false);
+        } catch (ReferenceViolationInterrupt e) {
+            halt(HaltCode.ICS_OVERFLOW);
+            return;
+        }
+        stackPtr.setXM(newPtr);
+
+        var stack = bReg.getStorage();
+        var stackOffset = (int)(stackPtr.getXM() - bReg.getLowerLimitNormalized());
+        stack.set(stackOffset, _activityStatePacket.getProgramAddressRegister().getCompositeValue());
+        stack.set(stackOffset + 1, _activityStatePacket.getDesignatorRegister().getCompositeValue());
+        stack.set(stackOffset + 2, (((long)interrupt.getShortStatusField()) << 30)
+                                   | (_activityStatePacket.getIndicatorKeyRegister().getCompositeValue() & 0_077777));
+        stack.set(stackOffset + 3, _activityStatePacket.getQuantumTimer());
+        stack.set(stackOffset + 4, _activityStatePacket.getCurrentInstruction().getW());
+        stack.set(stackOffset + 5, interrupt.getInterruptStatusWord0());
+        stack.set(stackOffset + 6, interrupt.getInterruptStatusWord1());
+        for (int i = 7; i < stackPtr.getXI(); i++) {
+            stack.set(stackOffset + i, 0);
+        }
+
+        var oldAddress = _activityStatePacket.getProgramAddressRegister().getCompositeValue();
+
+        // Find interrupt vector for this interrupt class
+        var intVector = _baseRegisters[16].getStorage().get(interrupt.getInterruptClass().getCode());
+        var sourceLevel = (int)(intVector >> 33);
+        var sourceBDIndex = (int)(intVector >> 18) & 0_077777;
+        var sourceOffset = (int)intVector & 0_777777;
+        if ((sourceLevel == 0) && (sourceBDIndex < 32)) {
+            halt(HaltCode.INVALID_INTERRUPT_VECTOR);
+            return;
+        }
+
+        // Find the bank descriptor for the interrupt vector.
+        var sourceBDBreg = _baseRegisters[16 + sourceLevel];
+        var sourceBDStorage = sourceBDBreg.getStorage();
+        var sourceBDOffset = (8 * sourceBDIndex) - sourceBDBreg.getLowerLimitNormalized();
+        var sourceBDType = BankDescriptor.getBankType(sourceBDStorage, sourceBDOffset);
+        if (sourceBDType != BankType.ExtendedMode) {
+            halt(HaltCode.INVALID_INTERRUPT_HANDLER_BANK_TYPE);
+            return;
+        }
+
+        // Update hard-held ASP data items.
+        //  PAR.PC is updated to the content of the appropriate interrupt vector
+        _activityStatePacket.getProgramAddressRegister().setProgramCounter(sourceOffset);
+
+        //  DR bits are cleared, excepting DB17 and DB29 are set to 1
+        //      DB1, 2 are not changed (we don't use them, but we'll honor convention)
+        //      DB6 - If this is a Hardware_Check_Interrupt, set DB6 unless it is already set... in that case, halt
+        //      DB17 := 1 (Executive Register Set Selection)
+        //      DB29 := 1 (Arithmetic Exception Enabled)
+        var dBits = _activityStatePacket.getDesignatorRegister().getCompositeValue() & 0_600000_000000L;
+        if ((dBits & DesignatorRegister.MASK_FaultHandlingInProgress) != 0) {
+            if (interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.HardwareCheck) {
+                halt(HaltCode.HARDWARE_CHECK_DURING_FAULT_HANDLING);
+                return;
+            } else {
+                dBits |= DesignatorRegister.MASK_FaultHandlingInProgress;
+            }
+        }
+        dBits |= DesignatorRegister.MASK_ExecRegisterSetSelected;
+        dBits |= DesignatorRegister.MASK_ArithmeticExceptionEnabled;
+        _activityStatePacket.getDesignatorRegister().setWord36(dBits);
+
+        // Clear Indicator Key Register
+        _activityStatePacket.getIndicatorKeyRegister().setWord36(0);
+
+        // Load B0 with the bank containing the interrupt handler
+        try {
+            loadBank(0, sourceLevel, sourceBDIndex, sourceBDStorage, sourceBDOffset, 0);
+        } catch (HardwareCheckInterrupt e) {
+            halt(HaltCode.CANNOT_LOAD_INTERRUPT_HANDLER_BANK);
+        }
+
+        createJumpHistoryEntry(oldAddress);
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -814,14 +921,14 @@ public class Engine {
      * For retrieving A registers from A0 to UA3.
      * Note that UA0 through UA3 could be thought of as A16 through A19, and are accessed
      * implicitly rather than by a-field. We accept values 16 through 19 for these registers.
-     * @param registerNumber
-     * @return
+     * @param registerNumber the register number to fetch
+     * @return the GRS index of the register of interest
      */
     public int getExecOrUserARegisterIndex(
         final int registerNumber
     ) {
         var isExec = _activityStatePacket.getDesignatorRegister().isExecRegisterSetSelected();
-        return isExec ? Constants.GRS_EA0 + registerNumber : Constants.GRS_A0 + registerNumber;
+        return isExec ? GRS_EA0 + registerNumber : GRS_A0 + registerNumber;
     }
 
     /**
@@ -838,7 +945,7 @@ public class Engine {
         final int registerNumber
     ) {
         return _activityStatePacket.getDesignatorRegister().isExecRegisterSetSelected()
-               ? Constants.GRS_ER0 + registerNumber : Constants.GRS_R0 + registerNumber;
+               ? GRS_ER0 + registerNumber : GRS_R0 + registerNumber;
     }
 
     /**
@@ -855,7 +962,7 @@ public class Engine {
         final int registerNumber
     ) {
         return _activityStatePacket.getDesignatorRegister().isExecRegisterSetSelected()
-               ? Constants.GRS_EX0 + registerNumber : Constants.GRS_X0 + registerNumber;
+               ? GRS_EX0 + registerNumber : GRS_X0 + registerNumber;
     }
 
     /**
@@ -976,7 +1083,7 @@ public class Engine {
      */
     public void jumpToCachedAddressPlusOne() {
         var par = _activityStatePacket.getProgramAddressRegister();
-        var oldAddress = par.getProgramCounter();
+        var oldAddress = par.getCompositeValue();
         var newPC = spGetOperandRelativeAddress() + 1;
         par.setProgramCounter(newPC);
         spClearOperandBaseRegisterIndex();
@@ -989,7 +1096,7 @@ public class Engine {
      * @param baseRegisterIndex the index of the bank register to be loaded
      * @param bankLevel the level of the bank to be loaded
      * @param bankDescriptorIndex the index of the bank descriptor
-     * @param offset the offset within the bank to be loaded (for subsetting, and only for B1-B15)
+     * @param subsetOffset the offset within the bank to be loaded (for subsetting, and only for B1-B15)
      * @throws HardwareCheckInterrupt if the base register index is invalid
      * @throws AddressingExceptionInterrupt if the bank level or BDI is invalid
      */
@@ -997,7 +1104,7 @@ public class Engine {
         final int baseRegisterIndex,
         final int bankLevel,
         final int bankDescriptorIndex,
-        final int offset
+        final int subsetOffset
     ) throws HardwareCheckInterrupt, AddressingExceptionInterrupt {
         if ((baseRegisterIndex < 0) || (baseRegisterIndex > 31)) {
             // invalid base register index - this is really bad.
@@ -1020,15 +1127,35 @@ public class Engine {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException, bankLevel, bankDescriptorIndex);
         }
 
+        loadBank(baseRegisterIndex, bankLevel, bankDescriptorIndex, bdtReg.getStorage(), 8 * bankDescriptorIndex, subsetOffset);
+    }
+
+    /**
+     * Loads a bank register with the bank descriptor at the given bdtStorage and bdtOffset.
+     * @param baseRegisterIndex the index of the bank register to be loaded
+     * @param bankLevel the level of the bank to be loaded
+     * @param bankDescriptorIndex the index of the bank descriptor (needed for loading PAR or ABTE)
+     * @param bdtStorage the storage containing for the bank descriptor table which contains the bank descriptor to be loaded.
+     * @param bdtOffset the offset within the bank descriptor table of the bank descriptor to be loaded
+     * @param subsetOffset the offset within the bank to be loaded (for subsetting, and only for B1-B15)
+     */
+    public void loadBank(
+        final int baseRegisterIndex,
+        final int bankLevel,
+        final int bankDescriptorIndex,
+        final ArraySlice bdtStorage,
+        final int bdtOffset,
+        final int subsetOffset
+    ) throws HardwareCheckInterrupt {
         var bReg = _baseRegisters[baseRegisterIndex];
-        var bdtOffset = bankDescriptorIndex * 8;
-        bReg.setLimitsNormalized(BankDescriptor.isLargeBank(bdtReg.getStorage(), bdtOffset),
-                                 (int) BankDescriptor.getLowerLimit(bdtReg.getStorage(), bdtOffset),
-                                 (int) BankDescriptor.getUpperLimit(bdtReg.getStorage(), bdtOffset));
-        bReg.setAccessLock(BankDescriptor.getAccessLock(bdtReg.getStorage(), bdtOffset));
-        bReg.setGeneralAccessPermissions(BankDescriptor.getGeneralAccessPermissions(bdtReg.getStorage(), bdtOffset));
-        bReg.setSpecialAccessPermissions(BankDescriptor.getSpecialAccessPermissions(bdtReg.getStorage(), bdtOffset));
-        var baseAddr = BankDescriptor.getBaseAddress(bdtReg.getStorage(), bdtOffset);
+
+        bReg.setLimitsNormalized(BankDescriptor.isLargeBank(bdtStorage, bdtOffset),
+                                 (int) BankDescriptor.getLowerLimit(bdtStorage, bdtOffset),
+                                 (int) BankDescriptor.getUpperLimit(bdtStorage, bdtOffset));
+        bReg.setAccessLock(BankDescriptor.getAccessLock(bdtStorage, bdtOffset));
+        bReg.setGeneralAccessPermissions(BankDescriptor.getGeneralAccessPermissions(bdtStorage, bdtOffset));
+        bReg.setSpecialAccessPermissions(BankDescriptor.getSpecialAccessPermissions(bdtStorage, bdtOffset));
+        var baseAddr = BankDescriptor.getBaseAddress(bdtStorage, bdtOffset);
         bReg.setBaseAddress(baseAddr);
         var bankLength = bReg.getUpperLimitNormalized() - bReg.getLowerLimitNormalized() + 1;
         bReg.setStorage(_storageManager.getSlice(baseAddr.getSegment(), baseAddr.getOffset(), bankLength));
@@ -1042,52 +1169,8 @@ public class Engine {
             _activeBaseTable.getEntry(baseRegisterIndex)
                             .setBankLevel((short)bankLevel)
                             .setBankDescriptorIndex(bankDescriptorIndex)
-                            .setSubsetSpecification(offset);
+                            .setSubsetSpecification(subsetOffset);
         }
-    }
-
-    /**
-     * This is the canonical bank manipulation algorithm, used by many clients, including certain instructions
-     * as well as interrupt handling and maybe one or two other things. See the embedded comments.
-     * We *could* use purpose-specific versions of this to improve performance in the various individual cases;
-     * however, that would require that we redo a lot of logic over and over, with small differences.
-     * @param function the function which is invoking use; null for interrupt processing
-     * @param baseRegister the base register which we will load (if we load a bank)
-     * @param ifSpec for LBJ only, indicates functionality in the case of BM->EM transfer
-     */
-    public void manipulateBanks(
-        final Function function,
-        final int baseRegister,
-        final int ifSpec
-    ) throws AddressingExceptionInterrupt,
-             InvalidInstructionInterrupt {
-        // Convenience variables
-        var isCALL = function instanceof CALLFunction;
-        var isGOTO = function instanceof GOTOFunction;
-        var isLOCL = function instanceof LOCLFunction;
-        var isRTN = function instanceof RTNFunction;
-
-        var isLBU = function instanceof LBUFunction;
-        var isLxJ = (function instanceof LBJFunction) || (function instanceof LDJFunction) || (function instanceof LIJFunction);
-
-        var isInterrupt = function == null;
-        var isLoad = isLBU; // TODO or LBE or LAE
-
-        // Step 1 - Prevent nonsense
-        if (isLBU && ((baseRegister == 0) || (baseRegister == 1))) {
-            throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidBaseRegister);
-        } else if (isLxJ && (ifSpec == 3)) {
-            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidISValue, 0, 0);
-        }
-
-        // Step 2
-        // Prior L,BDI Fetch: For CALL only, the name of the Bank currently loaded into B0 is obtained
-        // from hard-held L,BDI. For LXJ and LXJ/CALL only, the name of the Bank currently loaded into
-        // the Base_Register to be altered is obtained from the appropriate ABT entry: For LBJ,
-        // specified by Xa.BDR (BDR+12). For LDJ, B14 if DB31 = 0; B15 if DB31 = 1. For LIJ, B12 if
-        // DB31 = 0; B13 if DB31 = 1.
-
-        // TODO
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -1628,5 +1711,72 @@ public class Engine {
             var newValue = injectPartialWord(origValue, partialWordIndicator, operand, qWord || forceQuarterWordMode);
             bReg.getStorage().set(offset, newValue);
         }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------------------
+    // Stack things
+
+    /**
+     * Allocates an RCS frame and populates it from the given parameter(s).
+     * Used for storing a return context upon transferring to a putative subroutine.
+     * @param bankDescriptorRegister For mixed-mode transfers, this is the BDR of the bank being transferred from; otherwise zero.
+     * @throws RCSGenericStackUnderflowOverflowInterrupt If the RCS is exhausted
+     */
+    public void allocateAndPopulateRCSFrame(
+        final int bankLevel,
+        final int bankDescriptorIndex,
+        final int offset,
+        final int bankDescriptorRegister,
+        final int db12To17,
+        final AccessKey accessKey
+    ) throws RCSGenericStackUnderflowOverflowInterrupt {
+        var bReg = _baseRegisters[RCS_BASE_REGISTER];
+        var stackPtr = _generalRegisterSet.getRegister(RCS_STACK_POINTER);
+        var newPtr = stackPtr.getXM() - RCS_FRAME_SIZE;
+        if (bReg.isVoid()) {
+            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
+                                                                RCS_BASE_REGISTER,
+                                                                (int)newPtr);
+        }
+        try {
+            bReg.checkAccessLimits(newPtr, false);
+        } catch (ReferenceViolationInterrupt e) {
+            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
+                                                                RCS_BASE_REGISTER,
+                                                                (int)newPtr);
+        }
+
+        stackPtr.setXM(newPtr);
+        var storage = bReg.getStorage();
+        var frameOffset = (int)(newPtr - bReg.getLowerLimitNormalized());
+        var w0 = ((long)bankLevel << 33) | ((long)bankDescriptorIndex << 30) | (offset & 0_777777);
+        var w1 = ((bankDescriptorRegister & 03) << 24) | ((db12To17 & 0_77) << 18) | accessKey.toComposite();
+        storage.set(frameOffset, w0);
+        storage.set(frameOffset + 1, w1);
+    }
+
+    /**
+     * Releases the most-current RCS frame. Used for returning from a subroutine.
+     * @throws RCSGenericStackUnderflowOverflowInterrupt If the RCS is empty
+     */
+    public void releaseRCSFrame() throws RCSGenericStackUnderflowOverflowInterrupt {
+        var bReg = _baseRegisters[RCS_BASE_REGISTER];
+        var stackPtr = _generalRegisterSet.getRegister(RCS_STACK_POINTER);
+        var oldPtr = stackPtr.getXM();
+        if (bReg.isVoid()) {
+            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow,
+                                                                RCS_BASE_REGISTER,
+                                                                (int)oldPtr);
+        }
+        try {
+            bReg.checkAccessLimits(oldPtr, false);
+        } catch (ReferenceViolationInterrupt e) {
+            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow,
+                                                                RCS_BASE_REGISTER,
+                                                                (int)oldPtr);
+        }
+
+        var newPtr = stackPtr.getXM() + RCS_FRAME_SIZE;
+        stackPtr.setXM(newPtr);
     }
 }

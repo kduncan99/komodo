@@ -37,7 +37,7 @@ public class IndicatorKeyRegister {
     public final boolean getBreakpointRegisterMatchCondition()    { return (getPendingInterruptInformation() & 04) != 0; }
     public final boolean getSoftwareBreak()                       { return (getPendingInterruptInformation() & 02) != 0; }
 
-    public long getWord36() {
+    public long getCompositeValue() {
         long value = Word36.setS1(0, _shortStatusField);
         value = Word36.setS2(value, (_midInstructionDescription << 3) | _pendingInterruptInformation);
         value = Word36.setS3(value, _interruptClassField);

@@ -14,6 +14,11 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  * (CALL) Loads a bank to B0 then jumps to the address in the U field
  * after preserving essential portions of the current environment.
  */
+/*
+TODO REMOVE THESE SPECIAL NOTES LATER
+
+
+ */
 public class CALLFunction extends Function {
 
     public static final CALLFunction INSTANCE = new CALLFunction();

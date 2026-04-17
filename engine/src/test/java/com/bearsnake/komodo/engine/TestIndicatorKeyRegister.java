@@ -22,7 +22,7 @@ public class TestIndicatorKeyRegister {
         assertEquals(0, ikr.getPendingInterruptInformation());
         assertEquals(0, ikr.getInterruptClassField());
         assertEquals(0, ikr.getAccessKey().toComposite());
-        assertEquals(0, ikr.getWord36());
+        assertEquals(0, ikr.getCompositeValue());
     }
 
     @Test
@@ -37,7 +37,7 @@ public class TestIndicatorKeyRegister {
         assertEquals(3, ikr.getPendingInterruptInformation());
         assertEquals(021, ikr.getInterruptClassField());
         assertEquals(0123456, ikr.getAccessKey().toComposite());
-        assertEquals(value, ikr.getWord36());
+        assertEquals(value, ikr.getCompositeValue());
     }
 
     @Test
@@ -138,7 +138,7 @@ public class TestIndicatorKeyRegister {
         for (int i = 0; i < 1000; i++) {
             long originalValue = _random.nextLong() & 0777777777777L;
             IndicatorKeyRegister ikr = new IndicatorKeyRegister(originalValue);
-            long newValue = ikr.getWord36();
+            long newValue = ikr.getCompositeValue();
             assertEquals(originalValue, newValue, String.format("Failed for 0%o", originalValue));
         }
     }
