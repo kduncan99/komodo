@@ -8,6 +8,10 @@ import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.DesignatorRegister;
 import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.decimal.*;
+import com.bearsnake.komodo.engine.functions.intControl.AAIJFunction;
+import com.bearsnake.komodo.engine.functions.intControl.ERFunction;
+import com.bearsnake.komodo.engine.functions.intControl.PAIJFunction;
+import com.bearsnake.komodo.engine.functions.intControl.SGNLFunction;
 import com.bearsnake.komodo.engine.functions.jump.*;
 import com.bearsnake.komodo.engine.functions.load.*;
 import com.bearsnake.komodo.engine.functions.logical.*;
@@ -290,14 +294,14 @@ public abstract class FunctionTable {
         // URFunction.INSTANCE,     PP=0
 
         // stack
-        BUYFunction.INSTANCE,   // TODO unit tests
-        SELLFunction.INSTANCE,  // TODO unit tests
+        BUYFunction.INSTANCE,
+        SELLFunction.INSTANCE,
 
-        // interrupt
-        // AAIJFunction.INSTANCE,
-        // ERFunction.INSTANCE, (Executive Return)
-        // PAIJFunction.INSTANCE,   PP=0
-        // SGNLFunction.INSTANCE,
+        // interruptControl
+        AAIJFunction.INSTANCE,
+        ERFunction.INSTANCE,    // TODO unit tests
+        PAIJFunction.INSTANCE,
+        SGNLFunction.INSTANCE,  // TODO unit tests
 
         // system
         // IARFunction.INSTANCE,    PP=0

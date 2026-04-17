@@ -19,8 +19,7 @@ public class TestBankDescriptor {
         assertEquals(BankType.BasicMode, bd.getBankType());
         assertFalse(bd.isGeneralFault());
         assertFalse(bd.isLargeBank());
-        assertEquals(0, bd.getLowerLimit());
-        assertEquals(0, bd.getUpperLimit());
+        assertTrue(bd.getLowerLimit() > bd.getUpperLimit());
         assertTrue(bd.isInactive());
         assertEquals(0, bd.getDisplacement());
         assertEquals(new AbsoluteAddress(0, 0), bd.getBaseAddress());

@@ -7,7 +7,6 @@ package com.bearsnake.komodo.engine;
 import com.bearsnake.komodo.engine.interrupts.AddressingExceptionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
-import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -171,4 +170,6 @@ public class TestEngine extends EngineUnitTest {
     }
 
     // TODO we should do some interrupt processing testing where the process fails for various reasons
+    //  Also need to check priority of processing
+    //  Also need to ensure that DB13 prevents deferrable interrupt processing
 }
