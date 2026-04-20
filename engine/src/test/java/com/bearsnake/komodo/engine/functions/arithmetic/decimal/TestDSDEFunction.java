@@ -38,7 +38,7 @@ public class TestDSDEFunction extends TestDecimalFunction {
 //        var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
 //                                     .setLowerLimit(0)
 //                                     .setUpperLimit(code.length - 1)
-//                                     .setBaseAddress(new AbsoluteAddress(0, 0));
+//                                     .setBaseAddress(AbsoluteAddress.construct(0, 0));
 //        bd.setInactive(false);
 //        _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
 //        _engine.getDesignatorRegister().setBasicModeEnabled(false);
@@ -55,8 +55,8 @@ public class TestDSDEFunction extends TestDecimalFunction {
         data[0_400] = decWord(0, 1, 0, 0, 0, 0, 0, 0, 0);
         data[0_401] = decWord(0, 0, 0, 0, 0, 0, 0, 1, POSITIVE_SIGN);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), new ArraySlice(code));
-        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), new ArraySlice(data));
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), new ArraySlice(code));
+        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), new ArraySlice(data));
 
         _engine.getExecOrUserARegister(4).setW(decWord(0, 2, 0, 0, 0, 0, 0, 0, 0));
         _engine.getExecOrUserARegister(5).setW(decWord(0, 0, 0, 0, 0, 0, 0, 2, POSITIVE_SIGN));
@@ -81,8 +81,8 @@ public class TestDSDEFunction extends TestDecimalFunction {
         data[0_400] = decWord(0, 0, 0, 0, 0, 0, 0, 0, 0);
         data[0_401] = decWord(0, 5, 0, 0, 0, 0, 0, 0, NEGATIVE_SIGN);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), new ArraySlice(code));
-        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), new ArraySlice(data));
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), new ArraySlice(code));
+        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), new ArraySlice(data));
 
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 0, 0, 0, 0, 0));
         _engine.getExecOrUserARegister(5).setW(decWord(1, 0, 0, 0, 0, 0, 0, 0, POSITIVE_SIGN));
@@ -107,8 +107,8 @@ public class TestDSDEFunction extends TestDecimalFunction {
         data[0_400] = decWord(0, 0, 0, 0, 0, 0, 0, 0, 0);
         data[0_401] = decWord(0, 0, 0, 0, 0, 0, 0, 1, POSITIVE_SIGN);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), new ArraySlice(code));
-        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), new ArraySlice(data));
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), new ArraySlice(code));
+        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), new ArraySlice(data));
 
         _engine.getExecOrUserARegister(4).setW(decWord(9, 9, 9, 9, 9, 9, 9, 9, 9));
         _engine.getExecOrUserARegister(5).setW(decWord(9, 9, 9, 9, 9, 9, 9, 9, NEGATIVE_SIGN));
@@ -133,7 +133,7 @@ public class TestDSDEFunction extends TestDecimalFunction {
         _engine.getExecOrUserRRegister(1).setW(decWord(0, 0, 0, 0, 0, 0, 0, 1, POSITIVE_SIGN));
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);

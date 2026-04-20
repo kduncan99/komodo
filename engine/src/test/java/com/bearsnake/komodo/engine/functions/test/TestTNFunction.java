@@ -46,8 +46,8 @@ public class TestTNFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_777, new AbsoluteAddress(2, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_777, AbsoluteAddress.construct(2, 0), bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -74,8 +74,8 @@ public class TestTNFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0777, new AbsoluteAddress(2, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), bank2);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -99,8 +99,8 @@ public class TestTNFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0777, new AbsoluteAddress(2, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), bank2);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -123,8 +123,8 @@ public class TestTNFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0777, new AbsoluteAddress(2, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), bank2);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -143,7 +143,7 @@ public class TestTNFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_22777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -164,7 +164,7 @@ public class TestTNFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_22777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -183,7 +183,7 @@ public class TestTNFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_22777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -212,7 +212,7 @@ public class TestTNFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_22777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);

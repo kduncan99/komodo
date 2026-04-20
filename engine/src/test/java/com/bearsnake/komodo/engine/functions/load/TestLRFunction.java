@@ -42,7 +42,7 @@ public class TestLRFunction extends FunctionUnitTest {
             0,
             };
         var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_22777, null, bank);
+        loadBaseRegister(13, false, 0_22000, 0_22777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -60,7 +60,7 @@ public class TestLRFunction extends FunctionUnitTest {
         var code = new long[0200000];
         code[0] = lrImm(Constants.JFIELD_U, 0, 0, 0200000);
         var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_277777, null, bank);
+        loadBaseRegister(13, false, 0_22000, 0_277777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -80,7 +80,7 @@ public class TestLRFunction extends FunctionUnitTest {
             0,
             };
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -110,8 +110,8 @@ public class TestLRFunction extends FunctionUnitTest {
 
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -133,7 +133,7 @@ public class TestLRFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -160,17 +160,17 @@ public class TestLRFunction extends FunctionUnitTest {
 
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(1, false, 0_0, 0_10000_0777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(1, false, 0_0, 0_10000_0777, 0, bank1);
 
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
+                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0)
                                       .setUpperLimit(0_10000_0777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+                                      .setBaseAddress(AbsoluteAddress.construct(1, 0));
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -206,8 +206,8 @@ public class TestLRFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -241,8 +241,8 @@ public class TestLRFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, null, bank1);
+        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
+        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -275,8 +275,8 @@ public class TestLRFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -307,8 +307,8 @@ public class TestLRFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, null, bank1);
+        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
+        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -331,7 +331,7 @@ public class TestLRFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank);
+        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -356,7 +356,7 @@ public class TestLRFunction extends FunctionUnitTest {
             };
         var bank = new ArraySlice(code);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank);
+        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -379,7 +379,7 @@ public class TestLRFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -404,7 +404,7 @@ public class TestLRFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

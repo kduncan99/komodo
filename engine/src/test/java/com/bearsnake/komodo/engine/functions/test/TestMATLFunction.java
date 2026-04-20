@@ -50,8 +50,8 @@ public class TestMATLFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_22000, 0_22777, new AbsoluteAddress(1, 0), bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -90,14 +90,14 @@ public class TestMATLFunction extends FunctionUnitTest {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
+                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_22)
                                       .setUpperLimit(0_22777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
+                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_22000, 0_22777, new AbsoluteAddress(1, 0), bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), bank1);
 
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.getExecOrUserARegister(2).setW(0_400000_000000L);

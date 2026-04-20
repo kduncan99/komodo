@@ -40,7 +40,7 @@ public class TestDEIFunction extends TestDecimalFunction {
         code[0_400] = decWord(1, 2, 3, 4, 5, 6, 7, 8, POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -63,8 +63,8 @@ public class TestDEIFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), bank2);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -83,7 +83,7 @@ public class TestDEIFunction extends TestDecimalFunction {
         code[0_400] = decWord(0, 0, 0, 0, 0, 0, 0, 0, POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -105,8 +105,8 @@ public class TestDEIFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), bank2);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -126,7 +126,7 @@ public class TestDEIFunction extends TestDecimalFunction {
         code[0_400] = decWord(1, 2, 3, 4, 5, 6, 7, 8, POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -147,7 +147,7 @@ public class TestDEIFunction extends TestDecimalFunction {
         code[0_600] = decWord(8, 7, 6, 5, 4, 3, 2, 1, POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister()
                 .setBasicModeEnabled(true)
@@ -172,8 +172,8 @@ public class TestDEIFunction extends TestDecimalFunction {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), bank2);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);

@@ -50,8 +50,8 @@ public class TestLAQWFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, null, bank1);
+        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
+        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -98,11 +98,11 @@ public class TestLAQWFunction extends FunctionUnitTest {
         var bank3 = new ArraySlice(data2);
         var bank4 = new ArraySlice(data3);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(3, false, 0_0, 0_0777, null, bank1);
-        loadBaseRegister(4, false, 0_0, 0_0777, null, bank2);
-        loadBaseRegister(5, false, 0_0, 0_0777, null, bank3);
-        loadBaseRegister(6, false, 0_0, 0_0777, null, bank4);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(3, false, 0_0, 0_0777, 0, bank1);
+        loadBaseRegister(4, false, 0_0, 0_0777, 0, bank2);
+        loadBaseRegister(5, false, 0_0, 0_0777, 0, bank3);
+        loadBaseRegister(6, false, 0_0, 0_0777, 0, bank4);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

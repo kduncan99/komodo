@@ -28,7 +28,7 @@ public class TestEngine extends EngineUnitTest {
                                     new AccessLock(),
                                     AccessPermissions.ALL,
                                     AccessPermissions.ALL,
-                                    new AbsoluteAddress(segIndex, 0),
+                                    AbsoluteAddress.construct(segIndex, 0),
                                     false,
                                     0,
                                     bankSize - 1,
@@ -62,7 +62,7 @@ public class TestEngine extends EngineUnitTest {
                                     new AccessLock(),
                                     AccessPermissions.ALL,
                                     AccessPermissions.ALL,
-                                    new AbsoluteAddress(segIndex, 0),
+                                    AbsoluteAddress.construct(segIndex, 0),
                                     false,
                                     0,
                                     bankSize - 1,
@@ -93,7 +93,7 @@ public class TestEngine extends EngineUnitTest {
                                     new AccessLock(),
                                     AccessPermissions.ALL,
                                     AccessPermissions.ALL,
-                                    new AbsoluteAddress(segIndex, 0),
+                                    AbsoluteAddress.construct(segIndex, 0),
                                     false,
                                     0,
                                     bankSize - 1,
@@ -118,7 +118,7 @@ public class TestEngine extends EngineUnitTest {
                                     new AccessLock(),
                                     AccessPermissions.ALL,
                                     AccessPermissions.ALL,
-                                    new AbsoluteAddress(segIndex, 0),
+                                    AbsoluteAddress.construct(segIndex, 0),
                                     false,
                                     0,
                                     bankSize - 1,
@@ -185,7 +185,7 @@ public class TestEngine extends EngineUnitTest {
         var codeBank = new ArraySlice(code);
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setDeferrableInterruptEnabled(false);
         _engine.postInterrupt(interrupt);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, codeBank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, codeBank);
 
         _engine.cycle();
         assertEquals(HaltCode.NONE, _engine.getHaltCode());

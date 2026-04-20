@@ -36,7 +36,7 @@ public class TestAAIJFunction extends FunctionUnitTest {
             0, 0, 0, 0, 0
         };
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -61,7 +61,7 @@ public class TestAAIJFunction extends FunctionUnitTest {
             0, 0, 0
         };
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -84,7 +84,7 @@ public class TestAAIJFunction extends FunctionUnitTest {
             0, 0, 0, 0, 0
         };
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -107,7 +107,7 @@ public class TestAAIJFunction extends FunctionUnitTest {
             0, 0, 0, 0, 0
         };
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -133,7 +133,7 @@ public class TestAAIJFunction extends FunctionUnitTest {
             0, 0, 0, 0, 0
         };
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

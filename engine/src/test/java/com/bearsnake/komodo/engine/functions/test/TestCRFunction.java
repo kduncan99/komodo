@@ -50,8 +50,8 @@ public class TestCRFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, new AbsoluteAddress(1, 0), bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -86,8 +86,8 @@ public class TestCRFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, new AbsoluteAddress(1, 0), bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -121,8 +121,8 @@ public class TestCRFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(14, false, 0_22000, 0_25777, new AbsoluteAddress(1, 0), bank1);
+        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(14, false, 0_22000, 0_25777, AbsoluteAddress.construct(1, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -150,7 +150,7 @@ public class TestCRFunction extends FunctionUnitTest {
         };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0, 0_777777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(12, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

@@ -44,7 +44,7 @@ public class TestANDFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -68,7 +68,7 @@ public class TestANDFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -95,8 +95,8 @@ public class TestANDFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0, 0_3777, null, bank2);
+        loadBaseRegister(0, false, 0, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0, 0_3777, 0, bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -118,7 +118,7 @@ public class TestANDFunction extends FunctionUnitTest {
         code[0600] = 0_777000_000777L;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -142,7 +142,7 @@ public class TestANDFunction extends FunctionUnitTest {
         code[020] = 0_000000_000017L;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, null, bank);
+        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -169,8 +169,8 @@ public class TestANDFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(13, false, 0_2000, 0_5777, null, bank2);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(13, false, 0_2000, 0_5777, 0, bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

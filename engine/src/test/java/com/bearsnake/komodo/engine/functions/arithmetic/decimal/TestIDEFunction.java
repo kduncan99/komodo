@@ -40,7 +40,7 @@ public class TestIDEFunction extends TestDecimalFunction {
         code[0_400] = 12345678L;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -63,7 +63,7 @@ public class TestIDEFunction extends TestDecimalFunction {
         code[0_400] = ~12345678L & 0_777777777777L;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -82,7 +82,7 @@ public class TestIDEFunction extends TestDecimalFunction {
         code[0_400] = 0;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -101,7 +101,7 @@ public class TestIDEFunction extends TestDecimalFunction {
         code[0_400] = 12345678L;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);

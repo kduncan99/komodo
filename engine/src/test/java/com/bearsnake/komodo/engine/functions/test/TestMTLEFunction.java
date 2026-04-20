@@ -53,8 +53,8 @@ public class TestMTLEFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_22000, 0_22777, new AbsoluteAddress(1, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -92,7 +92,7 @@ public class TestMTLEFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -118,7 +118,7 @@ public class TestMTLEFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -144,7 +144,7 @@ public class TestMTLEFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -183,8 +183,8 @@ public class TestMTLEFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_777, new AbsoluteAddress(1, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_777, AbsoluteAddress.construct(1, 0), bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -222,8 +222,8 @@ public class TestMTLEFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_777, new AbsoluteAddress(1, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_777, AbsoluteAddress.construct(1, 0), bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

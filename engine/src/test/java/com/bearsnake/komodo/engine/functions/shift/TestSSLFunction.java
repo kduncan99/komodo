@@ -31,7 +31,7 @@ public class TestSSLFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank);
+        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -57,7 +57,7 @@ public class TestSSLFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -80,7 +80,7 @@ public class TestSSLFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

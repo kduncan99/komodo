@@ -73,11 +73,11 @@ public class BankDescriptor {
         return (int)storage.get(offset + 1) & 0_777777;
     }
 
-    public static AbsoluteAddress getBaseAddress(
+    public static long getBaseAddress(
         final ArraySlice storage,
         final int offset
     ) {
-        return new AbsoluteAddress(storage, offset + 2);
+        return AbsoluteAddress.construct((int)storage.get(offset + 2), (int)storage.get(offset + 3));
     }
 
     public static long getInactiveQBDListNextPointer(
@@ -114,7 +114,7 @@ public class BankDescriptor {
     private int _upperLimit;
     private boolean _inactive;
     private int _displacement;
-    private final AbsoluteAddress _baseAddress;
+    private long _baseAddress;
     private long _inactiveQBDListNextPointer;
 
     /**
@@ -132,27 +132,28 @@ public class BankDescriptor {
         _upperLimit = 0_0777;
         _inactive = true;
         _displacement = 0;
-        _baseAddress = new AbsoluteAddress(0, 0);
+        _baseAddress = 0;
         _inactiveQBDListNextPointer = 0;
     }
 
     /**
-     * Create a BankDescriptor using the given parameters
-     * @param basicMode
-     * @param lock
-     * @param general
-     * @param special
-     * @param baseAddress
-     * @param largeBank
-     * @param actualLowerLimit
-     * @param actualUpperLimit
-     * @param displacement
+     * Create a BankDescriptor using the given parameters.
+     * This is for basic or extended mode bank descriptors - other bank descriptors are not supported with this method.
+     * @param basicMode true if this is a basic mode bank descriptor, false if it is an extended mode bank descriptor
+     * @param lock the access lock for this bank descriptor
+     * @param general the general access permissions for this bank descriptor
+     * @param special the special access permissions for this bank descriptor
+     * @param baseAddress the base address for this bank descriptor
+     * @param largeBank true if this is a large bank descriptor, false if it is a small bank descriptor
+     * @param actualLowerLimit the actual lower limit for this bank descriptor
+     * @param actualUpperLimit the actual upper limit for this bank descriptor
+     * @param displacement the displacement for this bank descriptor
      */
     public BankDescriptor(final boolean basicMode,
                           final AccessLock lock,
                           final AccessPermissions general,
                           final AccessPermissions special,
-                          final AbsoluteAddress baseAddress,
+                          final long baseAddress,
                           final boolean largeBank,
                           final long actualLowerLimit,
                           final long actualUpperLimit,
@@ -219,19 +220,19 @@ public class BankDescriptor {
         _inactive = (buffer[4] & 0_400000_000000L) != 0;
 
         _inactiveQBDListNextPointer = buffer[3];
-        _baseAddress = new AbsoluteAddress(buffer, 2);
+        _baseAddress = AbsoluteAddress.construct((int)buffer[2], (int)buffer[3]);
     }
 
     public AccessLock getAccessLock() { return _accessLock; }
     public BankType getBankType() { return _bankType; }
-    public AbsoluteAddress getBaseAddress() { return _baseAddress; }
+    public long getBaseAddress() { return _baseAddress; }
     public AccessPermissions getGeneralAccessPermissions() { return _generalAccessPermissions; }
     public long getIndirectLevelAndBDI() { return _indirectLevelAndBDI; }
-    public long getLowerLimit() { return _lowerLimit; }
-    public long getLowerLimitNormalized() { return _largeBank ? (_lowerLimit << 15) : (_lowerLimit << 9); }
+    public int getLowerLimit() { return _lowerLimit; }
+    public long getLowerLimitNormalized() { return (long)_lowerLimit << (_largeBank ? 15 : 9); }
     public AccessPermissions getSpecialAccessPermissions() { return _specialAccessPermissions; }
-    public long getUpperLimit() { return _upperLimit; }
-    public long getUpperLimitNormalized() { return _largeBank ? (_upperLimit << 6) : _upperLimit; }
+    public int getUpperLimit() { return _upperLimit; }
+    public long getUpperLimitNormalized() { return (long)_upperLimit << (_largeBank ? 6 : 0); }
     public boolean isGeneralFault() { return _generalFault; }
     public boolean isLargeBank() { return _largeBank; }
     public boolean isInactive() { return _inactive; }
@@ -240,7 +241,7 @@ public class BankDescriptor {
 
     public BankDescriptor setAccessLock(final AccessLock lock) { _accessLock.set(lock); return this; }
     public BankDescriptor setBankType(final BankType bankType) { _bankType = bankType; return this; }
-    public BankDescriptor setBaseAddress(final AbsoluteAddress baseAddress) { _baseAddress.set(baseAddress); return this; }
+    public BankDescriptor setBaseAddress(final long baseAddress) { _baseAddress = baseAddress; return this; }
     public BankDescriptor setGeneralAccessPermissions(final AccessPermissions perms) { _generalAccessPermissions.set(perms); return this; }
     public BankDescriptor setSpecialAccessPermissions(final AccessPermissions perms) { _specialAccessPermissions.set(perms); return this; }
     public BankDescriptor setGeneralFault(final boolean flag) { _generalFault = flag; return this; }
@@ -287,10 +288,8 @@ public class BankDescriptor {
             value2 = 0;
             value3 = _inactiveQBDListNextPointer;
         } else {
-            long[] addrWords = new long[2];
-            _baseAddress.populate(new ArraySlice(addrWords), 0);
-            value2 = addrWords[0];
-            value3 = addrWords[1];
+            value2 = AbsoluteAddress.getSegment(_baseAddress);
+            value3 = AbsoluteAddress.getOffset(_baseAddress);
         }
 
         long value4 = 0;

@@ -41,8 +41,8 @@ public class TestLSCFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, null, bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -80,8 +80,8 @@ public class TestLSCFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, null, bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -116,8 +116,8 @@ public class TestLSCFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, null, bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -144,8 +144,8 @@ public class TestLSCFunction extends FunctionUnitTest {
         var bank13 = new ArraySlice(code);
         var bank12 = new ArraySlice(data);
 
-        loadBaseRegister(13, false, 0_4000, 0_4777, null, bank13);
-        loadBaseRegister(12, false, 0_0, 0_1777, null, bank12);
+        loadBaseRegister(13, false, 0_4000, 0_4777, 0, bank13);
+        loadBaseRegister(12, false, 0_0, 0_1777, 0, bank12);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -171,8 +171,8 @@ public class TestLSCFunction extends FunctionUnitTest {
         var bank13 = new ArraySlice(code);
         var bank12 = new ArraySlice(data);
 
-        loadBaseRegister(13, false, 0_4000, 0_4777, null, bank13);
-        loadBaseRegister(12, false, 0_0, 0_1777, null, bank12);
+        loadBaseRegister(13, false, 0_4000, 0_4777, 0, bank13);
+        loadBaseRegister(12, false, 0_0, 0_1777, 0, bank12);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

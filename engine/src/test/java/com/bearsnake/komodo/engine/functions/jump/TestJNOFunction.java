@@ -42,7 +42,7 @@ public class TestJNOFunction extends FunctionUnitTest {
         code[0] = jnoBM(0_1005);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -67,7 +67,7 @@ public class TestJNOFunction extends FunctionUnitTest {
         code[0] = jnoBM(0_1005);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -92,7 +92,7 @@ public class TestJNOFunction extends FunctionUnitTest {
         code[0] = jnoEM(0_1005);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -117,7 +117,7 @@ public class TestJNOFunction extends FunctionUnitTest {
         code[0] = jnoEM(0_1005);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -142,7 +142,7 @@ public class TestJNOFunction extends FunctionUnitTest {
         code[0] = jnoBM(3, 0, 0, 0_1005); // jump to 0_1005 + X3.m (0_10) = 0_1015
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -169,7 +169,7 @@ public class TestJNOFunction extends FunctionUnitTest {
         code[0_1000] = fjaxu(0, 0, 0, 0, 0_1200); // second stage: J to 0_1200
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_3777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_3777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -194,7 +194,7 @@ public class TestJNOFunction extends FunctionUnitTest {
         code[0] = jnoEM(3, 0_1100); // jump to 0_1100 + X3.m (0_10) = 0_1100
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

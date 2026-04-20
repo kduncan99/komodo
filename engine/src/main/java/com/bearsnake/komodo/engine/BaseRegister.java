@@ -19,7 +19,7 @@ public class BaseRegister {
     private AccessLock _accessLock;
     private int _lowerLimit;
     private int _upperLimit;
-    private AbsoluteAddress _baseAddress;
+    private long _baseAddress;
 
     private ArraySlice _storage;
 
@@ -42,7 +42,7 @@ public class BaseRegister {
     public int getLowerLimitNormalized() { return _isLargeBank ? (_lowerLimit << 15) : (_lowerLimit << 9); }
     public int getUpperLimit() { return _upperLimit; }
     public int getUpperLimitNormalized() { return _isLargeBank ? (_upperLimit << 6) : _upperLimit; }
-    public AbsoluteAddress getBaseAddress() { return _baseAddress; }
+    public long getBaseAddress() { return _baseAddress; }
     public ArraySlice getStorage() { return _storage; }
 
     public BaseRegister setGeneralAccessPermissions(
@@ -95,7 +95,7 @@ public class BaseRegister {
     }
 
     public BaseRegister setBaseAddress(
-        final AbsoluteAddress addr
+        final long addr
     ) {
         _baseAddress = addr;
         return this;

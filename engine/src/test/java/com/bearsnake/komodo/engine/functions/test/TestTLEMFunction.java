@@ -37,7 +37,7 @@ public class TestTLEMFunction extends FunctionUnitTest {
         code[0] = tlemBM(Constants.JFIELD_W, 1, 0, 0, 0, 01000);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
 
         _engine.getGeneralRegisterSet().getRegister(Constants.GRS_X1).setXI(0).setXM(02000);
 
@@ -70,8 +70,8 @@ public class TestTLEMFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, new AbsoluteAddress(0, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(0, 0), bank2);
 
         _engine.getGeneralRegisterSet().getRegister(1).setXI(0).setXM(02000);
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
@@ -105,8 +105,8 @@ public class TestTLEMFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, new AbsoluteAddress(0, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(0, 0), bank2);
 
         _engine.getGeneralRegisterSet().getRegister(1).setXI(10).setXM(02000);
         _engine.getGeneralRegisterSet().getRegister(2).setXM(5);
@@ -142,9 +142,9 @@ public class TestTLEMFunction extends FunctionUnitTest {
         var bank2 = new ArraySlice(indirectData);
         var bank3 = new ArraySlice(targetData);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(13, false, 0_20000, 0_20777, new AbsoluteAddress(3, 0), bank2);
-        loadBaseRegister(14, false, 0_30000, 0_30777, new AbsoluteAddress(5, 0), bank3);
+        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(13, false, 0_20000, 0_20777, AbsoluteAddress.construct(3, 0), bank2);
+        loadBaseRegister(14, false, 0_30000, 0_30777, AbsoluteAddress.construct(5, 0), bank3);
 
         _engine.getExecOrUserXRegister(1).setXI(0).setXM(05);
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short) 3);
@@ -169,7 +169,7 @@ public class TestTLEMFunction extends FunctionUnitTest {
         };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
 
         _engine.getGeneralRegisterSet().getRegister(1).setXI(5).setXM(03000);
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
@@ -196,8 +196,8 @@ public class TestTLEMFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, new AbsoluteAddress(0, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(0, 0), bank2);
 
         _engine.getGeneralRegisterSet().getRegister(5).setW(0_000002_061234L);
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
@@ -223,8 +223,8 @@ public class TestTLEMFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, new AbsoluteAddress(0, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(0, 0), bank2);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);

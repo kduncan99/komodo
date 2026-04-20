@@ -38,7 +38,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0] = jmgi(8, 0, 0, 0, 0_2000);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -67,7 +67,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -95,7 +95,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -122,7 +122,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0] = jmgi(010, 011, 0, 0, 0_1000);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -152,7 +152,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0_1000] = 0_1500; // indirect address
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -179,7 +179,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0] = jmgi(010, 010, 0, 0, 0_1000);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -208,7 +208,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0_2000] = 0_1500;
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_3477, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_3477, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -235,7 +235,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0] = jmgi(010, 0, 0, 0, 0_1500);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
         bank0.load(code, 0, code.length, 0);
 
         _engine.getDesignatorRegister()
@@ -266,7 +266,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0] = jmgi(010, 0, 0, 0, 0_2000);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_2777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_2777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -293,7 +293,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0] = jmgi(8, 0, 0, 0, 0_1000);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_2777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_2777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -319,7 +319,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0] = jmgi(010, 011, 0, 0, 0_1000);
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_2777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_2777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

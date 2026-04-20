@@ -34,7 +34,7 @@ public class TestDLSCFunction extends FunctionUnitTest {
         code[0_401] = 0_123400_000000L;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(13, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -65,7 +65,7 @@ public class TestDLSCFunction extends FunctionUnitTest {
         code[0_2001] = 0_000007_000000L;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_3777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_3777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -88,7 +88,7 @@ public class TestDLSCFunction extends FunctionUnitTest {
         code[0_401] = 0;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -111,7 +111,7 @@ public class TestDLSCFunction extends FunctionUnitTest {
         code[0_401] = 0_777777_777777L;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -134,7 +134,7 @@ public class TestDLSCFunction extends FunctionUnitTest {
         code[0_401] = 0;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

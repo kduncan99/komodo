@@ -48,8 +48,8 @@ public class TestTSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_777777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777777, new AbsoluteAddress(0, 0), bank2);
+        loadBaseRegister(0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -77,8 +77,8 @@ public class TestTSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_777777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777777, new AbsoluteAddress(0, 0), bank2);
+        loadBaseRegister(0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -102,7 +102,7 @@ public class TestTSFunction extends FunctionUnitTest {
         bank0.set(1, code[1]);
         bank0.set(0_100, 0L);          // Initial value clear
 
-        loadBaseRegister(12, false, 0, 0_177777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(12, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -130,7 +130,7 @@ public class TestTSFunction extends FunctionUnitTest {
         bank0.set(1, code[1]);
         bank0.set(0_100, 0_010000_000000L); // Initial value set
 
-        loadBaseRegister(13, false, 0, 0_177777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(13, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

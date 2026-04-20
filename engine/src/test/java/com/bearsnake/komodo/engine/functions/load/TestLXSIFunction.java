@@ -39,7 +39,7 @@ public class TestLXSIFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -72,8 +72,8 @@ public class TestLXSIFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -106,8 +106,8 @@ public class TestLXSIFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -139,8 +139,8 @@ public class TestLXSIFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

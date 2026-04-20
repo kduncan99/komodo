@@ -39,7 +39,7 @@ public class TestSRSFunction extends FunctionUnitTest {
         code[0] = srsBM(1, 0, 0, 0, 0_1005); // store SRS starting at offset 05
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -73,8 +73,8 @@ public class TestSRSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(new long[10]); // buffer for storage
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, null, bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -114,8 +114,8 @@ public class TestSRSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(new long[10]);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, null, bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -147,8 +147,8 @@ public class TestSRSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(new long[10]);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, null, bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

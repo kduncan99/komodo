@@ -55,8 +55,8 @@ public class TestTSSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_177777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_177777, new AbsoluteAddress(0, 0), bank1);
+        loadBaseRegister(0, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -85,8 +85,8 @@ public class TestTSSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_177777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_177777, new AbsoluteAddress(0, 0), bank1);
+        loadBaseRegister(0, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -114,7 +114,7 @@ public class TestTSSFunction extends FunctionUnitTest {
 
         var bank0 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0, 0_177777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(14, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -148,8 +148,8 @@ public class TestTSSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_1777, new AbsoluteAddress(0, 0), bank1);
+        loadBaseRegister(0, false, 0, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_1777, AbsoluteAddress.construct(0, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -177,8 +177,8 @@ public class TestTSSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_1777, new AbsoluteAddress(0, 0), bank1);
+        loadBaseRegister(0, false, 0, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0_1777, AbsoluteAddress.construct(0, 0), bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

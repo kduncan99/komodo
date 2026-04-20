@@ -34,7 +34,7 @@ public class TestJGDFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -62,7 +62,7 @@ public class TestJGDFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -91,7 +91,7 @@ public class TestJGDFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -119,7 +119,7 @@ public class TestJGDFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -137,7 +137,7 @@ public class TestJGDFunction extends FunctionUnitTest {
         code[0] = jgd(0, 8, 3, 0, 0, 0_1000); // GRS index 8, Indexed by X3
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -166,7 +166,7 @@ public class TestJGDFunction extends FunctionUnitTest {
         code[0] = jgd(0, 8, 3, 0, 0, 0_1000); // GRS index 8, Indexed by X3
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -195,7 +195,7 @@ public class TestJGDFunction extends FunctionUnitTest {
         code[0_2000] = 0_1500;
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_3777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_3777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

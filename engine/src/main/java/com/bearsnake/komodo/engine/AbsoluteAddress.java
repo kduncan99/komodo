@@ -4,135 +4,72 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
-
 /**
- * Represents an absolute address - this is a composite value which identifies a particular
+ * Represents an absolute address - this is a composite value that identifies a particular
  * StaticMainStorageProcessor, and an offset from the beginning of the storage of that processor
  * which identifies a particular word of storage.
+ * It is the concatenation of two 32-bit words and is stored in main storage as a singular 64-bit integer.
+ * The segment is in the MSW, and the offset is in the LSW.
+ * The segment:
+ *      Indicates a particular segment - the offset is relative to the segment.
+ *      For hardware-emulated MSPs, there may be only one or a few segments, and the operating system is
+ *      responsible for managing memory there-in.
+ *      For pass-through MSPs, there will be a segment for every memory allocation.  The operating system
+ *      is responsible for requesting and releasing segments in sizes most convenient for it.
+ *      Range: 0:0x7FFFFFFF (31 bits)
+ *  The offset:
+ *      A value corresponding to an offset from the start of that MSP's segment.
+ *      Range: 0:0x7FFFFFFF (31 bits)
+ * We use a single 64-bit value in order to avoid leaving a lot of small objects lying about in storage.
  */
 public class AbsoluteAddress {
 
-    /**
-     * Indicates a particular segment - the offset is relative to the segment.
-     * For hardware-emulated MSPs, there may be only one or a few segments, and the operating system is
-     * responsible for managing memory there-in.
-     * For pass-through MSPs, there will be a segment for every memory allocation.  The operating system
-     * is responsible for requesting and releasing segments in sizes most convenient for it.
-     * Range: 0:0x7FFFFFFF (31 bits)
-     */
-    private int _segment;
+    // This is a static class - no instances allowed
+    private AbsoluteAddress() {}
 
-    /**
-     * A value corresponding to an offset from the start of that MSP's segment.
-     * Range: 0:0x7FFFFFFF (31 bits)
-     */
-    private int _offset;
-
-    /**
-     * Constructor from components
-     * @param segment segment of a particular MSP
-     * @param offset offset from the beginning of the indicated segment
-     */
-    public AbsoluteAddress(
+    public static long construct(
         final int segment,
         final int offset
     ) {
-        _segment = segment & 0x7FFFFFFF;
-        _offset = offset & 0x7FFFFFFF;
+        return (((long)(segment & 0x7FFFFFFF)) << 32) | (offset & 0x7FFFFFFFL);
     }
 
-    /**
-     * Constructor given an absolute address layout in memory
-     * @param baseArray ArraySlice containing the 2-word absolute address (possibly as a proper subset of the array)
-     * @param offset offset from the start of baseArray where the absolute address is located
-     */
-    public AbsoluteAddress(
-        final ArraySlice baseArray,
+    public static int getOffset(
+        final long addr
+    ) {
+        return (int)addr;
+    }
+
+    public static int getSegment(
+        final long addr
+    ) {
+        return (int)(addr >> 32);
+    }
+
+    public static long addOffset(
+        final long address,
         final int offset
     ) {
-        this((int)baseArray.get(offset), (int)baseArray.get(offset + 1));
+        return ((long)getSegment(address) << 32) | ((getOffset(address) + offset) & 0x7FFFFFFFL);
     }
 
-    /**
-     * Constructor given an absolute address layout in memory - as above, but using discrete long array as source
-     * @param baseArray long array
-     * @param offset offset from the start of baseArray where the absolute address is located
-     */
-    public AbsoluteAddress(
-        final long[] baseArray,
+    public static long setOffset(
+        final long address,
         final int offset
     ) {
-        this((int)baseArray[offset], (int)baseArray[offset + 1]);
+        return ((long)getSegment(address) << 32) | (offset & 0x7FFFFFFFL);
     }
 
-    public int getSegment() { return _segment; }
-    public int getOffset() { return _offset; }
-
-    public AbsoluteAddress set(final AbsoluteAddress addr) {
-        _segment = addr._segment;
-        _offset = addr._offset;
-        return this;
-    }
-
-    public AbsoluteAddress setSegment(final int segment) {
-        _segment = segment;
-        return this;
-    }
-
-    public AbsoluteAddress setOffset(final int offset) {
-        _offset = offset;
-        return this;
-    }
-
-    /**
-     * Creates a new AbsoluteAddress with the same segment and the given offset added to the current offset.
-     * @param offset offset to be added
-     */
-    public AbsoluteAddress addOffset(final int offset) {
-        return new AbsoluteAddress(_segment, _offset + offset);
-    }
-
-    /**
-     * Populates a two-word area with our architecturally-defined pattern for representing
-     * an absolute address in main storage.
-     * The format is:
-     *      Word 0  Bits 0-4:  zero
-     *              Bits 5-35: MSP segment
-     *      Word 1  Bits 0-4:  MSP UPI
-     *              Bits 5-35: Offset from start of the MSP segment
-     * @param arena defines an arena of memory, possibly the storage from an MSP
-     * @param offset offset from the start of the arena, where we place the 3-word ACW
-     */
-    public void populate(
-        final ArraySlice arena,
-        final int offset
+    public static long setSegment(
+        final long address,
+        final int segment
     ) {
-        arena.set(offset, _segment & 0x7FFFFFFF);
-        arena.set(offset + 1, _offset & 0x7FFFFFFF);
+        return (((long)(segment & 0x7FFFFFFF)) << 32) | (getOffset(address) & 0xFFFFFFFFL);
     }
 
-    /**
-     * Generate a hash code based solely on the values of this object
-     * @return hash code
-     */
-    @Override
-    public int hashCode() {
-        return (_segment << 8) ^ _offset;
-    }
-
-    /**
-     * equals method
-     * @param obj comparison object
-     * @return true if this object equals the comparison object
-     */
-    @Override
-    public boolean equals(final Object obj) {
-        return (obj instanceof AbsoluteAddress aa) && (_segment == aa._segment) && (_offset == aa._offset);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("0%o:%012o", _segment, _offset);
+    public static String toString(
+        final long address
+    ) {
+        return String.format("0%o:%012o", getSegment(address), getOffset(address));
     }
 }

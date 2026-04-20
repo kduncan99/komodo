@@ -384,7 +384,7 @@ public class Engine {
     // memory location for purposes including (but maybe not limited to) instructions which read AND write
     // to a memory location across interrupt points. It is static because it is most needed when we have
     // multiple active Engine objects.
-    private static final HashMap<AbsoluteAddress, Engine> _lockedAddresses = new HashMap<>();
+    private static final HashMap<Long, Engine> _lockedAddresses = new HashMap<>();
     private static boolean _lockIsHeldByUs = false;
 
     /**
@@ -403,17 +403,17 @@ public class Engine {
     /**
      * Attempts to lock the given memory address.
      * Note that any given entity cannot lock the same address more than once.
-     * @param address the address to lock
+     * @param absoluteAddress the address to lock
      * @return true if we could obtain the lock, false otherwise.
      */
     private boolean addressLock(
-        final AbsoluteAddress address
+        final Long absoluteAddress
     ) {
         synchronized (_lockedAddresses) {
-            if (_lockedAddresses.containsKey(address)) {
+            if (_lockedAddresses.containsKey(absoluteAddress)) {
                 return false;
             } else {
-                _lockedAddresses.put(address, this);
+                _lockedAddresses.put(absoluteAddress, this);
                 _lockIsHeldByUs = true;
                 return true;
             }
@@ -424,14 +424,12 @@ public class Engine {
      * Requests a lock on the given memory address, and waits until the lock is obtained.
      * WARNING - this can wait forever if the entity which locked the address misbehaves.
      * An entity should NEVER call this if it has already locked the address.
-     * @param address the address to lock
+     * @param absoluteAddress the address to lock
      */
     private void addressLockAndWait(
-        final AbsoluteAddress address,
-        final int offsetFromBase
+        final Long absoluteAddress
     ) {
-        var newAbsolute = new AbsoluteAddress(address.getSegment(), address.getOffset() + offsetFromBase);
-        while (!addressLock(newAbsolute)) {
+        while (!addressLock(absoluteAddress)) {
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
@@ -1160,7 +1158,9 @@ public class Engine {
         var baseAddr = BankDescriptor.getBaseAddress(bdtStorage, bdtOffset);
         bReg.setBaseAddress(baseAddr);
         var bankLength = bReg.getUpperLimitNormalized() - bReg.getLowerLimitNormalized() + 1;
-        bReg.setStorage(_storageManager.getSlice(baseAddr.getSegment(), baseAddr.getOffset(), bankLength));
+        bReg.setStorage(_storageManager.getSlice(AbsoluteAddress.getSegment(baseAddr),
+                                                 AbsoluteAddress.getOffset(baseAddr),
+                                                 bankLength));
 
         if (baseRegisterIndex == 0) {
             // Update hard-held PAR
@@ -1600,7 +1600,7 @@ public class Engine {
         var operand = bReg.getStorage().get(offset);
 
         if (lockStorage) {
-            addressLockAndWait(bReg.getBaseAddress(), offset);
+            addressLockAndWait(AbsoluteAddress.addOffset(bReg.getBaseAddress(), offset));
         }
 
         if (allowPartialWordTransfer) {

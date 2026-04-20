@@ -71,8 +71,8 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(14, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(15, false, 0_022000, 0_022777, null, bank1);
+        loadBaseRegister(14, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(15, false, 0_022000, 0_022777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -94,8 +94,8 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -120,8 +120,8 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(14, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(15, false, 0_022000, 0_022777, null, bank1);
+        loadBaseRegister(14, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(15, false, 0_022000, 0_022777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -149,8 +149,8 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -180,8 +180,8 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(14, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(15, false, 0_022000, 0_022777, null, bank1);
+        loadBaseRegister(14, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(15, false, 0_022000, 0_022777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -213,8 +213,8 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -238,8 +238,8 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(14, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(15, false, 0_022000, 0_022777, null, bank1);
+        loadBaseRegister(14, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(15, false, 0_022000, 0_022777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -263,8 +263,8 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_0777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

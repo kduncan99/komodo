@@ -37,12 +37,12 @@ public class TestTNOPFunction extends FunctionUnitTest {
         };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 01777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(0, false, 0_1000, 01777, AbsoluteAddress.construct(0, 0), bank0);
 
         // Setup Bank 2 for operand (though ignored)
         var data = new long[256];
         data[0100] = 0_123456_654321L;
-        loadBaseRegister(2, false, 0, 0777, new AbsoluteAddress(2, 0), new ArraySlice(data));
+        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), new ArraySlice(data));
 
         // Setup X1: XI=1, XM=100
         _engine.getGeneralRegisterSet().getRegister(1).setXI(1).setXM(0100);
@@ -69,8 +69,8 @@ public class TestTNOPFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 01777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0777, new AbsoluteAddress(2, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 01777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), bank2);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0).setBankLevel((short) 0);
@@ -90,7 +90,7 @@ public class TestTNOPFunction extends FunctionUnitTest {
         };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_01777, new AbsoluteAddress(0, 0), bank0);
+        loadBaseRegister(0, false, 0_1000, 0_01777, AbsoluteAddress.construct(0, 0), bank0);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0).setBankLevel((short) 0);

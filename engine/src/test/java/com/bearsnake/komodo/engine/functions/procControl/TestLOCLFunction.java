@@ -42,11 +42,11 @@ public class TestLOCLFunction extends FunctionUnitTest {
         var code = new long[]{
             locl(0, 0, 0, 0_1012),
             0,
-            0,
-            };
+            0
+        };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
         createReturnControlStack(0_2000, 32);
         var stackReg = _engine.getGeneralRegister(Engine.RCS_STACK_POINTER, true);
         stackReg.setXM(0_2000);
@@ -82,7 +82,7 @@ public class TestLOCLFunction extends FunctionUnitTest {
         };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
         createReturnControlStack(0_2000, 32);
 
         _engine.getDesignatorRegister()

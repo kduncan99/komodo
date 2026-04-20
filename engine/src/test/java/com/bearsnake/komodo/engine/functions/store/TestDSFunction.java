@@ -40,8 +40,8 @@ public class TestDSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, null, bank1);
+        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
+        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -70,8 +70,8 @@ public class TestDSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_01000, 0_01777, null, bank0);
-        loadBaseRegister(2, false, 0_00000, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_01000, 0_01777, 0, bank0);
+        loadBaseRegister(2, false, 0_00000, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -100,8 +100,8 @@ public class TestDSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_01000, 0_01777, null, bank0);
-        loadBaseRegister(2, false, 0_00000, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_01000, 0_01777, 0, bank0);
+        loadBaseRegister(2, false, 0_00000, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -132,8 +132,8 @@ public class TestDSFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, null, bank1);
+        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
+        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

@@ -38,7 +38,7 @@ public class TestHJFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -62,8 +62,8 @@ public class TestHJFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(13, false, 0_3000, 0_3777, null, bank1);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(13, false, 0_3000, 0_3777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -87,8 +87,8 @@ public class TestHJFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(other);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(14, false, 0_4000, 0_4777, null, bank1);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(14, false, 0_4000, 0_4777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -112,8 +112,8 @@ public class TestHJFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(other);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(15, false, 0_5000, 0_5777, null, bank1);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(15, false, 0_5000, 0_5777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -138,7 +138,7 @@ public class TestHJFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -171,7 +171,7 @@ public class TestHJFunction extends FunctionUnitTest {
             };
 
         var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

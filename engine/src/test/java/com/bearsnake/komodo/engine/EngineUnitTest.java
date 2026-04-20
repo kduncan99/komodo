@@ -24,7 +24,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
         final boolean isLargeBank,
         final int lowerLimitNormalized,
         final int upperLimitNormalized,
-        final AbsoluteAddress baseAddress,
+        final long baseAddress,
         final ArraySlice storage
     ) {
         _engine.getBaseRegister(registerNumber)
@@ -42,7 +42,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
         final boolean isLargeBank,
         final int lowerLimitNormalized,
         final int upperLimitNormalized,
-        final AbsoluteAddress baseAddress,
+        final long baseAddress,
         final ArraySlice storage,
         final int bankLevel,
         final int bankIndex,
@@ -191,7 +191,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             .setAccessLock(new AccessLock())
             .setGeneralAccessPermissions(AccessPermissions.ALL)
             .setSpecialAccessPermissions(AccessPermissions.ALL)
-            .setBaseAddress(new AbsoluteAddress(segx, 0));
+            .setBaseAddress(AbsoluteAddress.construct(segx, 0));
 
         xReg.setXI(stackFrameSize).setXM(upperLimit + 1);
     }
@@ -216,7 +216,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             .setAccessLock(new AccessLock())
             .setGeneralAccessPermissions(AccessPermissions.ALL)
             .setSpecialAccessPermissions(AccessPermissions.ALL)
-            .setBaseAddress(new AbsoluteAddress(segx, 0));
+            .setBaseAddress(AbsoluteAddress.construct(segx, 0));
 
         xReg.setXI(0).setXM(upperLimit + 1);
     }
@@ -249,7 +249,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             .setAccessLock(new AccessLock())
             .setGeneralAccessPermissions(AccessPermissions.ALL)
             .setSpecialAccessPermissions(AccessPermissions.ALL)
-            .setBaseAddress(new AbsoluteAddress(segx, 0));
+            .setBaseAddress(AbsoluteAddress.construct(segx, 0));
 
         xReg.setXI(stackFrameSize).setXM(upperLimit + 1);
     }
@@ -289,7 +289,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
         bd.setGeneralFault(false);
         bd.setInactive(false);
         bd.setDisplacement(0);
-        bd.getBaseAddress().setSegment(segx).setOffset(0);
+        bd.setBaseAddress(AbsoluteAddress.construct(segx, 0));
         bd.setAccessLock(new AccessLock());
         bd.setGeneralAccessPermissions(AccessPermissions.ALL);
         bd.setSpecialAccessPermissions(AccessPermissions.ALL);
@@ -332,7 +332,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             bReg.setSpecialAccessPermissions(AccessPermissions.NONE);
             bReg.setGeneralAccessPermissions(AccessPermissions.NONE);
             bReg.setAccessLock(new AccessLock());
-            bReg.setBaseAddress(new AbsoluteAddress(bankDescriptorTableIdentifier, 0));
+            bReg.setBaseAddress(AbsoluteAddress.construct(bankDescriptorTableIdentifier, 0));
             bReg.setLimitsNormalized(false, 0, segment.getSize() | 0777);
         } catch (HardwareCheckInterrupt e) {
             assert(false):"Caught hardware check interrupt:" + e;

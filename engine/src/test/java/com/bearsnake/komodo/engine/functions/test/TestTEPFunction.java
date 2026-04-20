@@ -40,11 +40,11 @@ public class TestTEPFunction extends FunctionUnitTest {
         var code = new long[] {
             tepImm(Constants.JFIELD_U, 2, 0, 0112233),
             0,
-            0,
-            };
+            0
+        };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -68,7 +68,7 @@ public class TestTEPFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -88,16 +88,16 @@ public class TestTEPFunction extends FunctionUnitTest {
         var code = new long[] {
             tepEM(Constants.JFIELD_W, 2, 0, 0, 0, 2, 0),
             0,
-            0,
-            };
+            0
+        };
 
         var data = new long[]{ 0_111111_111111L };
 
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0777, new AbsoluteAddress(2, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -121,7 +121,7 @@ public class TestTEPFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -146,7 +146,7 @@ public class TestTEPFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -176,8 +176,8 @@ public class TestTEPFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0777, new AbsoluteAddress(2, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -205,8 +205,8 @@ public class TestTEPFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0777, new AbsoluteAddress(2, 0), bank2);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), bank2);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -230,7 +230,7 @@ public class TestTEPFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(15, false, 0_22000, 0_22777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(15, false, 0_22000, 0_22777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -254,7 +254,12 @@ public class TestTEPFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_22777, new AbsoluteAddress(2, 0), bank);
+        loadBaseRegister(13,
+                         false,
+                         0_22000,
+                         0_22777,
+                         AbsoluteAddress.construct(2, 0),
+                         bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -284,7 +289,7 @@ public class TestTEPFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_22777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(13, false, 0_22000, 0_22777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -308,7 +313,7 @@ public class TestTEPFunction extends FunctionUnitTest {
             };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_22777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(13, false, 0_22000, 0_22777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

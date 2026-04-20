@@ -46,8 +46,8 @@ public class TestSMAFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, null, bank1);
+        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
+        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -79,8 +79,8 @@ public class TestSMAFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -107,7 +107,7 @@ public class TestSMAFunction extends FunctionUnitTest {
 
         var bank0 = new ArraySlice(code);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -135,14 +135,14 @@ public class TestSMAFunction extends FunctionUnitTest {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_00)
                                       .setUpperLimit(0_01777)
-                                      .setBaseAddress(new AbsoluteAddress(0, 0));
+                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_00)
                                       .setUpperLimit(0_01777)
-                                      .setBaseAddress(new AbsoluteAddress(1, 0));
+                                      .setBaseAddress(AbsoluteAddress.construct(1, 0));
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(2, false, 0_2000, 0_2777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(2, false, 0_2000, 0_2777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

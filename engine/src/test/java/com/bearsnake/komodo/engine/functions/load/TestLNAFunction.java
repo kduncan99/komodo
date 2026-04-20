@@ -42,7 +42,7 @@ public class TestLNAFunction extends FunctionUnitTest {
         };
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -73,8 +73,8 @@ public class TestLNAFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -105,8 +105,8 @@ public class TestLNAFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, null, bank1);
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -140,8 +140,8 @@ public class TestLNAFunction extends FunctionUnitTest {
         var bank0 = new ArraySlice(code);
         var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, null, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, null, bank1);
+        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
+        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -171,8 +171,8 @@ public class TestLNAFunction extends FunctionUnitTest {
             data(0_112, 0_233, 0_445, 0_566),
         };
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, null, new ArraySlice(code));
-        loadBaseRegister(1, false, 0_0, 0_1777, null, new ArraySlice(data));
+        loadBaseRegister(0, false, 0_1000, 0_1777, 0, new ArraySlice(code));
+        loadBaseRegister(1, false, 0_0, 0_1777, 0, new ArraySlice(data));
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

@@ -39,7 +39,7 @@ public class TestSDEFunction extends TestDecimalFunction {
         code[0_400] = decWord(0, 1, 1, 1, 1, 1, 1, 1, POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getExecOrUserARegister(4).setW(decWord(1, 3, 4, 5, 6, 7, 8, 9, POSITIVE_SIGN));
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
@@ -58,7 +58,7 @@ public class TestSDEFunction extends TestDecimalFunction {
         code[0_400] = decWord(0, 0, 0, 0, 0, 0, 5, 0, NEGATIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 0, 1, 0, 0, POSITIVE_SIGN));
         _engine.getDesignatorRegister().setBasicModeEnabled(true);

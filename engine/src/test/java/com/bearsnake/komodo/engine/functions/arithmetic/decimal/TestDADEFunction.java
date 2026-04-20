@@ -35,7 +35,7 @@ public class TestDADEFunction extends TestDecimalFunction {
         var bd = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                      .setLowerLimit(0)
                                      .setUpperLimit(code.length - 1)
-                                     .setBaseAddress(new AbsoluteAddress(0, 0));
+                                     .setBaseAddress(AbsoluteAddress.construct(0, 0));
         bd.setInactive(false);
         _engine.getBaseRegister(0).setBankDescriptor(bd).setStorage(bank).setSubsetting(0);
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
@@ -55,7 +55,7 @@ public class TestDADEFunction extends TestDecimalFunction {
         code[0_401] = decWord(0, 0, 0, 0, 0, 0, 0, 1, POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -82,7 +82,7 @@ public class TestDADEFunction extends TestDecimalFunction {
         code[0_401] = decWord(0, 5, 0, 0, 0, 0, 0, 0, NEGATIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -107,7 +107,7 @@ public class TestDADEFunction extends TestDecimalFunction {
         code[0_401] = decWord(0, 0, 0, 0, 0, 0, 0, 1, POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -128,7 +128,7 @@ public class TestDADEFunction extends TestDecimalFunction {
         code[1] = 0;
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);

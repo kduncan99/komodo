@@ -43,7 +43,7 @@ public class TestDDEIFunction extends TestDecimalFunction {
         code[0_401] = ((0L << 32) | (1L << 28) | (2L << 24) | (3L << 20) | (4L << 16) | (5L << 12) | (6L << 8) | (7L << 4) | POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -70,8 +70,8 @@ public class TestDDEIFunction extends TestDecimalFunction {
         data[0_401] = ((0L << 32) | (1L << 28) | (2L << 24) | (3L << 20) | (4L << 16) | (5L << 12) | (6L << 8) | (7L << 4) | NEGATIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
-        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), new ArraySlice(data));
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), new ArraySlice(data));
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -94,7 +94,7 @@ public class TestDDEIFunction extends TestDecimalFunction {
         code[0_401] = ((0L << 32) | (1L << 28) | (2L << 24) | (3L << 20) | (4L << 16) | (5L << 12) | (6L << 8) | (7L << 4) | POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -116,7 +116,7 @@ public class TestDDEIFunction extends TestDecimalFunction {
         code[0_601] = ((0L << 32) | (1L << 28) | (2L << 24) | (3L << 20) | (4L << 16) | (5L << 12) | (6L << 8) | (7L << 4) | POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
+        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
 
         _engine.getDesignatorRegister()
                 .setBasicModeEnabled(true)
@@ -141,8 +141,8 @@ public class TestDDEIFunction extends TestDecimalFunction {
         data[0_401] = ((0L << 32) | (1L << 28) | (2L << 24) | (3L << 20) | (4L << 16) | (5L << 12) | (6L << 8) | (7L << 4) | POSITIVE_SIGN);
 
         var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, new AbsoluteAddress(0, 0), bank);
-        loadBaseRegister(2, false, 0, 0_777, new AbsoluteAddress(1, 0), new ArraySlice(data));
+        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), new ArraySlice(data));
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
