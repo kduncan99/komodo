@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.functions.Function;
@@ -214,7 +213,7 @@ public class Engine {
 
         // Find interrupt vector for this interrupt class
         var intVector = _baseRegisters[16].getStorage().get(interrupt.getInterruptClass().getCode());
-        var sourceLevel = (int)(intVector >> 33);
+        var sourceLevel = (short)(intVector >> 33);
         var sourceBDIndex = (int)(intVector >> 18) & 0_077777;
         var sourceOffset = (int)intVector & 0_777777;
         if ((sourceLevel == 0) && (sourceBDIndex < 32)) {
@@ -223,6 +222,14 @@ public class Engine {
         }
 
         // Find the bank descriptor for the interrupt vector.
+        long sourceBDAddr;
+        try {
+            sourceBDAddr = findBankDescriptorAbsoluteAddress(sourceLevel, sourceBDIndex);
+        } catch (AddressingExceptionInterrupt e) {
+            halt(HaltCode.INVALID_INTERRUPT_VECTOR);
+            return;
+        }
+
         var sourceBDBreg = _baseRegisters[16 + sourceLevel];
         var sourceBDStorage = sourceBDBreg.getStorage();
         var sourceBDOffset = (8 * sourceBDIndex) - sourceBDBreg.getLowerLimitNormalized();
@@ -259,7 +266,7 @@ public class Engine {
 
         // Load B0 with the bank containing the interrupt handler
         try {
-            loadBank(0, sourceLevel, sourceBDIndex, sourceBDStorage, sourceBDOffset, 0);
+            loadBank(0, sourceBDAddr, sourceLevel, sourceBDIndex, 0);
         } catch (HardwareCheckInterrupt e) {
             halt(HaltCode.CANNOT_LOAD_INTERRUPT_HANDLER_BANK);
         }
@@ -861,6 +868,43 @@ public class Engine {
     }
 
     /**
+     * Finds the absolute address of the bank descriptor corresponding to the given level and BDI
+     * in the context of the current base register set.
+     * @param bankLevel the bank level
+     * @param bankDescriptorIndex the bank descriptor index
+     * @return the absolute address of the bank descriptor
+     */
+    public long findBankDescriptorAbsoluteAddress(
+        final short bankLevel,
+        final int bankDescriptorIndex
+    ) throws AddressingExceptionInterrupt {
+        if ((bankLevel < 0) || (bankLevel > 7) || (bankDescriptorIndex < 0)) {
+            // Invalid bank level or BDI
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI, bankLevel, bankDescriptorIndex);
+        }
+
+        if ((bankLevel == 0) && (bankDescriptorIndex < 32)) {
+            // Invalid bank level or BDI
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI, bankLevel, bankDescriptorIndex);
+        }
+
+        var bdtReg = _baseRegisters[bankLevel + 16];
+        if (bdtReg.isVoid()) {
+            // No BDT exists for the indicated level
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException, bankLevel, bankDescriptorIndex);
+        }
+
+        var addr = bdtReg.getBaseAddress();
+        var bankOffset = 8 * bankDescriptorIndex;
+        if (bdtReg.getLowerLimitNormalized() + bankOffset + 7 > bdtReg.getUpperLimitNormalized()) {
+            // BDT is beyond the limits of the bank.
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException, bankLevel, bankDescriptorIndex);
+        }
+
+        return AbsoluteAddress.addOffset(addr, 8 * bankDescriptorIndex);
+    }
+
+    /**
      * FOR BASIC MODE ONLY
      * Takes a relative address and determines which (if any) of the basic mode banks
      * currently based on BDR12-15 is to be selected for that address.
@@ -997,6 +1041,10 @@ public class Engine {
         return _generalRegisterSet;
     }
 
+    public HaltCode getHaltCode() {
+        return _haltCode;
+    }
+
     public ProgramAddressRegister getProgramAddressRegister() {
         return _activityStatePacket.getProgramAddressRegister();
     }
@@ -1016,10 +1064,6 @@ public class Engine {
         // TODO LOG THIS
         System.out.printf("*** HALT: %s\n", haltCode);
         _haltCode = haltCode;
-    }
-
-    public HaltCode getHaltCode() {
-        return _haltCode;
     }
 
     public boolean isHalted() {
@@ -1126,28 +1170,29 @@ public class Engine {
         }
 
         var bdtStorageOffset = (8 * bankDescriptorIndex);
-        loadBank(baseRegisterIndex, bankLevel, bankDescriptorIndex, bdtReg.getStorage(), bdtStorageOffset, subsetOffset);
+        var address = AbsoluteAddress.addOffset(bdtReg.getBaseAddress(), bdtStorageOffset);
+        loadBank(baseRegisterIndex, address, bankLevel, bankDescriptorIndex, subsetOffset);
     }
 
     /**
-     * Loads a bank register with the bank descriptor at the given bdtStorage and bdtOffset.
+     * Loads a bank register with the bank descriptor at the given absolute address.
      * @param baseRegisterIndex the index of the bank register to be loaded
-     * @param bankLevel the level of the bank to be loaded
+     * @param address the absolute address of the bank descriptor to be loaded
+     * @param bankLevel the level of the bank to be loaded (needed for loading PAR or ABTE)
      * @param bankDescriptorIndex the index of the bank descriptor (needed for loading PAR or ABTE)
-     * @param bdtStorage the storage containing for the bank descriptor table which contains the bank descriptor to be loaded.
-     * @param bdtOffset the offset within the bank descriptor table of the bank descriptor to be loaded
      * @param subsetOffset the offset within the bank to be loaded (for subsetting, and only for B1-B15)
      */
     public void loadBank(
         final int baseRegisterIndex,
+        final long address,
         final int bankLevel,
         final int bankDescriptorIndex,
-        final ArraySlice bdtStorage,
-        final int bdtOffset,
         final int subsetOffset
     ) throws HardwareCheckInterrupt {
         var bReg = _baseRegisters[baseRegisterIndex];
 
+        var bdtStorage = _storageManager.getSegment(AbsoluteAddress.getSegment(address));
+        var bdtOffset = AbsoluteAddress.getOffset(address);
         var large = BankDescriptor.isLargeBank(bdtStorage, bdtOffset);
         var normLower = BankDescriptor.getLowerLimit(bdtStorage, bdtOffset) << (large ? 15 : 9);
         var normUpper = BankDescriptor.getUpperLimit(bdtStorage, bdtOffset) << (large ? 6 : 0);
