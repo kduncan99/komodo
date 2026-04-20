@@ -168,8 +168,8 @@ public class TestEngine extends EngineUnitTest {
         assertEquals(0_000040_000020L, _engine.getProgramAddressRegister().getCompositeValue());
     }
 
-    // TODO we should do some interrupt processing testing where the process fails for various reasons
-    //  Also need to check priority of processing
+    // TODO We should do some interrupt processing testing where the process fails for various reasons
+    // TODO Also need to check priority of processing
 
     @Test
     public void testEnsureInterruptsAreNotProcessed() throws HardwareCheckInterrupt {

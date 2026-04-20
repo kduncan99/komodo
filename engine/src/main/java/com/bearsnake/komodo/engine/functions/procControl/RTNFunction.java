@@ -4,43 +4,19 @@
 
 package com.bearsnake.komodo.engine.functions.procControl;
 
+import com.bearsnake.komodo.engine.AccessKey;
+import com.bearsnake.komodo.engine.BankDescriptor;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
+import com.bearsnake.komodo.engine.interrupts.AddressingExceptionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
+import com.bearsnake.komodo.engine.interrupts.TerminalAddressingExceptionInterrupt;
 
 /**
  * Return function
  * (RTN) uses the RCS to determine how to re-establish a previously saved environment,
  * loading the appropriate bank and then jumping to the address in the U field.
- */
-/*
-TODO REMOVE THESE SPECIAL NOTES LATER
-
-RTN to an Extended_Mode (RCS DB16 = 0) Algorithm (4.6.4) Summary:
-A model_dependent check must be made for a possible RCS overflow as described in 4.6.4.1.
-3-10:   A determination is made of the Base_Register information to be loaded into B0
-        (including any interrupts that may be generated). RCS.L,BDI is the Source L,BDI.
-16:     Access_Key := RCS.Access_Key
-        DB12–17 := RCS.DB12-17.
-17:     PAR.PC := RCS.Offset
-18:     PAR.L,BDI := RCS.L,BDI
-21:     If BD.G = 1 a Terminal_Addressing_Exception interrupt occurs. No check for Enter
-        access is made on RTN.
-
-RTN to Basic_Mode (RCS DB16 = 1, Mixed-Mode Transfer) Algorithm (4.6.4) Summary:
-3-9:    A determination is made of the Base_Register information to be loaded (including any
-        interrupts that may be generated). RCS.L,BDI is the Source L,BDI.
-10:     Because this is a RTN to Basic_Mode (RCS.DB16 = 1), one of Base_Register 12–15 is to
-        be loaded, decided by RCS.B + 12.
-11:     B0.V := 1 and hard-held PAR.L,BDI := 0,0, marking B0 as void.
-16:     Access_Key := RCS.Access_Key
-        DB12–17 := RCS.DB12-17.
-17:     PAR.PC := (U)bits 18–35.
-18:     The ABT is updated. Note: ABT(Target B).Offset := 0.
-20:     Basic_Mode DB31 toggle and Reference_Violation detection (see 4.4.6.1).
-21:     If BD.G = 1 a Terminal_Addressing_Exception interrupt occurs. No check for Enter Access,
-        Validated Entry or Selection of Base_Register is made on RTN.
  */
 public class RTNFunction extends Function {
 
@@ -59,6 +35,98 @@ public class RTNFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        return true;//TODO
+        // No operands, extended mode only, F.x,h,i,b,d are all ignored.
+
+        // Find RCS frame
+        var frameContent = new long[2];
+        engine.releaseRCSFrame(frameContent);
+
+        // Determine source L, BDI
+        var sourceLevel = (int)(frameContent[0] >> 33);
+        var sourceBDI = (int)(frameContent[0] >> 18) & 0_077777;
+        var sourceOffset = (int)(frameContent[0] & 0_777777L);
+
+        // Are we doing mixed-mode transfer?
+        var rcsB = (int)(frameContent[1] >> 24) & 0_3;
+        var rcsDB12 = (int)(frameContent[1] >> 18) & 0_77;
+        var rcsAccessKey = new AccessKey(frameContent[1] & 0_777777);
+
+        // This is a mixed mode transfer if DB16 (basic mode) in the RCS is set.
+        var mixedModeTransfer = (rcsDB12 & 02) != 0;
+        var rcsBankToBeLoaded = mixedModeTransfer ? (rcsB + 12) : 0;
+
+        // Check validity of L,BDI.
+        // If L,BDI is 0,0, we're going to load a void bank.
+        if ((sourceLevel == 0) && (sourceBDI >= 1) && (sourceBDI <= 31)) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                   sourceLevel,
+                                                   sourceBDI);
+        }
+        var loadVoid = (sourceLevel == 0) && (sourceBDI == 0);
+        if (!mixedModeTransfer && loadVoid) {
+            // Cannot load void bank on EM->EM transfer.
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                   sourceLevel,
+                                                   sourceBDI);
+        }
+
+        // Find the storage and offset for the BD described by L,BDI
+        var sourceBDStorage = engine.getBaseRegister(sourceLevel + 16).getStorage();
+        var sourceBDOffset = 8 * sourceBDI;
+        if ((sourceBDOffset + 7) > sourceBDStorage.getSize()) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                   sourceLevel,
+                                                   sourceBDI);
+        }
+
+
+        var sourceBankType = BankDescriptor.getBankType(sourceBDStorage, sourceBDOffset);
+        var generalFault = BankDescriptor.isGeneralFault(sourceBDStorage, sourceBDOffset);
+        switch (sourceBankType) {
+           case ExtendedMode -> {
+               // this is okay - just drop through
+           }
+           case BasicMode, Gate -> {
+               // EM->EM addressing exception, EM->BM is okay
+               if (!mixedModeTransfer) {
+                   throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                        sourceLevel,
+                                                        sourceBDI);
+               }
+            }
+            default -> throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                             sourceLevel,
+                                                             sourceBDI);
+        }
+
+        var targetBReg = engine.getBaseRegister(rcsBankToBeLoaded);
+        var par = engine.getProgramAddressRegister();
+        var ikr = engine.getActivityStatePacket().getIndicatorKeyRegister();
+        var dr = engine.getDesignatorRegister();
+
+        ikr.getAccessKey().set(rcsAccessKey);
+        var drBits = dr.getCompositeValue() & 0_777700_777777L;
+
+        if (mixedModeTransfer) {
+            targetBReg.setIsVoid(true);
+            par.setBankLevel((short)0).setBankDescriptorIndex(0).setOffset(sourceOffset);
+            dr.setWord36(drBits | (long)rcsDB12 << 18);
+            var abte = engine.getActiveBaseTableEntry(rcsBankToBeLoaded);
+            abte.setBankLevel((short)sourceLevel).setBankDescriptorIndex(sourceBDI).setSubsetSpecification(0);
+            engine.getDesignatorRegister().setBasicModeBaseRegisterSelection(rcsBankToBeLoaded == 13 || rcsBankToBeLoaded == 15);
+            engine.spSetBasicModeCachedBaseRegisterIndex(rcsBankToBeLoaded);
+            targetBReg.checkAccessLimits(sourceOffset, true);
+        } else {
+            par.setBankLevel((short)sourceLevel).setBankDescriptorIndex(sourceBDI).setOffset(sourceOffset);
+        }
+
+        if (generalFault) {
+            throw new TerminalAddressingExceptionInterrupt(TerminalAddressingExceptionInterrupt.Reason.GBitSetInTargetBD,
+                                                           sourceLevel,
+                                                           sourceBDI);
+        }
+
+        engine.spSetPreventProgramCounterUpdate(true);
+        return true;
     }
 }

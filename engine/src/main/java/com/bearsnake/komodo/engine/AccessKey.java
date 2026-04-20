@@ -11,7 +11,7 @@ package com.bearsnake.komodo.engine;
 public class AccessKey extends AccessInfo {
     public AccessKey() { super(); }
     public AccessKey(final AccessInfo source) { super(source); }
-    public AccessKey(final int domain, final short ring) { super(domain, ring); }
+    public AccessKey(final short ring, final int domain) { super(ring, domain); }
     public AccessKey(final long value) { super(value); }
 
     public boolean isMasterKey() {

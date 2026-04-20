@@ -47,6 +47,20 @@ public abstract class Function {
         _mnemonic = mnemonic;
     }
 
+    private static long fjaxhibd(
+        final long f,
+        final long j,
+        final long a,
+        final long x,
+        final long h,
+        final long i,
+        final long b,
+        final long d
+    ) {
+        return ((f & 077) << 30) | ((j & 017) << 26) | ((a & 017) << 22) | ((x & 017) << 18)
+               | ((h & 01) << 17) | ((i & 01) << 16) << ((b & 017) << 12) | (d & 07777);
+    }
+
     public int getFunctionTableIndex() {
         return _functionTableIndex;
     }
@@ -172,6 +186,14 @@ public abstract class Function {
         // j-field with the a-field (dropping the highest bit of the j-field) for 7 bits of GRS index.
         if (iWord.getF() == 070) {
             return JGDFunction.interpret(engine, iWord);
+        }
+
+        // Special code for RTN
+        //      RTN
+        // x, h, i, b, and d fields are ignored, but we will ignore them only if they are zero.
+        if (!dReg.isBasicModeEnabled()
+            && (iWord.getW() == fjaxhibd(073, 017, 003, 0, 0, 0, 0, 0))) {
+            return "RTN";
         }
 
         // TODO Special code for BT

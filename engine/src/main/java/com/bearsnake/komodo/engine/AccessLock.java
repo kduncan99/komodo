@@ -11,7 +11,7 @@ package com.bearsnake.komodo.engine;
 public class AccessLock extends AccessInfo {
 
     public AccessLock() { super(); }
-    public AccessLock(final int domain, final short ring) { super(domain, ring); }
+    public AccessLock(final short ring, final int domain) { super(ring, domain); }
     public AccessLock(final long value) { super(value); }
 
     /**

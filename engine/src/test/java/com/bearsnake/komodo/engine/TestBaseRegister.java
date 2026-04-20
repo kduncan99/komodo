@@ -25,7 +25,7 @@ public class TestBaseRegister {
         BaseRegister br = new BaseRegister();
         AccessPermissions gap = new AccessPermissions(true, false, true);
         AccessPermissions sap = new AccessPermissions(false, true, false);
-        AccessLock lock = new AccessLock(123, (short) 2);
+        AccessLock lock = new AccessLock((short) 2, 123);
         AbsoluteAddress addr = new AbsoluteAddress(0123, 0456);
 
         br.setGeneralAccessPermissions(gap)
@@ -102,20 +102,20 @@ public class TestBaseRegister {
         BaseRegister br = new BaseRegister();
         AccessPermissions gap = new AccessPermissions(true, false, false); // Read only
         AccessPermissions sap = new AccessPermissions(true, true, true);  // All
-        AccessLock lock = new AccessLock(10, (short) 2);
+        AccessLock lock = new AccessLock((short) 2, 10);
         br.setGeneralAccessPermissions(gap).setSpecialAccessPermissions(sap).setAccessLock(lock);
 
         // Master key (ring 0, domain 0) -> ALL
-        assertEquals(AccessPermissions.ALL, br.getEffectivePermissions(new AccessKey(0, (short) 0)));
+        assertEquals(AccessPermissions.ALL, br.getEffectivePermissions(new AccessKey((short) 0, 0)));
 
         // Ring < lock ring (1 < 2) -> SAP
-        assertEquals(sap, br.getEffectivePermissions(new AccessKey(20, (short) 1)));
+        assertEquals(sap, br.getEffectivePermissions(new AccessKey((short)1, 20)));
 
         // Domain == lock domain (10 == 10) -> SAP
-        assertEquals(sap, br.getEffectivePermissions(new AccessKey(10, (short) 3)));
+        assertEquals(sap, br.getEffectivePermissions(new AccessKey((short)3, 10)));
 
         // Otherwise -> GAP
-        assertEquals(gap, br.getEffectivePermissions(new AccessKey(20, (short) 3)));
+        assertEquals(gap, br.getEffectivePermissions(new AccessKey((short) 3, 20)));
     }
 
     @Test

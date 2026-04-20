@@ -565,7 +565,7 @@ public class Engine {
     // -----------------------------------------------------------------------------------------------------------------------------
     // Access to Engine internals for external callers (mainly functions)
 
-    ActiveBaseTable.Entry getActiveBaseTableEntry(
+    public ActiveBaseTable.Entry getActiveBaseTableEntry(
         final int registerNumber
     ) {
         return _activeBaseTable.getEntry(registerNumber);
@@ -1127,7 +1127,8 @@ public class Engine {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException, bankLevel, bankDescriptorIndex);
         }
 
-        loadBank(baseRegisterIndex, bankLevel, bankDescriptorIndex, bdtReg.getStorage(), 8 * bankDescriptorIndex, subsetOffset);
+        var bdtStorageOffset = (8 * bankDescriptorIndex);
+        loadBank(baseRegisterIndex, bankLevel, bankDescriptorIndex, bdtReg.getStorage(), bdtStorageOffset, subsetOffset);
     }
 
     /**
@@ -1749,7 +1750,7 @@ public class Engine {
         stackPtr.setXM(newPtr);
         var storage = bReg.getStorage();
         var frameOffset = (int)(newPtr - bReg.getLowerLimitNormalized());
-        var w0 = ((long)bankLevel << 33) | ((long)bankDescriptorIndex << 30) | (offset & 0_777777);
+        var w0 = ((long)(bankLevel & 07) << 33) | ((long)(bankDescriptorIndex & 0_077777) << 18) | (offset & 0_777777);
         var w1 = ((bankDescriptorRegister & 03) << 24) | ((db12To17 & 0_77) << 18) | accessKey.toComposite();
         storage.set(frameOffset, w0);
         storage.set(frameOffset + 1, w1);
@@ -1757,9 +1758,12 @@ public class Engine {
 
     /**
      * Releases the most-current RCS frame. Used for returning from a subroutine.
+     * @param frameContent Array to store the released frame content - must be (at least) two words.
      * @throws RCSGenericStackUnderflowOverflowInterrupt If the RCS is empty
      */
-    public void releaseRCSFrame() throws RCSGenericStackUnderflowOverflowInterrupt {
+    public void releaseRCSFrame(
+        long[] frameContent
+    ) throws RCSGenericStackUnderflowOverflowInterrupt {
         var bReg = _baseRegisters[RCS_BASE_REGISTER];
         var stackPtr = _generalRegisterSet.getRegister(RCS_STACK_POINTER);
         var oldPtr = stackPtr.getXM();
@@ -1775,6 +1779,10 @@ public class Engine {
                                                                 RCS_BASE_REGISTER,
                                                                 (int)oldPtr);
         }
+
+        var offset = (int)(oldPtr - bReg.getLowerLimitNormalized());
+        frameContent[0] = bReg.getStorage().get(offset);
+        frameContent[1] = bReg.getStorage().get(offset + 1);
 
         var newPtr = stackPtr.getXM() + RCS_FRAME_SIZE;
         stackPtr.setXM(newPtr);

@@ -56,6 +56,29 @@ public abstract class FunctionUnitTest extends EngineUnitTest {
                 && (_engine.getCurrentInstruction().getW() == 0)) {
                 // this is normal...ish. Anyway, it's how all the unit tests halt the engine.
             } else {
+                System.out.println("Interrupt: " + _interrupt);
+                System.out.printf("  SSF:  %02o\n", _interrupt.getShortStatusField());
+                System.out.printf("  ISW0: %012o\n", _interrupt.getInterruptStatusWord0());
+                System.out.printf("  ISW1: %012o\n", _interrupt.getInterruptStatusWord1());
+                System.out.printf("PC: %o:%05o:%06o\n",
+                                  _engine.getProgramAddressRegister().getBankLevel(),
+                                  _engine.getProgramAddressRegister().getBankDescriptorIndex(),
+                                  _engine.getProgramAddressRegister().getProgramCounter());
+                System.out.printf("DR: %012o\n", _engine.getDesignatorRegister().getCompositeValue());
+                for (int i = 0; i < 16; i++) {
+                    var br = _engine.getBaseRegister(i);
+                    if (!br.isVoid() || (i == 0)) {
+                        if (br.isVoid()) {
+                            System.out.printf("B%02d:VOID\n", i);
+                        } else {
+                            System.out.printf("B%-2d: addr:%s ll=%06o ul=%06o\n",
+                                              i,
+                                              br.getBaseAddress(),
+                                              br.getLowerLimitNormalized(),
+                                              br.getUpperLimitNormalized());
+                        }
+                    }
+                }
                 throw _interrupt;
             }
         }

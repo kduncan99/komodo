@@ -27,12 +27,12 @@ public class TestBankDescriptor {
         assertEquals(0, bd.getInactiveQBDListNextPointer());
         assertEquals(new AccessPermissions(false, false, false), bd.getGeneralAccessPermissions());
         assertEquals(new AccessPermissions(false, false, false), bd.getSpecialAccessPermissions());
-        assertEquals(new AccessLock(0, (short) 0), bd.getAccessLock());
+        assertEquals(new AccessLock((short) 0, 0), bd.getAccessLock());
     }
 
     @Test
     public void testParameterConstructorSmallBank() {
-        AccessLock lock = new AccessLock(10, (short) 1);
+        AccessLock lock = new AccessLock((short) 1, 10);
         AccessPermissions general = new AccessPermissions(true, true, false);
         AccessPermissions special = new AccessPermissions(true, true, true);
         AbsoluteAddress base = new AbsoluteAddress(2, 3);
@@ -56,7 +56,7 @@ public class TestBankDescriptor {
 
     @Test
     public void testParameterConstructorLargeBank() {
-        AccessLock lock = new AccessLock(10, (short) 1);
+        AccessLock lock = new AccessLock((short) 1, 10);
         AccessPermissions general = new AccessPermissions(true, true, false);
         AccessPermissions special = new AccessPermissions(true, true, true);
         AbsoluteAddress base = new AbsoluteAddress(2, 3);
@@ -93,7 +93,7 @@ public class TestBankDescriptor {
           .setLowerLimit(0x10)
           .setUpperLimit(0x20)
           .setInactiveQBDListNextPointer(0xFEED)
-          .setAccessLock(new AccessLock(5, (short) 2))
+          .setAccessLock(new AccessLock((short) 2, 5))
           .setBaseAddress(new AbsoluteAddress(5, 6))
           .setGeneralAccessPermissions(new AccessPermissions(true, false, true))
           .setSpecialAccessPermissions(new AccessPermissions(false, true, false));
@@ -107,7 +107,7 @@ public class TestBankDescriptor {
         assertEquals(0x10, bd.getLowerLimit());
         assertEquals(0x20, bd.getUpperLimit());
         assertEquals(0xFEED, bd.getInactiveQBDListNextPointer());
-        assertEquals(new AccessLock(5, (short) 2), bd.getAccessLock());
+        assertEquals(new AccessLock((short) 2, 5), bd.getAccessLock());
         assertEquals(new AbsoluteAddress(5, 6), bd.getBaseAddress());
         assertEquals(new AccessPermissions(true, false, true), bd.getGeneralAccessPermissions());
         assertEquals(new AccessPermissions(false, true, false), bd.getSpecialAccessPermissions());
@@ -142,7 +142,7 @@ public class TestBankDescriptor {
            .setDisplacement(0x1234)
            .setLowerLimit(0x123)
            .setUpperLimit(0_777777)
-           .setAccessLock(new AccessLock(0x1234, (short) 3))
+           .setAccessLock(new AccessLock((short) 3, 0x1234))
            .setBaseAddress(new AbsoluteAddress(0x123456, 0x789ABCDE))
            .setGeneralAccessPermissions(new AccessPermissions(true, false, true))
            .setSpecialAccessPermissions(new AccessPermissions(false, true, false));

@@ -89,7 +89,6 @@ public abstract class FunctionTable {
         // ANXFunction.INSTANCE,
         // ATFunction.INSTANCE,
         // AUFunction.INSTANCE,
-
         // AXFunction.INSTANCE,
         // BAOFunction.INSTANCE,
         // DAFunction.INSTANCE,
@@ -268,8 +267,8 @@ public abstract class FunctionTable {
         LBJFunction.INSTANCE,   // TODO
         LDJFunction.INSTANCE,   // TODO
         LIJFunction.INSTANCE,   // TODO
-        LOCLFunction.INSTANCE,  // TODO
-        RTNFunction.INSTANCE,   // TODO
+        LOCLFunction.INSTANCE,
+        RTNFunction.INSTANCE,
 
         // queueing
         // DEPOSITQBFFunction.INSTANCE,
@@ -334,9 +333,8 @@ public abstract class FunctionTable {
         EXRFunction.INSTANCE,
         NOPFunction.INSTANCE,
         RNGBFunction.INSTANCE,
-        RNGIFunction.INSTANCE,
-        };
-
+        RNGIFunction.INSTANCE
+    };
 
     private static boolean _isInitialized = false;
     private static final HashMap<Integer, Function> BASIC_MODE_TOP_LEVEL = new HashMap<>();

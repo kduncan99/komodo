@@ -10,6 +10,8 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 import java.util.HashMap;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
 public abstract class EngineUnitTest implements StorageManager, InterruptHandler {
 
     protected Engine _engine;
@@ -172,7 +174,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
      * @param stackLowerLimit Lower limit of the stack (usually 0, but whatever)
      * @param stackFrameSize Size of the stack frame (should be a non-zero multiple of 16)
      * @param stackSize Total size of the stack in words
-     * @throws HardwareCheckInterrupt
+     * @throws HardwareCheckInterrupt If something goes badly wrong with storage
      */
     protected void createInterruptControlStack(
         final int stackLowerLimit,
@@ -195,6 +197,31 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
     }
 
     /**
+     * Creates an RCS for testing various functions
+     * @param stackLowerLimit Lower limit of the stack (usually 0, but whatever)
+     * @param stackSize Total size of the stack in words
+     * @throws HardwareCheckInterrupt If something goes badly wrong with storage
+     */
+    protected void createReturnControlStack(
+        final int stackLowerLimit,
+        final int stackSize
+    ) throws HardwareCheckInterrupt {
+        var segx = allocateSegment(stackSize);
+        var upperLimit = stackLowerLimit + stackSize - 1;
+        var bReg = _engine.getBaseRegister(Engine.RCS_BASE_REGISTER);
+        var xReg = _engine.getExecOrUserXRegister(Engine.RCS_STACK_POINTER);
+
+        bReg.setStorage(getSegment(segx))
+            .setLimitsNormalized(false, stackLowerLimit, upperLimit)
+            .setAccessLock(new AccessLock())
+            .setGeneralAccessPermissions(AccessPermissions.ALL)
+            .setSpecialAccessPermissions(AccessPermissions.ALL)
+            .setBaseAddress(new AbsoluteAddress(segx, 0));
+
+        xReg.setXI(0).setXM(upperLimit + 1);
+    }
+
+    /**
      * Allocates a segment of memory of the specified size and creates a stack in it.
      * The indicated base register becomes the stack descriptor,
      * while the indicated index register becomes the stack pointer.
@@ -203,6 +230,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
      * @param stackLowerLimit Lower limit of the stack (usually 0, but whatever)
      * @param stackFrameSize Default frame size (modified by U on BUY and SELL)
      * @param stackSize Total stack size
+     * @throws HardwareCheckInterrupt If something goes badly wrong with storage
      */
     protected void createStack(
         final int baseRegisterNumber,
@@ -324,6 +352,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
     ) {
         assert ((bankLevel >= 0) && (bankLevel <= 7)):"Invalid bank level: " + bankLevel;
         var bReg = _engine.getBaseRegister(bankLevel + 16);
+        assert(!bReg.isVoid()):"Base register " + (bankLevel + 16) + " is void for bank level " + bankLevel;
         assert(bankDescriptorIndex < bReg.getUpperLimitNormalized()):"BDI " + bankDescriptorIndex + " exceeds BDT size for level " + bankLevel;
         bankDescriptor.serialize(bReg.getStorage(), 8 * bankDescriptorIndex);
     }

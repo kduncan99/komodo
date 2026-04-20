@@ -30,7 +30,7 @@ public class TestAccessInfo {
         for (int x = 0; x < 20000; ++x) {
             var ring = (short)_random.nextInt(0x4);
             var domain = _random.nextInt(0x10000);
-            AccessInfo ai = new AccessInfo(domain, ring);
+            AccessInfo ai = new AccessInfo(ring, domain);
             assertEquals(ring, ai.getRing());
             assertEquals(domain, ai.getDomain());
         }
@@ -41,8 +41,8 @@ public class TestAccessInfo {
         for (int x = 0; x < 20000; ++x) {
             var ring = (short)_random.nextInt(0x4);
             var domain = _random.nextInt(0xFFFF);
-            AccessInfo ai0 = new AccessInfo(domain, ring);
-            AccessInfo ai1 = new AccessInfo(domain, ring);
+            AccessInfo ai0 = new AccessInfo(ring, domain);
+            AccessInfo ai1 = new AccessInfo(ring, domain);
             assertEquals(ai0, ai1);
         }
     }
@@ -55,8 +55,8 @@ public class TestAccessInfo {
             var domain0 = _random.nextInt(0xFFFF);
             var domain1 = _random.nextInt(0xFFFF);
             if ((ring0 != ring1) || (domain0 != domain1)) {
-                AccessInfo ai0 = new AccessInfo(domain0, ring0);
-                AccessInfo ai1 = new AccessInfo(domain1, ring1);
+                AccessInfo ai0 = new AccessInfo(ring0, domain0);
+                AccessInfo ai1 = new AccessInfo(ring1, domain1);
                 assertNotEquals(ai0, ai1);
             }
         }

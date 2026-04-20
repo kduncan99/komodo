@@ -26,11 +26,11 @@ public class AccessInfo {
     }
 
     public AccessInfo(
-        int domain,
-        short ring
+        short ring,
+        int domain
     ) {
-        _domain = domain;
         _ring = ring;
+        _domain = domain;
     }
 
     public AccessInfo(
