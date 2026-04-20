@@ -52,25 +52,25 @@ public class BankDescriptor {
         return new AccessLock((int)(storage.get(offset) & 0_777777));
     }
 
-    public static long getIndirectLevelAndBDI(
+    public static int getIndirectLevelAndBDI(
         final ArraySlice storage,
         final int offset
     ) {
-        return (storage.get(offset + 1) >> 18) & 0_777777L;
+        return (int)(storage.get(offset + 1) >> 18) & 0_777777;
     }
 
-    public static long getLowerLimit(
+    public static int getLowerLimit(
         final ArraySlice storage,
         final int offset
     ) {
-        return (storage.get(offset + 1) >> 27) & 0777L;
+        return (int)(storage.get(offset + 1) >> 27) & 0777;
     }
 
-    public static long getUpperLimit(
+    public static int getUpperLimit(
         final ArraySlice storage,
         final int offset
     ) {
-        return storage.get(offset + 1) & 0_777777L;
+        return (int)storage.get(offset + 1) & 0_777777;
     }
 
     public static AbsoluteAddress getBaseAddress(
@@ -87,11 +87,11 @@ public class BankDescriptor {
         return storage.get(offset + 3);
     }
 
-    public static long getDisplacement(
+    public static int getDisplacement(
         final ArraySlice storage,
         final int offset
     ) {
-        return (storage.get(offset + 4) >> 18) & 0_077777L;
+        return (int)(storage.get(offset + 4) >> 18) & 0_077777;
     }
 
     public static boolean isInactive(
@@ -109,11 +109,11 @@ public class BankDescriptor {
     private boolean _generalFault;
     private boolean _largeBank;
     private final AccessLock _accessLock;
-    private long _indirectLevelAndBDI;
-    private long _lowerLimit;
-    private long _upperLimit;
+    private int _indirectLevelAndBDI;
+    private int _lowerLimit;
+    private int _upperLimit;
     private boolean _inactive;
-    private long _displacement;
+    private int _displacement;
     private final AbsoluteAddress _baseAddress;
     private long _inactiveQBDListNextPointer;
 
@@ -183,11 +183,11 @@ public class BankDescriptor {
             }
         }
 
-        _lowerLimit = ll;
-        _upperLimit = ul;
+        _lowerLimit = (int)ll;
+        _upperLimit = (int)ul;
         _inactive = false;
         _inactiveQBDListNextPointer = 0;
-        _displacement = displacement;
+        _displacement = (int)displacement;
     }
 
     /**
@@ -209,13 +209,13 @@ public class BankDescriptor {
         _accessLock = new AccessLock(buffer[0] & 0x3FFFF);
 
         if (_bankType == BankType.Indirect) {
-            _indirectLevelAndBDI = (buffer[1] >> 18) & 0_777777L;
+            _indirectLevelAndBDI = (int)(buffer[1] >> 18) & 0_777777;
         } else {
-            _lowerLimit = (buffer[1] >> 27) & 0777L;
-            _upperLimit = buffer[1] & 0_777777L;
+            _lowerLimit = (int)(buffer[1] >> 27) & 0777;
+            _upperLimit = (int)buffer[1] & 0_777777;
         }
 
-        _displacement = (buffer[4] >> 18) & 077777L;
+        _displacement = (int)(buffer[4] >> 18) & 077777;
         _inactive = (buffer[4] & 0_400000_000000L) != 0;
 
         _inactiveQBDListNextPointer = buffer[3];
@@ -245,11 +245,11 @@ public class BankDescriptor {
     public BankDescriptor setSpecialAccessPermissions(final AccessPermissions perms) { _specialAccessPermissions.set(perms); return this; }
     public BankDescriptor setGeneralFault(final boolean flag) { _generalFault = flag; return this; }
     public BankDescriptor setLargeBank(final boolean flag) { _largeBank = flag; return this; }
-    public BankDescriptor setIndirectLevelAndBDI(final long value) { _indirectLevelAndBDI = value; return this; }
-    public BankDescriptor setLowerLimit(final long value) { _lowerLimit = value; return this; }
-    public BankDescriptor setUpperLimit(final long value) { _upperLimit = value; return this; }
+    public BankDescriptor setIndirectLevelAndBDI(final int value) { _indirectLevelAndBDI = value; return this; }
+    public BankDescriptor setLowerLimit(final int value) { _lowerLimit = value; return this; }
+    public BankDescriptor setUpperLimit(final int value) { _upperLimit = value; return this; }
     public BankDescriptor setInactive(final boolean flag) { _inactive = flag; return this; }
-    public BankDescriptor setDisplacement(final long value) { _displacement = value; return this; }
+    public BankDescriptor setDisplacement(final int value) { _displacement = value; return this; }
     public BankDescriptor setInactiveQBDListNextPointer(final long value) { _inactiveQBDListNextPointer = value; return this; }
 
     /**
@@ -275,9 +275,9 @@ public class BankDescriptor {
 
         long value1 = 0;
         if (_bankType == BankType.Indirect) {
-            value1 |= _indirectLevelAndBDI << 18;
+            value1 |= (long)_indirectLevelAndBDI << 18;
         } else {
-            value1 |= _lowerLimit << 27;
+            value1 |= (long)_lowerLimit << 27;
             value1 |= _upperLimit;
         }
 
