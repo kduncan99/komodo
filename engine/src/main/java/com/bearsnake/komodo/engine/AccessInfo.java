@@ -29,15 +29,15 @@ public class AccessInfo {
         short ring,
         int domain
     ) {
-        _ring = ring;
-        _domain = domain;
+        _ring = (short) (ring & 03);
+        _domain = domain & 0_177777;
     }
 
     public AccessInfo(
         final long value
     ) {
-        _ring = (short)((value >> 16) & 0x3);
-        _domain = (int)(value & 0xFFFF);
+        _ring = (short)((value >> 16) & 03);
+        _domain = (int)(value & 0_177777);
     }
 
     /**
@@ -46,8 +46,8 @@ public class AccessInfo {
      *      bits 0-15:  domain
      */
     public void fromComposite(final long value) {
-        _ring = (short)((value >> 16) & 0x3);
-        _domain = (int)(value & 0xFFFF);
+        _ring = (short)((value >> 16) & 03);
+        _domain = (int)(value & 0_177777);
     }
 
     public int getDomain() { return _domain; }
