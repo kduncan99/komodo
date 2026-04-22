@@ -7,6 +7,7 @@ package com.bearsnake.komodo.engine.functions.addrSpace;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
+import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
@@ -23,7 +24,7 @@ public class LBUFunction extends Function {
         setBasicModeFunctionCode(new FunctionCode(0_75).setJField(0_00).setProcessorPrivilege(0));
         setExtendedModeFunctionCode(new FunctionCode(0_75).setJField(0_00));
 
-        setAFieldSemantics(AFieldSemantics.B_REGISTER);
+        setAFieldSemantics(AFieldSemantics.B_REGISTER_USER);
         setImmediateMode(false);
         setIsGRS(true);
     }
@@ -32,6 +33,13 @@ public class LBUFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        return true;//TODO
+        var ci = engine.getCurrentInstruction();
+        if (ci.getA() < 2) {
+            throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidBaseRegister);
+        }
+
+        // TODO
+
+        return true;
     }
 }

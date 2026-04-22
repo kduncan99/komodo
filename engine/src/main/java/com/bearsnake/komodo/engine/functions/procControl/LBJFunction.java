@@ -5,7 +5,9 @@
 package com.bearsnake.komodo.engine.functions.procControl;
 
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
+import com.bearsnake.komodo.engine.interrupts.AddressingExceptionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
@@ -27,6 +29,11 @@ public class LBJFunction extends LXJFunction {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
+        var operand = (int)engine.getJumpOperand();
+        if (engine.spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
+            return false;
+        }
+
         var ci = engine.getCurrentInstruction();
         var xa = ci.getA();
         if (xa == 0) {
@@ -35,22 +42,7 @@ public class LBJFunction extends LXJFunction {
         var xaReg = engine.getExecOrUserARegister(xa);
         var xaValue = xaReg.getW();
 
-        var e = xaValue >> 35;
-        var bdr = (xaValue >> 33) & 03;
-        var ls = (xaValue >> 32) & 01;
-        var is = (xaValue >> 30) & 03;
-        var bdi = (xaValue >> 18) & 0_077777;
-
-        // docs say xa.e and xa.bdi are ignored when is==2 (for RTN)...
-        // TODO should we also assume xa.ls is ignored?
-        var level = switch ((int) ((e << 1) | ls)) {
-            case 0b00 -> 4;
-            case 0b01 -> 6;
-            case 0b10 -> 2;
-            case 0b11 -> 0;
-            default -> throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidLinkageRegister);
-        };
-
-        return true;//TODO
+        var baseRegisterNumber = (short) ((xaValue >> 33) & 03);
+        return executeCommon(engine, operand, xaReg, baseRegisterNumber);
     }
 }

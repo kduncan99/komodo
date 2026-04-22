@@ -4,10 +4,16 @@
 
 package com.bearsnake.komodo.engine;
 
+import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionTable;
+import com.bearsnake.komodo.engine.functions.actControl.LAEFunction;
+import com.bearsnake.komodo.engine.functions.actControl.URFunction;
+import com.bearsnake.komodo.engine.functions.addrSpace.LBEFunction;
+import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
+import com.bearsnake.komodo.engine.functions.procControl.*;
 import com.bearsnake.komodo.engine.functions.special.EXFunction;
 import com.bearsnake.komodo.engine.functions.special.EXRFunction;
 import com.bearsnake.komodo.engine.interrupts.*;
@@ -74,7 +80,8 @@ public class Engine {
         _storageManager = storageManager;
 
         _random.setSeed(System.currentTimeMillis());
-        IntStream.range(0, 32).forEach(bx -> _baseRegisters[bx] = BaseRegister.createVoid());
+        IntStream.range(0, 32)
+                 .forEach(bx -> _baseRegisters[bx] = BaseRegister.createVoid());
 
         spClearPreventProgramCounterUpdate();
         spClearBasicModeCachedBaseRegisterIndex();
@@ -87,7 +94,7 @@ public class Engine {
 
     /**
      * This constructor is for use by external operating systems.
-     * @param storageManager storage manager for this engine. Could be the external operating system.
+     * @param storageManager   storage manager for this engine. Could be the external operating system.
      * @param interruptHandler interrupt handler for this engine. This is part of the external operating system.
      */
     public Engine(
@@ -162,8 +169,8 @@ public class Engine {
     /**
      * Process an interrupt for internal operating system mode.
      * This boils down to the following steps:
-     *  a) preserve the current ASP (in case we want to come back to it)
-     *  b) set up addressing structures to refer to the appropriate interrupt handler
+     *      preserve the current ASP (in case we want to come back to it)
+     *      set up addressing structures to refer to the appropriate interrupt handler
      * @param interrupt the interrupt to process
      */
     private void processInterrupt(
@@ -196,10 +203,10 @@ public class Engine {
         stackPtr.setXM(newPtr);
 
         var stack = bReg.getStorage();
-        var stackOffset = (int)(stackPtr.getXM() - bReg.getLowerLimitNormalized());
+        var stackOffset = (int) (stackPtr.getXM() - bReg.getLowerLimitNormalized());
         stack.set(stackOffset, _activityStatePacket.getProgramAddressRegister().getCompositeValue());
         stack.set(stackOffset + 1, _activityStatePacket.getDesignatorRegister().getCompositeValue());
-        stack.set(stackOffset + 2, (((long)interrupt.getShortStatusField()) << 30)
+        stack.set(stackOffset + 2, (((long) interrupt.getShortStatusField()) << 30)
                                    | (_activityStatePacket.getIndicatorKeyRegister().getCompositeValue() & 0_077777));
         stack.set(stackOffset + 3, _activityStatePacket.getQuantumTimer());
         stack.set(stackOffset + 4, _activityStatePacket.getCurrentInstruction().getW());
@@ -213,9 +220,9 @@ public class Engine {
 
         // Find interrupt vector for this interrupt class
         var intVector = _baseRegisters[16].getStorage().get(interrupt.getInterruptClass().getCode());
-        var sourceLevel = (short)(intVector >> 33);
-        var sourceBDIndex = (int)(intVector >> 18) & 0_077777;
-        var sourceOffset = (int)intVector & 0_777777;
+        var sourceLevel = (short) (intVector >> 33);
+        var sourceBDIndex = (int) (intVector >> 18) & 0_077777;
+        var sourceOffset = (int) intVector & 0_777777;
         if ((sourceLevel == 0) && (sourceBDIndex < 32)) {
             halt(HaltCode.INVALID_INTERRUPT_VECTOR);
             return;
@@ -365,10 +372,10 @@ public class Engine {
     // this value is a reference to our static instance of that function class.
     private static final int SPX_CURRENT_FUNCTION = 046;
 
-    public void spClearCurrentFunction() { spSetCurrentFunction(null); }
+    public void spClearCurrentFunction() {spSetCurrentFunction(null);}
 
     public Function spGetCurrentFunction() {
-        var w = (int)_generalRegisterSet.getRegister(SPX_CURRENT_FUNCTION).getW();
+        var w = (int) _generalRegisterSet.getRegister(SPX_CURRENT_FUNCTION).getW();
         if (Word36.isNegative(w)) {
             return null;
         } else {
@@ -550,13 +557,15 @@ public class Engine {
     private boolean isReadAllowed(
         final BaseRegister bReg
     ) {
-        return bReg.getEffectivePermissions(_activityStatePacket.getIndicatorKeyRegister().getAccessKey()).canRead();
+        return bReg.getEffectivePermissions(_activityStatePacket.getIndicatorKeyRegister()
+                                                                .getAccessKey())
+                   .canRead();
     }
 
     /**
      * Checks the given offset within the constraints of the given base register,
      * returning true if the offset is within those constraints, else false.
-     * @param bReg base register of interest
+     * @param bReg   base register of interest
      * @param offset offset from start of bank
      */
     private boolean isWithinLimits(
@@ -599,7 +608,10 @@ public class Engine {
         _activityStatePacket.getCurrentInstruction().setW(0);
         _activityStatePacket.getDesignatorRegister().setWord36(0);
         _activityStatePacket.getIndicatorKeyRegister().setWord36(0);
-        _activityStatePacket.getProgramAddressRegister().setProgramCounter(0).setBankLevel((short)0).setBankDescriptorIndex(0);
+        _activityStatePacket.getProgramAddressRegister()
+                            .setProgramCounter(0)
+                            .setBankLevel((short) 0)
+                            .setBankDescriptorIndex(0);
         clearJumpHistoryTable();
 
         spClearPreventProgramCounterUpdate();
@@ -795,9 +807,9 @@ public class Engine {
 
     /**
      * Extracts a partial word from the given source value, based on the partial word indicator and quarter word mode.
-     * @param source the source value to extract from
+     * @param source               the source value to extract from
      * @param partialWordIndicator the partial word indicator, indicating which part of the word to extract
-     * @param quarterWordMode whether to extract a quarter word (18 bits) or a half word (36 bits)
+     * @param quarterWordMode      whether to extract a quarter word (18 bits) or a half word (36 bits)
      * @return the extracted partial word
      */
     public static long extractPartialWord(
@@ -870,7 +882,7 @@ public class Engine {
     /**
      * Finds the absolute address of the bank descriptor corresponding to the given level and BDI
      * in the context of the current base register set.
-     * @param bankLevel the bank level
+     * @param bankLevel           the bank level
      * @param bankDescriptorIndex the bank descriptor index
      * @return the absolute address of the bank descriptor
      */
@@ -909,7 +921,7 @@ public class Engine {
      * Takes a relative address and determines which (if any) of the basic mode banks
      * currently based on BDR12-15 is to be selected for that address.
      * @param relativeAddress relative address to be checked
-     * @param isFetch true if this is part of a fetch operation
+     * @param isFetch         true if this is part of a fetch operation
      * @return index of chosen base register
      * @throws ReferenceViolationInterrupt if the address is not within any based bank
      */
@@ -1019,7 +1031,7 @@ public class Engine {
     /**
      * For use by various (likely external) callers.
      * Because the caller is asking for a register by its GRS index, we have to ensure the access is allowed.
-     * @param registerIndex the GRS index of the register to be returned
+     * @param registerIndex      the GRS index of the register to be returned
      * @param writeAccessAllowed whether the caller is requesting write access (as opposed to read access)
      * @return the requested register
      * @throws ReferenceViolationInterrupt if access is not allowed
@@ -1028,7 +1040,8 @@ public class Engine {
         final int registerIndex,
         final boolean writeAccessAllowed
     ) throws ReferenceViolationInterrupt {
-        if (!GeneralRegisterSet.isAccessAllowed(registerIndex, _activityStatePacket.getDesignatorRegister().getProcessorPrivilege(), writeAccessAllowed)) {
+        if (!GeneralRegisterSet.isAccessAllowed(registerIndex,
+                                                _activityStatePacket.getDesignatorRegister().getProcessorPrivilege(), writeAccessAllowed)) {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
         }
         return _generalRegisterSet.getRegister(registerIndex);
@@ -1089,10 +1102,10 @@ public class Engine {
 
     /**
      * Injects a partial word value into the given source value, based on the partial word indicator and quarter word mode.
-     * @param source the source value to inject into
+     * @param source               the source value to inject into
      * @param partialWordIndicator the partial word indicator
-     * @param partialWordValue the partial word value to inject
-     * @param quarterWordMode whether quarter word mode is enabled
+     * @param partialWordValue     the partial word value to inject
+     * @param quarterWordMode      whether quarter word mode is enabled
      * @return the modified source value with the injected partial word
      */
     public static long injectPartialWord(
@@ -1135,11 +1148,11 @@ public class Engine {
 
     /**
      * Loads a bank register with the bank indicated by the given level/BDI.
-     * @param baseRegisterIndex the index of the bank register to be loaded
-     * @param bankLevel the level of the bank to be loaded
+     * @param baseRegisterIndex   the index of the bank register to be loaded
+     * @param bankLevel           the level of the bank to be loaded
      * @param bankDescriptorIndex the index of the bank descriptor
-     * @param subsetOffset the offset within the bank to be loaded (for subsetting, and only for B1-B15)
-     * @throws HardwareCheckInterrupt if the base register index is invalid
+     * @param subsetOffset        the offset within the bank to be loaded (for subsetting, and only for B1-B15)
+     * @throws HardwareCheckInterrupt       if the base register index is invalid
      * @throws AddressingExceptionInterrupt if the bank level or BDI is invalid
      */
     public void loadBank(
@@ -1176,11 +1189,11 @@ public class Engine {
 
     /**
      * Loads a bank register with the bank descriptor at the given absolute address.
-     * @param baseRegisterIndex the index of the bank register to be loaded
-     * @param address the absolute address of the bank descriptor to be loaded
-     * @param bankLevel the level of the bank to be loaded (needed for loading PAR or ABTE)
+     * @param baseRegisterIndex   the index of the bank register to be loaded
+     * @param address             the absolute address of the bank descriptor to be loaded
+     * @param bankLevel           the level of the bank to be loaded (needed for loading PAR or ABTE)
      * @param bankDescriptorIndex the index of the bank descriptor (needed for loading PAR or ABTE)
-     * @param subsetOffset the offset within the bank to be loaded (for subsetting, and only for B1-B15)
+     * @param subsetOffset        the offset within the bank to be loaded (for subsetting, and only for B1-B15)
      */
     public void loadBank(
         final int baseRegisterIndex,
@@ -1210,11 +1223,11 @@ public class Engine {
         if (baseRegisterIndex == 0) {
             // Update hard-held PAR
             _activityStatePacket.getProgramAddressRegister()
-                                .setBankLevel((short)bankLevel)
+                                .setBankLevel((short) bankLevel)
                                 .setBankDescriptorIndex(bankDescriptorIndex);
         } else if (baseRegisterIndex < 16) {
             _activeBaseTable.getEntry(baseRegisterIndex)
-                            .setBankLevel((short)bankLevel)
+                            .setBankLevel((short) bankLevel)
                             .setBankDescriptorIndex(bankDescriptorIndex)
                             .setSubsetSpecification(subsetOffset);
         }
@@ -1227,9 +1240,9 @@ public class Engine {
      * Wrapper for the two methods which provide this service for basic and extended modes, respectively.
      * When it returns true, the address is fully resolved. This will usually occur after a single invocation.
      * However, if indirect addressing is being used, it may be necessary to call this method multiple times.
-     * @param useHIU indicates an Extended Mode Jump instruction which uses the entire U (or HIU) fields for the relative address.
-     *             basic mode always uses the u field.
-     * @param grsCheck indicates whether to perform GRS access checks
+     * @param useHIU             indicates an Extended Mode Jump instruction which uses the entire U (or HIU) fields for the relative address.
+     *                           basic mode always uses the u field.
+     * @param grsCheck           indicates whether to perform GRS access checks
      * @param ignoreAccessChecks indicates whether to ignore access checks during address resolution (for ignoreOperand())
      * @return true if the address is fully resolved, false otherwise
      */
@@ -1279,7 +1292,7 @@ public class Engine {
             } else {
                 addend = xReg.getSignedXM();
             }
-            relAddr = (int)Word36.addSimple(relAddr, addend);
+            relAddr = (int) Word36.addSimple(relAddr, addend);
             incrementIndexRegisterInF0();
         }
 
@@ -1330,9 +1343,9 @@ public class Engine {
      *      _operandRelativeAddress to the calculated relative address
      *      _operandBaseRegisterIndex to indicate the containing base register
      *      _instructionPoint to MID_INSTRUCTION.
-     * @param useU indicates an Extended Mode Jump instruction which uses the entire U (or HIU) fields for the relative address.
-     *             basic mode always uses the u field.
-     * @param grsCheck indicates whether to perform GRS access checks
+     * @param useU               indicates an Extended Mode Jump instruction which uses the entire U (or HIU) fields for the relative address.
+     *                           basic mode always uses the u field.
+     * @param grsCheck           indicates whether to perform GRS access checks
      * @param ignoreAccessChecks indicates whether to ignore access checks during address resolution (for ignoreOperand())
      */
     private void resolveExtendedModeRelativeAddress(
@@ -1353,7 +1366,7 @@ public class Engine {
             } else {
                 addend = xReg.getSignedXM();
             }
-            relAddr = (int)Word36.addSimple(relAddr, addend);
+            relAddr = (int) Word36.addSimple(relAddr, addend);
             incrementIndexRegisterInF0();
         }
 
@@ -1389,7 +1402,7 @@ public class Engine {
      * We presume we are retrieving from GRS or from storage - i.e., NOT allowing immediate addressing.
      * Also, we presume that we are doing full-word transfers - not partial word.
      * @param grsCheck indicates we should check U to see if it is a GRS location
-     * @param count number of consecutive words to be returned
+     * @param count    number of consecutive words to be returned
      * @return an array containing the requested operands, or null if we are in the middle of indirect address resolution.
      */
     public long[] getConsecutiveOperands(
@@ -1409,7 +1422,9 @@ public class Engine {
                 throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.GRSViolation, false);
             }
             for (int ox = 0; ox < count; ox++) {
-                if (!GeneralRegisterSet.isAccessAllowed(grsIndex, _activityStatePacket.getDesignatorRegister().getProcessorPrivilege(), false)) {
+                if (!GeneralRegisterSet.isAccessAllowed(grsIndex,
+                                                        _activityStatePacket.getDesignatorRegister().getProcessorPrivilege(),
+                                                        false)) {
                     throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.ReadAccessViolation, true);
                 }
                 result[ox] = _generalRegisterSet.getRegister(grsIndex).getW();
@@ -1442,7 +1457,7 @@ public class Engine {
      * Load the value indicated in F0 as follows:
      * ---
      * For Processor Privilege 0,1
-     * 	value is 24 bits for DR.11 (kexec 24bit indexing enabled) true, else 18 bits
+     *  value is 24 bits for DR.11 (exec 24bit indexing enabled) true, else 18 bits
      * For Processor Privilege 2,3
      * 	value is 24 bits for FO.i set, else 18 bits
      * ---
@@ -1584,11 +1599,11 @@ public class Engine {
      * This is the general case of retrieving an operand, including all forms of addressing
      * and partial word access. Instructions which use the j-field as part of the function code will likely set
      * allowImmediate and allowPartialWordTransfer false.
-     * @param grsDestination true if we are going to put this value into a GRS location
-     * @param grsCheck true if we should consider GRS for addresses < 0200 for our source
-     * @param allowImmediate true if we should allow immediate addressing
+     * @param grsDestination           true if we are going to put this value into a GRS location
+     * @param grsCheck                 true if we should consider GRS for addresses < 0200 for our source
+     * @param allowImmediate           true if we should allow immediate addressing
      * @param allowPartialWordTransfer true if we should allow partial word access
-     * @param lockStorage true if we should lock the storage location
+     * @param lockStorage              true if we should lock the storage location
      * @return the operand
      * @throws MachineInterrupt in any case where an interrupt is generated
      */
@@ -1661,8 +1676,8 @@ public class Engine {
      * or GRS (full-words only) should follow the alogirhtm of invoking resolveRelativeAddress() until it returns true,
      * and only afterward should they develop the value to be stored, invoking *this* method to accomplish that store.
      * @param operands values to be stored
-     * @param offset starting index in the operands array
-     * @param count number of operands to store from the array
+     * @param offset   starting index in the operands array
+     * @param count    number of operands to store from the array
      * @throws MachineInterrupt in any case where an interrupt is generated
      */
     public void storeConsecutiveOperandsToCachedAddress(
@@ -1714,8 +1729,8 @@ public class Engine {
      * All code (primarily function implementations) which need to store values to storage (partial words or otherwise)
      * or GRS (full-words only) should follow the alogirhtm of invoking resolveRelativeAddress() until it returns true,
      * and only afterward should they develop the value to be stored, invoking *this* method to accomplish that store.
-     * @param operand the value to store
-     * @param sourceIsGRS true if the source of the operand is the GRS (prevents partial word GRS-to-GRS transfers)
+     * @param operand              the value to store
+     * @param sourceIsGRS          true if the source of the operand is the GRS (prevents partial word GRS-to-GRS transfers)
      * @param partialWordIndicator the partial word indicator. Ignored for GRS locations.
      * @param forceQuarterWordMode if true, force quarter-word mode for this operation
      * @throws ReferenceViolationInterrupt if the operation violates access limits or accessibility
@@ -1782,20 +1797,20 @@ public class Engine {
         if (bReg.isVoid()) {
             throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
                                                                 RCS_BASE_REGISTER,
-                                                                (int)newPtr);
+                                                                (int) newPtr);
         }
         try {
             bReg.checkAccessLimits(newPtr, false);
         } catch (ReferenceViolationInterrupt e) {
             throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
                                                                 RCS_BASE_REGISTER,
-                                                                (int)newPtr);
+                                                                (int) newPtr);
         }
 
         stackPtr.setXM(newPtr);
         var storage = bReg.getStorage();
-        var frameOffset = (int)(newPtr - bReg.getLowerLimitNormalized());
-        var w0 = ((long)(bankLevel & 07) << 33) | ((long)(bankDescriptorIndex & 0_077777) << 18) | (offset & 0_777777);
+        var frameOffset = (int) (newPtr - bReg.getLowerLimitNormalized());
+        var w0 = ((long) (bankLevel & 07) << 33) | ((long) (bankDescriptorIndex & 0_077777) << 18) | (offset & 0_777777);
         var w1 = ((bankDescriptorRegister & 03) << 24) | ((db12To17 & 0_77) << 18) | accessKey.toComposite();
         storage.set(frameOffset, w0);
         storage.set(frameOffset + 1, w1);
@@ -1815,21 +1830,631 @@ public class Engine {
         if (bReg.isVoid()) {
             throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow,
                                                                 RCS_BASE_REGISTER,
-                                                                (int)oldPtr);
+                                                                (int) oldPtr);
         }
         try {
             bReg.checkAccessLimits(oldPtr, false);
         } catch (ReferenceViolationInterrupt e) {
             throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow,
                                                                 RCS_BASE_REGISTER,
-                                                                (int)oldPtr);
+                                                                (int) oldPtr);
         }
 
-        var offset = (int)(oldPtr - bReg.getLowerLimitNormalized());
+        var offset = (int) (oldPtr - bReg.getLowerLimitNormalized());
         frameContent[0] = bReg.getStorage().get(offset);
         frameContent[1] = bReg.getStorage().get(offset + 1);
 
         var newPtr = stackPtr.getXM() + RCS_FRAME_SIZE;
         stackPtr.setXM(newPtr);
     }
+
+    // -----------------------------------------------------------------------------------------------------------------------------
+    // Bank Manipulation algorithm
+
+    // member things for communicating between sub-functions for bank manipulation
+
+    private boolean _bamIsCALL;
+    private boolean _bamIsGOTO;
+    private boolean _bamIsRTN;
+    private boolean _bamIsUR;
+
+    private boolean _bamIsLAE;
+    private boolean _bamIsLBE;
+    private boolean _bamIsLBU;
+
+    private boolean _bamIsLBJ;
+    private boolean _bamIsLDJ;
+    private boolean _bamIsLIJ;
+    private boolean _bamIsLxJ;
+    private boolean _bamIsLxJRTN;
+
+    private boolean _bamIsInterrupt;
+    private boolean _bamIsLoad;
+    private boolean _bamIsTransfer;
+
+    private enum TransferMode {
+        BM_TO_BM,
+        BM_TO_EM,
+        EM_TO_BM,
+        EM_TO_EM;
+
+        static TransferMode fromFlags(
+            final boolean sourceIsBasic,
+            final boolean destinationIsBasic
+        ) {
+            if (sourceIsBasic) {
+                if (destinationIsBasic) {
+                    return BM_TO_BM;
+                } else {
+                    return BM_TO_EM;
+                }
+            } else {
+                if (destinationIsBasic) {
+                    return EM_TO_BM;
+                } else {
+                    return EM_TO_EM;
+                }
+            }
+        }
+    }
+
+    private boolean _bamIsCurrentlyBasicMode;
+    private TransferMode _bamTransferMode;
+
+    private short _bamPriorBankLevel;
+    private int _bamPriorBankDescriptorIndex;
+
+    private final long[] _bamRcsWords = new long[2];
+    private short _bamRcsBaseRegisterNumber;
+    private int _bamRcsDB12to17;
+    private final AccessKey _bamRcsAccessKey = new AccessKey();
+
+    private short _bamTargetBankLevel;
+    private int _bamTargetBankDescriptorIndex;
+    private int _bamTargetOffset;
+    private boolean _bamTargetIsVoid;
+
+    private long _bamTargetBDAddress;
+    private ArraySlice _bamTargetBDStorage;
+    private int _bamTargetBDOffset;
+    private BankType _bamTargetBankType;
+    private boolean _bamProcessIndirect;
+    private boolean _bamProcessGate;
+
+    private ArraySlice _bamGateStorage;
+    private int _bamGateOffset;
+
+    private short _bamBaseRegisterNumber;
+
+    /**
+     * Handles bank loading/switching/transfer etc for the following instructions:
+     * CALL, GOTO, RTN, UR
+     * LBJ, LDJ, LIJ (collectively referred to as LxJ)
+     * LBU, LBE, LAE
+     * Interrupt processing (no particular instruction)
+     * This is one mother of a function, and is therefore broken up into lots of smaller subfunctions.
+     *
+     * @param function               the function which is being executed - null if we are handling interrupt processing
+     * @param interfaceSpec          the interface specification for LxJ functions
+     * @param baseRegisterNumber     the base register number to be loaded (LxJ EM->EM, LBU, LBE)
+     * @param lxjBankLevel           the bank level to be loaded for LxJ functions
+     * @param lxJBankDescriptorIndex the bank descriptor index to be loaded for LxJ functions
+     * @param operand                the operand for the instruction, or the interrupt vector for an interrupt
+     * @param operands               alternate operands (such as from UR)
+     */
+    public void bankManipulation(
+        final Function function,
+        final short interfaceSpec,
+        final short baseRegisterNumber,
+        final short lxjBankLevel,
+        final int lxJBankDescriptorIndex,
+        final long operand,
+        final long[] operands
+    ) throws MachineInterrupt {
+        bankManipulationSetup(function, interfaceSpec);
+
+        // Step 1 is handled by the individual LBU or LxJ function.
+
+        bankManipulationStep2(baseRegisterNumber);
+        bankManipulationStep2a();
+        bankManipulationStep3(lxjBankLevel, lxJBankDescriptorIndex, operand, operands);
+        bankManipulationStep4();
+        bankManipulationStep5();
+        bankManipulationStep6();
+
+        if (!_bamTargetIsVoid) {
+            bankManipulationStep7(baseRegisterNumber);
+        }
+
+        if (_bamProcessIndirect) {
+            bankManipulationStep8(baseRegisterNumber);
+        }
+
+        // Step 9 - gate bank processing
+        if (_bamProcessGate) {
+            bankManipulationStep9(interfaceSpec);
+        }
+
+        // At this point (assuming we are not loading a void bank) we will know the transfer mode
+        if (!_bamTargetIsVoid && (_bamTransferMode == null)) {
+            _bamTransferMode = TransferMode.fromFlags(_bamIsCurrentlyBasicMode, (_bamTargetBankType == BankType.BasicMode));
+        }
+
+        bankManipulationStep10(baseRegisterNumber);
+        bankManipulationStep11();
+
+        // Step 12 - allocate and populate and RCS frame
+        // TODO
+
+        // Step 13 - Write X(a)
+        // TODO
+
+        // Step 14 - Write user X(0)
+        // TODO
+
+        // Step 15 - Transfer gate fields
+        if (_bamProcessGate) {
+            // TODO
+        }
+
+        // Step 16 - Hard-held ASP update
+        // TODO
+
+        // Step 17 - More hard-held ASP update
+        // TODO
+
+        // Step 18 - Update ABTE or Hard-held L,BDI
+        // TODO
+
+        // Step 19 - Load base register (finally)
+        // TODO
+
+        // Step 20 - Toggle DB31 designator register bit for Basic Mode
+        // TODO
+
+        // Step 21 - Exception checking
+        // TODO
+    }
+
+    private void bankManipulationSetup(
+        final Function function,
+        final short interfaceSpec
+    ) {
+        _bamIsCALL = function instanceof CALLFunction;
+        _bamIsGOTO = function instanceof GOTOFunction;
+        _bamIsRTN = function instanceof RTNFunction;
+        _bamIsUR = function instanceof URFunction;
+
+        _bamIsLAE = function instanceof LAEFunction;
+        _bamIsLBE = function instanceof LBEFunction;
+        _bamIsLBU = function instanceof LBUFunction;
+
+        _bamIsLBJ = function instanceof LBJFunction;
+        _bamIsLDJ = function instanceof LDJFunction;
+        _bamIsLIJ = function instanceof LIJFunction;
+        _bamIsLxJ = _bamIsLBJ || _bamIsLDJ || _bamIsLIJ;
+        _bamIsLxJRTN = _bamIsLxJ && (interfaceSpec == 2);
+
+        _bamIsInterrupt = function == null;
+        _bamIsLoad = _bamIsLAE || _bamIsLBE || _bamIsLBU;
+        _bamIsTransfer = _bamIsCALL || _bamIsGOTO || _bamIsRTN || _bamIsUR || _bamIsLxJ;
+
+        _bamIsCurrentlyBasicMode = _activityStatePacket.getDesignatorRegister().isBasicModeEnabled();
+        _bamTransferMode = null; // not known at this point
+
+        _bamPriorBankLevel = 0;
+        _bamPriorBankDescriptorIndex = 0;
+
+        _bamRcsWords[0] = 0;
+        _bamRcsWords[1] = 0;
+        _bamRcsBaseRegisterNumber = 0;
+        _bamRcsDB12to17 = 0;
+        _bamRcsAccessKey.setRing((short) 0).setDomain(0);
+
+        _bamTargetBankLevel = 0;
+        _bamTargetBankDescriptorIndex = 0;
+        _bamTargetOffset = 0;
+        _bamTargetIsVoid = false;
+
+        _bamTargetBDAddress = 0;
+        _bamTargetBDStorage = null;
+        _bamTargetBDOffset = 0;
+        _bamTargetBankType = null;
+        _bamProcessIndirect = false;
+        _bamProcessGate = false;
+
+        _bamGateStorage = null;
+        _bamGateOffset = 0;
+
+        _bamBaseRegisterNumber = 0;
+    }
+
+    // Step 2 - prior L,BDI
+    //  For CALL, use hard-held L,BDI (for B0) - for LxJ (excepting LxJ/RTN) use L,BDI from appropriate ABTE.
+    private void bankManipulationStep2(
+        final int baseRegisterNumber
+    ) {
+        if (_bamIsCALL) {
+            _bamPriorBankLevel = _activityStatePacket.getProgramAddressRegister().getBankLevel();
+            _bamPriorBankDescriptorIndex = _activityStatePacket.getProgramAddressRegister().getBankDescriptorIndex();
+        } else if ((_bamIsLxJ) && (baseRegisterNumber != 0)) {
+            var abte = _activeBaseTable.getEntry(baseRegisterNumber);
+            _bamPriorBankLevel = abte.getBankLevel();
+            _bamPriorBankDescriptorIndex = abte.getBankDescriptorIndex();
+        }
+    }
+
+    // Step 2a - for certain functions, pop an RCS frame into rcsWords.
+    //  At this point, we know what flavor of transfer we are doing --
+    //  apart from this, we won't know until we find the final target bank.
+    //  We also know a couple of other things which we'll need later.
+    private void bankManipulationStep2a() throws RCSGenericStackUnderflowOverflowInterrupt {
+        if (_bamIsRTN || _bamIsLxJRTN) {
+            releaseRCSFrame(_bamRcsWords);
+            var rcsB = _bamRcsWords[1] >> 24;
+            _bamRcsDB12to17 = (int) (_bamRcsWords[1] >> 18) & 077;
+            _bamRcsAccessKey.fromComposite(_bamRcsWords[1] & 0_777777);
+
+            var destIsBasic = (_bamRcsDB12to17 & 02) != 0;
+            if (destIsBasic) {
+                _bamRcsBaseRegisterNumber = (short) (rcsB + 12);
+            }
+            _bamTransferMode = TransferMode.fromFlags(_bamIsCurrentlyBasicMode, destIsBasic);
+        }
+    }
+
+    // Step 3 - determine initial target L,BDI and offset, and obtain RCS frame if appropriate.
+    //  Offset is jump destination for transfers, subsetting for loads.
+    private void bankManipulationStep3(
+        final short lxjBankLevel,
+        final int lxJBankDescriptorIndex,
+        final long operand,
+        final long[] operands
+    ) {
+        if (_bamIsLoad || _bamIsCALL || _bamIsGOTO || _bamIsInterrupt) {
+            _bamTargetBankLevel = (short) ((operand >> 33) & 07);
+            _bamTargetBankDescriptorIndex = (int) (operand >> 18) & 0_077777;
+            _bamTargetOffset = (int) operand & 0_777777;
+        } else if (_bamIsUR) {
+            // Get L,BDI from PAR.PC in the ASP at U.
+            // Coincidentally, this also (indirectly) tells us the transfer mode.
+            var par = operands[0];
+            _bamTargetBankLevel = (short) (par >> 33);
+            _bamTargetBankDescriptorIndex = (int) (par >> 18) & 0_077777;
+            _bamTargetOffset = (int) par & 0_777777;
+
+            var targetBM = (operands[1] & DesignatorRegister.MASK_BasicModeEnabled) != 0;
+            _bamTransferMode = TransferMode.fromFlags(_bamIsCurrentlyBasicMode, targetBM);
+        } else if (_bamIsRTN || _bamIsLxJRTN) {
+            _bamTargetBankLevel = (short) (_bamRcsWords[0] >> 33);
+            _bamTargetBankDescriptorIndex = (int) (_bamRcsWords[0] >> 18) & 0_077777;
+            _bamTargetOffset = (int) _bamRcsWords[0] & 0_777777;
+        } else {
+            _bamTargetBankLevel = lxjBankLevel;
+            _bamTargetBankDescriptorIndex = lxJBankDescriptorIndex;
+            _bamTargetOffset = (int) operand & 0_777777;
+        }
+    }
+
+    // Step 4 Valid L,BDI check
+    private void bankManipulationStep4(
+    ) throws AddressingExceptionInterrupt {
+        if ((_bamTargetBankLevel == 0) && (_bamTargetBankDescriptorIndex >= 1) && (_bamTargetBankDescriptorIndex <= 31)) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                   _bamTargetBankLevel,
+                                                   _bamTargetBankDescriptorIndex);
+        }
+    }
+
+    // Step 5 Void bank check
+    private void bankManipulationStep5(
+    ) throws AddressingExceptionInterrupt {
+        if ((_bamTargetBankLevel == 0) && (_bamTargetBankDescriptorIndex == 0)) {
+            if (_bamIsLoad
+                || (_bamIsLxJRTN && (_bamTransferMode == TransferMode.BM_TO_BM))
+                || (_bamIsRTN && (_bamTransferMode == TransferMode.EM_TO_BM))) {
+                _bamTargetIsVoid = true;
+            } else if (_bamIsUR && ((_bamTransferMode == TransferMode.BM_TO_BM) || (_bamTransferMode == TransferMode.EM_TO_BM))) {
+                _bamTargetIsVoid = true;
+            } else {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                       _bamTargetBankLevel,
+                                                       _bamTargetBankDescriptorIndex);
+            }
+        }
+    }
+
+    // Step 6 - get address of initial bank descriptor
+    private void bankManipulationStep6(
+    ) throws AddressingExceptionInterrupt,
+             HardwareCheckInterrupt {
+        if (!_bamTargetIsVoid) {
+            _bamTargetBDAddress = findBankDescriptorAbsoluteAddress(_bamTargetBankLevel, _bamTargetBankDescriptorIndex);
+            _bamTargetBDStorage = _storageManager.getSegment(AbsoluteAddress.getSegment(_bamTargetBDAddress));
+            _bamTargetBDOffset = AbsoluteAddress.getOffset(_bamTargetBDAddress);
+            _bamTargetBankType = BankDescriptor.getBankType(_bamTargetBDStorage, _bamTargetBDOffset);
+        }
+    }
+
+    // Step 7 - check target bank type for validity, and possible additional processing
+    private void bankManipulationStep7(
+        final int baseRegisterNumber
+    ) throws AddressingExceptionInterrupt {
+        var isException = false;
+        switch (_bamTargetBankType) {
+            case BasicMode -> {
+                if (_bamIsLBU) {
+                    if ((baseRegisterNumber >= 2) && (baseRegisterNumber <= 15)) {
+                        if (_activityStatePacket.getDesignatorRegister().getProcessorPrivilege() < 2) {
+                            // target bank is good (do nothing)
+                        } else {
+                            // Privilege > 1, BD.GAP.E or BD.SAP.E needs to be set
+                            var bdGap = BankDescriptor.getGeneralAccessPermissions(_bamTargetBDStorage, _bamTargetBDOffset);
+                            var bdSap = BankDescriptor.getSpecialAccessPermissions(_bamTargetBDStorage, _bamTargetBDOffset);
+                            if (bdGap.canEnter() || bdSap.canEnter()) {
+                                // target bank is good (do nothing)
+                            } else {
+                                // this is treated as void
+                                _bamTargetIsVoid = true;
+                            }
+                        }
+                    }
+                } else if (_bamIsCALL || _bamIsGOTO || _bamIsRTN) {
+                    if (_bamTransferMode == TransferMode.EM_TO_BM) {
+                        isException = true;
+                    }
+                    // RTN EMtoEM is okay, CALL/GOTO EMtoEM won't get here
+                } else if (_bamIsLxJ) {
+                    if (_bamIsLxJRTN && (_bamTransferMode == TransferMode.BM_TO_EM)) {
+                        isException = true;
+                    }
+                    // Anything is LxJ either can't get here, or is okay
+                } else if (_bamIsInterrupt) {
+                    isException = true;
+                }
+                // anything else is okay
+            }
+
+            case ExtendedMode -> { /* fall through - anything is either okay or not possible */ }
+
+            case Indirect -> {
+                if (_bamIsLBU || _bamIsLBE || _bamIsGOTO || _bamIsCALL) {
+                    _bamProcessIndirect = true;
+                } else if (_bamIsLAE || _bamIsRTN || _bamIsLxJRTN || _bamIsUR || _bamIsInterrupt) {
+                    isException = true;
+                } else if (_bamIsLxJ) {
+                    _bamProcessIndirect = true;
+                }
+            }
+
+            case Gate -> {
+                if (_bamIsLoad) {
+                    // target gate is okay
+                } else if (_bamIsGOTO || _bamIsCALL) {
+                    _bamProcessGate = true;
+                } else if (_bamIsRTN) {
+                    if (_bamTransferMode == TransferMode.EM_TO_EM) {
+                        isException = true;
+                    }
+                    // otherwise, it's okay
+                } else if (_bamIsLxJRTN) {
+                    if (_bamTransferMode == TransferMode.BM_TO_EM) {
+                        isException = true;
+                    }
+                    // otherwise, it's okay
+                } else if (_bamIsLxJ) {
+                    _bamProcessGate = true;
+                } else if (_bamIsUR || _bamIsInterrupt) {
+                    isException = true;
+                }
+            }
+
+            default -> isException = true;
+        }
+
+        if (isException) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                   _bamTargetBankLevel,
+                                                   _bamTargetBankDescriptorIndex);
+        }
+    }
+
+    // Step 8 - indirect bank processing
+    private void bankManipulationStep8(
+        final int baseRegisterNumber
+    ) throws AddressingExceptionInterrupt,
+             HardwareCheckInterrupt {
+        if (BankDescriptor.isGeneralFault(_bamTargetBDStorage, _bamTargetBDOffset)) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.GBitSetGate,
+                                                   _bamTargetBankLevel,
+                                                   _bamTargetBankDescriptorIndex);
+        }
+
+        var indirectLBDI = BankDescriptor.getIndirectLevelAndBDI(_bamTargetBDStorage, _bamTargetBDOffset);
+        _bamTargetBankLevel = (short) (indirectLBDI >> 6);
+        _bamTargetBankDescriptorIndex = (indirectLBDI & 0_077777);
+        if ((_bamTargetBankLevel == 0) && (_bamTargetBankDescriptorIndex >= 1) && (_bamTargetBankDescriptorIndex <= 31)) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                   _bamTargetBankLevel,
+                                                   _bamTargetBankDescriptorIndex);
+        }
+
+        // Find indirected-to bank descriptor address
+        _bamTargetBDAddress = findBankDescriptorAbsoluteAddress(_bamTargetBankLevel, _bamTargetBankDescriptorIndex);
+        _bamTargetBDStorage = _storageManager.getSegment(AbsoluteAddress.getSegment(_bamTargetBDAddress));
+        _bamTargetBDOffset = AbsoluteAddress.getOffset(_bamTargetBDAddress);
+        _bamTargetBankType = BankDescriptor.getBankType(_bamTargetBDStorage, _bamTargetBDOffset);
+
+        // another bank type check very similar to the one above, except we don't allow indirect banks now
+        var isException = false;
+        switch (_bamTargetBankType) {
+            case BasicMode -> {
+                if (_bamIsLBU) {
+                    if ((baseRegisterNumber >= 2) && (baseRegisterNumber <= 15)) {
+                        if (_activityStatePacket.getDesignatorRegister().getProcessorPrivilege() < 2) {
+                            // target bank is good (do nothing)
+                        } else {
+                            // Privilege > 1, BD.GAP.E or BD.SAP.E needs to be set
+                            var bdGap = BankDescriptor.getGeneralAccessPermissions(_bamTargetBDStorage, _bamTargetBDOffset);
+                            var bdSap = BankDescriptor.getSpecialAccessPermissions(_bamTargetBDStorage, _bamTargetBDOffset);
+                            if (bdGap.canEnter() || bdSap.canEnter()) {
+                                // target bank is good (do nothing)
+                            } else {
+                                // this is treated as void
+                                _bamTargetIsVoid = true;
+                            }
+                        }
+                    }
+                }
+                // anything else is okay (indirect becomes target, or not applicable)
+            }
+
+            case ExtendedMode -> { /* everything is okay or not applicable */ }
+
+            case Gate -> {
+                if (_bamIsCALL || _bamIsGOTO || _bamIsLxJ) {
+                    _bamProcessGate = true;
+                }
+                // everything else is okay (gate becomes target)
+            }
+
+            default -> isException = true;
+        }
+        if (isException) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                   _bamTargetBankLevel,
+                                                   _bamTargetBankDescriptorIndex);
+        }
+    }
+
+    // Step 9 - gate bank processing
+    private void bankManipulationStep9(
+        final short interfaceSpec
+    ) throws AddressingExceptionInterrupt, HardwareCheckInterrupt {
+        if (BankDescriptor.isGeneralFault(_bamTargetBDStorage, _bamTargetBDOffset)) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.GBitSetGate,
+                                                   _bamTargetBankLevel,
+                                                   _bamTargetBankDescriptorIndex);
+        }
+
+        var ikr = _activityStatePacket.getIndicatorKeyRegister();
+        var key = ikr.getAccessKey();
+        var lock = BankDescriptor.getAccessLock(_bamTargetBDStorage, _bamTargetBDOffset);
+        var gap = BankDescriptor.getGeneralAccessPermissions(_bamTargetBDStorage, _bamTargetBDOffset);
+        var sap = BankDescriptor.getSpecialAccessPermissions(_bamTargetBDStorage, _bamTargetBDOffset);
+        var effPerms = lock.getEffectivePermissions(key, gap, sap);
+        if (!effPerms.canEnter()) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.EnterAccessDenied,
+                                                   _bamTargetBankLevel,
+                                                   _bamTargetBankDescriptorIndex);
+        }
+
+        // substep a - check offset against gate bank
+        var gbul = BankDescriptor.getUpperLimit(_bamTargetBDStorage, _bamTargetBDOffset);
+        var gbll = BankDescriptor.getLowerLimit(_bamTargetBDStorage, _bamTargetBDOffset);
+        var gbSize = gbul - gbll + 1;
+        if (_bamTargetOffset + 7 >= gbSize) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.GateBankBoundaryViolation,
+                                                  _bamTargetBankLevel,
+                                                  _bamTargetBankDescriptorIndex);
+        }
+
+        // substep b - ensure target offset is a multiple of 8.
+        if ((_bamTargetOffset & 07) != 0) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.GateBankBoundaryViolation,
+                                                  _bamTargetBankLevel,
+                                                  _bamTargetBankDescriptorIndex);
+        }
+
+        // substep c - calculate gate address
+        var gateAddress = BankDescriptor.getBaseAddress(_bamTargetBDStorage, _bamTargetBDOffset);
+        AbsoluteAddress.addOffset(gateAddress, _bamTargetOffset);
+
+        // substep d - check for enter access to the gate itself
+        _bamGateStorage = _storageManager.getSegment(AbsoluteAddress.getSegment(gateAddress));
+        _bamGateOffset = AbsoluteAddress.getOffset(gateAddress);
+        lock = Gate.getAccessLock(_bamGateStorage, _bamGateOffset);
+        gap = Gate.getGeneralAccessPermissions(_bamGateStorage, _bamGateOffset);
+        sap = Gate.getSpecialAccessPermissions(_bamGateStorage, _bamGateOffset);
+        var gateEffPerms = lock.getEffectivePermissions(key, gap, sap);
+        if (!gateEffPerms.canEnter()) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.EnterAccessDenied,
+                                                   _bamTargetBankLevel,
+                                                   _bamTargetBankDescriptorIndex);
+        }
+
+        // substep e - check for goto inhibit
+        if (_bamIsGOTO || (_bamIsLxJ && interfaceSpec == 1)) {
+            if (Gate.isGotoInhibited(_bamGateStorage, _bamGateOffset)) {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.GoToInhibitSet,
+                                                      _bamTargetBankLevel,
+                                                      _bamTargetBankDescriptorIndex);
+            }
+        }
+
+        // substep f - check target L,BDI
+        _bamTargetBankLevel = Gate.getBankLevel(_bamGateStorage, _bamGateOffset);
+        _bamTargetBankDescriptorIndex = Gate.getBankDescriptorIndex(_bamGateStorage, _bamGateOffset);
+        _bamTargetOffset = Gate.getOffset(_bamGateStorage, _bamGateOffset);
+        if ((_bamTargetBankLevel == 0) && (_bamTargetBankDescriptorIndex < 32)) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                   _bamTargetBankLevel,
+                                                   _bamTargetBankDescriptorIndex);
+        }
+
+        // substep g - we do NOT support library gates
+        if (Gate.isLibrary(_bamGateStorage, _bamGateOffset)) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                  _bamTargetBankLevel,
+                                                  _bamTargetBankDescriptorIndex);
+        }
+
+        // substep h - preserve values from gate (automatic, via _bamGateStorage and _bamGateOffset)
+
+        // substep i - go get new target bank descriptor address
+        _bamTargetBDAddress = findBankDescriptorAbsoluteAddress(_bamTargetBankLevel, _bamTargetBankDescriptorIndex);
+        _bamTargetBDStorage = _storageManager.getSegment(AbsoluteAddress.getSegment(_bamTargetBDAddress));
+        _bamTargetBDOffset = AbsoluteAddress.getOffset(_bamTargetBDAddress);
+
+        // substep j - ensure new target bank is BASIC or EXTENDED, and not something else
+        _bamTargetBankType = BankDescriptor.getBankType(_bamTargetBDStorage, _bamTargetBDOffset);
+        if (_bamTargetBankType != BankType.BasicMode && _bamTargetBankType != BankType.ExtendedMode) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                   _bamTargetBankLevel,
+                                                   _bamTargetBankDescriptorIndex);
+        }
+    }
+
+    // Step 10 - Determine base register to be loaded (if we don't know it already)
+    private void bankManipulationStep10(
+        final short baseRegisterNumber
+    ) {
+        if (_bamIsRTN || _bamIsLxJRTN) {
+            _bamBaseRegisterNumber = _bamRcsBaseRegisterNumber;
+        } else if ((_bamIsLoad) || (_bamIsLxJ && (_bamTransferMode == TransferMode.BM_TO_BM))) {
+            _bamBaseRegisterNumber = baseRegisterNumber;
+        } else if ((_bamIsCALL || _bamIsGOTO) && (_bamTransferMode == TransferMode.EM_TO_BM)) {
+            if (_bamProcessGate) {
+                _bamBaseRegisterNumber = Gate.getBasicModeBaseRegister(_bamGateStorage, _bamGateOffset);
+            } else {
+                _bamBaseRegisterNumber = 12;
+            }
+        } else {
+            _bamBaseRegisterNumber = 0;
+        }
+    }
+
+    // Step 11 - if we are exiting a bank in certain situations, update the base register for that bank.
+    private void bankManipulationStep11() {
+        if (_bamTransferMode == TransferMode.EM_TO_BM) {
+            // mark B0 void
+            _baseRegisters[0].setIsVoid(true);
+            _activityStatePacket.getProgramAddressRegister().setBankLevel((short) 0).setBankDescriptorIndex(0);
+        } else if (_bamTransferMode == TransferMode.BM_TO_EM) {
+            _baseRegisters[_bamBaseRegisterNumber].setIsVoid(false);
+            _activeBaseTable.getEntry(_bamBaseRegisterNumber).setBankLevel((short) 0).setBankDescriptorIndex(0);
+        }
+    }
+
+    // TODO more steps
 }

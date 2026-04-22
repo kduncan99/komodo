@@ -24,7 +24,8 @@ public abstract class Function {
         UNUSED,
         FUNCTION_CODE_EXTENSION,
         A_REGISTER,
-        B_REGISTER,
+        B_REGISTER_EXEC,
+        B_REGISTER_USER,
         R_REGISTER,
         X_REGISTER,
         GRS_INDEX,
@@ -226,9 +227,12 @@ public abstract class Function {
             case AFieldSemantics.A_REGISTER -> sb.append("A")
                                                  .append(iWord.getA())
                                                  .append(",");
-            case AFieldSemantics.B_REGISTER -> sb.append("B")
-                                                 .append(iWord.getA())
-                                                 .append(",");
+            case AFieldSemantics.B_REGISTER_EXEC -> sb.append("B")
+                                                      .append(iWord.getA() + 16)
+                                                      .append(",");
+            case AFieldSemantics.B_REGISTER_USER -> sb.append("B")
+                                                      .append(iWord.getA())
+                                                      .append(",");
             case AFieldSemantics.R_REGISTER -> sb.append("R")
                                                  .append(iWord.getA())
                                                  .append(",");

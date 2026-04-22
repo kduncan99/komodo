@@ -4,9 +4,12 @@
 
 package com.bearsnake.komodo.engine.functions.procControl;
 
+import com.bearsnake.komodo.engine.AccessPermissions;
+import com.bearsnake.komodo.engine.BankDescriptor;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
+import com.bearsnake.komodo.engine.interrupts.AddressingExceptionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
@@ -15,6 +18,15 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  */
 /*
  TODO REMOVE THESE SPECIAL NOTES LATER
+The GOTO instruction loads B0 (or one of B12–B15 on a transfer to Basic_Mode) to describe the
+Bank specified by the L,BDI in bits 0–17 of the instruction operand at the address U and a jump is
+taken in the new environment to the address in bits 18–35 of the instruction operand at the
+address U. Regardless of the value of DB17, User X0bit 0 := DB16 (0 if previous mode was
+Extended_Mode or 1 if previous mode was Basic_Mode), User X0bits 1-17 := 0, and User
+X0bits 18-35 := previous Access_Key. Gate processing may occur, including writing Latent
+Parameter values to R0 and R1 (User R0 and User R1 if DB17 = 0 or Executive R0 and Executive
+R1 if DB17 = 1), if Gate.LP0I = 0 and/or Gate.LP1I = 0, respectively.
+
 GOTO to an Extended_Mode Bank Algorithm (4.6.4) Summary:
 3-10:A determination is made of the Base_Register information to be loaded into B0
         (including any interrupt that may be generated). Gate processing may occur.
@@ -86,6 +98,107 @@ public class GOTOFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        return true;//TODO
+        var ikr = engine.getActivityStatePacket().getIndicatorKeyRegister();
+        var operand = engine.getOperand(false, true, false, false, false);
+
+        // source bank determination
+        var targetLevel = (int)(operand >> 33);
+        var targetBDI = (int)(operand >> 18) & 0_077777;
+        var targetOffset = (int)(operand & 0_777777L);
+
+        if ((targetLevel == 0) && (targetBDI <= 31)) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                   targetLevel,
+                                                   targetBDI);
+        }
+
+        // Find the storage and offset for the BD described by L,BDI
+        var bdStorage = engine.getBaseRegister(targetLevel + 16).getStorage();
+        var bdOffset = 8 * targetBDI;
+        if ((bdOffset + 7) > bdStorage.getSize()) {
+            throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                   targetLevel,
+                                                   targetBDI);
+        }
+
+        var sourceBankType = BankDescriptor.getBankType(bdStorage, bdOffset);
+        var gateProcessing = false;
+        var indirectProcessing = false;
+        switch (sourceBankType) {
+            case Gate -> gateProcessing = true;
+            case Indirect -> indirectProcessing = true;
+            default -> throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                              targetLevel,
+                                                              targetBDI);
+        }
+
+        if (indirectProcessing) {
+            if (BankDescriptor.isGeneralFault(bdStorage, bdOffset)) {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.GBitSetIndirect,
+                                                      targetLevel,
+                                                      targetBDI);
+            }
+
+            var indirectLBDI = BankDescriptor.getIndirectLevelAndBDI(bdStorage, bdOffset);
+            targetLevel = indirectLBDI >> 07;
+            targetBDI = indirectLBDI & 0_077777;
+
+            // Find the storage and offset for the indirected-to BD described by L,BDI
+            bdStorage = engine.getBaseRegister(targetLevel + 16).getStorage();
+            bdOffset = 8 * targetBDI;
+            if ((bdOffset + 7) > bdStorage.getSize()) {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidSourceLevelBDI,
+                                                       targetLevel,
+                                                       targetBDI);
+            }
+
+            var indirectBankType = BankDescriptor.getBankType(bdStorage, bdOffset);
+            switch (indirectBankType) {
+                case ExtendedMode, BasicMode -> {
+                    targetLevel = targetLevel;
+                    targetBDI = targetBDI;
+                }
+                case Gate -> gateProcessing = true;
+                default -> throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.BDTypeInvalid,
+                                                                  targetLevel,
+                                                                  targetBDI);
+            }
+        }
+
+        if (gateProcessing) {
+            if (BankDescriptor.isGeneralFault(bdStorage, bdOffset)) {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.GBitSetIndirect,
+                                                       targetLevel,
+                                                       targetBDI);
+            }
+
+            var bankLock = BankDescriptor.getAccessLock(bdStorage, bdOffset);
+            var bankGAP = BankDescriptor.getGeneralAccessPermissions(bdStorage, bdOffset);
+            var bankSAP = BankDescriptor.getSpecialAccessPermissions(bdStorage, bdOffset);
+            var effPerms = bankLock.getEffectivePermissions(ikr.getAccessKey(), bankGAP, bankSAP);
+            if (!effPerms.canEnter()) {
+                throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.EnterAccessDenied,
+                                                       targetLevel,
+                                                       targetBDI);
+            }
+
+            // go get the gate
+            // NOTE all addressing exceptions are terminal addressing exceptions
+            // TODO source offset is limits checked against gate BD -> addressing exception
+            // TODO if absolute boundary violation is detected on gate address or X(a).Offset is not an 8-word offset -> addressing exception
+            // TODO source offset applied to base address of Bate BD, gate is fetched
+            // TODO Current AccessKey checked for Enger access against Acces_Lock, GAP/SAP of the gate -> Addressing exception
+            // TODO Check GOTO_Inhibit
+            // TODO Check L,BDI for 0,0 to 0,31
+            // TODO retain dBits, Access_Key, Latent Params, B fields from the Gate
+            // TODO target BD is fetched
+            // TODO target BD Type must be Extended or Basic -> addressing exception
+        }
+
+        // Determine base register (see step 10)
+
+        // TODO more
+
+        return true;
     }
 }
