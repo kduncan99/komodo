@@ -1938,7 +1938,8 @@ public class Engine {
      * @param interfaceSpec          the interface specification for LxJ functions
      * @param baseRegisterNumber     the base register number to be loaded (LxJ EM->EM, LBU, LBE)
      * @param lxjBankLevel           the bank level to be loaded for LxJ functions
-     * @param lxJBankDescriptorIndex the bank descriptor index to be loaded for LxJ functions
+     * @param lxjBankDescriptorIndex the bank descriptor index to be loaded for LxJ functions
+     * @param lxjXRegister           the X(a) register for LxJ functions
      * @param operand                the operand for the instruction, or the interrupt vector for an interrupt
      * @param operands               alternate operands (such as from UR)
      */
@@ -1947,7 +1948,8 @@ public class Engine {
         final short interfaceSpec,
         final short baseRegisterNumber,
         final short lxjBankLevel,
-        final int lxJBankDescriptorIndex,
+        final int lxjBankDescriptorIndex,
+        final Register lxjXRegister,
         final long operand,
         final long[] operands
     ) throws MachineInterrupt {
@@ -1957,7 +1959,7 @@ public class Engine {
 
         bankManipulationStep2(baseRegisterNumber);
         bankManipulationStep2a();
-        bankManipulationStep3(lxjBankLevel, lxJBankDescriptorIndex, operand, operands);
+        bankManipulationStep3(lxjBankLevel, lxjBankDescriptorIndex, operand, operands);
         bankManipulationStep4();
         bankManipulationStep5();
         bankManipulationStep6();
@@ -1982,15 +1984,9 @@ public class Engine {
 
         bankManipulationStep10(baseRegisterNumber);
         bankManipulationStep11();
-
-        // Step 12 - allocate and populate and RCS frame
-        // TODO
-
-        // Step 13 - Write X(a)
-        // TODO
-
-        // Step 14 - Write user X(0)
-        // TODO
+        bankManipulationStep12();
+        bankManipulationStep13(lxjXRegister);
+        bankManipulationStep14();
 
         // Step 15 - Transfer gate fields
         if (_bamProcessGate) {
@@ -2453,6 +2449,82 @@ public class Engine {
         } else if (_bamTransferMode == TransferMode.BM_TO_EM) {
             _baseRegisters[_bamBaseRegisterNumber].setIsVoid(false);
             _activeBaseTable.getEntry(_bamBaseRegisterNumber).setBankLevel((short) 0).setBankDescriptorIndex(0);
+        }
+    }
+
+    // Step 12 - write an RCS frame if appropriate
+    private void bankManipulationStep12(
+    ) throws RCSGenericStackUnderflowOverflowInterrupt {
+        var par = _activityStatePacket.getProgramAddressRegister();
+        var dr = _activityStatePacket.getDesignatorRegister();
+        var ik = _activityStatePacket.getIndicatorKeyRegister();
+        var pc = par.getProgramCounter() + 1;
+        short db12To17 = (short) ((dr.getCompositeValue() >> 18) & 0_77);
+
+        if (_bamIsCALL) {
+            if (_bamTransferMode == TransferMode.EM_TO_EM) {
+                allocateAndPopulateRCSFrame(_bamPriorBankLevel,
+                                            _bamPriorBankDescriptorIndex,
+                                            pc,
+                                            0,
+                                            db12To17,
+                                            ik.getAccessKey());
+            } else if (_bamTransferMode == TransferMode.EM_TO_BM) {
+                var br = _bamProcessGate ? Gate.getBasicModeBaseRegister(_bamGateStorage, _bamBaseRegisterNumber) : 0;
+                allocateAndPopulateRCSFrame(_bamPriorBankLevel,
+                                            _bamPriorBankDescriptorIndex,
+                                            pc,
+                                            br,
+                                            db12To17,
+                                            ik.getAccessKey());
+            }
+        } else if (_bamIsLxJ && (_bamTransferMode == TransferMode.BM_TO_EM)) {
+            allocateAndPopulateRCSFrame(_bamPriorBankLevel,
+                                        _bamPriorBankDescriptorIndex,
+                                        pc,
+                                        _bamRcsBaseRegisterNumber,
+                                        db12To17,
+                                        ik.getAccessKey());
+        }
+    }
+
+    // Step 13 - Write X(a) or X11 in certain circumstances
+    private void bankManipulationStep13(
+        final Register xRegister
+    ) {
+        if ((_bamIsLxJ && (_bamTransferMode == TransferMode.BM_TO_BM))) {
+            var xValue = xRegister.getW() & 0_300000_000000L;
+
+            if (_bamPriorBankDescriptorIndex > 4095) {
+                xValue |= 0_440000_000000L;
+            } else {
+                xValue |= switch (_bamPriorBankLevel) {
+                    case 0 -> 0_440000_000000L | _bamPriorBankDescriptorIndex;
+                    case 2 -> 0_400000_000000L | _bamPriorBankDescriptorIndex;
+                    case 4 -> _bamPriorBankDescriptorIndex;
+                    case 6 -> 0_040000_000000L | _bamPriorBankDescriptorIndex;
+                    default -> 0_440000_000000L;
+                };
+            }
+
+            xValue |= _activityStatePacket.getProgramAddressRegister().getProgramCounter() + 1;
+            xRegister.setW(xValue);
+        } else if (_bamIsCALL && (_bamTransferMode == TransferMode.EM_TO_BM)) {
+            var x11Reg = getExecOrUserXRegister(11);
+            x11Reg.setS1((x11Reg.getS1() & 074) | 02);
+        }
+    }
+
+    // Step 14 - for certain functions, write User X0 with DB16 in Bit0, and Access Key in H2.
+    private void bankManipulationStep14(
+    ) {
+        if (_bamIsCALL || _bamIsGOTO || (_bamIsLxJ && !_bamIsLxJRTN)) {
+            var xReg = _generalRegisterSet.getRegister(GRS_X0);
+            var dr = _activityStatePacket.getDesignatorRegister();
+            var ik = _activityStatePacket.getIndicatorKeyRegister();
+            var xValue = dr.isBasicModeEnabled() ? 0_400000_000000L : 0_000000_000000L;
+            xValue |= ik.getAccessKey().toComposite();
+            xReg.setW(xValue);
         }
     }
 
