@@ -6,6 +6,9 @@ package com.bearsnake.komodo.engine.functions;
 
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.DesignatorRegister;
+import com.bearsnake.komodo.engine.functions.actControl.LAEFunction;
+import com.bearsnake.komodo.engine.functions.actControl.URFunction;
+import com.bearsnake.komodo.engine.functions.addrSpace.LBEFunction;
 import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.decimal.*;
 import com.bearsnake.komodo.engine.functions.intControl.AAIJFunction;
@@ -248,10 +251,11 @@ public abstract class FunctionTable {
 
         // addressSpace
         // DABTFunction.INSTANCE,   PP=0,1
-        // LBEFunction.INSTANCE,    PP=0
+
+        LBEFunction.INSTANCE,// TODO needs unit tests
         // LBEDFunction.INSTANCE,   PP=0
         // LBNFunction.INSTANCE,
-        LBUFunction.INSTANCE,// TODO
+        LBUFunction.INSTANCE,// TODO needs unit tests
         // LBUDFunction.INSTANCE,   PP=0
         // SBEDFunction.INSTANCE,   PP=0
         // SBUFunction.INSTANCE,
@@ -262,13 +266,13 @@ public abstract class FunctionTable {
         // We do not support VIEW
 
         // procedureControl
-        CALLFunction.INSTANCE,  // TODO
-        GOTOFunction.INSTANCE,  // TODO
-        LBJFunction.INSTANCE,   // TODO
-        LDJFunction.INSTANCE,   // TODO
-        LIJFunction.INSTANCE,   // TODO
+        CALLFunction.INSTANCE,// TODO needs unit tests
+        GOTOFunction.INSTANCE,// TODO needs unit tests
+        LBJFunction.INSTANCE,// TODO needs unit tests
+        LDJFunction.INSTANCE,// TODO needs unit tests
+        LIJFunction.INSTANCE,// TODO needs unit tests
         LOCLFunction.INSTANCE,
-        RTNFunction.INSTANCE,
+        RTNFunction.INSTANCE,// TODO needs more unit tests
 
         // queueing
         // DEPOSITQBFFunction.INSTANCE,
@@ -282,7 +286,7 @@ public abstract class FunctionTable {
         // ACELFunction.INSTANCE,   PP=0,1,2
         // DCELFunction.INSTANCE,   PP=0,1,2
         // KCHGFunction.INSTANCE,   PP=0
-        // LAEFunction.INSTANCE,    PP=0
+        LAEFunction.INSTANCE,// TODO needs unit tests
         // LDFunction.INSTANCE,     PP=0
         // LPDFunction.INSTANCE,
         // LUDFunction.INSTANCE,
@@ -290,7 +294,7 @@ public abstract class FunctionTable {
         // SKQTFunction.INSTANCE,   PP=0,1
         // SPDFunction.INSTANCE,
         // SUDFunction.INSTANCE,
-        // URFunction.INSTANCE,     PP=0
+        URFunction.INSTANCE,// TODO needs unit tests
 
         // stack
         BUYFunction.INSTANCE,

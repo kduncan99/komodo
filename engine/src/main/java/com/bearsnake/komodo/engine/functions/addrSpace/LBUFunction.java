@@ -38,7 +38,8 @@ public class LBUFunction extends Function {
             throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidBaseRegister);
         }
 
-        // TODO
+        var operand = engine.getOperand(false, true, false, false, false);
+        engine.bankManipulation(this, (short) 0, (short) ci.getA(), (short) 0, 0, null, operand, null);
 
         return true;
     }

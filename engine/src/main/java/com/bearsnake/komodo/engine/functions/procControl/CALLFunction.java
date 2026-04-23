@@ -14,11 +14,6 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
  * (CALL) Loads a bank to B0 then jumps to the address in the U field
  * after preserving essential portions of the current environment.
  */
-/*
-TODO REMOVE THESE SPECIAL NOTES LATER
-
-
- */
 public class CALLFunction extends Function {
 
     public static final CALLFunction INSTANCE = new CALLFunction();
@@ -36,6 +31,10 @@ public class CALLFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        return true;//TODO
+        var operand = engine.getOperand(false, true, false, false, false);
+        var oldAddress = engine.getProgramAddressRegister().getCompositeValue();
+        engine.bankManipulation(this, (short) 0, (short) 0, (short) 0, 0, null, operand, null);
+        engine.createJumpHistoryEntry(oldAddress);
+        return true;
     }
 }

@@ -1874,6 +1874,7 @@ public class Engine {
     private ArraySlice _bamTargetBDStorage;
     private int _bamTargetBDOffset;
     private BankType _bamTargetBankType;
+    private boolean _bamTargetCanEnter;
     private boolean _bamProcessIndirect;
     private boolean _bamProcessGate;
 
@@ -2003,6 +2004,7 @@ public class Engine {
         _bamTargetBDStorage = null;
         _bamTargetBDOffset = 0;
         _bamTargetBankType = null;
+        _bamTargetCanEnter = false;
         _bamProcessIndirect = false;
         _bamProcessGate = false;
 
@@ -2136,6 +2138,7 @@ public class Engine {
                             var bdSap = BankDescriptor.getSpecialAccessPermissions(_bamTargetBDStorage, _bamTargetBDOffset);
                             if (bdGap.canEnter() || bdSap.canEnter()) {
                                 // target bank is good (do nothing)
+                                _bamTargetCanEnter = true;
                             } else {
                                 // this is treated as void
                                 _bamTargetIsVoid = true;
@@ -2242,6 +2245,7 @@ public class Engine {
                             var bdSap = BankDescriptor.getSpecialAccessPermissions(_bamTargetBDStorage, _bamTargetBDOffset);
                             if (bdGap.canEnter() || bdSap.canEnter()) {
                                 // target bank is good (do nothing)
+                                _bamTargetCanEnter = true;
                             } else {
                                 // this is treated as void
                                 _bamTargetIsVoid = true;
@@ -2652,12 +2656,54 @@ public class Engine {
         }
 
         // exception check - E
-        // TODO
+        /*
+            TODO remove
+            Entry. An attempt was made to do a nongated transfer to an Extended_Mode Bank for which
+            Enter access is denied.
+         */
+        var checkE = false;
+        checkE |= (_bamIsCALL || _bamIsGOTO) && (_bamTransferMode == TransferMode.EM_TO_EM);
+        checkE |= (_bamIsLxJ && !_bamIsLxJRTN);
+        if (checkE) {
+            // TODO See 4.6.3.3
+        }
 
         // exception check - V
-        // TODO
+        /*
+            TODO remove
+            Validated Entry. An attempt was made to do a nongated transfer to a Basic_Mode Bank for
+            which Enter access is denied, at a Relative_Address unequal to the starting Relative_Address of
+            the Bank; that is, the 18-bit Offset (Jump_to_Address) is not equal to the Target BD’s
+            Lower_Limit concatenated with nine trailing zeros (this check need not take into account the
+            BD.S, since instructions cannot be fetched from Large_Banks). This check, combined with the
+            following one, provides the functional equivalent of the Validated Entry Point mechanism of
+            previous architectures; that is, a GAP.R = 1 or SAP.R = 1 for a Basic_Mode Bank implies Validated
+            Entry Point.
+         */
+        var checkV = false;
+        checkV |= (_bamIsLxJ && !_bamIsLxJRTN) && (_bamTransferMode == TransferMode.BM_TO_BM) && !_bamTargetCanEnter;
+        checkV |= (_bamIsCALL || _bamIsGOTO) && (_bamTransferMode == TransferMode.EM_TO_BM) && !_bamTargetCanEnter;
+        if (checkV) {
+            // TODO
+        }
 
         // exception check - S
-        // TODO
+        /*
+            TODO remove
+            Selection of Base_Register. An attempt was made to do either a gated transfer, or a nongated
+            transfer for which Enter access is denied, to a Basic_Mode Bank, but new PAR.PC (U or the
+            Offset from the Gate) does not select (using Basic_Mode Base_Register selection; see 4.4.6) the
+            Base_Register being modified.
+         */
+        var checkS = false;
+        checkS |= (_bamIsLxJ && !_bamIsLxJRTN)
+                  && (_bamTransferMode == TransferMode.BM_TO_BM)
+                  && (_bamProcessGate || ((_bamTargetBankType == BankType.BasicMode) && !_bamTargetCanEnter));
+        checkS |= (_bamIsCALL || _bamIsGOTO)
+                  && (_bamTransferMode == TransferMode.EM_TO_BM)
+                  && (_bamProcessGate || !_bamTargetCanEnter);
+        if (checkS) {
+            // TODO
+        }
     }
 }

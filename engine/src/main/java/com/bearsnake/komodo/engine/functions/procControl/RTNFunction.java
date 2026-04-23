@@ -31,7 +31,9 @@ public class RTNFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
+        var oldAddress = engine.getProgramAddressRegister().getCompositeValue();
         engine.bankManipulation(this, (short) 0, (short) 0, (short) 0, 0, null, 0L, null);
+        engine.createJumpHistoryEntry(oldAddress);
         return true;
     }
 }

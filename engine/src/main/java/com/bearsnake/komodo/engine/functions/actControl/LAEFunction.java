@@ -30,6 +30,10 @@ public class LAEFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        return true;//TODO
+        var operands = engine.getConsecutiveOperands(false, 15);
+        var oldAddress = engine.getProgramAddressRegister().getCompositeValue();
+        engine.bankManipulation(this, (short) 0, (short) 0, (short) 0, 0, null, 0L, operands);
+        engine.createJumpHistoryEntry(oldAddress);
+        return true;
     }
 }

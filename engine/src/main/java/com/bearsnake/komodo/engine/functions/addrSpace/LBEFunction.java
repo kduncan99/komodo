@@ -33,6 +33,9 @@ public class LBEFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        return true;//TODO
+        var ci = engine.getCurrentInstruction();
+        var operand = engine.getOperand(false, true, false, false, false);
+        engine.bankManipulation(this, (short) 0, (short) (ci.getA() + 16), (short) 0, 0, null, operand, null);
+        return true;
     }
 }
