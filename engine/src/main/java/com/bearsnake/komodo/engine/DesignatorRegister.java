@@ -11,25 +11,36 @@ import com.bearsnake.komodo.baselib.Word36;
  */
 public class DesignatorRegister {
 
-    static final long MASK_ActivityLevelQueueMonitorEnabled = Word36.MASK_B0;
-    static final long MASK_FaultHandlingInProgress          = Word36.MASK_B6;
-    static final long MASK_Executive24BitIndexingEnabled    = Word36.MASK_B11;
-    static final long MASK_QuantumTimerEnabled              = Word36.MASK_B12;
-    static final long MASK_DeferrableInterruptEnabled       = Word36.MASK_B13;
-    static final long MASK_ProcessorPrivilege               = Word36.MASK_B14 | Word36.MASK_B15;
-    static final long MASK_BasicModeEnabled                 = Word36.MASK_B16;
-    static final long MASK_ExecRegisterSetSelected          = Word36.MASK_B17;
-    static final long MASK_Carry                            = Word36.MASK_B18;
-    static final long MASK_Overflow                         = Word36.MASK_B19;
-    static final long MASK_CharacteristicUnderflow          = Word36.MASK_B21;
-    static final long MASK_CharacteristicOverflow           = Word36.MASK_B22;
-    static final long MASK_DivideCheck                      = Word36.MASK_B23;
-    static final long MASK_OperationTrapEnabled             = Word36.MASK_B27;
-    static final long MASK_ArithmeticExceptionEnabled       = Word36.MASK_B29;
-    static final long MASK_BasicModeBaseRegisterSelection   = Word36.MASK_B31;
-    static final long MASK_QuarterWordModeEnabled           = Word36.MASK_B32;
+    static final long MASK_ActivityLevelQueueMonitorEnabled             = Word36.MASK_B0;
+    static final long MASK_PerformanceMonitoringCounterEnabled          = Word36.MASK_B1;
+    static final long MASK_PerformanceMonitoringCounterInterruptControl = Word36.MASK_B2;
+    static final long MASK_SoftwarePerformanceMonitor                   = Word36.MASK_B3 | Word36.MASK_B4 | Word36.MASK_B5;
+    static final long MASK_FaultHandlingInProgress                      = Word36.MASK_B6;
+    static final long MASK_Executive24BitIndexingEnabled                = Word36.MASK_B11;
+    static final long MASK_QuantumTimerEnabled                          = Word36.MASK_B12;
+    static final long MASK_DeferrableInterruptEnabled                   = Word36.MASK_B13;
+    static final long MASK_ProcessorPrivilege                           = Word36.MASK_B14 | Word36.MASK_B15;
+    static final long MASK_BasicModeEnabled                             = Word36.MASK_B16;
+    static final long MASK_ExecRegisterSetSelected                      = Word36.MASK_B17;
+    static final long MASK_Carry                                        = Word36.MASK_B18;
+    static final long MASK_Overflow                                     = Word36.MASK_B19;
+    static final long MASK_CharacteristicUnderflow                      = Word36.MASK_B21;
+    static final long MASK_CharacteristicOverflow                       = Word36.MASK_B22;
+    static final long MASK_DivideCheck                                  = Word36.MASK_B23;
+    static final long MASK_OperationTrapEnabled                         = Word36.MASK_B27;
+    static final long MASK_ArithmeticExceptionEnabled                   = Word36.MASK_B29;
+    static final long MASK_BasicModeBaseRegisterSelection               = Word36.MASK_B31;
+    static final long MASK_QuarterWordModeEnabled                       = Word36.MASK_B32;
+
+    public static final long MASK_SetToZero = (Word36.MASK_B7 | Word36.MASK_B8 | Word36.MASK_B9 | Word36.MASK_B10
+                                               | Word36.MASK_B20 | Word36.MASK_B24 | Word36.MASK_B25 | Word36.MASK_B26
+                                               | Word36.MASK_B28 | Word36.MASK_B30
+                                               | Word36.MASK_B33 | Word36.MASK_B34 | Word36.MASK_B35);
 
     private boolean _activityLevelQueueMonitorEnabled;
+    private boolean _performanceMonitoringCounterEnabled;
+    private boolean _performanceMonitoringCounterInterruptControl;
+    private short _softwarePerformanceMonitor;
     private boolean _faultHandlingInProgress;
     private boolean _executive24BitIndexingEnabled;
     private boolean _quantumTimerEnabled;
@@ -51,6 +62,9 @@ public class DesignatorRegister {
 
     public DesignatorRegister clear() {
         _activityLevelQueueMonitorEnabled = false;
+        _performanceMonitoringCounterEnabled = false;
+        _performanceMonitoringCounterInterruptControl = false;
+        _softwarePerformanceMonitor = 0;
         _faultHandlingInProgress = false;
         _executive24BitIndexingEnabled = false;
         _quantumTimerEnabled = false;
@@ -72,11 +86,14 @@ public class DesignatorRegister {
     public long getCompositeValue() {
         long result = 0;
         result |= (_activityLevelQueueMonitorEnabled ? MASK_ActivityLevelQueueMonitorEnabled : 0);
+        result |= (_performanceMonitoringCounterEnabled ? MASK_PerformanceMonitoringCounterEnabled : 0);
+        result |= (_performanceMonitoringCounterInterruptControl ? MASK_PerformanceMonitoringCounterInterruptControl : 0);
+        result |= ((long)(_softwarePerformanceMonitor & 07) << 30);
         result |= (_faultHandlingInProgress ? MASK_FaultHandlingInProgress : 0);
         result |= (_executive24BitIndexingEnabled ? MASK_Executive24BitIndexingEnabled : 0);
         result |= (_quantumTimerEnabled ? MASK_QuantumTimerEnabled : 0);
         result |= (_deferrableInterruptEnabled ? MASK_DeferrableInterruptEnabled : 0);
-        result |= ((long)_processorPrivilege << 20);
+        result |= ((long)(_processorPrivilege & 03) << 20);
         result |= (_basicModeEnabled ? MASK_BasicModeEnabled : 0);
         result |= (_execRegisterSetSelected ? MASK_ExecRegisterSetSelected : 0);
         result |= (_carry ? MASK_Carry : 0);
@@ -101,9 +118,12 @@ public class DesignatorRegister {
         return result;
     }
 
-    public short getProcessorPrivilege()                { return _processorPrivilege; }
+    public short getSoftwarePerformanceMonitor()        { return (short)(_softwarePerformanceMonitor & 07); }
+    public short getProcessorPrivilege()                { return (short)(_processorPrivilege & 03); }
     public boolean getBasicModeBaseRegisterSelection()  { return _basicModeBaseRegisterSelection; }
     public boolean isActivityLevelQueueMonitorEnabled() { return _activityLevelQueueMonitorEnabled; }
+    public boolean isPerformanceMonitoringCounterEnabled() { return _performanceMonitoringCounterEnabled; }
+    public boolean isPerformanceMonitoringCounterInterruptControl() { return _performanceMonitoringCounterInterruptControl; }
     public boolean isFaultHandlingInProgress()          { return _faultHandlingInProgress; }
     public boolean isExecutive24BitIndexingEnabled()    { return _executive24BitIndexingEnabled; }
     public boolean isQuantumTimerEnabled()              { return _quantumTimerEnabled; }
@@ -119,10 +139,13 @@ public class DesignatorRegister {
     public boolean isArithmeticExceptionEnabled()       { return _arithmeticExceptionEnabled; }
     public boolean isQuarterWordModeEnabled()           { return _quarterWordModeEnabled; }
 
-    public void set(
+    public DesignatorRegister set(
         final DesignatorRegister source
     ) {
         _activityLevelQueueMonitorEnabled = source._activityLevelQueueMonitorEnabled;
+        _performanceMonitoringCounterEnabled = source._performanceMonitoringCounterEnabled;
+        _performanceMonitoringCounterInterruptControl = source._performanceMonitoringCounterInterruptControl;
+        _softwarePerformanceMonitor = source._softwarePerformanceMonitor;
         _faultHandlingInProgress = source._faultHandlingInProgress;
         _executive24BitIndexingEnabled = source._executive24BitIndexingEnabled;
         _quantumTimerEnabled = source._quantumTimerEnabled;
@@ -139,12 +162,16 @@ public class DesignatorRegister {
         _arithmeticExceptionEnabled = source._arithmeticExceptionEnabled;
         _basicModeBaseRegisterSelection = source._basicModeBaseRegisterSelection;
         _quarterWordModeEnabled = source._quarterWordModeEnabled;
+        return this;
     }
 
-    public void set(
+    public DesignatorRegister set(
         final long value
     ) {
         _activityLevelQueueMonitorEnabled = (value & MASK_ActivityLevelQueueMonitorEnabled) != 0;
+        _performanceMonitoringCounterEnabled = (value & MASK_PerformanceMonitoringCounterEnabled) != 0;
+        _performanceMonitoringCounterInterruptControl = (value & MASK_PerformanceMonitoringCounterInterruptControl) != 0;
+        _softwarePerformanceMonitor = (short)((value >> 30) & 0x07);
         _faultHandlingInProgress = (value & MASK_FaultHandlingInProgress) != 0;
         _executive24BitIndexingEnabled = (value & MASK_Executive24BitIndexingEnabled) != 0;
         _quantumTimerEnabled = (value & MASK_QuantumTimerEnabled) != 0;
@@ -161,12 +188,34 @@ public class DesignatorRegister {
         _arithmeticExceptionEnabled = (value & MASK_ArithmeticExceptionEnabled) != 0;
         _basicModeBaseRegisterSelection = (value & MASK_BasicModeBaseRegisterSelection) != 0;
         _quarterWordModeEnabled = (value & MASK_QuarterWordModeEnabled) != 0;
+        return this;
     }
 
     public DesignatorRegister setActivityLevelQueueMonitorEnabled(
         final boolean flag
     ) {
         _activityLevelQueueMonitorEnabled = flag;
+        return this;
+    }
+
+    public DesignatorRegister setPerformanceMonitoringCounterEnabled(
+        final boolean flag
+    ) {
+        _performanceMonitoringCounterEnabled = flag;
+        return this;
+    }
+
+    public DesignatorRegister setPerformanceMonitoringCounterInterruptControl(
+        final boolean flag
+    ) {
+        _performanceMonitoringCounterInterruptControl = flag;
+        return this;
+    }
+
+    public DesignatorRegister setSoftwarePerformanceMonitor(
+        final short value
+    ) {
+        _softwarePerformanceMonitor = (short)(value & 0x07);
         return this;
     }
 
@@ -290,5 +339,28 @@ public class DesignatorRegister {
         _processorPrivilege = (short)((value >> 2) & 0x03);
         _basicModeEnabled = (value & 0_02) != 0;
         _execRegisterSetSelected = (value & 0_01) != 0;
+    }
+
+    public void display() {
+        System.out.println("ActivityLevelQueueMonitorEnabled: " + _activityLevelQueueMonitorEnabled);
+        System.out.println("PerformanceMonitoringCounterEnabled: " + _performanceMonitoringCounterEnabled);
+        System.out.println("PerformanceMonitoringCounterInterruptControl: " + _performanceMonitoringCounterInterruptControl);
+        System.out.println("SoftwarePerformanceMonitor: " + _softwarePerformanceMonitor);
+        System.out.println("FaultHandlingInProgress: " + _faultHandlingInProgress);
+        System.out.println("Executive24BitIndexingEnabled: " + _executive24BitIndexingEnabled);
+        System.out.println("QuantumTimerEnabled: " + _quantumTimerEnabled);
+        System.out.println("DeferrableInterruptEnabled: " + _deferrableInterruptEnabled);
+        System.out.println("ProcessorPrivilege: " + _processorPrivilege);
+        System.out.println("BasicModeEnabled: " + _basicModeEnabled);
+        System.out.println("ExecRegisterSetSelected: " + _execRegisterSetSelected);
+        System.out.println("Carry: " + _carry);
+        System.out.println("Overflow: " + _overflow);
+        System.out.println("CharacteristicUnderflow: " + _characteristicUnderflow);
+        System.out.println("CharacteristicOverflow: " + _characteristicOverflow);
+        System.out.println("DivideCheck: " + _divideCheck);
+        System.out.println("OperationTrapEnabled: " + _operationTrapEnabled);
+        System.out.println("ArithmeticExceptionEnabled: " + _arithmeticExceptionEnabled);
+        System.out.println("BasicModeBaseRegisterSelection: " + _basicModeBaseRegisterSelection);
+        System.out.println("QuarterWordModeEnabled: " + _quarterWordModeEnabled);
     }
 }

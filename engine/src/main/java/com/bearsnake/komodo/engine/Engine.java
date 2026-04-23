@@ -561,6 +561,8 @@ public class Engine {
     // Useful miscellaneous methods
 
     public void clear() {
+        _haltCode = HaltCode.NONE;
+
         _activityStatePacket.getCurrentInstruction().setW(0);
         _activityStatePacket.getDesignatorRegister().set(0);
         _activityStatePacket.getIndicatorKeyRegister().set(0);

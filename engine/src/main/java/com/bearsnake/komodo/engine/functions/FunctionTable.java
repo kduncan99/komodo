@@ -7,6 +7,7 @@ package com.bearsnake.komodo.engine.functions;
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.engine.DesignatorRegister;
 import com.bearsnake.komodo.engine.functions.actControl.LAEFunction;
+import com.bearsnake.komodo.engine.functions.actControl.SDFunction;
 import com.bearsnake.komodo.engine.functions.actControl.URFunction;
 import com.bearsnake.komodo.engine.functions.addrSpace.LBEFunction;
 import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
@@ -282,7 +283,7 @@ public abstract class FunctionTable {
         // ENQFFunction.INSTANCE,
         // WITHDRAWQBFunction.INSTANCE,
 
-        // activity
+        // activityControl
         // ACELFunction.INSTANCE,   PP=0,1,2
         // DCELFunction.INSTANCE,   PP=0,1,2
         // KCHGFunction.INSTANCE,   PP=0
@@ -290,7 +291,7 @@ public abstract class FunctionTable {
         // LDFunction.INSTANCE,     PP=0
         // LPDFunction.INSTANCE,
         // LUDFunction.INSTANCE,
-        // SDFunction.INSTANCE,     PP=0,1
+        SDFunction.INSTANCE,
         // SKQTFunction.INSTANCE,   PP=0,1
         // SPDFunction.INSTANCE,
         // SUDFunction.INSTANCE,

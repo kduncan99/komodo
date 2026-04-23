@@ -46,6 +46,7 @@ public abstract class FunctionUnitTest extends EngineUnitTest {
     protected MachineInterrupt _interrupt = null;
 
     protected void run() throws MachineInterrupt {
+        _engine.halt(HaltCode.NONE);
         _interrupt = null;
         while (!_engine.isHalted()) {
             _engine.cycle();
