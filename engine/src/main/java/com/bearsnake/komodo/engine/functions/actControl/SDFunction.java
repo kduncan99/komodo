@@ -10,8 +10,8 @@ import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
- * Load Addressing Environment function
- * (LAE) Loads B1 through B15 from the 15 word packet at U.
+ * Store Designator Register function
+ * (SD) Stores the contents of the designator register into the memory location indicated by U.
  */
 public class SDFunction extends Function {
 
