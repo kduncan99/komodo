@@ -91,24 +91,14 @@ public class DesignatorRegister {
         return result;
     }
 
-    public void setWord36(final long value) {
-        _activityLevelQueueMonitorEnabled = (value & MASK_ActivityLevelQueueMonitorEnabled) != 0;
-        _faultHandlingInProgress = (value & MASK_FaultHandlingInProgress) != 0;
-        _executive24BitIndexingEnabled = (value & MASK_Executive24BitIndexingEnabled) != 0;
-        _quantumTimerEnabled = (value & MASK_QuantumTimerEnabled) != 0;
-        _deferrableInterruptEnabled = (value & MASK_DeferrableInterruptEnabled) != 0;
-        _processorPrivilege = (short)((value >> 20) & 0x03);
-        _basicModeEnabled = (value & MASK_BasicModeEnabled) != 0;
-        _execRegisterSetSelected = (value & MASK_ExecRegisterSetSelected) != 0;
-        _carry = (value & MASK_Carry) != 0;
-        _overflow = (value & MASK_Overflow) != 0;
-        _characteristicUnderflow = (value & MASK_CharacteristicUnderflow) != 0;
-        _characteristicOverflow = (value & MASK_CharacteristicOverflow) != 0;
-        _divideCheck = (value & MASK_DivideCheck) != 0;
-        _operationTrapEnabled = (value & MASK_OperationTrapEnabled) != 0;
-        _arithmeticExceptionEnabled = (value & MASK_ArithmeticExceptionEnabled) != 0;
-        _basicModeBaseRegisterSelection = (value & MASK_BasicModeBaseRegisterSelection) != 0;
-        _quarterWordModeEnabled = (value & MASK_QuarterWordModeEnabled) != 0;
+    public short getDB12to17() {
+        short result = 0;
+        result |= (short)(_quantumTimerEnabled ? 0_40 : 0);
+        result |= (short)(_deferrableInterruptEnabled ? 0_20 : 0);
+        result |= (short)(_processorPrivilege << 2);
+        result |= (short)(_basicModeEnabled ? 0_02 : 0);
+        result |= (short)(_execRegisterSetSelected ? 0_01 : 0);
+        return result;
     }
 
     public short getProcessorPrivilege()                { return _processorPrivilege; }
@@ -129,89 +119,176 @@ public class DesignatorRegister {
     public boolean isArithmeticExceptionEnabled()       { return _arithmeticExceptionEnabled; }
     public boolean isQuarterWordModeEnabled()           { return _quarterWordModeEnabled; }
 
-    public DesignatorRegister setActivityLevelQueueMonitorEnabled(final boolean flag) {
+    public void set(
+        final DesignatorRegister source
+    ) {
+        _activityLevelQueueMonitorEnabled = source._activityLevelQueueMonitorEnabled;
+        _faultHandlingInProgress = source._faultHandlingInProgress;
+        _executive24BitIndexingEnabled = source._executive24BitIndexingEnabled;
+        _quantumTimerEnabled = source._quantumTimerEnabled;
+        _deferrableInterruptEnabled = source._deferrableInterruptEnabled;
+        _processorPrivilege = source._processorPrivilege;
+        _basicModeEnabled = source._basicModeEnabled;
+        _execRegisterSetSelected = source._execRegisterSetSelected;
+        _carry = source._carry;
+        _overflow = source._overflow;
+        _characteristicUnderflow = source._characteristicUnderflow;
+        _characteristicOverflow = source._characteristicOverflow;
+        _divideCheck = source._divideCheck;
+        _operationTrapEnabled = source._operationTrapEnabled;
+        _arithmeticExceptionEnabled = source._arithmeticExceptionEnabled;
+        _basicModeBaseRegisterSelection = source._basicModeBaseRegisterSelection;
+        _quarterWordModeEnabled = source._quarterWordModeEnabled;
+    }
+
+    public void set(
+        final long value
+    ) {
+        _activityLevelQueueMonitorEnabled = (value & MASK_ActivityLevelQueueMonitorEnabled) != 0;
+        _faultHandlingInProgress = (value & MASK_FaultHandlingInProgress) != 0;
+        _executive24BitIndexingEnabled = (value & MASK_Executive24BitIndexingEnabled) != 0;
+        _quantumTimerEnabled = (value & MASK_QuantumTimerEnabled) != 0;
+        _deferrableInterruptEnabled = (value & MASK_DeferrableInterruptEnabled) != 0;
+        _processorPrivilege = (short)((value >> 20) & 0x03);
+        _basicModeEnabled = (value & MASK_BasicModeEnabled) != 0;
+        _execRegisterSetSelected = (value & MASK_ExecRegisterSetSelected) != 0;
+        _carry = (value & MASK_Carry) != 0;
+        _overflow = (value & MASK_Overflow) != 0;
+        _characteristicUnderflow = (value & MASK_CharacteristicUnderflow) != 0;
+        _characteristicOverflow = (value & MASK_CharacteristicOverflow) != 0;
+        _divideCheck = (value & MASK_DivideCheck) != 0;
+        _operationTrapEnabled = (value & MASK_OperationTrapEnabled) != 0;
+        _arithmeticExceptionEnabled = (value & MASK_ArithmeticExceptionEnabled) != 0;
+        _basicModeBaseRegisterSelection = (value & MASK_BasicModeBaseRegisterSelection) != 0;
+        _quarterWordModeEnabled = (value & MASK_QuarterWordModeEnabled) != 0;
+    }
+
+    public DesignatorRegister setActivityLevelQueueMonitorEnabled(
+        final boolean flag
+    ) {
         _activityLevelQueueMonitorEnabled = flag;
         return this;
     }
 
-    public DesignatorRegister setFaultHandlingInProgress(final boolean flag) {
+    public DesignatorRegister setFaultHandlingInProgress(
+        final boolean flag
+    ) {
         _faultHandlingInProgress = flag;
         return this;
     }
 
-    public DesignatorRegister setExecutive24BitIndexingEnabled(final boolean flag) {
+    public DesignatorRegister setExecutive24BitIndexingEnabled(
+        final boolean flag
+    ) {
         _executive24BitIndexingEnabled = flag;
         return this;
     }
 
-    public DesignatorRegister setQuantumTimerEnabled(final boolean flag) {
+    public DesignatorRegister setQuantumTimerEnabled(
+        final boolean flag
+    ) {
         _quantumTimerEnabled = flag;
         return this;
     }
 
-    public DesignatorRegister setDeferrableInterruptEnabled(final boolean flag) {
+    public DesignatorRegister setDeferrableInterruptEnabled(
+        final boolean flag
+    ) {
         _deferrableInterruptEnabled = flag;
         return this;
     }
 
-    public DesignatorRegister setProcessorPrivilege(final short value) {
+    public DesignatorRegister setProcessorPrivilege(
+        final short value
+    ) {
         _processorPrivilege = (short)(value & 0x03);
         return this;
     }
 
-    public DesignatorRegister setBasicModeEnabled(final boolean flag) {
+    public DesignatorRegister setBasicModeEnabled(
+        final boolean flag
+    ) {
         _basicModeEnabled = flag;
         return this;
     }
 
-    public DesignatorRegister setExecRegisterSetSelected(final boolean flag) {
+    public DesignatorRegister setExecRegisterSetSelected(
+        final boolean flag
+    ) {
         _execRegisterSetSelected = flag;
         return this;
     }
 
-    public DesignatorRegister setCarry(final boolean flag) {
+    public DesignatorRegister setCarry(
+        final boolean flag
+    ) {
         _carry = flag;
         return this;
     }
 
-    public DesignatorRegister setOverflow(final boolean flag) {
+    public DesignatorRegister setOverflow(
+        final boolean flag
+    ) {
         _overflow = flag;
         return this;
     }
 
-    public DesignatorRegister setCharacteristicUnderflow(final boolean flag) {
+    public DesignatorRegister setCharacteristicUnderflow(
+        final boolean flag
+    ) {
         _characteristicUnderflow = flag;
         return this;
     }
 
-    public DesignatorRegister setCharacteristicOverflow(final boolean flag) {
+    public DesignatorRegister setCharacteristicOverflow(
+        final boolean flag
+    ) {
         _characteristicOverflow = flag;
         return this;
     }
 
-    public DesignatorRegister setDivideCheck(final boolean flag) {
+    public DesignatorRegister setDivideCheck(
+        final boolean flag
+    ) {
         _divideCheck = flag;
         return this;
     }
 
-    public DesignatorRegister setOperationTrapEnabled(final boolean flag) {
+    public DesignatorRegister setOperationTrapEnabled(
+        final boolean flag
+    ) {
         _operationTrapEnabled = flag;
         return this;
     }
 
-    public DesignatorRegister setArithmeticExceptionEnabled(final boolean flag) {
+    public DesignatorRegister setArithmeticExceptionEnabled(
+        final boolean flag
+    ) {
         _arithmeticExceptionEnabled = flag;
         return this;
     }
 
-    public DesignatorRegister setBasicModeBaseRegisterSelection(final boolean flag) {
+    public DesignatorRegister setBasicModeBaseRegisterSelection(
+        final boolean flag
+    ) {
         _basicModeBaseRegisterSelection = flag;
         return this;
     }
 
-    public DesignatorRegister setQuarterWordModeEnabled(final boolean flag) {
+    public DesignatorRegister setQuarterWordModeEnabled(
+        final boolean flag
+    ) {
         _quarterWordModeEnabled = flag;
         return this;
     }
 
+    public void setDB12to17(
+        final short value
+    ) {
+        _quantumTimerEnabled = (value & 0_40) != 0;
+        _deferrableInterruptEnabled = (value & 0_20) != 0;
+        _processorPrivilege = (short)((value >> 2) & 0x03);
+        _basicModeEnabled = (value & 0_02) != 0;
+        _execRegisterSetSelected = (value & 0_01) != 0;
+    }
 }

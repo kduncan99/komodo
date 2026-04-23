@@ -23,7 +23,7 @@ public class IndicatorKeyRegister {
     }
 
     public IndicatorKeyRegister(final long value) {
-        setWord36(value);
+        set(value);
     }
 
     public final int getShortStatusField()                        { return _shortStatusField; }
@@ -45,7 +45,7 @@ public class IndicatorKeyRegister {
         return value;
     }
 
-    public IndicatorKeyRegister setWord36(
+    public IndicatorKeyRegister set(
         final long value
     ) {
         _shortStatusField = Word36.getS1(value);

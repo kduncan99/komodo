@@ -12,7 +12,7 @@ public class ActivityStatePacket {
     private final DesignatorRegister _designatorRegister = new DesignatorRegister();
     private final IndicatorKeyRegister _indicatorKeyRegister = new IndicatorKeyRegister();
     private final ProgramAddressRegister _programAddressRegister = new ProgramAddressRegister();
-    private final long _quantumTimer = 0;
+    private long _quantumTimer = 0;
 
     public ActivityStatePacket() {
     }
@@ -27,6 +27,13 @@ public class ActivityStatePacket {
         final long instruction
     ) {
         _currentInstruction.setW(instruction);
+        return this;
+    }
+
+    public ActivityStatePacket setQuantumTimer(
+        final long quantumTimer
+    ) {
+        _quantumTimer = quantumTimer;
         return this;
     }
 }

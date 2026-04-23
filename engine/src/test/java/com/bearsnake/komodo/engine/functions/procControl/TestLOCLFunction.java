@@ -119,7 +119,7 @@ public class TestLOCLFunction extends FunctionUnitTest {
 
         var codeBDTSegIndex = createBankDescriptorTable(1024);
         loadBankDescriptorTableToBaseRegister(codeBDTSegIndex, codeLevel);
-        registerBankDescriptorViaLevelAndBDI(codeLevel, codeBDTSegIndex, codeBD);
+        registerBankDescriptorViaLevelAndBDI(codeLevel, codeBDI, codeBD);
 
         // set up RCS entry with a fake frame which appears to have been created by a CALL from the destination bank.
         createReturnControlStack(0_2000, 32);

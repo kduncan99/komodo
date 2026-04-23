@@ -74,6 +74,51 @@ public class TestDesignatorRegister {
     }
 
     @Test
+    public void testSetDB12To17AndGetDB12To17() {
+        DesignatorRegister dr = new DesignatorRegister();
+
+        dr.setDB12to17((short) 0);
+        assertEquals(0, dr.getDB12to17());
+        assertFalse(dr.isQuantumTimerEnabled());
+        assertFalse(dr.isDeferrableInterruptEnabled());
+        assertEquals(0, dr.getProcessorPrivilege());
+        assertFalse(dr.isBasicModeEnabled());
+        assertFalse(dr.isExecRegisterSetSelected());
+
+        dr.setDB12to17((short) 0_77);
+        assertEquals(0_77, dr.getDB12to17());
+        assertTrue(dr.isQuantumTimerEnabled());
+        assertTrue(dr.isDeferrableInterruptEnabled());
+        assertEquals(3, dr.getProcessorPrivilege());
+        assertTrue(dr.isBasicModeEnabled());
+        assertTrue(dr.isExecRegisterSetSelected());
+
+        dr.setDB12to17((short) 0_40);
+        assertEquals(0_40, dr.getDB12to17());
+        assertTrue(dr.isQuantumTimerEnabled());
+        assertFalse(dr.isDeferrableInterruptEnabled());
+        assertEquals(0, dr.getProcessorPrivilege());
+        assertFalse(dr.isBasicModeEnabled());
+        assertFalse(dr.isExecRegisterSetSelected());
+
+        dr.setDB12to17((short) 0_20);
+        assertEquals(0_20, dr.getDB12to17());
+        assertFalse(dr.isQuantumTimerEnabled());
+        assertTrue(dr.isDeferrableInterruptEnabled());
+        assertEquals(0, dr.getProcessorPrivilege());
+        assertFalse(dr.isBasicModeEnabled());
+        assertFalse(dr.isExecRegisterSetSelected());
+
+        dr.setDB12to17((short) 0_17);
+        assertEquals(0_17, dr.getDB12to17());
+        assertFalse(dr.isQuantumTimerEnabled());
+        assertFalse(dr.isDeferrableInterruptEnabled());
+        assertEquals(3, dr.getProcessorPrivilege());
+        assertTrue(dr.isBasicModeEnabled());
+        assertTrue(dr.isExecRegisterSetSelected());
+    }
+
+    @Test
     public void testClear() {
         DesignatorRegister dr = new DesignatorRegister();
         dr.setCarry(true).setOverflow(true).setProcessorPrivilege((short) 3);
@@ -120,7 +165,7 @@ public class TestDesignatorRegister {
         long word = dr1.getCompositeValue();
 
         DesignatorRegister dr2 = new DesignatorRegister();
-        dr2.setWord36(word);
+        dr2.set(word);
 
         assertEquals(dr1.isActivityLevelQueueMonitorEnabled(), dr2.isActivityLevelQueueMonitorEnabled());
         assertEquals(dr1.isFaultHandlingInProgress(), dr2.isFaultHandlingInProgress());
@@ -146,13 +191,13 @@ public class TestDesignatorRegister {
         DesignatorRegister dr = new DesignatorRegister();
 
         // ActivityLevelQueueMonitorEnabled: MASK_B0 = 1L << 35
-        dr.setWord36(Word36.MASK_B0);
+        dr.set(Word36.MASK_B0);
         assertTrue(dr.isActivityLevelQueueMonitorEnabled());
         assertEquals(Word36.MASK_B0, dr.getCompositeValue());
 
         dr.clear();
         // FaultHandlingInProgress: MASK_B6 = 1L << 29
-        dr.setWord36(Word36.MASK_B6);
+        dr.set(Word36.MASK_B6);
         assertTrue(dr.isFaultHandlingInProgress());
         assertEquals(Word36.MASK_B6, dr.getCompositeValue());
 
@@ -175,13 +220,13 @@ public class TestDesignatorRegister {
 
         dr.clear();
         // BasicModeBaseRegisterSelection: MASK_B31 = 1L << 4
-        dr.setWord36(Word36.MASK_B31);
+        dr.set(Word36.MASK_B31);
         assertTrue(dr.getBasicModeBaseRegisterSelection());
         assertEquals(Word36.MASK_B31, dr.getCompositeValue());
 
         dr.clear();
         // QuarterWordModeEnabled: MASK_B32 = 1L << 3
-        dr.setWord36(Word36.MASK_B32);
+        dr.set(Word36.MASK_B32);
         assertTrue(dr.isQuarterWordModeEnabled());
         assertEquals(Word36.MASK_B32, dr.getCompositeValue());
     }

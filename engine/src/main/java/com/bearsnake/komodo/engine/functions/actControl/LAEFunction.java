@@ -11,7 +11,7 @@ import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 /**
  * Load Addressing Environment function
- * (LAE) Loads B1 through B15 from the 15 words packet at U.
+ * (LAE) Loads B1 through B15 from the 15 word packet at U.
  */
 public class LAEFunction extends Function {
 

@@ -216,69 +216,25 @@ public class Engine {
             stack.set(stackOffset + i, 0);
         }
 
-        var oldAddress = _activityStatePacket.getProgramAddressRegister().getCompositeValue();
-
         // Find interrupt vector for this interrupt class
         var intVector = _baseRegisters[16].getStorage().get(interrupt.getInterruptClass().getCode());
         var sourceLevel = (short) (intVector >> 33);
         var sourceBDIndex = (int) (intVector >> 18) & 0_077777;
-        var sourceOffset = (int) intVector & 0_777777;
         if ((sourceLevel == 0) && (sourceBDIndex < 32)) {
             halt(HaltCode.INVALID_INTERRUPT_VECTOR);
             return;
         }
 
-        // Find the bank descriptor for the interrupt vector.
-        long sourceBDAddr;
+        var fhip = _activityStatePacket.getDesignatorRegister().isFaultHandlingInProgress();
         try {
-            sourceBDAddr = findBankDescriptorAbsoluteAddress(sourceLevel, sourceBDIndex);
-        } catch (AddressingExceptionInterrupt e) {
-            halt(HaltCode.INVALID_INTERRUPT_VECTOR);
-            return;
-        }
-
-        var sourceBDBreg = _baseRegisters[16 + sourceLevel];
-        var sourceBDStorage = sourceBDBreg.getStorage();
-        var sourceBDOffset = (8 * sourceBDIndex) - sourceBDBreg.getLowerLimitNormalized();
-        var sourceBDType = BankDescriptor.getBankType(sourceBDStorage, sourceBDOffset);
-        if (sourceBDType != BankType.ExtendedMode) {
-            halt(HaltCode.INVALID_INTERRUPT_HANDLER_BANK_TYPE);
-            return;
-        }
-
-        // Update hard-held ASP data items.
-        //  PAR.PC is updated to the content of the appropriate interrupt vector
-        _activityStatePacket.getProgramAddressRegister().setProgramCounter(sourceOffset);
-
-        //  DR bits are cleared, excepting DB17 and DB29 are set to 1
-        //      DB1, 2 are not changed (we don't use them, but we'll honor convention)
-        //      DB6 - If this is a Hardware_Check_Interrupt, set DB6 unless it is already set... in that case, halt
-        //      DB17 := 1 (Executive Register Set Selection)
-        //      DB29 := 1 (Arithmetic Exception Enabled)
-        var dBits = _activityStatePacket.getDesignatorRegister().getCompositeValue() & 0_600000_000000L;
-        if ((dBits & DesignatorRegister.MASK_FaultHandlingInProgress) != 0) {
-            if (interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.HardwareCheck) {
+            var oldAddress = _activityStatePacket.getProgramAddressRegister().getCompositeValue();
+            bankManipulation(null, (short) 0, (short) 0, (short) 0, 0, null, intVector, null);
+            createJumpHistoryEntry(oldAddress);
+        } catch (MachineInterrupt e) {
+            if (fhip) {
                 halt(HaltCode.HARDWARE_CHECK_DURING_FAULT_HANDLING);
-                return;
-            } else {
-                dBits |= DesignatorRegister.MASK_FaultHandlingInProgress;
             }
         }
-        dBits |= DesignatorRegister.MASK_ExecRegisterSetSelected;
-        dBits |= DesignatorRegister.MASK_ArithmeticExceptionEnabled;
-        _activityStatePacket.getDesignatorRegister().setWord36(dBits);
-
-        // Clear Indicator Key Register
-        _activityStatePacket.getIndicatorKeyRegister().setWord36(0);
-
-        // Load B0 with the bank containing the interrupt handler
-        try {
-            loadBank(0, sourceBDAddr, sourceLevel, sourceBDIndex, 0);
-        } catch (HardwareCheckInterrupt e) {
-            halt(HaltCode.CANNOT_LOAD_INTERRUPT_HANDLER_BANK);
-        }
-
-        createJumpHistoryEntry(oldAddress);
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -606,8 +562,8 @@ public class Engine {
 
     public void clear() {
         _activityStatePacket.getCurrentInstruction().setW(0);
-        _activityStatePacket.getDesignatorRegister().setWord36(0);
-        _activityStatePacket.getIndicatorKeyRegister().setWord36(0);
+        _activityStatePacket.getDesignatorRegister().set(0);
+        _activityStatePacket.getIndicatorKeyRegister().set(0);
         _activityStatePacket.getProgramAddressRegister()
                             .setProgramCounter(0)
                             .setBankLevel((short) 0)
@@ -1906,7 +1862,7 @@ public class Engine {
 
     private final long[] _bamRcsWords = new long[2];
     private short _bamRcsBaseRegisterNumber;
-    private int _bamRcsDB12to17;
+    private short _bamRcsDB12to17;
     private final AccessKey _bamRcsAccessKey = new AccessKey();
 
     private short _bamTargetBankLevel;
@@ -1941,7 +1897,7 @@ public class Engine {
      * @param lxjBankDescriptorIndex the bank descriptor index to be loaded for LxJ functions
      * @param lxjXRegister           the X(a) register for LxJ functions
      * @param operand                the operand for the instruction, or the interrupt vector for an interrupt
-     * @param operands               alternate operands (such as from UR)
+     * @param operands               alternate operands (such as from UR or LAE)
      */
     public void bankManipulation(
         final Function function,
@@ -1972,7 +1928,6 @@ public class Engine {
             bankManipulationStep8(baseRegisterNumber);
         }
 
-        // Step 9 - gate bank processing
         if (_bamProcessGate) {
             bankManipulationStep9(interfaceSpec);
         }
@@ -1988,28 +1943,20 @@ public class Engine {
         bankManipulationStep13(lxjXRegister);
         bankManipulationStep14();
 
-        // Step 15 - Transfer gate fields
         if (_bamProcessGate) {
-            // TODO
+            bankManipulationStep15();
+        } else {
+            bankManipulationStep16(operands);
         }
 
-        // Step 16 - Hard-held ASP update
-        // TODO
+        bankManipulationStep17();
+        bankManipulationStep18();
+        bankManipulationStep19(operands);
+        bankManipulationStep20();
 
-        // Step 17 - More hard-held ASP update
-        // TODO
-
-        // Step 18 - Update ABTE or Hard-held L,BDI
-        // TODO
-
-        // Step 19 - Load base register (finally)
-        // TODO
-
-        // Step 20 - Toggle DB31 designator register bit for Basic Mode
-        // TODO
-
-        // Step 21 - Exception checking
-        // TODO
+        if (!_bamTargetIsVoid) {
+            bankManipulationStep21();
+        }
     }
 
     private void bankManipulationSetup(
@@ -2088,7 +2035,7 @@ public class Engine {
         if (_bamIsRTN || _bamIsLxJRTN) {
             releaseRCSFrame(_bamRcsWords);
             var rcsB = _bamRcsWords[1] >> 24;
-            _bamRcsDB12to17 = (int) (_bamRcsWords[1] >> 18) & 077;
+            _bamRcsDB12to17 = (short) ((_bamRcsWords[1] >> 18) & 077);
             _bamRcsAccessKey.fromComposite(_bamRcsWords[1] & 0_777777);
 
             var destIsBasic = (_bamRcsDB12to17 & 02) != 0;
@@ -2459,7 +2406,7 @@ public class Engine {
         var dr = _activityStatePacket.getDesignatorRegister();
         var ik = _activityStatePacket.getIndicatorKeyRegister();
         var pc = par.getProgramCounter() + 1;
-        short db12To17 = (short) ((dr.getCompositeValue() >> 18) & 0_77);
+        short db12To17 = dr.getDB12to17();
 
         if (_bamIsCALL) {
             if (_bamTransferMode == TransferMode.EM_TO_EM) {
@@ -2528,5 +2475,189 @@ public class Engine {
         }
     }
 
-    // TODO more steps
+    // Step 15 - Gate fields transfer (for situations where a gate bank was processed)
+    // This is mutually exclusive with step 16 below.
+    private void bankManipulationStep15() {
+        // Load designator bits 12-17
+        if (!Gate.isDesignatorBitInhibited(_bamGateStorage, _bamGateOffset)) {
+            var dr = _activityStatePacket.getDesignatorRegister();
+            dr.setDB12to17((short)Gate.getDesignatorRegisterBits12To17(_bamGateStorage, _bamGateOffset));
+        }
+
+        // Load access key
+        if (!Gate.isAccessKeyInhibited(_bamGateStorage, _bamGateOffset)) {
+            var ik = _activityStatePacket.getIndicatorKeyRegister();
+            ik.getAccessKey().set(Gate.getAccessKey(_bamGateStorage, _bamGateOffset));
+        }
+
+        // Load latent parameters
+        if (!Gate.isLatentParameter0Inhibited(_bamGateStorage, _bamGateOffset)) {
+            var r0Reg = getExecOrUserXRegister(0);
+            r0Reg.setW(Gate.getLatentParameter0(_bamGateStorage, _bamGateOffset));
+        }
+
+        if (!Gate.isLatentParameter1Inhibited(_bamGateStorage, _bamGateOffset)) {
+            var r1Reg = getExecOrUserXRegister(1);
+            r1Reg.setW(Gate.getLatentParameter1(_bamGateStorage, _bamGateOffset));
+        }
+    }
+
+    // Step 16 - Hard-held ASP write for certain situations.
+    // This is mutually exclusive with step 15 above.
+    private void bankManipulationStep16(
+        final long[] operands
+    ) {
+        var ik = _activityStatePacket.getIndicatorKeyRegister();
+        var dr = _activityStatePacket.getDesignatorRegister();
+
+        if (_bamIsUR) {
+            _activityStatePacket.getProgramAddressRegister().fromComposite(operands[0]);
+            _activityStatePacket.getDesignatorRegister().set(operands[1]);
+            var ssf = _activityStatePacket.getIndicatorKeyRegister().getShortStatusField();
+            _activityStatePacket.getIndicatorKeyRegister().set(operands[2]).setShortStatusField(ssf);
+            _activityStatePacket.setQuantumTimer(operands[3]);
+            _activityStatePacket.getCurrentInstruction().setW(operands[4]);
+        } else if (_bamIsTransfer) {
+            switch (_bamTransferMode) {
+                case EM_TO_EM -> {
+                    if (_bamIsRTN) {
+                        ik.getAccessKey().set(_bamRcsAccessKey);
+                        dr.setDB12to17(_bamRcsDB12to17);
+                    }
+                }
+                case BM_TO_BM -> {
+                    if (_bamIsLxJRTN) {
+                        ik.getAccessKey().set(_bamRcsAccessKey);
+                        dr.setDB12to17(_bamRcsDB12to17);
+                    }
+                }
+                case EM_TO_BM -> {
+                    if (_bamIsCALL || _bamIsGOTO) {
+                        dr.setBasicModeEnabled(true);
+                    } else if (_bamIsRTN) {
+                        ik.getAccessKey().set(_bamRcsAccessKey);
+                        dr.setDB12to17(_bamRcsDB12to17);
+                    }
+                }
+                case BM_TO_EM -> {
+                    if (_bamIsLxJRTN) {
+                        ik.getAccessKey().set(_bamRcsAccessKey);
+                        dr.setDB12to17(_bamRcsDB12to17);
+                    } else if (_bamIsLxJ) {
+                        dr.setBasicModeEnabled(false);
+                    }
+                }
+            }
+        } else if (_bamIsInterrupt) {
+            // Update hard-held ASP data items.
+            //  PAR.PC is updated to the content of the appropriate interrupt vector
+            _activityStatePacket.getProgramAddressRegister().setProgramCounter(_bamTargetOffset);
+
+            //  DR bits are cleared, excepting DB17 and DB29 are set to 1
+            //      DB1, 2 are not changed (we don't use them, but we'll honor convention)
+            //      DB6 - If this is a Hardware_Check_Interrupt, set DB6
+            //      DB17 := 1 (Executive Register Set Selection)
+            //      DB29 := 1 (Arithmetic Exception Enabled)
+            var dBits = _activityStatePacket.getDesignatorRegister().getCompositeValue() & 0_600000_000000L;
+            dBits |= DesignatorRegister.MASK_FaultHandlingInProgress;
+            dBits |= DesignatorRegister.MASK_ExecRegisterSetSelected;
+            dBits |= DesignatorRegister.MASK_ArithmeticExceptionEnabled;
+            _activityStatePacket.getDesignatorRegister().set(dBits);
+
+            // Clear Indicator Key Register
+            _activityStatePacket.getIndicatorKeyRegister().set(0);
+        }
+    }
+
+    // Step 17 - More hard-held ASP update - write PAR.PC for transfers
+    private void bankManipulationStep17() {
+        if (_bamIsTransfer) {
+            _activityStatePacket.getProgramAddressRegister().setProgramCounter(_bamTargetOffset);
+            spSetPreventProgramCounterUpdate(true);
+        }
+    }
+
+    // Step 18 - Update ABTE or Hard-held L,BDI
+    private void bankManipulationStep18() {
+        if (_bamBaseRegisterNumber == 0) {
+            var par = _activityStatePacket.getProgramAddressRegister();
+            par.setBankLevel(_bamTargetBankLevel);
+            par.setBankDescriptorIndex(_bamTargetBankDescriptorIndex);
+        } else {
+            var abte = _activeBaseTable.getEntry(_bamBaseRegisterNumber);
+            if (_bamTargetIsVoid) {
+                abte.setBankLevel((short) 0);
+                abte.setBankDescriptorIndex(0);
+            } else {
+                abte.setBankLevel(_bamTargetBankLevel);
+                abte.setBankDescriptorIndex(_bamTargetBankDescriptorIndex);
+                if (_bamIsLoad) {
+                    abte.setSubsetSpecification(_bamTargetOffset);
+                } else if (_bamIsTransfer) {
+                    abte.setSubsetSpecification(0);
+                }
+            }
+        }
+    }
+
+    // Step 19 - Load base register (finally)
+    private void bankManipulationStep19(
+        final long[] operands
+    ) throws HardwareCheckInterrupt, AddressingExceptionInterrupt {
+        if (_bamIsLAE) {
+            for (int brx = 1, opx = 0; brx < 16; brx++, opx++) {
+                var op = operands[opx];
+                if (Word36.getH1(op) == 0) {
+                    _baseRegisters[brx].setIsVoid(true);
+                    var abte = _activeBaseTable.getEntry(brx);
+                    abte.setBankLevel((short) 0);
+                    abte.setBankDescriptorIndex(0);
+                } else {
+                    loadBank(brx, (short) (op >> 33), (int) (op >> 18), (int) (op & 0_777777));
+                }
+            }
+        } else {
+            if (_bamTargetIsVoid) {
+                _baseRegisters[_bamBaseRegisterNumber].setIsVoid(true);
+                var abte = _activeBaseTable.getEntry(_bamBaseRegisterNumber);
+                abte.setBankLevel((short) 0);
+                abte.setBankDescriptorIndex(0);
+            } else {
+                loadBank(_bamBaseRegisterNumber,
+                         _bamTargetBankLevel,
+                         (int) _bamTargetBankDescriptorIndex,
+                         0);// TODO subset should be set appropriately; 0 is not always right
+            }
+        }
+    }
+
+    // Step 20 - Toggle DB31 designator register bit for transfers to Basic Mode
+    private void bankManipulationStep20() {
+        if (_bamTransferMode == TransferMode.EM_TO_BM) {
+            var db31Bit = _bamBaseRegisterNumber == 13 || _bamBaseRegisterNumber == 15;
+            _activityStatePacket.getDesignatorRegister().setBasicModeBaseRegisterSelection(db31Bit);
+        }
+    }
+
+    // Step 21 - Exception checking
+    private void bankManipulationStep21() throws TerminalAddressingExceptionInterrupt {
+        // exception check - G
+        var checkG = false;
+        checkG |= ((_bamIsLBU || _bamIsLBE) && (_bamTargetBankType != BankType.QueueRepository));
+        checkG |= _bamTransferMode != null;
+        if (checkG && BankDescriptor.isGeneralFault(_bamTargetBDStorage, _bamTargetBDOffset)) {
+            throw new TerminalAddressingExceptionInterrupt(TerminalAddressingExceptionInterrupt.Reason.GBitSetInTargetBD,
+                                                           _bamTargetBankLevel,
+                                                           _bamTargetBankDescriptorIndex);
+        }
+
+        // exception check - E
+        // TODO
+
+        // exception check - V
+        // TODO
+
+        // exception check - S
+        // TODO
+    }
 }

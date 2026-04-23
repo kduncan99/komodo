@@ -66,7 +66,7 @@ public class TestRTNFunction extends FunctionUnitTest {
 
         var destinationBDTSegIndex = createBankDescriptorTable(1024);
         loadBankDescriptorTableToBaseRegister(destinationBDTSegIndex, destinationLevel);
-        registerBankDescriptorViaLevelAndBDI(destinationLevel, destinationBDTSegIndex, destinationBD);
+        registerBankDescriptorViaLevelAndBDI(destinationLevel, destinationBDI, destinationBD);
 
         // set up BDT, BD, and bank for the code bank we are returning from
         var initialLevel = 5;
@@ -77,7 +77,7 @@ public class TestRTNFunction extends FunctionUnitTest {
 
         var initialBDTSegIndex = createBankDescriptorTable(1024);
         loadBankDescriptorTableToBaseRegister(initialBDTSegIndex, initialLevel);
-        registerBankDescriptorViaLevelAndBDI(initialLevel, initialBDTSegIndex, initialBD);
+        registerBankDescriptorViaLevelAndBDI(initialLevel, initialBDI, initialBD);
 
         // set up RCS entry with a fake frame which appears to have been created by a CALL from the destination bank.
         createReturnControlStack(0_2000, 32);
