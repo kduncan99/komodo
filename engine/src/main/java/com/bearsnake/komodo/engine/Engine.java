@@ -37,6 +37,14 @@ public class Engine {
     public static final int ICS_BASE_REGISTER = 26;
     public static final int ICS_STACK_POINTER = GRS_EX1;
 
+    // The exact meaning of this (or rather the consequences of this) are dependant upon whether
+    // we have an internal or an external operating system. It has meaning for the following functions:
+    //  SEND
+    //  ACI
+    //  SPID
+    private final short _upiNumber;
+    private boolean _broadcastInterruptEligible = false;
+
     // This is how we talk directly to storage.
     // Generally, we try to maintain ArraySlice objects through which we can access storage without
     // actually bothering the manager. However, we do need the manager whenever we need to allocate new storage
@@ -73,10 +81,14 @@ public class Engine {
 
     /**
      * This constructor is for use with an internal operating system.
+     * @param upiNumber        UPI number of this engine. This is the number which identifies the engine in the
+     * @param storageManager   storage manager for this engine. Could be the external operating system.
      */
     public Engine(
+        final short upiNumber,
         final StorageManager storageManager
     ) {
+        _upiNumber = upiNumber;
         _storageManager = storageManager;
 
         _random.setSeed(System.currentTimeMillis());
@@ -94,6 +106,21 @@ public class Engine {
 
     /**
      * This constructor is for use by external operating systems.
+     * @param upiNumber        UPI number of this engine. This is the number which identifies the engine in the
+     * @param storageManager   storage manager for this engine. Could be the external operating system.
+     * @param interruptHandler interrupt handler for this engine. This is part of the external operating system.
+     */
+    public Engine(
+        final short upiNumber,
+        final StorageManager storageManager,
+        final InterruptHandler interruptHandler
+    ) {
+        this(upiNumber, storageManager);
+        _interruptHandler = interruptHandler;
+    }
+
+    /**
+     * This constructor is for unit tests - it assumes a fixed UPI number of zero
      * @param storageManager   storage manager for this engine. Could be the external operating system.
      * @param interruptHandler interrupt handler for this engine. This is part of the external operating system.
      */
@@ -101,8 +128,7 @@ public class Engine {
         final StorageManager storageManager,
         final InterruptHandler interruptHandler
     ) {
-        this(storageManager);
-        _interruptHandler = interruptHandler;
+        this((short) 0, storageManager, interruptHandler);
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -243,6 +269,8 @@ public class Engine {
     private final long[] _jumpHistoryTable = new long[JUMP_HISTORY_TABLE_SIZE];
     private int _jumpHistoryTableFirstIndex = 0;    // index of first existing entry in the jump history table
     private int _jumpHistoryTableNextIndex = 0;     // where we put the next entry
+    private boolean _enableJumpHistoryInterrupt = true;
+    private boolean _jumpHistoryIsFull = false;
 
     public void clearJumpHistoryTable() {
         IntStream.range(0, JUMP_HISTORY_TABLE_SIZE)
@@ -261,13 +289,25 @@ public class Engine {
         if (_jumpHistoryTableNextIndex == JUMP_HISTORY_TABLE_SIZE) {
             _jumpHistoryTableNextIndex = 0;
             if (_jumpHistoryTableNextIndex == _jumpHistoryTableFirstIndex) {
-                postInterrupt(new JumpHistoryFullInterrupt());
+                if (_enableJumpHistoryInterrupt) {
+                    postInterrupt(new JumpHistoryFullInterrupt());
+                    _jumpHistoryIsFull = false;
+                } else {
+                    _jumpHistoryIsFull = true;
+                }
+
                 _jumpHistoryTableFirstIndex++;
                 if (_jumpHistoryTableFirstIndex == JUMP_HISTORY_TABLE_SIZE) {
                     _jumpHistoryTableFirstIndex = 0;
                 }
             }
         }
+    }
+
+    public void enableJumpHistoryInterrupt(
+        final boolean flag
+    ) {
+        _enableJumpHistoryInterrupt = flag;
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -355,18 +395,29 @@ public class Engine {
     // to a memory location across interrupt points. It is static because it is most needed when we have
     // multiple active Engine objects.
     private static final HashMap<Long, Engine> _lockedAddresses = new HashMap<>();
-    private static boolean _lockIsHeldByUs = false;
 
     /**
      * Clears all the locks held by this engine.
      */
-    private void addressClearLocks() {
-        if (_lockIsHeldByUs) {
-            synchronized (_lockedAddresses) {
-                _lockedAddresses.entrySet()
-                                .removeIf(entry -> entry.getValue() == this);
-                _lockIsHeldByUs = false;
-            }
+    //TODO This is done upon detection of a hardware fault...
+    //  otherwise, locks are to be cleared explicitly, not en masse...
+    private void addressClearAllLocks() {
+        synchronized (_lockedAddresses) {
+            _lockedAddresses.entrySet()
+                            .removeIf(entry -> entry.getValue() == this);
+        }
+    }
+
+    /**
+     * Clears a specific lock - this is not restricted to the processor which obtained the lock,
+     * because it might have been set by SYSC, and is to be cleared by a different processor via SYSC.
+     * @param absoluteAddress the address to be cleared
+     */
+    public void addressClearLock(
+        final Long absoluteAddress
+    ) {
+        synchronized (_lockedAddresses) {
+            _lockedAddresses.remove(absoluteAddress);
         }
     }
 
@@ -376,7 +427,7 @@ public class Engine {
      * @param absoluteAddress the address to lock
      * @return true if we could obtain the lock, false otherwise.
      */
-    private boolean addressLock(
+    public boolean addressLock(
         final Long absoluteAddress
     ) {
         synchronized (_lockedAddresses) {
@@ -384,7 +435,6 @@ public class Engine {
                 return false;
             } else {
                 _lockedAddresses.put(absoluteAddress, this);
-                _lockIsHeldByUs = true;
                 return true;
             }
         }
@@ -396,7 +446,7 @@ public class Engine {
      * An entity should NEVER call this if it has already locked the address.
      * @param absoluteAddress the address to lock
      */
-    private void addressLockAndWait(
+    public void addressLockAndWait(
         final Long absoluteAddress
     ) {
         while (!addressLock(absoluteAddress)) {
@@ -469,8 +519,8 @@ public class Engine {
         final BaseRegister bReg,
         final long relativeAddress,
         final long addressCount,
-        final boolean readFlag,
-        final boolean writeFlag,
+        final boolean readFlag,// TODO why always false?
+        final boolean writeFlag,// TODO why always true?
         final AccessKey accessKey
     ) throws ReferenceViolationInterrupt {
         // TODO can we use BaseRegister.checkAccessLimits() ?
@@ -557,6 +607,14 @@ public class Engine {
         return _baseRegisters[registerNumber];
     }
 
+    public StorageManager getStorageManager() {
+        return _storageManager;
+    }
+
+    public short getUpiNumber() {
+        return _upiNumber;
+    }
+
     // -----------------------------------------------------------------------------------------------------------------------------
     // Useful miscellaneous methods
 
@@ -579,6 +637,16 @@ public class Engine {
         spClearOperandBaseRegisterIndex();
         spClearOperandRelativeAddress();
         spClearCurrentFunction();
+    }
+
+    /**
+     * Clears the reset condition -
+     *  invoked directly by external operating system,
+     *  invoked via IPC by internal operating system
+     * once we are ready to handle exigent interrupts.
+     */
+    public void clearReset() {
+        _resetIndicator = false;
     }
 
     /**
@@ -635,6 +703,11 @@ public class Engine {
     public boolean cycle() {
         if (_haltCode != HaltCode.NONE) {
             return false;
+        }
+
+        if (_jumpHistoryIsFull) {
+            postInterrupt(new JumpHistoryFullInterrupt());
+            _jumpHistoryIsFull = false;
         }
 
         if (checkForInterrupts()) {
@@ -699,10 +772,11 @@ public class Engine {
                     spSetPreventProgramCounterUpdate(false);
                 }
             }
+        } catch (HardwareCheckInterrupt | HardwareDefaultInterrupt e) {
+            addressClearAllLocks();
+            postInterrupt(e);
         } catch (MachineInterrupt e) {
             postInterrupt(e);
-        } finally {
-            addressClearLocks();
         }
 
         return complete;
@@ -1191,6 +1265,15 @@ public class Engine {
         }
     }
 
+    /**
+     * For IPC function to enable or disable broadcast interrupts (UPI mechanism)
+     */
+    public void setBroadcastInterruptEligible(
+        final boolean flag
+    ) {
+        _broadcastInterruptEligible = flag;
+    }
+
     // -----------------------------------------------------------------------------------------------------------------------------
     // Address resolution
 
@@ -1407,6 +1490,40 @@ public class Engine {
         return IntStream.range(0, count)
                         .mapToLong(ox -> bReg.getStorage().get(offset + ox))
                         .toArray();
+    }
+
+    public long[] getConsecutiveOperandsFromCachedAddress(
+        final int count
+    ) throws MachineInterrupt {
+        var result = new long[count];
+
+        var dr = _activityStatePacket.getDesignatorRegister();
+        var pPriv = dr.getProcessorPrivilege();
+        var brx = spGetOperandBaseRegisterIndex();
+        var relAddr = spGetOperandRelativeAddress();
+        if (spGetOperandIsGRS()) {
+            // reading from the GRS
+            for (int i = 0; i < count; i++) {
+                var addr = (relAddr + i) & 0177;
+                if (!GeneralRegisterSet.isAccessAllowed(addr, pPriv, false)) {
+                    throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.WriteAccessViolation, true);
+                }
+                result[i] = _generalRegisterSet.getRegister(addr).getW();
+            }
+        } else {
+            // reading from storage...
+            var ikr = _activityStatePacket.getIndicatorKeyRegister();
+            var key = ikr.getAccessKey();
+            checkAccessLimitsRange(_baseRegisters[brx], relAddr, count, false, true, key);
+
+            var bReg = _baseRegisters[brx];
+            var baseOffset = relAddr - bReg.getLowerLimitNormalized();
+            for (int i = 0; i < count; i++) {
+                result[i] = bReg.getStorage().get(baseOffset + i);
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -1657,7 +1774,6 @@ public class Engine {
                 _generalRegisterSet.setRegister(addr, operands[offset + i]);
             }
         } else {
-
             // We're writing to storage...
             var ikr = _activityStatePacket.getIndicatorKeyRegister();
             var key = ikr.getAccessKey();
@@ -1666,8 +1782,7 @@ public class Engine {
             var bReg = _baseRegisters[brx];
             var baseOffset = relAddr - bReg.getLowerLimitNormalized();
             for (int i = 0; i < count; i++) {
-                bReg.getStorage()
-                    .set(baseOffset + i, operands[offset + i]);
+                bReg.getStorage().set(baseOffset + i, operands[offset + i]);
             }
         }
     }

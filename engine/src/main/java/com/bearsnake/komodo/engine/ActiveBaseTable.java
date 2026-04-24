@@ -21,15 +21,15 @@ public class ActiveBaseTable {
             final int bankDescriptorIndex,
             final int subsetSpecification
         ) {
-            _bankLevel = bankLevel;
-            _bankDescriptorIndex = bankDescriptorIndex;
-            _subsetSpecification = subsetSpecification;
+            _bankLevel = (short) (bankLevel & 07);
+            _bankDescriptorIndex = bankDescriptorIndex & 0_077777;
+            _subsetSpecification = subsetSpecification & 0_777777;
         }
 
         public Entry setBankLevel(
             final short bankLevel
         ) {
-            _bankLevel = (short)(bankLevel & 0_07);
+            _bankLevel = (short) (bankLevel & 0_07);
             return this;
         }
 
@@ -45,6 +45,10 @@ public class ActiveBaseTable {
         ) {
             _subsetSpecification = subsetSpecification & 0_777777;
             return this;
+        }
+
+        public long toComposite() {
+            return (((long) _bankLevel) << 33) | (((long)_bankDescriptorIndex) << 16) | _subsetSpecification;
         }
     }
 

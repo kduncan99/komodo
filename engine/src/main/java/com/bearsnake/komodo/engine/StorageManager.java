@@ -58,6 +58,13 @@ public interface StorageManager {
     void releaseSegment(final int segment) throws HardwareCheckInterrupt;
 
     /**
+     * Resizes the indicated segment.  The segment will be truncated or padded with zeros to the new size.
+     * @param segment The segment index, from 0 to 0x7FFFFFFF.
+     * @param newSize The new size of the segment (from 0 to 0x7FFFFFFF), in words.
+     */
+    void resizeSegment(final int segment, final int newSize) throws HardwareCheckInterrupt;
+
+    /**
      * Sets a word in the indicated segment.
      * @param segment The segment index, from 0 to 0x7FFFFFFF.
      * @param offset The offset within the segment, from 0 to segment size - 1.

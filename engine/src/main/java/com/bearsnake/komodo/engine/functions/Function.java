@@ -10,9 +10,11 @@ import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.DesignatorRegister;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.jump.JGDFunction;
+import com.bearsnake.komodo.engine.functions.procControl.RTNFunction;
 import com.bearsnake.komodo.engine.interrupts.HardwareDefaultInterrupt;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
+import com.bearsnake.komodo.engine.functions.system.IARFunction;
 
 import java.util.HashMap;
 
@@ -181,24 +183,6 @@ public abstract class Function {
     ) {
         var dReg = engine.getDesignatorRegister();
 
-        // Special code for JGD
-        //      JGD a,*u,*x
-        // looks normal, but the trick here is that a is a GRS index, created by concatenating the
-        // j-field with the a-field (dropping the highest bit of the j-field) for 7 bits of GRS index.
-        if (iWord.getF() == 070) {
-            return JGDFunction.interpret(engine, iWord);
-        }
-
-        // Special code for RTN
-        //      RTN
-        // x, h, i, b, and d fields are ignored, but we will ignore them only if they are zero.
-        if (!dReg.isBasicModeEnabled()
-            && (iWord.getW() == fjaxhibd(073, 017, 003, 0, 0, 0, 0, 0))) {
-            return "RTN";
-        }
-
-        // TODO Special code for BT
-
         Function func;
         try {
             func = lookup(dReg, iWord.getW());
@@ -209,6 +193,26 @@ public abstract class Function {
         FunctionCode funcCode = dReg.isBasicModeEnabled()
                                 ? func.getBasicModeFunctionCode()
                                 : func.getExtendedModeFunctionCode();
+
+        // Special code for JGD
+        //      JGD a,*u,*x
+        // looks normal, but the trick here is that a is a GRS index, created by concatenating the
+        // j-field with the a-field (dropping the highest bit of the j-field) for 7 bits of GRS index.
+        if (func instanceof JGDFunction) {
+            return JGDFunction.interpret(engine, iWord);
+        }
+
+        // Special code for IAR, RTN
+        //      IAR
+        //      RTN
+        // x, h, i, b, and d fields are ignored, but we will ignore them only if they are zero.
+        if (((func instanceof IARFunction) || (func instanceof RTNFunction))
+            && (iWord.getX() == 0)
+            && (iWord.getHIU() == 0)) {
+            return func.getMnemonic();
+        }
+
+        // TODO Special code for BT
 
         // first display field - mnemonic and optional j-field designation.
         // If there is a j-field value in the function coordinate, it is not used as a

@@ -144,6 +144,17 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
         _segments.remove(segment);
     }
 
+    public synchronized void resizeSegment(
+        final int segment,
+        final int newSize
+    ) throws HardwareCheckInterrupt {
+        if (!_segments.containsKey(segment)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        }
+        var slice = _segments.get(segment);
+        asdf
+    }
+
     /**
      * Sets a word in the indicated segment.
      * @param segment The segment index, from 0 to 0x7FFFFFFF.

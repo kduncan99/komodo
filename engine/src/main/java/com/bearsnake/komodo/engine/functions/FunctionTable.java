@@ -10,6 +10,7 @@ import com.bearsnake.komodo.engine.functions.actControl.LAEFunction;
 import com.bearsnake.komodo.engine.functions.actControl.LDFunction;
 import com.bearsnake.komodo.engine.functions.actControl.SDFunction;
 import com.bearsnake.komodo.engine.functions.actControl.URFunction;
+import com.bearsnake.komodo.engine.functions.addrSpace.DABTFunction;
 import com.bearsnake.komodo.engine.functions.addrSpace.LBEFunction;
 import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.decimal.*;
@@ -25,9 +26,13 @@ import com.bearsnake.komodo.engine.functions.shift.*;
 import com.bearsnake.komodo.engine.functions.special.*;
 import com.bearsnake.komodo.engine.functions.stack.BUYFunction;
 import com.bearsnake.komodo.engine.functions.stack.SELLFunction;
+import com.bearsnake.komodo.engine.functions.system.IPCFunction;
+import com.bearsnake.komodo.engine.functions.system.SPIDFunction;
+import com.bearsnake.komodo.engine.functions.system.SYSCFunction;
 import com.bearsnake.komodo.engine.functions.test.*;
 import com.bearsnake.komodo.engine.functions.store.*;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
+import com.bearsnake.komodo.engine.functions.system.IARFunction;
 
 import java.util.HashMap;
 
@@ -252,8 +257,7 @@ public abstract class FunctionTable {
         // TNESFunction.INSTANCE,
 
         // addressSpace
-        // DABTFunction.INSTANCE,   PP=0,1
-
+        DABTFunction.INSTANCE,// TODO needs unit tests
         LBEFunction.INSTANCE,// TODO needs unit tests
         // LBEDFunction.INSTANCE,   PP=0
         // LBNFunction.INSTANCE,
@@ -309,10 +313,10 @@ public abstract class FunctionTable {
         SGNLFunction.INSTANCE,
 
         // system
-        // IARFunction.INSTANCE,    PP=0
-        // IPCFunction.INSTANCE,    PP=0
-        // SPIDFunction.INSTANCE,   PP=0,1,2
-        // SYSCFunction.INSTANCE,   PP=0
+        IARFunction.INSTANCE,
+        IPCFunction.INSTANCE,// TODO needs unit tests
+        SPIDFunction.INSTANCE,// TODO needs unit tests
+        SYSCFunction.INSTANCE,// TODO needs unit tests
 
         // dayclock
         // LMCFunction.INSTANCE,    PP=0
