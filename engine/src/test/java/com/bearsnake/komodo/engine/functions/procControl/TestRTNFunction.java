@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.procControl;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.AccessKey;
 import com.bearsnake.komodo.engine.BankDescriptor;
 import com.bearsnake.komodo.engine.BankType;
@@ -35,8 +34,7 @@ public class TestRTNFunction extends FunctionUnitTest {
             rtn()
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
         createReturnControlStack(0_2000, 32);
 
         _engine.getDesignatorRegister()
@@ -58,22 +56,21 @@ public class TestRTNFunction extends FunctionUnitTest {
     @Test
     public void testRTN_to_EM() throws MachineInterrupt {
         // set up BDT, BD, and bank for the code bank we are returning to
-        var destinationLevel = 7;
+        var destinationLevel = (short) 7;
         var destinationBDI = 0_000016;
-        var destinationBD = new BankDescriptor();
-        var destinationOffset = 0_1010; // the return-to address
-        var destinationBank = createBank(BankType.ExtendedMode, 0_1000, 1024, destinationBD);
+        var destinationBD = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0_1).setUpperLimit(0_1777);
+        var destinationAddress = 0_1010; // the return-to address
 
         var destinationBDTSegIndex = createBankDescriptorTable(1024);
         loadBankDescriptorTableToBaseRegister(destinationBDTSegIndex, destinationLevel);
         registerBankDescriptorViaLevelAndBDI(destinationLevel, destinationBDI, destinationBD);
 
         // set up BDT, BD, and bank for the code bank we are returning from
-        var initialLevel = 5;
+        var initialLevel = (short) 5;
         var initialBDI = 0_000004;
-        var initialBD = new BankDescriptor();
+        var initialBD = new BankDescriptor().setBankType(BankType.ExtendedMode).setLowerLimit(0_1).setUpperLimit(0_1777);
         var initialBank = createBank(BankType.ExtendedMode, 0_1000, 1024, initialBD);
-        initialBank.set(2, rtn());
+        initialBank[2] = rtn();
 
         var initialBDTSegIndex = createBankDescriptorTable(1024);
         loadBankDescriptorTableToBaseRegister(initialBDTSegIndex, initialLevel);
@@ -84,12 +81,12 @@ public class TestRTNFunction extends FunctionUnitTest {
         var db12to17 = 010; // !quantumTimer, !deferrable, pp=2, !basicMode, !execRegs
         _engine.allocateAndPopulateRCSFrame(destinationLevel,
                                             destinationBDI,
-                                            destinationOffset,
+                                            destinationAddress,
                                             0,
                                             db12to17,
                                             new AccessKey((short)3, (short)12));
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, initialBD.getBaseAddress(), initialBank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, initialBD.getBaseAddress(), initialBank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -98,11 +95,11 @@ public class TestRTNFunction extends FunctionUnitTest {
         _engine.getProgramAddressRegister()
                .setProgramCounter(0_1002) // arbitrary
                .setBankDescriptorIndex(initialBDI)
-               .setBankLevel((short) initialLevel);
+               .setBankLevel(initialLevel);
 
         run();
 
-        assertEquals(destinationOffset, _engine.getProgramAddressRegister().getProgramCounter());
+        assertEquals(destinationAddress, _engine.getProgramAddressRegister().getProgramCounter());
         assertEquals(destinationBDI, _engine.getProgramAddressRegister().getBankDescriptorIndex());
         assertEquals(destinationLevel, _engine.getProgramAddressRegister().getBankLevel());
     }

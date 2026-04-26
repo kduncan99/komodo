@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -41,8 +40,7 @@ public class TestJFunction extends FunctionUnitTest {
         var code = new long[01000];
         code[0] = jBM(01003);   // J 01003
 
-        var bank0 = new ArraySlice(code);
-          loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+          loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -61,13 +59,11 @@ public class TestJFunction extends FunctionUnitTest {
     @Test
     public void testJ_ToDBank_BM() throws MachineInterrupt {
         var code = new long[]{ jBM(03000), };
-        var data = new long[]{ 0, 0, 0, };
+        var other = new long[]{ 0, 0, 0, };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(13, false, 0_3000, 0_3777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 13, false, 0_3000, 0_3777, 0, other);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -86,13 +82,11 @@ public class TestJFunction extends FunctionUnitTest {
     @Test
     public void testJ_ToOppositeIBank_BM() throws MachineInterrupt {
         var code = new long[]{ jBM(04000), };
-        var other = new long[]{ 0, 0, 0, };
+        var other = new long[]{ 0, 0, 0 };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(other);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(14, false, 0_4000, 0_4777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 14, false, 0_4000, 0_4777, 0, other);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -113,11 +107,9 @@ public class TestJFunction extends FunctionUnitTest {
         var code = new long[]{ jBM(05000), };
         var other = new long[]{ 0, 0, 0, };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(other);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(15, false, 0_5000, 0_5777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 15, false, 0_5000, 0_5777, 0, other);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -141,8 +133,7 @@ public class TestJFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -174,8 +165,7 @@ public class TestJFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -200,8 +190,7 @@ public class TestJFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -222,8 +211,7 @@ public class TestJFunction extends FunctionUnitTest {
         var code = new long[0400005];
         code[0] = jEM(0400005);
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_400777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_400777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -244,8 +232,7 @@ public class TestJFunction extends FunctionUnitTest {
         var code = new long[0200000];
         code[0] = jEM(0200000);
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_201777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_201777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -270,8 +257,7 @@ public class TestJFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

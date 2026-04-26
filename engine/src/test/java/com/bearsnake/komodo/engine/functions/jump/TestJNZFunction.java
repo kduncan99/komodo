@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
@@ -43,8 +42,7 @@ public class TestJNZFunction extends FunctionUnitTest {
             jnzBM(5, 0_1005),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -63,8 +61,7 @@ public class TestJNZFunction extends FunctionUnitTest {
             jnzBM(5, 0_1005),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -83,8 +80,7 @@ public class TestJNZFunction extends FunctionUnitTest {
             jnzBM(5, 0_1005),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -103,8 +99,7 @@ public class TestJNZFunction extends FunctionUnitTest {
             jnzEM(5, 0_1005),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -123,8 +118,7 @@ public class TestJNZFunction extends FunctionUnitTest {
             jnzEM(5, 0_1005),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -143,8 +137,7 @@ public class TestJNZFunction extends FunctionUnitTest {
             jnzEM(5, 0_1005),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -164,8 +157,7 @@ public class TestJNZFunction extends FunctionUnitTest {
             0, 0, 0, 0, 0
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(14, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 14, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -188,8 +180,7 @@ public class TestJNZFunction extends FunctionUnitTest {
             0, 0, 0, 0, 0
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -216,8 +207,7 @@ public class TestJNZFunction extends FunctionUnitTest {
             0, 0, 0, 0, 0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(14, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 14, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

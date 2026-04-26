@@ -34,12 +34,13 @@ public class UNLKFunction extends Function {
     public boolean execute(
         final Engine engine
     ) throws MachineInterrupt {
-        var operand = engine.getOperand(false, false, false, false, true);
+        engine.getOperand(false, false, false, false, true);
         if (engine.spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
             return false;
         }
 
         engine.storeToCachedAddress(0, false, Constants.JFIELD_S1, false);
+        engine.addressClearAllLocks();
         return true;
     }
 }

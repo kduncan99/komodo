@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.stack;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -33,8 +32,7 @@ public class TestSELLFunction extends FunctionUnitTest {
             0
         };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -44,7 +42,7 @@ public class TestSELLFunction extends FunctionUnitTest {
 
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
-        createStack(5, 5, 0, 8, 1024);
+        createStack((short) 5, 5, 0, 8, 1024);
         _engine.getExecOrUserXRegister(5).setXM(0);
         var origStackPtr = _engine.getExecOrUserXRegister(5).getXM();
 
@@ -60,8 +58,7 @@ public class TestSELLFunction extends FunctionUnitTest {
             0
         };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -71,7 +68,7 @@ public class TestSELLFunction extends FunctionUnitTest {
 
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
-        createStack(5, 5, 0_1000, 8, 1024);
+        createStack((short) 5, 5, 0_1000, 8, 1024);
         _engine.getExecOrUserXRegister(5).setXM(0_1000);
         var origStackPtr = _engine.getExecOrUserXRegister(5).getXM();
 
@@ -87,8 +84,7 @@ public class TestSELLFunction extends FunctionUnitTest {
             0
         };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -98,7 +94,7 @@ public class TestSELLFunction extends FunctionUnitTest {
 
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
 
-        createStack(5, 5, 0_1000, 8, 1024);
+        createStack((short) 5, 5, 0_1000, 8, 1024);
 
         var interrupt = assertThrows(RCSGenericStackUnderflowOverflowInterrupt.class, this::run);
         assertEquals(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow, interrupt.getReason());

@@ -41,14 +41,7 @@ public class SELLFunction extends Function {
         var xMod24 = !dr.isBasicModeEnabled() && (dr.getProcessorPrivilege() < 2) && dr.isExecutive24BitIndexingEnabled();
         var oldPtr = xMod24 ? stackPtr.getXM24() : stackPtr.getXM();
 
-        if (bReg.isVoid()) {
-            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow,
-                                                                ci.getB(),
-                                                                (int)oldPtr);
-        }
-        try {
-            bReg.checkAccessLimits(oldPtr, false);
-        } catch (ReferenceViolationInterrupt e) {
+        if (!bReg.isWithinLimits(oldPtr)) {
             throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow,
                                                                 ci.getB(),
                                                                 (int)oldPtr);

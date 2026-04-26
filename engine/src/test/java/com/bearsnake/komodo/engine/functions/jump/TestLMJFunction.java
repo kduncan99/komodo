@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.AbsoluteAddress;
 import com.bearsnake.komodo.engine.BankDescriptor;
 import com.bearsnake.komodo.engine.BankType;
@@ -41,8 +40,7 @@ public class TestLMJFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -69,8 +67,7 @@ public class TestLMJFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -100,8 +97,7 @@ public class TestLMJFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

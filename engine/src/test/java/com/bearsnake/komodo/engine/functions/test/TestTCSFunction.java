@@ -4,8 +4,8 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.engine.*;
+import com.bearsnake.komodo.engine.AbsoluteAddress;
+import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,11 +43,9 @@ public class TestTCSFunction extends FunctionUnitTest {
         // Bit 5 is set, and some other bits set to ensure only S1 is cleared
         data[42] = 0_010000_123456L;
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank1);
+        loadBaseRegister((short) 0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -57,7 +55,7 @@ public class TestTCSFunction extends FunctionUnitTest {
         run();
 
         // Check if S1 was cleared (top 6 bits)
-        assertEquals(0_000000_123456L, bank1.get(42));
+        assertEquals(0_000000_123456L, data[42]);
         // Check if next instruction was skipped (PC = 2)
         assertEquals(0_2, _engine.getProgramAddressRegister().getProgramCounter());
     }
@@ -73,11 +71,8 @@ public class TestTCSFunction extends FunctionUnitTest {
         var data = new long[50];
         data[42] = 0_000000_123456L;    // Bit 5 is 0
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank1);
+        loadBaseRegister((short) 0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -87,7 +82,7 @@ public class TestTCSFunction extends FunctionUnitTest {
         run();
 
         // Check if nothing changed
-        assertEquals(0_000000_123456L, bank1.get(42));
+        assertEquals(0_000000_123456L, data[42]);
         // Check if next instruction was NOT skipped (PC = 1)
         assertEquals(0_1, _engine.getProgramAddressRegister().getProgramCounter());
     }
@@ -103,10 +98,8 @@ public class TestTCSFunction extends FunctionUnitTest {
         var data = new long[100];
         data[0_42] = 0_010000_654321L;    // Bit 5 is 1
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(14, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), data);
 
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
         _engine.getDesignatorRegister()

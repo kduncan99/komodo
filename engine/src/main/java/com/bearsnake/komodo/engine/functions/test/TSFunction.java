@@ -43,11 +43,13 @@ public class TSFunction extends Function {
         }
 
         if ((Word36.getS1(operand) & 01) == 1) {
+            engine.addressClearAllLocks();
             throw new TestAndSetInterrupt(engine.spGetOperandBaseRegisterIndex(),
                                           engine.spGetOperandRelativeAddress());
         }
 
         engine.storeToCachedAddress((operand >> 30) | 0_01, false, Constants.JFIELD_S1, false);
+        engine.addressClearAllLocks();
         return true;
     }
 }

@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.procControl;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.BankDescriptor;
 import com.bearsnake.komodo.engine.BankType;
 import com.bearsnake.komodo.engine.Engine;
@@ -19,11 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestLOCLFunction extends FunctionUnitTest {
 
-    private long locl(
-        long x,
-        long h,
-        long i,
-        long u
+    private long locl(long x, long h, long i, long u
     ) {
         return fjaxhiu(007, 016, 000, x, h, i, u);
     }
@@ -45,8 +40,7 @@ public class TestLOCLFunction extends FunctionUnitTest {
             0
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
         createReturnControlStack(0_2000, 32);
         var stackReg = _engine.getGeneralRegister(Engine.RCS_STACK_POINTER, true);
         stackReg.setXM(0_2000);
@@ -81,8 +75,7 @@ public class TestLOCLFunction extends FunctionUnitTest {
             0
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
         createReturnControlStack(0_2000, 32);
 
         _engine.getDesignatorRegister()
@@ -114,17 +107,17 @@ public class TestLOCLFunction extends FunctionUnitTest {
         var codeBDI = 0_000016;
         var codeBD = new BankDescriptor();
         var codeBank = createBank(BankType.ExtendedMode, 0_1000, 1024, codeBD);
-        codeBank.set(0, locl(0, 0, 0, 0_1005));
-        codeBank.set(5, rtn());
+        codeBank[0] = locl(0, 0, 0, 0_1005);
+        codeBank[5] = rtn();
 
         var codeBDTSegIndex = createBankDescriptorTable(1024);
-        loadBankDescriptorTableToBaseRegister(codeBDTSegIndex, codeLevel);
-        registerBankDescriptorViaLevelAndBDI(codeLevel, codeBDI, codeBD);
+        loadBankDescriptorTableToBaseRegister(codeBDTSegIndex, (short) codeLevel);
+        registerBankDescriptorViaLevelAndBDI((short) codeLevel, codeBDI, codeBD);
 
         // set up RCS entry with a fake frame which appears to have been created by a CALL from the destination bank.
         createReturnControlStack(0_2000, 32);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, codeBD.getBaseAddress(), codeBank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, codeBD.getBaseAddress(), codeBank);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

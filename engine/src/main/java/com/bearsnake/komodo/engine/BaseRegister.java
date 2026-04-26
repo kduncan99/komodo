@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
 
 /**
@@ -21,7 +20,7 @@ public class BaseRegister {
     private int _upperLimit;
     private long _baseAddress;
 
-    private ArraySlice _storage;
+    private long[] _storage;
 
     /**
      * Creates a void base register
@@ -43,7 +42,7 @@ public class BaseRegister {
     public int getUpperLimit() { return _upperLimit; }
     public int getUpperLimitNormalized() { return _isLargeBank ? (_upperLimit << 6) : _upperLimit; }
     public long getBaseAddress() { return _baseAddress; }
-    public ArraySlice getStorage() { return _storage; }
+    public long[] getStorage() { return _storage; }
 
     public BaseRegister setGeneralAccessPermissions(
         final AccessPermissions permissions
@@ -102,10 +101,17 @@ public class BaseRegister {
     }
 
     public BaseRegister setStorage(
-        final ArraySlice storage
+        final long[] storage
     ) {
         _storage = storage;
         return this;
+    }
+
+    public void setStorageWord(
+        final int offset,
+        final long value
+    ) {
+        _storage[offset] = value;
     }
 
     /**
@@ -130,16 +136,12 @@ public class BaseRegister {
      * Verifies that the given relative address is within the limits defined
      * by the lower and upper normalized limits.
      * @param relativeAddress relative address to be compared
-     * @param fetchFlag true if this is part of a fetch operation
+     * @return true if the address is within the limits, else false
      */
-    public void checkAccessLimits(
-        final long relativeAddress,
-        final boolean fetchFlag
-    ) throws ReferenceViolationInterrupt {
-        // TODO should we check void flag?
-        if ((relativeAddress < getLowerLimitNormalized()) || (relativeAddress > getUpperLimitNormalized())) {
-            throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, fetchFlag);
-        }
+    public boolean isWithinLimits(
+        final long relativeAddress
+    ) {
+        return !_isVoid && (relativeAddress >= getLowerLimitNormalized()) && (relativeAddress <= getUpperLimitNormalized());
     }
 
     /**

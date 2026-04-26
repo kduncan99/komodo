@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -43,8 +42,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -67,8 +65,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -94,11 +91,9 @@ public class TestTOPFunction extends FunctionUnitTest {
 
         var data = new long[]{ 0_111111_111111L }; // bit count is 18 (EVEN) -> NO SKIP
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(2, 0), bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(2, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -121,8 +116,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -146,8 +140,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -174,11 +167,9 @@ public class TestTOPFunction extends FunctionUnitTest {
 
         var data = new long[]{ 0_000000_000001L }; // 1 bit (ODD)
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(2, 0), bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(2, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -203,11 +194,9 @@ public class TestTOPFunction extends FunctionUnitTest {
 
         var data = new long[]{ 0_000000_000003L }; // 2 bits (EVEN)
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(2, 0), bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(2, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -230,8 +219,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -254,8 +242,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(15, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 15, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -284,8 +271,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 12, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -308,8 +294,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(14, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

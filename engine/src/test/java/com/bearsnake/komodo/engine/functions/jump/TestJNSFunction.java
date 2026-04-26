@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
@@ -42,8 +41,7 @@ public class TestJNSFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = jnsBM(5, 0_1000); // JNS if A5 is negative, jump to 0_1000
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 13, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -71,8 +69,7 @@ public class TestJNSFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = jnsEM(5, 0_1000); // JNS if A5 is negative, jump to 0_1000
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

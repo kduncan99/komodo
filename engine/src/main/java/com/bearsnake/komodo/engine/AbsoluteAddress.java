@@ -5,10 +5,10 @@
 package com.bearsnake.komodo.engine;
 
 /**
- * Represents an absolute address - this is a composite value that identifies a particular
- * StaticMainStorageProcessor, and an offset from the beginning of the storage of that processor
- * which identifies a particular word of storage.
- * It is the concatenation of two 32-bit words and is stored in main storage as a singular 64-bit integer.
+ * Represents an absolute address - this is a composite value that refers to storage managed by a StorageManager.
+ * It contains a segment identifier which is used to select one storage bank from the manager,
+ * and an offset value which indicates a specific word in that bank.
+ * It is implemented as the concatenation of two 32-bit words and is represented as a singular 64-bit integer.
  * The segment is in the MSW, and the offset is in the LSW.
  * The segment:
  *      Indicates a particular segment - the offset is relative to the segment.

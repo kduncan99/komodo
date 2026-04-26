@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -47,11 +46,9 @@ public class TestTGMFunction extends FunctionUnitTest {
             0_777777_777777L,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -77,8 +74,7 @@ public class TestTGMFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -102,8 +98,7 @@ public class TestTGMFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -127,8 +122,7 @@ public class TestTGMFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -155,11 +149,9 @@ public class TestTGMFunction extends FunctionUnitTest {
 
         var data = new long[]{ 0_111111_111111L };
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0777, AbsoluteAddress.construct(2, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

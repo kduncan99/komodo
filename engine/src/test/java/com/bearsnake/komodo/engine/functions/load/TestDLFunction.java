@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.load;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -45,11 +44,8 @@ public class TestDLFunction extends FunctionUnitTest {
             0_000004_000004,
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(13, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(14, false, 0_30000, 0_30777, 0, bank1);
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 14, false, 0_30000, 0_30777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -82,11 +78,8 @@ public class TestDLFunction extends FunctionUnitTest {
             0_000004_000004,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(5, false, 0_1000, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 5, false, 0_1000, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -123,11 +116,8 @@ public class TestDLFunction extends FunctionUnitTest {
             fjaxhiu(0, 0, 0, 4, 1, 0, 030000),
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(13, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(14, false, 0_30000, 0_30777, 0, bank1);
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 14, false, 0_30000, 0_30777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

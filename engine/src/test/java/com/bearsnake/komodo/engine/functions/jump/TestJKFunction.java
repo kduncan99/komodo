@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -37,8 +36,7 @@ public class TestJKFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -62,11 +60,9 @@ public class TestJKFunction extends FunctionUnitTest {
             };
         var data = new long[]{ 0, 0, 0, };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(13, false, 0_3000, 0_3777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 13, false, 0_3000, 0_3777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -91,8 +87,7 @@ public class TestJKFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

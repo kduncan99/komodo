@@ -50,6 +50,7 @@ public class CRFunction extends Function {
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 
+        engine.addressClearAllLocks();
         return true;
     }
 }

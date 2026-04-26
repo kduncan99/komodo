@@ -161,7 +161,7 @@ public abstract class Function {
         engine.spSetPreventProgramCounterUpdate(true);
 
         var par = engine.getProgramAddressRegister();
-        var oldAddress = par.getCompositeValue();
+        var oldAddress = par.toCompositeValue();
         par.setProgramCounter((int) (jumpTarget & 0_777777));
 
         var dr = engine.getDesignatorRegister();

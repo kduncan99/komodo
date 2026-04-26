@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.interrupts.*;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +21,7 @@ public class TestEngine extends EngineUnitTest {
         var bankSize = 1024;
         var segIndex = allocateSegment(bankSize);
         var bank = getSegment(segIndex);
-        bank.set(042, 0_1234);
+        bank[042] = 0_1234;
 
         var bd = new BankDescriptor(false,
                                     new AccessLock(),
@@ -35,7 +34,7 @@ public class TestEngine extends EngineUnitTest {
                                     0);
 
         var bdtId = createBankDescriptorTable(32);
-        var bankLevel = 1;
+        var bankLevel = (short) 1;
         var bdi = 05;
 
         loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
@@ -44,7 +43,7 @@ public class TestEngine extends EngineUnitTest {
 
         assertFalse(_engine.getBaseRegister(0).isVoid());
         assertEquals(bankSize - 1, _engine.getBaseRegister(0).getUpperLimitNormalized());
-        assertEquals(0_1234, _engine.getBaseRegister(0).getStorage().get(0_42));
+        assertEquals(0_1234, _engine.getBaseRegister(0).getStorage()[0_42]);
         assertEquals(bankLevel, _engine.getProgramAddressRegister().getBankLevel());
         assertEquals(bdi, _engine.getProgramAddressRegister().getBankDescriptorIndex());
     }
@@ -56,7 +55,7 @@ public class TestEngine extends EngineUnitTest {
         var bankSize = 1024;
         var segIndex = allocateSegment(bankSize);
         var bank = getSegment(segIndex);
-        bank.set(042, 0_1234);
+        bank[042] = 0_1234;
 
         var bd = new BankDescriptor(false,
                                     new AccessLock(),
@@ -69,7 +68,7 @@ public class TestEngine extends EngineUnitTest {
                                     0);
 
         var bdtId = createBankDescriptorTable(32);
-        var bankLevel = 3;
+        var bankLevel = (short) 3;
         var bdi = 010;
 
         loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
@@ -78,7 +77,7 @@ public class TestEngine extends EngineUnitTest {
 
         assertFalse(_engine.getBaseRegister(15).isVoid());
         assertEquals(bankSize - 1, _engine.getBaseRegister(15).getUpperLimitNormalized());
-        assertEquals(0_1234, _engine.getBaseRegister(15).getStorage().get(0_42));
+        assertEquals(0_1234, _engine.getBaseRegister(15).getStorage()[0_42]);
         assertEquals(bankLevel, _engine.getActiveBaseTableEntry(15).getBankLevel());
         assertEquals(bdi, _engine.getActiveBaseTableEntry(15).getBankDescriptorIndex());
     }
@@ -100,7 +99,7 @@ public class TestEngine extends EngineUnitTest {
                                     0);
 
         var bdtId = createBankDescriptorTable(32);
-        var bankLevel = 0;
+        var bankLevel = (short) 0;
         var bdi = 0;
 
         loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
@@ -125,7 +124,7 @@ public class TestEngine extends EngineUnitTest {
                                     0);
 
         var bdtId = createBankDescriptorTable(32);
-        var bankLevel = 01;
+        var bankLevel = (short) 01;
         var bdi = 05;
 
         loadBankDescriptorTableToBaseRegister(bdtId, bankLevel);
@@ -141,21 +140,21 @@ public class TestEngine extends EngineUnitTest {
         createBank(BankType.ExtendedMode, 0_1000, 0_1000, codeBankDescriptor);
         // codeBank is all zeroes, so no matter where we jump to, we'll get an invalid instruction interrupt.
 
-        var codeBankLevel = 0;
+        var codeBankLevel = (short) 0;
         var codeBankIndex = 32;
         var codeBankOffset = 0_20; // arbitrary choice for offset
-        var codeBankVirtualAddress = ((long)codeBankLevel << 33) | ((long)codeBankIndex << 18) | codeBankOffset;
+        var codeBankVirtualAddress = VirtualAddress.toCompositeValue(codeBankLevel, codeBankIndex, codeBankOffset);
 
         // Set up level 0 BDT, then load an interrupt vector for the interrupt,
         // and a BDT for the code bank.
         var bdtID = createBankDescriptorTable(64);
         var bdt = getSegment(bdtID);
-        loadBankDescriptorTableToBaseRegister(bdtID, 0);
+        loadBankDescriptorTableToBaseRegister(bdtID, (short) 0);
 
         // Create an interrupt, use the interrupt class value to establish the interrupt vector,
         // register the code bank as the interrupt handler, then post the interrupt.
         var interrupt = new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction);
-        bdt.set(interrupt.getInterruptClass().getCode(), codeBankVirtualAddress);
+        bdt[interrupt.getInterruptClass().getCode()] = codeBankVirtualAddress;
         registerBankDescriptorViaLevelAndBDI(codeBankLevel, codeBankIndex, codeBankDescriptor);
         _engine.postInterrupt(new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.InvalidTargetInstruction));
 
@@ -165,7 +164,7 @@ public class TestEngine extends EngineUnitTest {
         // Now see what happens.
         _engine.cycle();
         assertFalse(_engine.isHalted());
-        assertEquals(0_000040_000020L, _engine.getProgramAddressRegister().getCompositeValue());
+        assertEquals(0_000040_000020L, _engine.getProgramAddressRegister().toCompositeValue());
     }
 
     // TODO We should do some interrupt processing testing where the process fails for various reasons
@@ -176,16 +175,15 @@ public class TestEngine extends EngineUnitTest {
         _engine = new Engine(this, null);
 
         var bdtID = createBankDescriptorTable(64);
-        loadBankDescriptorTableToBaseRegister(bdtID, 0);
+        loadBankDescriptorTableToBaseRegister(bdtID, (short) 0);
 
         MachineInterrupt interrupt = new UPINormalInterrupt(MachineInterrupt.Synchrony.Pended, 0);
         createInterruptControlStack(0, 16, 512);
 
         var code = new long[]{ 0 };
-        var codeBank = new ArraySlice(code);
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setDeferrableInterruptEnabled(false);
         _engine.postInterrupt(interrupt);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, codeBank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.cycle();
         assertEquals(HaltCode.NONE, _engine.getHaltCode());

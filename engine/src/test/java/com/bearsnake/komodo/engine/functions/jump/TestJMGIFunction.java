@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
@@ -37,8 +36,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         var code = new long[0_2000];
         code[0] = jmgi(8, 0, 0, 0, 0_2000);
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -66,8 +64,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -94,8 +91,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -121,8 +117,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = jmgi(010, 011, 0, 0, 0_1000);
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -151,8 +146,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0] = jmgi(010, 0, 0, 1, 0_2000);
         code[0_1000] = 0_1500; // indirect address
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -178,8 +172,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = jmgi(010, 010, 0, 0, 0_1000);
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -207,8 +200,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         code[0] = jmgi(010, 010, 1, 0, 0_1000);
         code[0_2000] = 0_1500;
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_3477, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_3477, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -234,9 +226,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = jmgi(010, 0, 0, 0, 0_1500);
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank0);
-        bank0.load(code, 0, code.length, 0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -265,8 +255,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = jmgi(010, 0, 0, 0, 0_2000);
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -292,8 +281,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = jmgi(8, 0, 0, 0, 0_1000);
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -318,8 +306,7 @@ public class TestJMGIFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = jmgi(010, 011, 0, 0, 0_1000);
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

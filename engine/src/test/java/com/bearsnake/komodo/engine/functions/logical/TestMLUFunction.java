@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.logical;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -55,8 +54,7 @@ public class TestMLUFunction extends FunctionUnitTest {
             mluImm(0, 0_123456),    // MLU,U     A0,0123456
             0,
             };
-        var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -85,8 +83,7 @@ public class TestMLUFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -116,11 +113,9 @@ public class TestMLUFunction extends FunctionUnitTest {
         var data = new long[0_4000];
         data[0_03000] = 0_323232_323232L;
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0, 0_3777, 0, bank2);
+        loadBaseRegister((short) 0, false, 0, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0, 0_3777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -142,8 +137,7 @@ public class TestMLUFunction extends FunctionUnitTest {
         code[1] = 0; // stop
         code[0600] = 0_777000_000777L;
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -168,8 +162,7 @@ public class TestMLUFunction extends FunctionUnitTest {
         code[010] = 0_000000_001020L;// indirect to 0_1020
         code[020] = 0_000000_000017L;
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_2777, 0, bank);
+        loadBaseRegister((short) 12, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -194,11 +187,9 @@ public class TestMLUFunction extends FunctionUnitTest {
         var data = new long[0_4000];
         data[0_500] = 0_112233_556677L;
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(13, false, 0_2000, 0_5777, 0, bank2);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 13, false, 0_2000, 0_5777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

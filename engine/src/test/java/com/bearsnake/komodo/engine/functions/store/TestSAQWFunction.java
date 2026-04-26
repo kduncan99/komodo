@@ -4,8 +4,7 @@
 
 package com.bearsnake.komodo.engine.functions.store;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.engine.*;
+import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,8 +39,7 @@ public class TestSAQWFunction extends FunctionUnitTest {
             0, 0, 0, 0,
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -66,7 +64,7 @@ public class TestSAQWFunction extends FunctionUnitTest {
         for (var v = 0; v < code.length; v ++) {
             System.out.printf("%04o : %012o\n", v, code[v]);
         }
-        assertEquals(expected, bank0.get(0_7));
+        assertEquals(expected, code[0_7]);
     }
 
     @Test
@@ -75,12 +73,10 @@ public class TestSAQWFunction extends FunctionUnitTest {
             saqwEM(4, 2, 0, 0, 2, 0), // SAQW A4, 2, 0, X2 (Bank 2, Offset 0)
             0,
         };
+        var data = new long[02000];
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(new long[10]);
-
-        loadBaseRegister(0, false, 0_0, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank2);
+        loadBaseRegister((short) 0, false, 0_0, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -98,23 +94,16 @@ public class TestSAQWFunction extends FunctionUnitTest {
         // Q3 is bits 9-17.
         // 0123 << 9 = 0000000123000 octal.
         long expected = 0_000000_123_000L;
-        assertEquals(expected, bank2.get(0));
+        assertEquals(expected, data[0]);
     }
 
     @Test
     public void testSAQW_Indirect() throws MachineInterrupt {
-        var code = new long[] {
-            saqwBM(1, 2, 0, 1, 0_1000), // SAQW A1, *01000, X2
-            0,
-        };
+        var code = new long[0_2000];
+        code[0] = saqwBM(1, 2, 0, 1, 0_1000); // SAQW A1, *01000, X2
+        code[0_1000] =  0_1005L;
 
-        var bank0 = new ArraySlice(new long[0_2000]);
-        bank0.load(code, 0, code.length, 0);
-
-        // Pointer at 01000 pointing to 01005
-        bank0.set(0_1000, 0_1005L);
-
-        loadBaseRegister(12, false, 0_0, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_0, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -135,6 +124,6 @@ public class TestSAQWFunction extends FunctionUnitTest {
         // A1=0777.
         // Q1 is 0777 << 27 = 0777_000_000_000.
         long expected = 0_777_000_000_000L;
-        assertEquals(expected, bank0.get(0_1005));
+        assertEquals(expected, code[0_1005]);
     }
 }

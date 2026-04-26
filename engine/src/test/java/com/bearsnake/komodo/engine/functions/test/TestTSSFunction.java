@@ -4,16 +4,13 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
-import com.bearsnake.komodo.engine.interrupts.TestAndSetInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for TSS and TS functions.
@@ -27,10 +24,6 @@ public class TestTSSFunction extends FunctionUnitTest {
 
     private long tssEM(long x, long h, long i, long b, long d) {
         return fjaxhibd(0_73, 0_17, 0_01, x, h, i, b, d);
-    }
-
-    private long tsEM(long x, long h, long i, long b, long d) {
-        return fjaxhibd(0_73, 0_17, 0_00, x, h, i, b, d);
     }
 
     private long tssBM(long x, long u) {
@@ -52,11 +45,8 @@ public class TestTSSFunction extends FunctionUnitTest {
         var data = new long[50];
         data[42] = 0L;                  // Initial value, bit 5 is 0
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank1);
+        loadBaseRegister((short) 0, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -66,7 +56,7 @@ public class TestTSSFunction extends FunctionUnitTest {
         run();
 
         // Check if bit 5 was set (0_010000_000000L)
-        assertEquals(0_010000_000000L, bank1.get(42));
+        assertEquals(0_010000_000000L, data[42]);
         // Check if next instruction was skipped (PC = 2)
         assertEquals(0_2, _engine.getProgramAddressRegister().getProgramCounter());
     }
@@ -82,11 +72,8 @@ public class TestTSSFunction extends FunctionUnitTest {
         var data = new long[50];
         data[42] = 0_010000_000000L;    // Initial value, bit 5 is 1
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank1);
+        loadBaseRegister((short) 0, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -96,25 +83,18 @@ public class TestTSSFunction extends FunctionUnitTest {
         run();
 
         // Check if bit 5 is still set
-        assertEquals(0_010000_000000L, bank1.get(42));
+        assertEquals(0_010000_000000L, data[42]);
         // Check if next instruction was NOT skipped (PC = 1)
         assertEquals(0_1, _engine.getProgramAddressRegister().getProgramCounter());
     }
 
     @Test
     public void testTSS_Skip_BM() throws MachineInterrupt {
-        var code = new long[] {
-            tssBM(0, 42),               // TSS (U)
-            0,                           // Skipped if bit 5 is 0
-            0,                           // Normal stop
-        };
+        var code = new long[0_20000];
+        code[0] = tssBM(0, 42);
+        code[42] = 0L;                  // Initial value, bit 5 is 0
 
-        var data = new long[100];
-        data[42] = 0L;                  // Initial value, bit 5 is 0
-
-        var bank0 = new ArraySlice(data);
-
-        loadBaseRegister(14, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister((short) 14, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -122,15 +102,10 @@ public class TestTSSFunction extends FunctionUnitTest {
                .setExecRegisterSetSelected(false)
                .setBasicModeBaseRegisterSelection(false);
 
-        // Put code at the beginning of the bank
-        bank0.set(0, code[0]);
-        bank0.set(1, code[1]);
-        bank0.set(2, code[2]);
-
         run();
 
         // Check if bit 5 was set
-        assertEquals(0_010000_000000L, bank0.get(42));
+        assertEquals(0_010000_000000L, code[42]);
         // Check if next instruction was skipped
         assertEquals(0_2, _engine.getProgramAddressRegister().getProgramCounter());
     }
@@ -138,18 +113,16 @@ public class TestTSSFunction extends FunctionUnitTest {
     @Test
     public void testTSS_Success_EM() throws MachineInterrupt {
         var code = new long[] {
-            tsEM(0, 0, 0, 2, 42),       // TS (U)
-            0,                           // Normal stop
+            tssEM(0, 0, 0, 2, 42),
+            0,
+            0
         };
 
         var data = new long[50];
         data[42] = 0L;                  // bit 5 is 0
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_1777, AbsoluteAddress.construct(0, 0), bank1);
+        loadBaseRegister((short) 0, false, 0, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_1777, AbsoluteAddress.construct(0, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -159,32 +132,8 @@ public class TestTSSFunction extends FunctionUnitTest {
         run();
 
         // Check if bit 5 was set
-        assertEquals(0_010000_000000L, bank1.get(42));
+        assertEquals(0_010000_000000L, data[42]);
         // Check if next instruction was reached
-        assertEquals(0_1, _engine.getProgramAddressRegister().getProgramCounter());
-    }
-
-    @Test
-    public void testTSS_Interrupt_EM() {
-        var code = new long[] {
-            tsEM(0, 0, 0, 2, 42),       // TS (U)
-            0,
-        };
-
-        var data = new long[50];
-        data[42] = 0_010000_000000L;    // bit 5 is 1
-
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_1777, AbsoluteAddress.construct(0, 0), bank1);
-
-        _engine.getDesignatorRegister()
-               .setBasicModeEnabled(false)
-               .setProcessorPrivilege((short)3)
-               .setExecRegisterSetSelected(false);
-
-        assertThrows(TestAndSetInterrupt.class, this::run);
+        assertEquals(0_2, _engine.getProgramAddressRegister().getProgramCounter());
     }
 }

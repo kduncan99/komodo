@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.special;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -45,8 +44,7 @@ public class TestEXFunction extends FunctionUnitTest {
             laImm(4, 0, 01022)
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -72,8 +70,7 @@ public class TestEXFunction extends FunctionUnitTest {
             laImm(8, 0, 01),
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_22000, 0_22777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_22000, 0_22777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

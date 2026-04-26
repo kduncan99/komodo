@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.store;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
@@ -68,11 +67,9 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(14, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(15, false, 0_022000, 0_022777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 15, false, 0_022000, 0_022777, 0, _data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -91,11 +88,9 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, 0, _data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -117,11 +112,9 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(14, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(15, false, 0_022000, 0_022777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 15, false, 0_022000, 0_022777, 0, _data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -146,11 +139,9 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, 0, _data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -177,11 +168,9 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(14, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(15, false, 0_022000, 0_022777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 15, false, 0_022000, 0_022777, 0, _data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -210,11 +199,9 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, 0, _data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -235,11 +222,9 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(14, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(15, false, 0_022000, 0_022777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 15, false, 0_022000, 0_022777, 0, _data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -260,11 +245,9 @@ public abstract class StoreConstantFunctionUnitTest extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(_data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, 0, _data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

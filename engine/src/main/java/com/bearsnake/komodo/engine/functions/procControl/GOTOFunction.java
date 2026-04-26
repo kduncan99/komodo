@@ -31,7 +31,7 @@ public class GOTOFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operand = engine.getOperand(false, true, false, false, false);
-        var oldAddress = engine.getProgramAddressRegister().getCompositeValue();
+        var oldAddress = engine.getProgramAddressRegister().toCompositeValue();
         engine.bankManipulation(this, (short) 0, (short) 0, (short) 0, 0, null, operand, null);
         engine.createJumpHistoryEntry(oldAddress);
         return true;

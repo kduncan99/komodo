@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.arithmetic.decimal;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,11 +45,9 @@ public class TestDIDEFunction extends TestDecimalFunction {
         data[0_400] = 0_536705L;
         data[0_401] = 0_213532645607L;
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -81,11 +78,9 @@ public class TestDIDEFunction extends TestDecimalFunction {
         data[0_400] = 0_777777241072L;
         data[0_401] = 0_564245132170L;
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -107,11 +102,9 @@ public class TestDIDEFunction extends TestDecimalFunction {
         code[0_400] = 0;
         code[0_401] = 0;
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -134,11 +127,9 @@ public class TestDIDEFunction extends TestDecimalFunction {
         data[0_400] = 0_536705L;
         data[0_401] = 0_213532645607L;
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(15, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), bank2);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 15, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -160,8 +151,7 @@ public class TestDIDEFunction extends TestDecimalFunction {
         code[0_600] = 0_536705L;
         code[0_601] = 0_213532645607L;
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                 .setBasicModeEnabled(true)
@@ -186,11 +176,9 @@ public class TestDIDEFunction extends TestDecimalFunction {
         data[0_400] = 0_536705L;
         data[0_401] = 0_213532645607L;
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);

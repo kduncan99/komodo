@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -47,11 +46,9 @@ public class TestMATGFunction extends FunctionUnitTest {
             0_000000_000001L,            // Operand 2 (Small)
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -84,11 +81,9 @@ public class TestMATGFunction extends FunctionUnitTest {
             0_400000_000000L,
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

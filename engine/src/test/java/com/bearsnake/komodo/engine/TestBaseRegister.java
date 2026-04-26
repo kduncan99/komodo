@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestBaseRegister {
+
     @Test
     public void testInitialState() {
         BaseRegister br = new BaseRegister();
@@ -86,15 +87,15 @@ public class TestBaseRegister {
         br.setLimitsNormalized(false, 02000, 04000);
 
         // Within limits
-        br.checkAccessLimits(02000, false);
-        br.checkAccessLimits(03000, true);
-        br.checkAccessLimits(04000, false);
+        assertTrue(br.isWithinLimits(02000));
+        assertTrue(br.isWithinLimits(03000));
+        assertTrue(br.isWithinLimits(04000));
 
         // Below limits
-        assertThrows(ReferenceViolationInterrupt.class, () -> br.checkAccessLimits(01777, false));
+        assertFalse(br.isWithinLimits(01777));
 
         // Above limits
-        assertThrows(ReferenceViolationInterrupt.class, () -> br.checkAccessLimits(04001, true));
+        assertFalse(br.isWithinLimits(04001));
     }
 
     @Test

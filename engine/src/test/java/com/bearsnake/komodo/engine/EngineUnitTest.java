@@ -4,30 +4,27 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
 import java.util.HashMap;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public abstract class EngineUnitTest implements StorageManager, InterruptHandler {
 
     protected Engine _engine;
 
     /**
-     * For base register 0 and 16-31
+     * For loading base register 0 and 16-31 when we don't need a bank descriptor
      */
     protected void loadBaseRegister(
-        final int registerNumber,
+        final short baseRegisterNumber,
         final boolean isLargeBank,
         final int lowerLimitNormalized,
         final int upperLimitNormalized,
         final long baseAddress,
-        final ArraySlice storage
+        final long[] storage
     ) {
-        _engine.getBaseRegister(registerNumber)
+        _engine.getBaseRegister(baseRegisterNumber)
                .setIsLargeBank(isLargeBank)
                .setLimitsNormalized(false, lowerLimitNormalized, upperLimitNormalized)
                .setBaseAddress(baseAddress)
@@ -38,18 +35,18 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
      * For base registers 1 through 15
      */
     protected void loadBaseRegister(
-        final int registerNumber,
+        final short baseRegisterNumber,
         final boolean isLargeBank,
         final int lowerLimitNormalized,
         final int upperLimitNormalized,
         final long baseAddress,
-        final ArraySlice storage,
+        final long[] storage,
         final int bankLevel,
         final int bankIndex,
         final int subsetting
     ) {
-        loadBaseRegister(registerNumber, isLargeBank, lowerLimitNormalized, upperLimitNormalized, baseAddress, storage);
-        var abte = _engine.getActiveBaseTableEntry(registerNumber);
+        loadBaseRegister(baseRegisterNumber, isLargeBank, lowerLimitNormalized, upperLimitNormalized, baseAddress, storage);
+        var abte = _engine.getActiveBaseTableEntry(baseRegisterNumber);
         abte.setBankLevel((short)bankLevel);
         abte.setBankDescriptorIndex((short)bankIndex);
         abte.setSubsetSpecification(subsetting);
@@ -57,7 +54,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
 
     // StorageManager implementation -----------------------------------------------------------------------------------------------
 
-    private final HashMap<Integer, ArraySlice> _segments = new HashMap<>();
+    private final HashMap<Integer, long[]> _segments = new HashMap<>();
 
     @Override
     public synchronized int allocateSegment(
@@ -72,7 +69,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
 
         for (int i = 0; ; ++i) {
             if (!_segments.containsKey(i)) {
-                _segments.put(i, new ArraySlice(new long[size]));
+                _segments.put(i, new long[size]);
                 return i;
             }
         }
@@ -84,29 +81,13 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
     }
 
     @Override
-    public synchronized ArraySlice getSegment(
+    public synchronized long[] getSegment(
         final int segment
     ) throws HardwareCheckInterrupt {
         if (!_segments.containsKey(segment)) {
             throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
         }
         return _segments.get(segment);
-    }
-
-    @Override
-    public synchronized ArraySlice getSlice(
-        final int segment,
-        final int offset,
-        final int length
-    ) throws HardwareCheckInterrupt {
-        if (!_segments.containsKey(segment)) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
-        }
-        var slice = _segments.get(segment);
-        if ((offset < 0) || (length < 0) || (offset + length > slice.getSize())) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
-        }
-        return slice;
     }
 
     /**
@@ -123,11 +104,11 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
         if (!_segments.containsKey(segment)) {
             throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
         }
-        var slice = _segments.get(segment);
-        if ((offset < 0) || (offset >= slice.getSize())) {
+        var bank = _segments.get(segment);
+        if ((offset < 0) || (offset >= bank.length)) {
             throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
         }
-        return slice.get(offset);
+        return bank[offset];
     }
 
     /**
@@ -142,17 +123,6 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
         }
         _segments.remove(segment);
-    }
-
-    public synchronized void resizeSegment(
-        final int segment,
-        final int newSize
-    ) throws HardwareCheckInterrupt {
-        if (!_segments.containsKey(segment)) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
-        }
-        var slice = _segments.get(segment);
-        asdf
     }
 
     /**
@@ -170,11 +140,11 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
         if (!_segments.containsKey(segment)) {
             throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
         }
-        var slice = _segments.get(segment);
-        if ((offset < 0) || (offset >= slice.getSize())) {
+        var bank = _segments.get(segment);
+        if ((offset < 0) || (offset >= bank.length)) {
             throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
         }
-        slice.set(offset, value);
+        bank[offset] = value;
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -244,7 +214,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
      * @throws HardwareCheckInterrupt If something goes badly wrong with storage
      */
     protected void createStack(
-        final int baseRegisterNumber,
+        final short baseRegisterNumber,
         final int stackPointerRegisterNumber,
         final int stackLowerLimit,
         final int stackFrameSize,
@@ -285,10 +255,10 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
 
     /**
      * Creates a bank of the indicated size, loading the given BankDescriptor object with the appropriate values,
-     * and allocating storage for the bank, returning an ArraySlice containing the storage.
-     * @return ArraySlice containing the storage for the newly created bank
+     * and allocating storage for the bank, returning an array containing the storage.
+     * @return array containing the storage for the newly created bank
      */
-    public ArraySlice createBank(
+    public long[] createBank(
         final BankType bankType,
         final int lowerLimitNormalized,
         final int bankSize,
@@ -333,7 +303,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
      */
     public void loadBankDescriptorTableToBaseRegister(
         final int bankDescriptorTableIdentifier,
-        final int bankLevel
+        final short bankLevel
     ) {
         try {
             assert ((bankLevel >= 0) && (bankLevel <= 7));
@@ -344,7 +314,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             bReg.setGeneralAccessPermissions(AccessPermissions.NONE);
             bReg.setAccessLock(new AccessLock());
             bReg.setBaseAddress(AbsoluteAddress.construct(bankDescriptorTableIdentifier, 0));
-            bReg.setLimitsNormalized(false, 0, segment.getSize() | 0777);
+            bReg.setLimitsNormalized(false, 0, segment.length | 0777);
         } catch (HardwareCheckInterrupt e) {
             assert(false):"Caught hardware check interrupt:" + e;
         }
@@ -357,7 +327,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
      * @param bankDescriptor The descriptor to register.
      */
     public void registerBankDescriptorViaLevelAndBDI(
-        final int bankLevel,
+        final short bankLevel,
         final int bankDescriptorIndex,
         final BankDescriptor bankDescriptor
     ) {

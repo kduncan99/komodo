@@ -4,8 +4,6 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.engine.interrupts.Gate;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -144,10 +142,9 @@ public class TestGate {
              .setLatentParameter1(0x76543210L);
 
         long[] buffer = new long[8];
-        ArraySlice slice = new ArraySlice(buffer);
-        gate1.serialize(slice, 0);
+        gate1.serialize(buffer, 0);
 
-        Gate gate2 = new Gate(buffer);
+        Gate gate2 = new Gate(buffer, 0);
 
         assertEquals(gate1.getGeneralAccessPermissions(), gate2.getGeneralAccessPermissions());
         assertEquals(gate1.getSpecialAccessPermissions(), gate2.getSpecialAccessPermissions());
@@ -190,28 +187,24 @@ public class TestGate {
             .setLatentParameter1(0_222222_222222L);
 
         long[] buffer = new long[8];
-        ArraySlice slice = new ArraySlice(buffer);
-        gate.serialize(slice, 0);
-        for (int ix = 0; ix < 8; ++ix) {
-            System.out.printf("%012o\n", buffer[ix]);//TODO remove
-        }
+        gate.serialize(buffer, 0);
 
-        assertEquals(new AccessPermissions(true, false, false), Gate.getGeneralAccessPermissions(slice, 0));
-        assertEquals(new AccessPermissions(false, false, false), Gate.getSpecialAccessPermissions(slice, 0));
-        assertTrue(Gate.isLibrary(slice, 0));
-        assertTrue(Gate.isGotoInhibited(slice, 0));
-        assertFalse(Gate.isDesignatorBitInhibited(slice, 0));
-        assertTrue(Gate.isAccessKeyInhibited(slice, 0));
-        assertFalse(Gate.isLatentParameter0Inhibited(slice, 0));
-        assertTrue(Gate.isLatentParameter1Inhibited(slice, 0));
-        assertEquals(new AccessLock((short) 2, 0_2345), Gate.getAccessLock(slice, 0));
-        assertEquals(5, Gate.getBankLevel(slice, 0));
-        assertEquals(0_12345, Gate.getBankDescriptorIndex(slice, 0));
-        assertEquals(0_3456, Gate.getOffset(slice, 0));
-        assertEquals(13, Gate.getBasicModeBaseRegister(slice, 0));
-        assertEquals(0x2A, Gate.getDesignatorRegisterBits12To17(slice, 0));
-        assertEquals(new AccessKey((short) 1, 0_2222), Gate.getAccessKey(slice, 0));
-        assertEquals(0_111111_111111L, Gate.getLatentParameter0(slice, 0));
-        assertEquals(0_222222_222222L, Gate.getLatentParameter1(slice, 0));
+        assertEquals(new AccessPermissions(true, false, false), Gate.getGeneralAccessPermissions(buffer, 0));
+        assertEquals(new AccessPermissions(false, false, false), Gate.getSpecialAccessPermissions(buffer, 0));
+        assertTrue(Gate.isLibrary(buffer, 0));
+        assertTrue(Gate.isGotoInhibited(buffer, 0));
+        assertFalse(Gate.isDesignatorBitInhibited(buffer, 0));
+        assertTrue(Gate.isAccessKeyInhibited(buffer, 0));
+        assertFalse(Gate.isLatentParameter0Inhibited(buffer, 0));
+        assertTrue(Gate.isLatentParameter1Inhibited(buffer, 0));
+        assertEquals(new AccessLock((short) 2, 0_2345), Gate.getAccessLock(buffer, 0));
+        assertEquals(5, Gate.getBankLevel(buffer, 0));
+        assertEquals(0_12345, Gate.getBankDescriptorIndex(buffer, 0));
+        assertEquals(0_3456, Gate.getOffset(buffer, 0));
+        assertEquals(13, Gate.getBasicModeBaseRegister(buffer, 0));
+        assertEquals(0x2A, Gate.getDesignatorRegisterBits12To17(buffer, 0));
+        assertEquals(new AccessKey((short) 1, 0_2222), Gate.getAccessKey(buffer, 0));
+        assertEquals(0_111111_111111L, Gate.getLatentParameter0(buffer, 0));
+        assertEquals(0_222222_222222L, Gate.getLatentParameter1(buffer, 0));
     }
 }

@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.special;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
@@ -48,8 +47,7 @@ public class TestEXRFunction extends FunctionUnitTest {
             laImm(4, 0, 01022) // not allowed, but we're never going to attempt it.
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -84,11 +82,9 @@ public class TestEXRFunction extends FunctionUnitTest {
             0_777777_777777L, // this one should not be changed
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -122,8 +118,7 @@ public class TestEXRFunction extends FunctionUnitTest {
             laImm(4, 0, 01022) // not allowed
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

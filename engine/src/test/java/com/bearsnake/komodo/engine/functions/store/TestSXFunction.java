@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.store;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -42,11 +41,9 @@ public class TestSXFunction extends FunctionUnitTest {
         };
 
         var data = new long[02000];
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short)3).setExecRegisterSetSelected(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -68,11 +65,9 @@ public class TestSXFunction extends FunctionUnitTest {
         };
 
         var data = new long[02000];
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_01000, 0_02777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_01000, 0_02777, 0, data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
@@ -91,8 +86,7 @@ public class TestSXFunction extends FunctionUnitTest {
             0,
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);
@@ -110,12 +104,10 @@ public class TestSXFunction extends FunctionUnitTest {
             sxEM(Constants.JFIELD_W, 1, 0, 0, 0, 2, 03000),
             0,
         };
+        var data = new long[0_2000];
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(new long[02000]);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_02000, 0_02777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_02000, 0_02777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -134,8 +126,7 @@ public class TestSXFunction extends FunctionUnitTest {
             0,
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000);

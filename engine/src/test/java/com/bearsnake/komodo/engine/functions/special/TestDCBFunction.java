@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.special;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -47,11 +46,9 @@ public class TestDCBFunction extends FunctionUnitTest {
             0_777777_777777L,
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

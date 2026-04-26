@@ -4,8 +4,8 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.engine.*;
+import com.bearsnake.komodo.engine.AbsoluteAddress;
+import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,11 +39,9 @@ public class TestUNLKFunction extends FunctionUnitTest {
         // Set bit 5 and some other bits to ensure only bit 5 is cleared
         data[42] = 0_010000_123456L;
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -53,7 +51,7 @@ public class TestUNLKFunction extends FunctionUnitTest {
 
         run();
 
-        assertEquals(0_000000_123456L, bank1.get(42));
+        assertEquals(0_000000_123456L, data[42]);
     }
 
     @Test
@@ -66,11 +64,9 @@ public class TestUNLKFunction extends FunctionUnitTest {
         var data = new long[50];
         data[42] = 0_777777_777777L;    // All 36 bits set
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -82,6 +78,6 @@ public class TestUNLKFunction extends FunctionUnitTest {
 
         // UNLK clears S1 (top 6 bits)
         // Expected: 0_007777_777777L
-        assertEquals(0_007777_777777L, bank1.get(42));
+        assertEquals(0_007777_777777L, data[42]);
     }
 }

@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.InstructionWord;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.functions.Function;
@@ -31,10 +30,10 @@ import static com.bearsnake.komodo.engine.Constants.*;
 public class Engine {
 
     private static final int JUMP_HISTORY_TABLE_SIZE = 512;
-    public static final int RCS_BASE_REGISTER = 25;
+    public static final short RCS_BASE_REGISTER = 25;
     public static final int RCS_STACK_POINTER = GRS_EX0;
     public static final int RCS_FRAME_SIZE = 2;
-    public static final int ICS_BASE_REGISTER = 26;
+    public static final short ICS_BASE_REGISTER = 26;
     public static final int ICS_STACK_POINTER = GRS_EX1;
 
     // The exact meaning of this (or rather the consequences of this) are dependant upon whether
@@ -46,9 +45,6 @@ public class Engine {
     private boolean _broadcastInterruptEligible = false;
 
     // This is how we talk directly to storage.
-    // Generally, we try to maintain ArraySlice objects through which we can access storage without
-    // actually bothering the manager. However, we do need the manager whenever we need to allocate new storage
-    // (in the context of internal operating systems), and when we need to load base registers (in any mode).
     private final StorageManager _storageManager;
 
     // Machine state (apart from scratch pad things)
@@ -216,13 +212,7 @@ public class Engine {
         var bReg = _baseRegisters[ICS_BASE_REGISTER];
         var stackPtr = _generalRegisterSet.getRegister(ICS_STACK_POINTER);
         var newPtr = stackPtr.getXM() - stackPtr.getXI();
-        if (bReg.isVoid()) {
-            halt(HaltCode.ICS_OVERFLOW);
-            return;
-        }
-        try {
-            bReg.checkAccessLimits(newPtr, false);
-        } catch (ReferenceViolationInterrupt e) {
+        if (!bReg.isWithinLimits(newPtr)) {
             halt(HaltCode.ICS_OVERFLOW);
             return;
         }
@@ -230,20 +220,20 @@ public class Engine {
 
         var stack = bReg.getStorage();
         var stackOffset = (int) (stackPtr.getXM() - bReg.getLowerLimitNormalized());
-        stack.set(stackOffset, _activityStatePacket.getProgramAddressRegister().getCompositeValue());
-        stack.set(stackOffset + 1, _activityStatePacket.getDesignatorRegister().getCompositeValue());
-        stack.set(stackOffset + 2, (((long) interrupt.getShortStatusField()) << 30)
-                                   | (_activityStatePacket.getIndicatorKeyRegister().getCompositeValue() & 0_077777));
-        stack.set(stackOffset + 3, _activityStatePacket.getQuantumTimer());
-        stack.set(stackOffset + 4, _activityStatePacket.getCurrentInstruction().getW());
-        stack.set(stackOffset + 5, interrupt.getInterruptStatusWord0());
-        stack.set(stackOffset + 6, interrupt.getInterruptStatusWord1());
+        stack[stackOffset] = _activityStatePacket.getProgramAddressRegister().toCompositeValue();
+        stack[stackOffset + 1] = _activityStatePacket.getDesignatorRegister().getCompositeValue();
+        stack[stackOffset + 2] = (((long) interrupt.getShortStatusField()) << 30)
+                                 | (_activityStatePacket.getIndicatorKeyRegister().getCompositeValue() & 0_077777);
+        stack[stackOffset + 3] = _activityStatePacket.getQuantumTimer();
+        stack[stackOffset + 4] = _activityStatePacket.getCurrentInstruction().getW();
+        stack[stackOffset + 5] = interrupt.getInterruptStatusWord0();
+        stack[stackOffset + 6] = interrupt.getInterruptStatusWord1();
         for (int i = 7; i < stackPtr.getXI(); i++) {
-            stack.set(stackOffset + i, 0);
+            stack[stackOffset + i] = 0;
         }
 
         // Find interrupt vector for this interrupt class
-        var intVector = _baseRegisters[16].getStorage().get(interrupt.getInterruptClass().getCode());
+        var intVector = _baseRegisters[16].getStorage()[interrupt.getInterruptClass().getCode()];
         var sourceLevel = (short) (intVector >> 33);
         var sourceBDIndex = (int) (intVector >> 18) & 0_077777;
         if ((sourceLevel == 0) && (sourceBDIndex < 32)) {
@@ -253,7 +243,7 @@ public class Engine {
 
         var fhip = _activityStatePacket.getDesignatorRegister().isFaultHandlingInProgress();
         try {
-            var oldAddress = _activityStatePacket.getProgramAddressRegister().getCompositeValue();
+            var oldAddress = _activityStatePacket.getProgramAddressRegister().toCompositeValue();
             bankManipulation(null, (short) 0, (short) 0, (short) 0, 0, null, intVector, null);
             createJumpHistoryEntry(oldAddress);
         } catch (MachineInterrupt e) {
@@ -399,9 +389,7 @@ public class Engine {
     /**
      * Clears all the locks held by this engine.
      */
-    //TODO This is done upon detection of a hardware fault...
-    //  otherwise, locks are to be cleared explicitly, not en masse...
-    private void addressClearAllLocks() {
+    public void addressClearAllLocks() {
         synchronized (_lockedAddresses) {
             _lockedAddresses.entrySet()
                             .removeIf(entry -> entry.getValue() == this);
@@ -566,20 +554,6 @@ public class Engine {
         return bReg.getEffectivePermissions(_activityStatePacket.getIndicatorKeyRegister()
                                                                 .getAccessKey())
                    .canRead();
-    }
-
-    /**
-     * Checks the given offset within the constraints of the given base register,
-     * returning true if the offset is within those constraints, else false.
-     * @param bReg   base register of interest
-     * @param offset offset from start of bank
-     */
-    private boolean isWithinLimits(
-        final BaseRegister bReg,
-        final long offset
-    ) {
-        // TODO can we use BaseRegister.checkAccessLimits() ?
-        return !bReg.isVoid() && (offset >= bReg.getLowerLimitNormalized()) && (offset <= bReg.getUpperLimitNormalized());
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -906,7 +880,7 @@ public class Engine {
 
         int offset = programCounter - bReg.getLowerLimitNormalized();
 
-        _activityStatePacket.getCurrentInstruction().setW(bReg.getStorage().get(offset));
+        _activityStatePacket.getCurrentInstruction().setW(bReg.getStorage()[offset]);
         _activityStatePacket.getIndicatorKeyRegister().setInstructionInF0(true);
         _activityStatePacket.getIndicatorKeyRegister().setExecuteRepeatedInstruction(false);
     }
@@ -964,12 +938,9 @@ public class Engine {
         var db31 = _activityStatePacket.getDesignatorRegister().getBasicModeBaseRegisterSelection();
         for (int tx = 0; tx < 4; tx++) {
             // See IP PRM 4.4.5 - select the base register from the selection table.
-            // If the bank is void, skip it.
-            // If the program counter is outside the bank limits, skip it.
-            // Otherwise, we found the BDR we want to use.
             var brx = BASE_REGISTER_CANDIDATES.get(db31)[tx];
             var bReg = _baseRegisters[brx];
-            if (isWithinLimits(bReg, relativeAddress)) {
+            if (bReg.isWithinLimits(relativeAddress)) {
                 return brx;
             }
         }
@@ -1098,6 +1069,18 @@ public class Engine {
         return _random;
     }
 
+    private long getStorageWordByRelativeAddress(
+        final short baseRegisterNumber,
+        final int address
+    ) {
+        int offset = address - _baseRegisters[baseRegisterNumber].getLowerLimitNormalized();
+        if ((baseRegisterNumber > 0) && (baseRegisterNumber < 16)) {
+            offset += _activeBaseTable.getEntry(baseRegisterNumber)
+                                      .getSubsetSpecification();
+        }
+        return _baseRegisters[baseRegisterNumber].getStorage()[offset];
+    }
+
     /**
      * Sets the halt code for the engine.
      * Subsequent invocations of cycle() will throw HaltedException until this is cleared.
@@ -1170,7 +1153,7 @@ public class Engine {
      */
     public void jumpToCachedAddressPlusOne() {
         var par = _activityStatePacket.getProgramAddressRegister();
-        var oldAddress = par.getCompositeValue();
+        var oldAddress = par.toCompositeValue();
         var newPC = spGetOperandRelativeAddress() + 1;
         par.setProgramCounter(newPC);
         spClearOperandBaseRegisterIndex();
@@ -1247,10 +1230,7 @@ public class Engine {
         bReg.setSpecialAccessPermissions(BankDescriptor.getSpecialAccessPermissions(bdtStorage, bdtOffset));
         var baseAddr = BankDescriptor.getBaseAddress(bdtStorage, bdtOffset);
         bReg.setBaseAddress(baseAddr);
-        var bankLength = bReg.getUpperLimitNormalized() - bReg.getLowerLimitNormalized() + 1;
-        bReg.setStorage(_storageManager.getSlice(AbsoluteAddress.getSegment(baseAddr),
-                                                 AbsoluteAddress.getOffset(baseAddr),
-                                                 bankLength));
+        bReg.setStorage(_storageManager.getSegment(AbsoluteAddress.getSegment(baseAddr)));
 
         if (baseRegisterIndex == 0) {
             // Update hard-held PAR
@@ -1272,6 +1252,18 @@ public class Engine {
         final boolean flag
     ) {
         _broadcastInterruptEligible = flag;
+    }
+
+    private void setStorageWordByRelativeAddress(
+        final short baseRegisterNumber,
+        final int address,
+        final long value
+    ) {
+        int offset = address - _baseRegisters[baseRegisterNumber].getLowerLimitNormalized();
+        if ((baseRegisterNumber > 0) && (baseRegisterNumber < 16)) {
+            offset += _activeBaseTable.getEntry(baseRegisterNumber).getSubsetSpecification();
+        }
+        _baseRegisters[baseRegisterNumber].getStorage()[offset] = value;
     }
 
     // -----------------------------------------------------------------------------------------------------------------------------
@@ -1359,11 +1351,7 @@ public class Engine {
             var key = _activityStatePacket.getIndicatorKeyRegister()
                                           .getAccessKey();
             checkAccessLimitsAndAccessibility(true, brx, relAddr, true, false, false, key);
-            var bReg = _baseRegisters[brx];
-            var offset = relAddr - bReg.getLowerLimitNormalized();
-            var value = bReg.getStorage().get(offset);
-            ci.setXHIU(value);
-
+            ci.setXHIU(getStorageWordByRelativeAddress((short) brx, relAddr));
             spSetInstructionPoint(InstructionPoint.RESOLVING_ADDRESS);
             return false;
         }
@@ -1486,10 +1474,11 @@ public class Engine {
             throw new ReferenceViolationInterrupt(ReferenceViolationInterrupt.ErrorType.StorageLimitsViolation, false);
         }
 
-        var offset = spGetOperandRelativeAddress() - bReg.getLowerLimitNormalized();
-        return IntStream.range(0, count)
-                        .mapToLong(ox -> bReg.getStorage().get(offset + ox))
-                        .toArray();
+        var result = new long[count];
+        for (int ox = 0; ox < count; ox++) {
+            result[ox] = getStorageWordByRelativeAddress((short) spGetOperandBaseRegisterIndex(), relAddr + ox);
+        }
+        return result;
     }
 
     public long[] getConsecutiveOperandsFromCachedAddress(
@@ -1499,7 +1488,7 @@ public class Engine {
 
         var dr = _activityStatePacket.getDesignatorRegister();
         var pPriv = dr.getProcessorPrivilege();
-        var brx = spGetOperandBaseRegisterIndex();
+        var brx = (short) spGetOperandBaseRegisterIndex();
         var relAddr = spGetOperandRelativeAddress();
         if (spGetOperandIsGRS()) {
             // reading from the GRS
@@ -1514,12 +1503,9 @@ public class Engine {
             // reading from storage...
             var ikr = _activityStatePacket.getIndicatorKeyRegister();
             var key = ikr.getAccessKey();
-            checkAccessLimitsRange(_baseRegisters[brx], relAddr, count, false, true, key);
-
-            var bReg = _baseRegisters[brx];
-            var baseOffset = relAddr - bReg.getLowerLimitNormalized();
+            checkAccessLimitsRange(_baseRegisters[brx], relAddr, count, false, false, key);
             for (int i = 0; i < count; i++) {
-                result[i] = bReg.getStorage().get(baseOffset + i);
+                result[i] = getStorageWordByRelativeAddress(brx, relAddr);
             }
         }
 
@@ -1637,9 +1623,7 @@ public class Engine {
                                               .getAccessKey();
                 checkAccessLimitsAndAccessibility(true, brx, operand, true, false, false, key);
                 var bReg = _baseRegisters[brx];
-                var offset = (int) (operand - bReg.getLowerLimitNormalized());
-                var value = bReg.getStorage()
-                                .get(offset);
+                var value = getStorageWordByRelativeAddress((short) brx, (int)operand);
                 ci.setXHIU(value);
 
                 spSetInstructionPoint(InstructionPoint.RESOLVING_ADDRESS);
@@ -1730,17 +1714,17 @@ public class Engine {
                                           spGetOperandRelativeAddress(),
                                           false, true, false, key);
 
-        var bReg = _baseRegisters[spGetOperandBaseRegisterIndex()];
-        var offset = spGetOperandRelativeAddress() - bReg.getLowerLimitNormalized();
-        var operand = bReg.getStorage().get(offset);
-
+        var operand = getStorageWordByRelativeAddress((short) spGetOperandBaseRegisterIndex(), spGetOperandRelativeAddress());
         if (lockStorage) {
+            var bReg = _baseRegisters[spGetOperandBaseRegisterIndex()];
+            var offset = spGetOperandRelativeAddress() - bReg.getLowerLimitNormalized();
             addressLockAndWait(AbsoluteAddress.addOffset(bReg.getBaseAddress(), offset));
         }
 
         if (allowPartialWordTransfer) {
             operand = extractPartialWord(operand, jFIeld, dr.isQuarterWordModeEnabled());
         }
+
         return operand;
     }
 
@@ -1762,7 +1746,7 @@ public class Engine {
     ) throws MachineInterrupt {
         var dr = _activityStatePacket.getDesignatorRegister();
         var pPriv = dr.getProcessorPrivilege();
-        var brx = spGetOperandBaseRegisterIndex();
+        var brx = (short) spGetOperandBaseRegisterIndex();
         var relAddr = spGetOperandRelativeAddress();
         if (spGetOperandIsGRS()) {
             // storing into the GRS
@@ -1778,11 +1762,8 @@ public class Engine {
             var ikr = _activityStatePacket.getIndicatorKeyRegister();
             var key = ikr.getAccessKey();
             checkAccessLimitsRange(_baseRegisters[brx], relAddr, count, false, true, key);
-
-            var bReg = _baseRegisters[brx];
-            var baseOffset = relAddr - bReg.getLowerLimitNormalized();
             for (int i = 0; i < count; i++) {
-                bReg.getStorage().set(baseOffset + i, operands[offset + i]);
+                setStorageWordByRelativeAddress(brx, relAddr + i, operands[offset + i]);
             }
         }
     }
@@ -1814,7 +1795,7 @@ public class Engine {
         final int partialWordIndicator,
         final boolean forceQuarterWordMode
     ) throws ReferenceViolationInterrupt {
-        var brx = spGetOperandBaseRegisterIndex();
+        var brx = (short) spGetOperandBaseRegisterIndex();
         var relAddr = spGetOperandRelativeAddress();
         var dr = _activityStatePacket.getDesignatorRegister();
 
@@ -1832,18 +1813,15 @@ public class Engine {
                 _generalRegisterSet.setRegister(relAddr, newValue);
             }
         } else {
-            var bReg = _baseRegisters[brx];
-            var offset = relAddr - bReg.getLowerLimitNormalized();
-
             var ikr = _activityStatePacket.getIndicatorKeyRegister();
             var key = ikr.getAccessKey();
             checkAccessLimitsAndAccessibility(_activityStatePacket.getDesignatorRegister().isBasicModeEnabled(),
                                               brx, relAddr, false, false, true, key);
 
             var qWord = dr.isQuarterWordModeEnabled();
-            var origValue = bReg.getStorage().get(offset);
+            var origValue = getStorageWordByRelativeAddress(brx, relAddr);
             var newValue = injectPartialWord(origValue, partialWordIndicator, operand, qWord || forceQuarterWordMode);
-            bReg.getStorage().set(offset, newValue);
+            setStorageWordByRelativeAddress(brx, relAddr, newValue);
         }
     }
 
@@ -1867,26 +1845,17 @@ public class Engine {
         var bReg = _baseRegisters[RCS_BASE_REGISTER];
         var stackPtr = _generalRegisterSet.getRegister(RCS_STACK_POINTER);
         var newPtr = stackPtr.getXM() - RCS_FRAME_SIZE;
-        if (bReg.isVoid()) {
-            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
-                                                                RCS_BASE_REGISTER,
-                                                                (int) newPtr);
-        }
-        try {
-            bReg.checkAccessLimits(newPtr, false);
-        } catch (ReferenceViolationInterrupt e) {
+        if (!bReg.isWithinLimits(newPtr)) {
             throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
                                                                 RCS_BASE_REGISTER,
                                                                 (int) newPtr);
         }
 
         stackPtr.setXM(newPtr);
-        var storage = bReg.getStorage();
-        var frameOffset = (int) (newPtr - bReg.getLowerLimitNormalized());
         var w0 = ((long) (bankLevel & 07) << 33) | ((long) (bankDescriptorIndex & 0_077777) << 18) | (offset & 0_777777);
         var w1 = ((bankDescriptorRegister & 03) << 24) | ((db12To17 & 0_77) << 18) | accessKey.toComposite();
-        storage.set(frameOffset, w0);
-        storage.set(frameOffset + 1, w1);
+        setStorageWordByRelativeAddress(RCS_BASE_REGISTER, (int) newPtr, w0);
+        setStorageWordByRelativeAddress(RCS_BASE_REGISTER, (int) newPtr + 1, w1);
     }
 
     /**
@@ -1900,22 +1869,14 @@ public class Engine {
         var bReg = _baseRegisters[RCS_BASE_REGISTER];
         var stackPtr = _generalRegisterSet.getRegister(RCS_STACK_POINTER);
         var oldPtr = stackPtr.getXM();
-        if (bReg.isVoid()) {
-            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow,
-                                                                RCS_BASE_REGISTER,
-                                                                (int) oldPtr);
-        }
-        try {
-            bReg.checkAccessLimits(oldPtr, false);
-        } catch (ReferenceViolationInterrupt e) {
+        if (!bReg.isWithinLimits(oldPtr)) {
             throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Underflow,
                                                                 RCS_BASE_REGISTER,
                                                                 (int) oldPtr);
         }
 
-        var offset = (int) (oldPtr - bReg.getLowerLimitNormalized());
-        frameContent[0] = bReg.getStorage().get(offset);
-        frameContent[1] = bReg.getStorage().get(offset + 1);
+        frameContent[0] = getStorageWordByRelativeAddress(RCS_BASE_REGISTER, (int) oldPtr);
+        frameContent[1] = getStorageWordByRelativeAddress(RCS_BASE_REGISTER, (int) oldPtr + 1);
 
         var newPtr = stackPtr.getXM() + RCS_FRAME_SIZE;
         stackPtr.setXM(newPtr);
@@ -1988,14 +1949,14 @@ public class Engine {
     private boolean _bamTargetIsVoid;
 
     private long _bamTargetBDAddress;
-    private ArraySlice _bamTargetBDStorage;
+    private long[] _bamTargetBDStorage;
     private int _bamTargetBDOffset;
     private BankType _bamTargetBankType;
     private boolean _bamTargetCanEnter;
     private boolean _bamProcessIndirect;
     private boolean _bamProcessGate;
 
-    private ArraySlice _bamGateStorage;
+    private long[] _bamGateStorage;
     private int _bamGateOffset;
 
     private short _bamBaseRegisterNumber;

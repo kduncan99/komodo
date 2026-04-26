@@ -45,6 +45,7 @@ public class TCSFunction extends Function {
             engine.getProgramAddressRegister().incrementProgramCounter();
         }
 
+        engine.addressClearAllLocks();
         return true;
     }
 }

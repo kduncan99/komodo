@@ -2,132 +2,129 @@
  * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
-package com.bearsnake.komodo.engine.interrupts;
-
-import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.engine.*;
+package com.bearsnake.komodo.engine;
 
 public class Gate {
 
     // static methods ----------------------------------------------------------
 
     public static AccessPermissions getGeneralAccessPermissions(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return new AccessPermissions((int)(storage.get(offset) >> 33) & 07);
+        return new AccessPermissions((int)(storage[offset] >> 33) & 07);
     }
 
     public static AccessPermissions getSpecialAccessPermissions(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return new AccessPermissions((int)(storage.get(offset) >> 30) & 07);
+        return new AccessPermissions((int)(storage[offset] >> 30) & 07);
     }
 
     public static boolean isLibrary(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (storage.get(offset) & 0_000040_000000L) != 0;
+        return (storage[offset] & 0_000040_000000L) != 0;
     }
 
     public static boolean isGotoInhibited(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (storage.get(offset) & 0_000020_000000L) != 0;
+        return (storage[offset] & 0_000020_000000L) != 0;
     }
 
     public static boolean isDesignatorBitInhibited(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (storage.get(offset) & 0_000010_000000L) != 0;
+        return (storage[offset] & 0_000010_000000L) != 0;
     }
 
     public static boolean isAccessKeyInhibited(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (storage.get(offset) & 0_000004_000000L) != 0;
+        return (storage[offset] & 0_000004_000000L) != 0;
     }
 
     public static boolean isLatentParameter0Inhibited(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (storage.get(offset) & 0_000002_000000L) != 0;
+        return (storage[offset] & 0_000002_000000L) != 0;
     }
 
     public static boolean isLatentParameter1Inhibited(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (storage.get(offset) & 0_000001_000000L) != 0;
+        return (storage[offset] & 0_000001_000000L) != 0;
     }
 
     public static AccessLock getAccessLock(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return new AccessLock((int)(storage.get(offset) & 0_777777));
+        return new AccessLock((int)(storage[offset] & 0_777777));
     }
 
     public static short getBankLevel(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (short)(storage.get(offset + 1) >> 33);
+        return (short)(storage[offset + 1] >> 33);
     }
 
     public static int getBankDescriptorIndex(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (int)(storage.get(offset + 1) >> 18) & 0_077777;
+        return (int)(storage[offset + 1] >> 18) & 0_077777;
     }
 
     public static int getOffset(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (int)(storage.get(offset + 1) & 0_777777);
+        return (int)(storage[offset + 1] & 0_777777);
     }
 
     public static short getBasicModeBaseRegister(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (short)(((storage.get(offset + 2) >> 24) & 03) + 12);
+        return (short)(((storage[offset + 2] >> 24) & 03) + 12);
     }
 
     public static int getDesignatorRegisterBits12To17(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (int)(storage.get(offset + 2) >> 18) & 0_077;
+        return (int)(storage[offset + 2] >> 18) & 0_077;
     }
 
     public static AccessKey getAccessKey(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return new AccessKey((int)(storage.get(offset + 2) & 0_777777));
+        return new AccessKey((int)(storage[offset + 2] & 0_777777));
     }
 
     public static long getLatentParameter0(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return storage.get(offset + 3) & 0_777777_777777L;
+        return storage[offset + 3] & 0_777777_777777L;
     }
 
     public static long getLatentParameter1(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return storage.get(offset + 4) & 0_777777_777777L;
+        return storage[offset + 4] & 0_777777_777777L;
     }
 
     // instance methods --------------------------------------------------------
@@ -218,25 +215,27 @@ public class Gate {
      * Loads a BankDescriptor from a buffer containing the serialized form of a Gate.
      * @param buffer 8-word buffer containing the serialized form of a Gate.
      */
-    public Gate(final long[] buffer) {
-        var as = new ArraySlice(buffer, 0, 8);
-        _generalAccessPermissions = getGeneralAccessPermissions(as, 0).setCanRead(false).setCanWrite(false);
-        _specialAccessPermissions = getSpecialAccessPermissions(as, 0).setCanRead(false).setCanWrite(false);
-        _isLibrary = isLibrary(as, 0);
-        _isGotoInhibited = isGotoInhibited(as, 0);
-        _isDesignatorBitInhibited = isDesignatorBitInhibited(as, 0);
-        _isAccessKeyInhibited = isAccessKeyInhibited(as, 0);
-        _isLatentParameter0Inhibited = isLatentParameter0Inhibited(as, 0);
-        _isLatentParameter1Inhibited = isLatentParameter1Inhibited(as, 0);
-        _accessLock = getAccessLock(as, 0);
-        _bankLevel = getBankLevel(as, 0);
-        _bankDescriptorIndex = getBankDescriptorIndex(as, 0);
-        _offset = getOffset(as, 0);
-        _basicModeBaseRegister = getBasicModeBaseRegister(as, 0);
-        _designatorRegisterBits12To17 = getDesignatorRegisterBits12To17(as, 0);
-        _accessKey = getAccessKey(as, 0);
-        _latentParameter0 = getLatentParameter0(as, 0);
-        _latentParameter1 = getLatentParameter1(as, 0);
+    public Gate(
+        final long[] buffer,
+        final int offset
+    ) {
+        _generalAccessPermissions = getGeneralAccessPermissions(buffer, 0).setCanRead(false).setCanWrite(false);
+        _specialAccessPermissions = getSpecialAccessPermissions(buffer, 0).setCanRead(false).setCanWrite(false);
+        _isLibrary = isLibrary(buffer, 0);
+        _isGotoInhibited = isGotoInhibited(buffer, 0);
+        _isDesignatorBitInhibited = isDesignatorBitInhibited(buffer, 0);
+        _isAccessKeyInhibited = isAccessKeyInhibited(buffer, 0);
+        _isLatentParameter0Inhibited = isLatentParameter0Inhibited(buffer, 0);
+        _isLatentParameter1Inhibited = isLatentParameter1Inhibited(buffer, 0);
+        _accessLock = getAccessLock(buffer, 0);
+        _bankLevel = getBankLevel(buffer, 0);
+        _bankDescriptorIndex = getBankDescriptorIndex(buffer, 0);
+        _offset = getOffset(buffer, 0);
+        _basicModeBaseRegister = getBasicModeBaseRegister(buffer, 0);
+        _designatorRegisterBits12To17 = getDesignatorRegisterBits12To17(buffer, 0);
+        _accessKey = getAccessKey(buffer, 0);
+        _latentParameter0 = getLatentParameter0(buffer, 0);
+        _latentParameter1 = getLatentParameter1(buffer, 0);
     }
 
     public AccessPermissions getGeneralAccessPermissions() { return _generalAccessPermissions; }
@@ -283,11 +282,11 @@ public class Gate {
 
     /**
      * Serializes this BankDescriptor into the given buffer at the given offset.
-     * @param slice slice containing the contiguous array to which we serialize this object
-     * @param offset offset from the start of the slice at which we should start writing this object's data
+     * @param buffer array to which we serialize this object
+     * @param offset offset from the start of the array at which we should start writing this object's data
      */
     public void serialize(
-        final ArraySlice slice,
+        final long[] buffer,
         final int offset
     ) {
         long value0 = 0;
@@ -311,13 +310,13 @@ public class Gate {
         value2 |= ((long)_designatorRegisterBits12To17 & 0_077) << 18;
         value2 |= _accessKey.toComposite() & 0_777777;
 
-        slice.set(offset, value0);
-        slice.set(offset + 1, value1);
-        slice.set(offset + 2, value2);
-        slice.set(offset + 3, _latentParameter0 & 0_777777_777777L);
-        slice.set(offset + 4, _latentParameter1 & 0_777777_777777L);
-        slice.set(offset + 5, 0);
-        slice.set(offset + 6, 0);
-        slice.set(offset + 7, 0);
+        buffer[offset] = value0;
+        buffer[offset + 1] = value1;
+        buffer[offset + 2] = value2;
+        buffer[offset + 3] = _latentParameter0 & 0_777777_777777L;
+        buffer[offset + 4] = _latentParameter1 & 0_777777_777777L;
+        buffer[offset + 5] = 0;
+        buffer[offset + 6] = 0;
+        buffer[offset + 7] = 0;
     }
 }

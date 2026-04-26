@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.load;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -37,21 +36,18 @@ public class TestLAQWFunction extends FunctionUnitTest {
             laqwBM( 1, 5, 0, 0, 040000),
             laqwBM( 2, 6, 0, 0, 040000),
             laqwBM( 3, 7, 0, 0, 040000),
-            0,
-            };
+            0
+        };
 
         var data = new long[]{
             0_040777_777777L,
             0_777030_777777L,
             0_777777_020777L,
-            0_777777_777010L,
-            };
+            0_777777_777010L
+        };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -84,25 +80,19 @@ public class TestLAQWFunction extends FunctionUnitTest {
             laqwEM( 1, 5, 0, 0, 4, 0),
             laqwEM( 2, 6, 0, 0, 5, 0),
             laqwEM( 3, 7, 0, 0, 6, 0),
-            0,
-            };
+            0
+        };
 
         var data0 = new long[]{ 0_040777_777777L };
         var data1 = new long[]{ 0, 0_777030_777777L };
         var data2 = new long[]{ 0, 0, 0_777777_020777L };
         var data3 = new long[]{ 0, 0, 0, 0_777777_777010L };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data0);
-        var bank2 = new ArraySlice(data1);
-        var bank3 = new ArraySlice(data2);
-        var bank4 = new ArraySlice(data3);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(3, false, 0_0, 0_0777, 0, bank1);
-        loadBaseRegister(4, false, 0_0, 0_0777, 0, bank2);
-        loadBaseRegister(5, false, 0_0, 0_0777, 0, bank3);
-        loadBaseRegister(6, false, 0_0, 0_0777, 0, bank4);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 3, false, 0_0, 0_0777, 0, data0);
+        loadBaseRegister((short) 4, false, 0_0, 0_0777, 0, data1);
+        loadBaseRegister((short) 5, false, 0_0, 0_0777, 0, data2);
+        loadBaseRegister((short) 6, false, 0_0, 0_0777, 0, data3);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

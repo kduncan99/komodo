@@ -43,14 +43,7 @@ public class BUYFunction extends Function {
         var operand = ci.getD();
         var newPtr = (oldPtr - operand - (xMod24 ? stackPtr.getSignedXI12() : stackPtr.getSignedXI())) & 0_777777;
 
-        if (bReg.isVoid()) {
-            throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
-                                                                ci.getB(),
-                                                                (int)newPtr);
-        }
-        try {
-            bReg.checkAccessLimits(newPtr, false);
-        } catch (ReferenceViolationInterrupt e) {
+        if (!bReg.isWithinLimits(newPtr)) {
             throw new RCSGenericStackUnderflowOverflowInterrupt(RCSGenericStackUnderflowOverflowInterrupt.Reason.Overflow,
                                                                 ci.getB(),
                                                                 (int)newPtr);

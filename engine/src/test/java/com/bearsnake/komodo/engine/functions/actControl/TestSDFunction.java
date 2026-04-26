@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.actControl;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.DesignatorRegister;
 import com.bearsnake.komodo.engine.Engine;
@@ -41,10 +40,8 @@ public class TestSDFunction extends FunctionUnitTest {
         var data = new long[0_1000];
         code[0] = sdBM(0, 0, 0, 0_2000);
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(13, false, 0_2000, 0_2777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 13, false, 0_2000, 0_2777, 0, data);
 
         _engine.getDesignatorRegister()
                .clear()
@@ -67,10 +64,8 @@ public class TestSDFunction extends FunctionUnitTest {
         var data = new long[0_1000];
         code[0] = sdBM(0, 0, 0, GRS_R5);
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(13, false, 0_2000, 0_2777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 13, false, 0_2000, 0_2777, 0, data);
 
         _engine.getDesignatorRegister()
                .clear()
@@ -96,10 +91,8 @@ public class TestSDFunction extends FunctionUnitTest {
         code[0] = sdBM(2, 1, 1, 0_2000);    // X2 will be set to 000001:000002
         code[012] = fjaxhiu(0, 0, 0, 2, 1, 0, 0_1020);
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(13, false, 0_2000, 0_2777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 13, false, 0_2000, 0_2777, 0, data);
 
         _engine.getDesignatorRegister()
                .clear()
@@ -125,10 +118,8 @@ public class TestSDFunction extends FunctionUnitTest {
         var data = new long[0_1000];
         code[0] = sdBM(0, 0, 0, 0_2000);
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(13, false, 0_2000, 0_2777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 13, false, 0_2000, 0_2777, 0, data);
 
         _engine.getDesignatorRegister()
                .clear()
@@ -150,10 +141,8 @@ public class TestSDFunction extends FunctionUnitTest {
         var data = new long[0_1000];
         code[0] = sdEM(0, 0, 0, 6, 0_2000);
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(6, false, 0_2000, 0_2777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 6, false, 0_2000, 0_2777, 0, data);
 
         _engine.getDesignatorRegister()
                .clear()
@@ -176,10 +165,8 @@ public class TestSDFunction extends FunctionUnitTest {
         var data = new long[0_1000];
         code[0] = sdEM(0, 0, 0, 6, 0_2000);
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(6, false, 0_2000, 0_2777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 6, false, 0_2000, 0_2777, 0, data);
 
         var rand = new Random();
         var dr = _engine.getDesignatorRegister();

@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
 
 /**
@@ -26,22 +25,11 @@ public interface StorageManager {
     void clearSegments();
 
     /**
-     * Retrieves the ArraySlice which contains the indicated segment.
+     * Retrieves the array which contains the indicated segment.
      * @param segment The segment index, from 0 to 0x7FFFFFFF.
-     * @return The ArraySlice containing the segment, or null if the segment is invalid.
+     * @return The array containing the segment, or null if the segment is invalid.
      */
-    ArraySlice getSegment(final int segment) throws HardwareCheckInterrupt;
-
-    /**
-     * Creates an ArraySlice which contains a sub-range of the indicated segment.
-     * This is NOT a copy - writes into this ArraySlice will affect the segment.
-     * Best used for cases where code needs to write to multiple consecutive words in a segment.
-     * @param segment The segment index, from 0 to 0x7FFFFFFF.
-     * @param offset The offset within the segment, from 0 to segment size - 1.
-     * @param length The length of the slice, from 1 to segment size - offset.
-     * @return The ArraySlice containing the segment slice, or null if the segment is invalid or the slice is out of bounds.
-     */
-    ArraySlice getSlice(final int segment, final int offset, final int length) throws HardwareCheckInterrupt;
+    long[] getSegment(final int segment) throws HardwareCheckInterrupt;
 
     /**
      * Retrieves a word from the indicated segment.
@@ -56,13 +44,6 @@ public interface StorageManager {
      * @param segment The segment index, from 0 to 0x7FFFFFFF.
      */
     void releaseSegment(final int segment) throws HardwareCheckInterrupt;
-
-    /**
-     * Resizes the indicated segment.  The segment will be truncated or padded with zeros to the new size.
-     * @param segment The segment index, from 0 to 0x7FFFFFFF.
-     * @param newSize The new size of the segment (from 0 to 0x7FFFFFFF), in words.
-     */
-    void resizeSegment(final int segment, final int newSize) throws HardwareCheckInterrupt;
 
     /**
      * Sets a word in the indicated segment.

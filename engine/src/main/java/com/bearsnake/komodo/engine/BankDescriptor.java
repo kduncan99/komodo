@@ -4,101 +4,124 @@
 
 package com.bearsnake.komodo.engine;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
-
 public class BankDescriptor {
 
     // static methods ----------------------------------------------------------
 
     public static AccessPermissions getGeneralAccessPermissions(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return new AccessPermissions((int)(storage.get(offset) >> 33) & 03);
+        return new AccessPermissions((int)(storage[offset] >> 33) & 03);
     }
 
     public static AccessPermissions getSpecialAccessPermissions(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return new AccessPermissions((int)(storage.get(offset) >> 30) & 07);
+        return new AccessPermissions((int)(storage[offset] >> 30) & 07);
+    }
+
+    public static int getBankLength(
+        final long[] storage,
+        final int offset
+    ) {
+        return getUpperLimitNormalized(storage, offset) - getLowerLimitNormalized(storage, offset) + 1;
     }
 
     public static BankType getBankType(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return BankType.get((int)(storage.get(offset) >> 24) & 0_017);
+        return BankType.get((int)(storage[offset] >> 24) & 0_017);
     }
 
     public static boolean isGeneralFault(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (storage.get(offset) & 0_000020_000000L) != 0;
+        return (storage[offset] & 0_000020_000000L) != 0;
     }
 
     public static boolean isLargeBank(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (storage.get(offset) & 0_000004_000000L) != 0;
+        return (storage[offset] & 0_000004_000000L) != 0;
     }
 
     public static AccessLock getAccessLock(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return new AccessLock((int)(storage.get(offset) & 0_777777));
+        return new AccessLock((int)(storage[offset] & 0_777777));
     }
 
     public static int getIndirectLevelAndBDI(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (int)(storage.get(offset + 1) >> 18) & 0_777777;
+        return (int)(storage[offset + 1] >> 18) & 0_777777;
     }
 
     public static int getLowerLimit(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (int)(storage.get(offset + 1) >> 27) & 0777;
+        return (int)(storage[offset + 1] >> 27) & 0777;
+    }
+
+    public static int getLowerLimitNormalized(
+        final long[] storage,
+        final int offset
+    ) {
+        var ll = getLowerLimit(storage, offset);
+        var large = isLargeBank(storage, offset);
+        return large ? ll << 15 : ll << 9;
     }
 
     public static int getUpperLimit(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (int)storage.get(offset + 1) & 0_777777;
+        return (int)storage[offset + 1] & 0_777777;
+    }
+
+    public static int getUpperLimitNormalized(
+        final long[] storage,
+        final int offset
+    ) {
+        var ul = getUpperLimit(storage, offset);
+        var large = isLargeBank(storage, offset);
+        return large ? ul << 6 : ul;
     }
 
     public static long getBaseAddress(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return AbsoluteAddress.construct((int)storage.get(offset + 2), (int)storage.get(offset + 3));
+        return AbsoluteAddress.construct((int)storage[offset + 2], (int)storage[offset + 3]);
     }
 
     public static long getInactiveQBDListNextPointer(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return storage.get(offset + 3);
+        return storage[offset + 3];
     }
 
     public static int getDisplacement(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (int)(storage.get(offset + 4) >> 18) & 0_077777;
+        return (int)(storage[offset + 4] >> 18) & 0_077777;
     }
 
     public static boolean isInactive(
-        final ArraySlice storage,
+        final long[] storage,
         final int offset
     ) {
-        return (storage.get(offset + 4) & 0_400000_000000L) != 0;
+        return (storage[offset + 4] & 0_400000_000000L) != 0;
     }
 
     // instance methods --------------------------------------------------------
@@ -259,7 +282,7 @@ public class BankDescriptor {
      * @param offset offset from the start of the slice at which we should start writing this object's data
      */
     public void serialize(
-        final ArraySlice slice,
+        final long[] slice,
         final int offset
     ) {
         long value0 = 0;
@@ -298,13 +321,13 @@ public class BankDescriptor {
         }
         value4 |= (_displacement & 077777L) << 18;
 
-        slice.set(offset, value0);
-        slice.set(offset + 1, value1);
-        slice.set(offset + 2, value2);
-        slice.set(offset + 3, value3);
-        slice.set(offset + 4, value4);
-        slice.set(offset + 5, 0);
-        slice.set(offset + 6, 0);
-        slice.set(offset + 7, 0);
+        slice[offset] = value0;
+        slice[offset + 1] = value1;
+        slice[offset + 2] = value2;
+        slice[offset + 3] = value3;
+        slice[offset + 4] = value4;
+        slice[offset + 5] = 0;
+        slice[offset + 6] = 0;
+        slice[offset + 7] = 0;
     }
 }

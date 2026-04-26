@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.load;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -39,10 +38,10 @@ public class TestLRFunction extends FunctionUnitTest {
     public void testLRImmediate_BM() throws MachineInterrupt {
         var code = new long[] {
             lrImm(Constants.JFIELD_U, 0, 0, 0123),
-            0,
-            };
-        var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_22777, 0, bank);
+            0
+        };
+
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -59,8 +58,8 @@ public class TestLRFunction extends FunctionUnitTest {
     public void testLRImmediate_Large_BM() throws MachineInterrupt {
         var code = new long[0200000];
         code[0] = lrImm(Constants.JFIELD_U, 0, 0, 0200000);
-        var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_22000, 0_277777, 0, bank);
+
+        loadBaseRegister((short) 13, false, 0_22000, 0_277777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -77,10 +76,10 @@ public class TestLRFunction extends FunctionUnitTest {
     public void testLRImmediate_EM() throws MachineInterrupt {
         var code = new long[] {
             lrImm(Constants.JFIELD_U, 0, 0, 0123),
-            0,
-            };
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
+            0
+        };
+
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -97,8 +96,8 @@ public class TestLRFunction extends FunctionUnitTest {
     public void testLR_W_EM() throws MachineInterrupt {
         var code = new long[] {
             lrEM(Constants.JFIELD_W, 2, 0, 0, 0, 1, 02),
-            0,
-            };
+            0
+        };
 
         var data = new long[] {
             0_1L,
@@ -108,10 +107,8 @@ public class TestLRFunction extends FunctionUnitTest {
             0_5L
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 1, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -129,11 +126,10 @@ public class TestLRFunction extends FunctionUnitTest {
         var code = new long[] {
             // use Q1 to verify reg->reg is always full-word
             lrEM(Constants.JFIELD_Q1, 2, 0, 0, 0, 0, Constants.GRS_A3),
-            0,
-            };
+            0
+        };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -152,16 +148,14 @@ public class TestLRFunction extends FunctionUnitTest {
     public void testLR_LongIndexed_EM() throws MachineInterrupt {
         var code = new long[] {
             lrEM(Constants.JFIELD_W, 4, 4, 1, 0, 1, 0),
-            0,
-            };
+            0
+        };
 
         var data = new long[0_1000_1000];
         data[0_1000_0000] = 0_445544_667766L;
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(1, false, 0_0, 0_10000_0777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 1, false, 0_0, 0_10000_0777, 0, data);
 
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)
@@ -192,8 +186,8 @@ public class TestLRFunction extends FunctionUnitTest {
     public void testLR_Indexed_EM() throws MachineInterrupt {
         var code = new long[] {
             lrEM(Constants.JFIELD_W, 5, 3, 1, 0, 1, 01),
-            0,
-            };
+            0
+        };
 
         var data = new long[] {
             0_11L,
@@ -203,11 +197,8 @@ public class TestLRFunction extends FunctionUnitTest {
             0_15L
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 1, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -229,20 +220,17 @@ public class TestLRFunction extends FunctionUnitTest {
             lrBM(Constants.JFIELD_T1, 0, 0, 0, 0, 040000),
             lrBM(Constants.JFIELD_T2, 1, 0, 0, 0, 040001),
             lrBM(Constants.JFIELD_T3, 2, 0, 0, 0, 040002),
-            0,
-            };
+            0
+        };
 
         var data = new long[]{
             0_221111_111111L,
             0_113311_007766L,
-            0_111144_675301L,
-            };
+            0_111144_675301L
+        };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -265,18 +253,13 @@ public class TestLRFunction extends FunctionUnitTest {
             lrEM(Constants.JFIELD_Q2, 13, 0, 0, 0, 1, 0),
             lrEM(Constants.JFIELD_Q3, 14, 0, 0, 0, 1, 0),
             lrEM(Constants.JFIELD_Q4, 15, 0, 0, 0, 1, 0),
-            0,
-            };
+            0
+        };
 
-        var data = new long[] {
-            data(0_112, 0_233, 0_445, 0_566),
-            };
+        var data = new long[] { data(0_112, 0_233, 0_445, 0_566) };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 1, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -299,16 +282,13 @@ public class TestLRFunction extends FunctionUnitTest {
             lrBM(Constants.JFIELD_W, 5, 0, 0, 1, 022002),
             0,
             lrBM(0, 0, 0, 0, 1, 022003),
-            lrBM(0, 0, 0, 0, 0, 040000),
-            };
+            lrBM(0, 0, 0, 0, 0, 040000)
+        };
 
         var data = new long[] { 0_221111_111111L };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -327,11 +307,10 @@ public class TestLRFunction extends FunctionUnitTest {
     public void testLR_GRS040_Priv3_BM_Violation() throws MachineInterrupt {
         var code = new long[] {
             lrBM(Constants.JFIELD_W, 0, 0, 0, 0, 040),
-            0,
-            };
+            0
+        };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -352,11 +331,10 @@ public class TestLRFunction extends FunctionUnitTest {
     public void testLR_GRS0130_Priv0_BM_Success() throws MachineInterrupt {
         var code = new long[] {
             lrBM(Constants.JFIELD_W, 0, 0, 0, 0, 0130),
-            0,
-            };
-        var bank = new ArraySlice(code);
+            0
+        };
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -375,11 +353,10 @@ public class TestLRFunction extends FunctionUnitTest {
     public void testLR_GRS0130_Priv3_EM_Violation() throws MachineInterrupt {
         var code = new long[] {
             lrEM(Constants.JFIELD_W, 0, 0, 0, 0, 0, 0130),
-            0,
-            };
+            0
+        };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -400,11 +377,10 @@ public class TestLRFunction extends FunctionUnitTest {
     public void testLR_GRS0130_Priv0_EM_Success() throws MachineInterrupt {
         var code = new long[] {
             lrEM(Constants.JFIELD_W, 0, 0, 0, 0, 0, 0130),
-            0,
-            };
+            0
+        };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

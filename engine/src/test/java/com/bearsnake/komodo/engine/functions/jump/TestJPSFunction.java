@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
@@ -42,8 +41,7 @@ public class TestJPSFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = jpsBM(5, 0_1000); // JPS if A5 is positive, jump to 0_100
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 13, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -68,8 +66,7 @@ public class TestJPSFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = jpsEM(5, 0_1000); // JPS if A5 is positive, jump to 0_100
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_2777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_2777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

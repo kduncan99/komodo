@@ -4,10 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.load;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.engine.AbsoluteAddress;
-import com.bearsnake.komodo.engine.BankDescriptor;
-import com.bearsnake.komodo.engine.BankType;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -34,16 +30,15 @@ public class TestLSBLFunction extends FunctionUnitTest {
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0).setBankLevel((short)0);
     }
 
-    /*
     @Test
     public void testLSBL_EM() throws MachineInterrupt {
         var code = new long[] {
             lsblEM(0, 0, 0, 0, 0, 0, GRS_R5),
             lsblEM(JFIELD_H2, 1, 0, 0, 0, 0, GRS_R5),   // should be full-word
-            lsblEM(JFIELD_S3, 2, 0, 0, 0, 2, 0),
+            lsblEM(JFIELD_S3, 2, 0, 0, 0, 2, 0_1000),
             lsblEMImm(JFIELD_U, 3, 0, 0_2222),
-            lsblEM(0, 4, 8, 0, 0, 2, 0),
-            0,
+            lsblEM(0, 4, 8, 0, 0, 2, 0_1000),
+            0
         };
 
         var data = new long[] {
@@ -51,23 +46,12 @@ public class TestLSBLFunction extends FunctionUnitTest {
             0,
             0,
             0,
-            0_44,
+            0_44
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_1000, 0_1777, 0, data);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_1)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0)
-                                      .setUpperLimit(0_1777)
-                                      .setBaseAddress(AbsoluteAddress.construct(1, 0));
-
-        _engine.getBaseRegister(0).setBankDescriptor(bd0).setStorage(bank0).setSubsetting(0);
-        _engine.getBaseRegister(2).setBankDescriptor(bd1).setStorage(bank1).setSubsetting(0);
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
                .setProcessorPrivilege((short)3)
@@ -89,6 +73,4 @@ public class TestLSBLFunction extends FunctionUnitTest {
         assertEquals(0_772277_777777L, _engine.getGeneralRegisterSet().getRegister(GRS_X3).getW());
         assertEquals(0_774477_777777L, _engine.getGeneralRegisterSet().getRegister(GRS_X4).getW());
     }
-
-     */
 }

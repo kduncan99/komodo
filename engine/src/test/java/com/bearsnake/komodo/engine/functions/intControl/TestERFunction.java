@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.intControl;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
@@ -32,8 +31,7 @@ public class TestERFunction extends FunctionUnitTest {
             erBM(0, 0, 0, 0_42),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.load;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -40,11 +39,10 @@ public class TestLMAFunction extends FunctionUnitTest {
             lmaImm(Constants.JFIELD_U, 0, 0, 0123),
             lmaImm(Constants.JFIELD_U, 1, 0, 0777773),
             lmaImm(Constants.JFIELD_XU, 2, 0, 0777773),
-            0,
+            0
         };
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -64,7 +62,7 @@ public class TestLMAFunction extends FunctionUnitTest {
         var code = new long[] {
             lmaEM(Constants.JFIELD_W, 12, 0, 0, 0, 1, 02),
             lmaEM(Constants.JFIELD_W, 13, 0, 0, 0, 1, 03),
-            0,
+            0
         };
 
         var data = new long[] {
@@ -75,11 +73,8 @@ public class TestLMAFunction extends FunctionUnitTest {
             0_5L
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 1, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -97,8 +92,8 @@ public class TestLMAFunction extends FunctionUnitTest {
     public void testLA_Indexed_EM() throws MachineInterrupt {
         var code = new long[] {
             lmaEM(Constants.JFIELD_W, 5, 3, 1, 0, 1, 01),
-            0,
-            };
+            0
+        };
 
         var data = new long[] {
             0_11L,
@@ -108,11 +103,8 @@ public class TestLMAFunction extends FunctionUnitTest {
             0_15L
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 1, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -134,8 +126,8 @@ public class TestLMAFunction extends FunctionUnitTest {
             lmaBM(Constants.JFIELD_T1, 0, 0, 0, 0, 040000),
             lmaBM(Constants.JFIELD_T2, 1, 0, 0, 0, 040001),
             lmaBM(Constants.JFIELD_T3, 2, 0, 0, 0, 040002),
-            0,
-            };
+            0
+        };
 
         var data = new long[]{
             0_221111_111111L,
@@ -143,11 +135,8 @@ public class TestLMAFunction extends FunctionUnitTest {
             0_111144_675301L,
             };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -170,18 +159,15 @@ public class TestLMAFunction extends FunctionUnitTest {
             lmaEM(Constants.JFIELD_Q2, 13, 0, 0, 0, 1, 0),
             lmaEM(Constants.JFIELD_Q3, 14, 0, 0, 0, 1, 0),
             lmaEM(Constants.JFIELD_Q4, 15, 0, 0, 0, 1, 0),
-            0,
+            0
         };
 
         var data = new long[] {
             data(0_112, 0_233, 0_445, 0_566),
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(1, false, 0_0, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 1, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

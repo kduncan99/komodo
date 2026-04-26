@@ -57,7 +57,7 @@ public abstract class LXJFunction extends Function {
             } case 3 -> throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.InvalidISValue, 0, 0);
         }
 
-        var oldAddress = engine.getProgramAddressRegister().getCompositeValue();
+        var oldAddress = engine.getProgramAddressRegister().toCompositeValue();
         engine.bankManipulation(this, interfaceSpec, baseRegisterNumber, bankLevel, bankDescriptorIndex, xaRegister, operand, null);
         engine.createJumpHistoryEntry(oldAddress);
         return true;

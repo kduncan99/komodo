@@ -17,44 +17,18 @@ public class ProgramAddressRegister extends VirtualAddress {
         super(value);
     }
 
-    public ProgramAddressRegister(
-        final short level,
-        final int bdi,
-        final int programCounter
-    ) {
-        super(level, bdi, programCounter);
-    }
-
     public int getProgramCounter() {
         return getOffset();
     }
 
-    public static long getCompositeValue(final int level,
-                                         final int bdi,
-                                         final int programCounter) {
-        return ((long) (level & 07) << 33) | ((long) (bdi & 077777) << 18) | (programCounter & 0777777);
-    }
-
-    public static long getCompositeValue(final boolean execFlag,
-                                         final boolean levelFlag,
-                                         final int bdi,
-                                         final int programCounter) {
-        return getCompositeValue(translateBasicToExtendedLevel(execFlag, levelFlag), bdi, programCounter);
-    }
-
     public void incrementProgramCounter() {
-        var pc = getProgramCounter();
-        pc++;
-        if (pc > 0777777) {
-            pc = 0;
-        }
-        setOffset(pc);
+        setAddress(getProgramCounter() + 1);
     }
 
     public ProgramAddressRegister setProgramCounter(
         final int value
     ) {
-        setOffset(value & 0_777777);
+        setAddress(value & 0_777777);
         return this;
     }
 }

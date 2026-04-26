@@ -3,7 +3,6 @@ package com.bearsnake.komodo.engine.functions.shift;
  * Copyright (c) 2018-2026 by Kurt Duncan - All Rights Reserved
  */
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -33,8 +32,7 @@ public class TestDLSCFunction extends FunctionUnitTest {
         code[0_400] = 0_123400_000000L;
         code[0_401] = 0_123400_000000L;
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(13, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 13, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -64,8 +62,7 @@ public class TestDLSCFunction extends FunctionUnitTest {
         code[0_2000] = 0;
         code[0_2001] = 0_000007_000000L;
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_3777, 0, bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_3777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -87,8 +84,7 @@ public class TestDLSCFunction extends FunctionUnitTest {
         code[0_400] = 0;
         code[0_401] = 0;
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -110,8 +106,7 @@ public class TestDLSCFunction extends FunctionUnitTest {
         code[0_400] = 0_777777_777777L;
         code[0_401] = 0_777777_777777L;
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -133,8 +128,7 @@ public class TestDLSCFunction extends FunctionUnitTest {
         code[0_400] = 0_200000_000000L;
         code[0_401] = 0;
 
-        var bank = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

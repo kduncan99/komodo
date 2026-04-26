@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.load;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -39,7 +38,7 @@ public class TestLSBOFunction extends FunctionUnitTest {
             lsboEM(JFIELD_S3, 2, 0, 0, 0, 2, 0),
             lsboEMImm(JFIELD_U, 3, 0, 0_2222),
             lsboEM(0, 4, 8, 0, 0, 2, 0),
-            0,
+            0
         };
 
         var data = new long[] {
@@ -47,14 +46,11 @@ public class TestLSBOFunction extends FunctionUnitTest {
             0,
             0,
             0,
-            0_44,
+            0_44
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

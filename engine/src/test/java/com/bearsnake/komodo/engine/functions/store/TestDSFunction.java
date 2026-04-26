@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.store;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -37,11 +36,9 @@ public class TestDSFunction extends FunctionUnitTest {
 
         var data = new long[02000];
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -67,11 +64,9 @@ public class TestDSFunction extends FunctionUnitTest {
 
         var data = new long[02000];
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_01000, 0_01777, 0, bank0);
-        loadBaseRegister(2, false, 0_00000, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_01000, 0_01777, 0, code);
+        loadBaseRegister((short) 2, false, 0_00000, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -97,11 +92,9 @@ public class TestDSFunction extends FunctionUnitTest {
 
         var data = new long[02000];
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_01000, 0_01777, 0, bank0);
-        loadBaseRegister(2, false, 0_00000, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_01000, 0_01777, 0, code);
+        loadBaseRegister((short) 2, false, 0_00000, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -129,11 +122,9 @@ public class TestDSFunction extends FunctionUnitTest {
         var data = new long[02000];
         data[0] = 0_000000_040005L; // Pointer at 040000 pointing to 040005
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

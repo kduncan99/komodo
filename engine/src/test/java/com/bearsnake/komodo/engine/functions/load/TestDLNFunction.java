@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.load;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -35,21 +34,18 @@ public class TestDLNFunction extends FunctionUnitTest {
         var code = new long[] {
             dlnBM(0, 0, 0, 0, 030000),
             dlnBM(2, 2, 0, 0, 030000),
-            0,
-            };
+            0
+        };
 
         var data = new long[] {
             0_000001_000001L,
             0_400002_000002L,
             0_400003_000003L,
-            0_000004_000004L,
+            0_000004_000004L
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(13, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(14, false, 0_30000, 0_30777, 0, bank1);
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 14, false, 0_30000, 0_30777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -72,21 +68,18 @@ public class TestDLNFunction extends FunctionUnitTest {
         var code = new long[] {
             dlnEM(10, 0, 0, 0, 5, 01000),
             dlnEM(12, 2, 0, 0, 5, 01000),
-            0,
-            };
+            0
+        };
 
         var data = new long[] {
             0_777777_777777L,
             0_000002_000002L,
             0_000003_000003L,
-            0_000004_000004L,
-            };
+            0_000004_000004L
+        };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(5, false, 0_1000, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 5, false, 0_1000, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -110,8 +103,8 @@ public class TestDLNFunction extends FunctionUnitTest {
             dlnBM(0, 0, 0, 0, 030000),
             dlnBM(2, 2, 0, 0, 030000),
             dlnBM(4, 3, 0, 1, 030000), // indirect to data,X3
-            0,
-            };
+            0
+        };
 
         var data = new long[] {
             0_000001_000001L,
@@ -120,14 +113,11 @@ public class TestDLNFunction extends FunctionUnitTest {
             0_000004_000004L,
             0_500005_000005L,
             0_600006_000006L,
-            fjaxhiu(0, 0, 0, 4, 1, 0, 030000),
-            };
+            fjaxhiu(0, 0, 0, 4, 1, 0, 030000)
+        };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(13, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(14, false, 0_30000, 0_30777, 0, bank1);
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 14, false, 0_30000, 0_30777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

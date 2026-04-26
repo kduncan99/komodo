@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -36,13 +35,12 @@ public class TestTNOPFunction extends FunctionUnitTest {
             0
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 01777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 01777, AbsoluteAddress.construct(0, 0), code);
 
         // Setup Bank 2 for operand (though ignored)
         var data = new long[256];
         data[0100] = 0_123456_654321L;
-        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), new ArraySlice(data));
+        loadBaseRegister((short) 2, false, 0, 0777, AbsoluteAddress.construct(2, 0), data);
 
         // Setup X1: XI=1, XM=100
         _engine.getGeneralRegisterSet().getRegister(1).setXI(1).setXM(0100);
@@ -66,11 +64,9 @@ public class TestTNOPFunction extends FunctionUnitTest {
         };
         var data = new long[] { 0_123456_654321L };
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 01777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0777, AbsoluteAddress.construct(2, 0), bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 01777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0777, AbsoluteAddress.construct(2, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0).setBankLevel((short) 0);
@@ -89,8 +85,7 @@ public class TestTNOPFunction extends FunctionUnitTest {
             0
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_01777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_01777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short) 3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0).setBankLevel((short) 0);

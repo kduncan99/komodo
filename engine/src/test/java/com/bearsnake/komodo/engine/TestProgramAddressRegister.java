@@ -11,7 +11,7 @@ public class TestProgramAddressRegister {
 
     @Test
     public void testGetProgramCounter() {
-        long value = VirtualAddress.getCompositeValue(0, 0, 012345);
+        long value = VirtualAddress.toCompositeValue((short) 0, 0, 012345);
         ProgramAddressRegister par = new ProgramAddressRegister(value);
         assertEquals(012345, par.getProgramCounter());
     }

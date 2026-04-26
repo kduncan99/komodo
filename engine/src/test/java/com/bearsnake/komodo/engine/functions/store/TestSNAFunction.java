@@ -4,8 +4,8 @@
 
 package com.bearsnake.komodo.engine.functions.store;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
-import com.bearsnake.komodo.engine.*;
+import com.bearsnake.komodo.engine.Constants;
+import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
@@ -45,11 +45,9 @@ public class TestSNAFunction extends FunctionUnitTest {
 
         var data = new long[02000];
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -84,11 +82,9 @@ public class TestSNAFunction extends FunctionUnitTest {
 
         var data = new long[02000];
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -127,9 +123,8 @@ public class TestSNAFunction extends FunctionUnitTest {
             0,
         };
 
-        var bank0 = new ArraySlice(code);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -160,11 +155,9 @@ public class TestSNAFunction extends FunctionUnitTest {
         data[01000] = 0_123456_765432L;
         data[01001] = 0_123456_765432L;
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -189,11 +182,9 @@ public class TestSNAFunction extends FunctionUnitTest {
 
         var data = new long[02000];
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -219,20 +210,8 @@ public class TestSNAFunction extends FunctionUnitTest {
         var data = new long[02000];
         data[0] = 0_000000_040005L;
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_22)
-                                      .setUpperLimit(0_22777)
-                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_40)
-                                      .setUpperLimit(0_40777)
-                                      .setBaseAddress(AbsoluteAddress.construct(1, 0));
-
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -258,21 +237,11 @@ public class TestSNAFunction extends FunctionUnitTest {
         data[0] = (1L << 16) | 040001L;
         data[1] = 040005L;
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
+        // TODO is the following important?
+        //bd1.getGeneralAccessPermissions().setCanRead(true).setCanWrite(true);
 
-        var bd0 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_22)
-                                      .setUpperLimit(0_22777)
-                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
-        var bd1 = new BankDescriptor().setBankType(BankType.BasicMode)
-                                      .setLowerLimit(0_40)
-                                      .setUpperLimit(0_40777)
-                                      .setBaseAddress(AbsoluteAddress.construct(1, 0));
-        bd1.getGeneralAccessPermissions().setCanRead(true).setCanWrite(true);
-
-        loadBaseRegister(14, false, 0_22000, 0_22777, 0, bank0);
-        loadBaseRegister(15, false, 0_40000, 0_40777, 0, bank1);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, 0, code);
+        loadBaseRegister((short) 15, false, 0_40000, 0_40777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -293,12 +262,10 @@ public class TestSNAFunction extends FunctionUnitTest {
             snaEM(Constants.JFIELD_W, 4, 0, 0, 0, 2, 02000),
             0,
         };
+        var data = new long[02000];
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(new long[02000]);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -317,14 +284,7 @@ public class TestSNAFunction extends FunctionUnitTest {
             0,
         };
 
-        var bank0 = new ArraySlice(code);
-
-        var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
-                                      .setLowerLimit(0_00)
-                                      .setUpperLimit(0_01777)
-                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

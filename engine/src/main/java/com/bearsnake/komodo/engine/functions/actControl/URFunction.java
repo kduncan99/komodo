@@ -41,7 +41,7 @@ public class URFunction extends Function {
         final Engine engine
     ) throws MachineInterrupt {
         var operands = engine.getConsecutiveOperands(false, 7);
-        var oldAddress = engine.getProgramAddressRegister().getCompositeValue();
+        var oldAddress = engine.getProgramAddressRegister().toCompositeValue();
         engine.bankManipulation(this, (short) 0, (short) 0, (short) 0, 0, null, 0L, operands);
         engine.createJumpHistoryEntry(oldAddress);
         return true;

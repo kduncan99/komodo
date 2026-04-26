@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -37,8 +36,7 @@ public class TestHJFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -59,11 +57,8 @@ public class TestHJFunction extends FunctionUnitTest {
         var code = new long[]{ hjBM(0, 03000), };
         var data = new long[]{ 0, 0, 0, };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
-
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(13, false, 0_3000, 0_3777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 13, false, 0_3000, 0_3777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -82,13 +77,10 @@ public class TestHJFunction extends FunctionUnitTest {
     @Test
     public void testHJ_ToOppositeIBank_BM() throws MachineInterrupt {
         var code = new long[]{ hjBM(0, 04000), };
-        var other = new long[]{ 0, 0, 0, };
+        var data = new long[]{ 0, 0, 0, };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(other);
-
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(14, false, 0_4000, 0_4777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 14, false, 0_4000, 0_4777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -107,13 +99,10 @@ public class TestHJFunction extends FunctionUnitTest {
     @Test
     public void testHJ_ToOppositeDBank_BM() throws MachineInterrupt {
         var code = new long[]{ hjBM(0, 05000), };
-        var other = new long[]{ 0, 0, 0, };
+        var data = new long[]{ 0, 0, 0, };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(other);
-
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(15, false, 0_5000, 0_5777, 0, bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 15, false, 0_5000, 0_5777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -137,8 +126,7 @@ public class TestHJFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -170,8 +158,7 @@ public class TestHJFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

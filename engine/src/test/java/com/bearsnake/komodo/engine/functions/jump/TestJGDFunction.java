@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.jump;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
@@ -33,8 +32,7 @@ public class TestJGDFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -61,8 +59,7 @@ public class TestJGDFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -90,8 +87,7 @@ public class TestJGDFunction extends FunctionUnitTest {
             0, 0, 0, 0, 0, 0, 0, 0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -118,8 +114,7 @@ public class TestJGDFunction extends FunctionUnitTest {
             0,
             };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -136,8 +131,7 @@ public class TestJGDFunction extends FunctionUnitTest {
         var code = new long[01000];
         code[0] = jgd(0, 8, 3, 0, 0, 0_1000); // GRS index 8, Indexed by X3
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -165,8 +159,7 @@ public class TestJGDFunction extends FunctionUnitTest {
         var code = new long[0_1000];
         code[0] = jgd(0, 8, 3, 0, 0, 0_1000); // GRS index 8, Indexed by X3
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -194,8 +187,7 @@ public class TestJGDFunction extends FunctionUnitTest {
         code[0] = jgd(0, 8, 0, 0, 1, 0_3000); // GRS index 8, Indirect bit set, U=03000
         code[0_2000] = 0_1500;
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_3777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_3777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

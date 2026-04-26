@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.intControl;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
@@ -35,8 +34,7 @@ public class TestPAIJFunction extends FunctionUnitTest {
             paijBM(0, 0, 0, 0_1005),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -60,8 +58,7 @@ public class TestPAIJFunction extends FunctionUnitTest {
             paijBM(0, 0, 0, 0_1005),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -81,8 +78,7 @@ public class TestPAIJFunction extends FunctionUnitTest {
             paijEM(0, 0, 0, 0_1005),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -104,8 +100,7 @@ public class TestPAIJFunction extends FunctionUnitTest {
             paijEM(2, 1, 0, 0_1000),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -130,8 +125,7 @@ public class TestPAIJFunction extends FunctionUnitTest {
             paijEM(0, 0, 0, 0_1005),
             0, 0, 0, 0, 0
         };
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

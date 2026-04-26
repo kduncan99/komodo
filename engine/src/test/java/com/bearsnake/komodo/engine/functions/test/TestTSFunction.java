@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -39,17 +38,15 @@ public class TestTSFunction extends FunctionUnitTest {
     public void testTS_SetsBit_EM() throws MachineInterrupt {
         var code = new long[] {
             tsEM(0, 0, 0, 2, 42),      // TS (U)
-            0,                         // Normal stop
+            0
         };
 
         var data = new long[100];
         data[42] = 0_000000_000000L;   // (U) bit 5 is clear
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank2);
+        loadBaseRegister((short) 0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -61,7 +58,7 @@ public class TestTSFunction extends FunctionUnitTest {
         run();
 
         // Check if bit 5 was set (0_010000_000000L)
-        assertEquals(0_010000_000000L, bank2.get(42));
+        assertEquals(0_010000_000000L, data[42]);
     }
 
     @Test
@@ -74,11 +71,9 @@ public class TestTSFunction extends FunctionUnitTest {
         var data = new long[100];
         data[42] = 0_010000_000000L;   // (U) bit 5 is already set
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank2);
+        loadBaseRegister((short) 0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -92,17 +87,10 @@ public class TestTSFunction extends FunctionUnitTest {
 
     @Test
     public void testTS_SetsBit_BM() throws MachineInterrupt {
-        var code = new long[] {
-            tsBM(0, 0_100),            // TS (U) where U=0_100
-            0,                         // Normal stop
-        };
+        var code = new long[0_20000];
+        code[0] = tsBM(0, 0_100);
 
-        var bank0 = new ArraySlice(new long[1000]);
-        bank0.set(0, code[0]);
-        bank0.set(1, code[1]);
-        bank0.set(0_100, 0L);          // Initial value clear
-
-        loadBaseRegister(12, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister((short) 12, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -115,22 +103,16 @@ public class TestTSFunction extends FunctionUnitTest {
         run();
 
         // Check if bit 5 was set
-        assertEquals(0_010000_000000L, bank0.get(0_100));
+        assertEquals(0_010000_000000L, code[0_100]);
     }
 
     @Test
     public void testTS_Interrupts_BM() {
-        var code = new long[] {
-            tsBM(0, 0_100),            // TS (U) where U=0_100
-            0,
-        };
+        var code = new long[0_20000];
+        code[0] = tsBM(0, 0_100);
+        code[0_100] = 0_010000_000000L;
 
-        var bank0 = new ArraySlice(new long[1000]);
-        bank0.set(0, code[0]);
-        bank0.set(1, code[1]);
-        bank0.set(0_100, 0_010000_000000L); // Initial value set
-
-        loadBaseRegister(13, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister((short) 13, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

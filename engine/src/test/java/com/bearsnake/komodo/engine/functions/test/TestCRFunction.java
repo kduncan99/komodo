@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.test;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
@@ -47,11 +46,9 @@ public class TestCRFunction extends FunctionUnitTest {
         var data = new long[50];
         data[42] = 0_123456_777777L;        // (U) initial value
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -66,7 +63,7 @@ public class TestCRFunction extends FunctionUnitTest {
         run();
 
         // Check if (U) was replaced
-        assertEquals(0_777777_654321L, bank1.get(42));
+        assertEquals(0_777777_654321L, data[42]);
         // Check if next instruction was skipped
         assertEquals(0_1002, _engine.getProgramAddressRegister().getProgramCounter());
     }
@@ -83,11 +80,9 @@ public class TestCRFunction extends FunctionUnitTest {
             0_123456_777777L,            // (U) initial value
         };
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), bank1);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -102,7 +97,7 @@ public class TestCRFunction extends FunctionUnitTest {
         run();
 
         // Check if (U) was NOT replaced
-        assertEquals(0_123456_777777L, bank1.get(0));
+        assertEquals(0_123456_777777L, data[0]);
         // Check if next instruction was NOT skipped
         assertEquals(0_1001, _engine.getProgramAddressRegister().getProgramCounter());
     }
@@ -118,11 +113,9 @@ public class TestCRFunction extends FunctionUnitTest {
         var data = new long[0_3000];
         data[0_2000] = 0_123456_777777L; // (U) initial value
 
-        var bank0 = new ArraySlice(code);
-        var bank1 = new ArraySlice(data);
 
-        loadBaseRegister(12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), bank0);
-        loadBaseRegister(14, false, 0_22000, 0_25777, AbsoluteAddress.construct(1, 0), bank1);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 14, false, 0_22000, 0_25777, AbsoluteAddress.construct(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -137,7 +130,7 @@ public class TestCRFunction extends FunctionUnitTest {
         run();
 
         // Check if (U) was replaced
-        assertEquals(0_777777_654321L, bank1.get(0_2000));
+        assertEquals(0_777777_654321L, data[0_2000]);
         // Check if next instruction was skipped
         assertEquals(0_1002, _engine.getProgramAddressRegister().getProgramCounter());
     }
@@ -149,8 +142,7 @@ public class TestCRFunction extends FunctionUnitTest {
             0,
         };
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), bank0);
+        loadBaseRegister((short) 12, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

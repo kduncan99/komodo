@@ -4,7 +4,6 @@
 
 package com.bearsnake.komodo.engine.functions.store;
 
-import com.bearsnake.komodo.baselib.ArraySlice;
 import com.bearsnake.komodo.engine.*;
 import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
@@ -38,8 +37,7 @@ public class TestSRSFunction extends FunctionUnitTest {
         var code = new long[02000];
         code[0] = srsBM(1, 0, 0, 0, 0_1005); // store SRS starting at offset 05
 
-        var bank0 = new ArraySlice(code);
-        loadBaseRegister(12, false, 0_1000, 0_1777, 0, bank0);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -61,20 +59,18 @@ public class TestSRSFunction extends FunctionUnitTest {
 
         run();
 
-        assertEquals(0111, bank0.get(05));
-        assertEquals(0222, bank0.get(06));
+        assertEquals(0111, code[05]);
+        assertEquals(0222, code[06]);
     }
 
     @Test
     public void testSRS_Simple_EM() throws MachineInterrupt {
         var code = new long[02000];
         code[0] = srsEM(1, 0, 0, 0, 2, 0);
+        var data = new long[0_2000];
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(new long[10]); // buffer for storage
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -97,25 +93,23 @@ public class TestSRSFunction extends FunctionUnitTest {
 
         run();
 
-        assertEquals(0100, bank2.get(0));
-        assertEquals(0101, bank2.get(1));
-        assertEquals(0200, bank2.get(2));
-        assertEquals(0201, bank2.get(3));
-        assertEquals(0202, bank2.get(4));
+        assertEquals(0100, data[0]);
+        assertEquals(0101, data[1]);
+        assertEquals(0200, data[2]);
+        assertEquals(0201, data[3]);
+        assertEquals(0202, data[4]);
     }
 
     @Test
     public void testSRS_GRSWrap_EM() throws MachineInterrupt {
         var code = new long[] {
             srsEM(1, 0, 0, 0, 2, 0),
-            0,
-            };
+            0
+        };
+        var data = new long[0_2000];
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(new long[10]);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -133,22 +127,20 @@ public class TestSRSFunction extends FunctionUnitTest {
 
         run();
 
-        assertEquals(0777, bank2.get(0));
-        assertEquals(01000, bank2.get(1));
+        assertEquals(0777, data[0]);
+        assertEquals(01000, data[1]);
     }
 
     @Test
     public void testSRS_GRSReadViolation_EM() throws MachineInterrupt {
         var code = new long[] {
             srsEM(1, 0, 0, 0, 2, 0),
-            0,
-            };
+            0
+        };
+        var data = new long[0_2000];
 
-        var bank0 = new ArraySlice(code);
-        var bank2 = new ArraySlice(new long[10]);
-
-        loadBaseRegister(0, false, 0_1000, 0_1777, 0, bank0);
-        loadBaseRegister(2, false, 0_0, 0_1777, 0, bank2);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
+        loadBaseRegister((short) 2, false, 0_0, 0_1777, 0, data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -161,7 +153,7 @@ public class TestSRSFunction extends FunctionUnitTest {
         _engine.getExecOrUserARegister(1).setQ3(1);
         _engine.getExecOrUserARegister(1).setQ4(040); // Attempt to read protected register 040
 
-        ReferenceViolationInterrupt mi = assertThrows(ReferenceViolationInterrupt.class, () -> run());
+        ReferenceViolationInterrupt mi = assertThrows(ReferenceViolationInterrupt.class, this::run);
         assertEquals(GRSViolation, mi._errorType);
     }
 }
