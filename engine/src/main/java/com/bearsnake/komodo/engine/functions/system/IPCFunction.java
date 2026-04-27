@@ -4,9 +4,12 @@
 
 package com.bearsnake.komodo.engine.functions.system;
 
+import com.bearsnake.komodo.baselib.Word36;
+import com.bearsnake.komodo.engine.AbsoluteAddress;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
+import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
 import com.bearsnake.komodo.engine.interrupts.InvalidInstructionInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
@@ -39,16 +42,53 @@ public class IPCFunction extends Function {
             case 4 -> engine.setBroadcastInterruptEligible(false);
             case 5 -> engine.setBroadcastInterruptEligible(true);
             case 070 -> {
-                // allocate a memory segment
-                // TODO
+                // allocate a bank (does NOT update bank descriptors)
+                // +00:S1   070
+                // +00:S2   where we return status, 0=success, 040=failure
+                // +01:0-4  reserved
+                // +01:5-35 requested size of bank
+                // +02,03   where we return absolute address of bank if successful
+                var operands = engine.getConsecutiveOperands(true, 4);
+                try {
+                    int segId = engine.getStorageManager().allocateSegment((int) operands[1] & 0x7FFFFFFF);
+                    AbsoluteAddress.encodeToStorage(segId, 0, operands, 2);
+                    operands[0] = Word36.setS2(operands[0], 0);
+                } catch (HardwareCheckInterrupt e) {
+                    operands[0] = Word36.setS2(operands[0], 040);
+                }
+                engine.storeConsecutiveOperandsToCachedAddress(operands);
             }
             case 071 -> {
-                // resize a memory segment
-                // TODO
+                // resize a bank (does NOT update bank descriptors)
+                // +00:S1   071
+                // +00:S2   where we return status, 0=success, 040=failure
+                // +01:0-4  reserved
+                // +01:5-35 new requested size of bank
+                // +02,03   absolute address of bank
+                var operands = engine.getConsecutiveOperands(true, 4);
+                try {
+                    engine.getStorageManager().resizeSegment(AbsoluteAddress.extractSegmentFromStorage(operands, 2),
+                                                             (int) operands[1] & 0x7FFFFFFF);
+                    operands[0] = Word36.setS2(operands[0], 0);
+                } catch (HardwareCheckInterrupt e) {
+                    operands[0] = Word36.setS2(operands[0], 040);
+                }
+                engine.storeConsecutiveOperandsToCachedAddress(operands);
             }
             case 072 -> {
-                // release a memory segment
-                // TODO
+                // release a bank (does NOT update bank descriptors)
+                // +00:S1   071
+                // +00:S2   where we return status, 0=success, 040=failure
+                // +01:W    reserved
+                // +02,03   absolute address of bank
+                var operands = engine.getConsecutiveOperands(true, 4);
+                try {
+                    engine.getStorageManager().releaseSegment(AbsoluteAddress.extractSegmentFromStorage(operands, 2));
+                    operands[0] = Word36.setS2(operands[0], 0);
+                } catch (HardwareCheckInterrupt e) {
+                    operands[0] = Word36.setS2(operands[0], 040);
+                }
+                engine.storeConsecutiveOperandsToCachedAddress(operands);
             }
             default -> throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);
         }

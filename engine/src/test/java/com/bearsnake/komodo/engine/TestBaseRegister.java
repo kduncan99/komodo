@@ -27,7 +27,7 @@ public class TestBaseRegister {
         AccessPermissions gap = new AccessPermissions(true, false, true);
         AccessPermissions sap = new AccessPermissions(false, true, false);
         AccessLock lock = new AccessLock((short) 2, 123);
-        var addr = AbsoluteAddress.construct(0123, 0456);
+        var addr = AbsoluteAddress.encodeToLong(0123, 0456);
 
         br.setGeneralAccessPermissions(gap)
           .setSpecialAccessPermissions(sap)

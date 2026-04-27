@@ -38,7 +38,7 @@ public class TestDEIFunction extends TestDecimalFunction {
         code[1] = 0;
         code[0_400] = decWord(1, 2, 3, 4, 5, 6, 7, 8, POSITIVE_SIGN);
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -59,8 +59,8 @@ public class TestDEIFunction extends TestDecimalFunction {
         data[0_400] = decWord(1, 2, 3, 4, 5, 6, 7, 8, NEGATIVE_SIGN);
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -78,7 +78,7 @@ public class TestDEIFunction extends TestDecimalFunction {
         code[1] = 0;
         code[0_400] = decWord(0, 0, 0, 0, 0, 0, 0, 0, POSITIVE_SIGN);
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -98,8 +98,8 @@ public class TestDEIFunction extends TestDecimalFunction {
         data[0_400] = decWord(0, 0, 0, 0, 0, 0, 0, 0, NEGATIVE_SIGN);
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -118,7 +118,7 @@ public class TestDEIFunction extends TestDecimalFunction {
         code[1] = 0;
         code[0_400] = decWord(1, 2, 3, 4, 5, 6, 7, 8, POSITIVE_SIGN);
 
-        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -138,7 +138,7 @@ public class TestDEIFunction extends TestDecimalFunction {
         // decWord(8, 7, 6, 5, 4, 3, 2, 1, POSITIVE_SIGN) -> 87654321
         code[0_600] = decWord(8, 7, 6, 5, 4, 3, 2, 1, POSITIVE_SIGN);
 
-        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                 .setBasicModeEnabled(true)
@@ -161,8 +161,8 @@ public class TestDEIFunction extends TestDecimalFunction {
         data[0_400] = decWord(1, 1, 1, 1, 1, 1, 1, 1, POSITIVE_SIGN);
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);

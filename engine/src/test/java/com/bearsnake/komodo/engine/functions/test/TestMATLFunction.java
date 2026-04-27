@@ -47,8 +47,8 @@ public class TestMATLFunction extends FunctionUnitTest {
         };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -85,14 +85,14 @@ public class TestMATLFunction extends FunctionUnitTest {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
+                                      .setBaseAddress(AbsoluteAddress.encodeToLong(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_22)
                                       .setUpperLimit(0_22777)
-                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
+                                      .setBaseAddress(AbsoluteAddress.encodeToLong(0, 0));
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
         _engine.getExecOrUserARegister(2).setW(0_400000_000000L);

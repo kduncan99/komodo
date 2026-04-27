@@ -5,8 +5,6 @@
 package com.bearsnake.komodo.engine.functions.arithmetic.decimal;
 
 import com.bearsnake.komodo.engine.AbsoluteAddress;
-import com.bearsnake.komodo.engine.BankDescriptor;
-import com.bearsnake.komodo.engine.BankType;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 import org.junit.jupiter.api.BeforeEach;
@@ -117,8 +115,8 @@ public class TestBDEFunction extends TestDecimalFunction {
         };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -150,8 +148,8 @@ public class TestBDEFunction extends TestDecimalFunction {
             };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -183,8 +181,8 @@ public class TestBDEFunction extends TestDecimalFunction {
             };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -216,8 +214,8 @@ public class TestBDEFunction extends TestDecimalFunction {
             };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -252,8 +250,8 @@ public class TestBDEFunction extends TestDecimalFunction {
             };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -288,8 +286,8 @@ public class TestBDEFunction extends TestDecimalFunction {
             };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -322,8 +320,8 @@ public class TestBDEFunction extends TestDecimalFunction {
             };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -356,8 +354,8 @@ public class TestBDEFunction extends TestDecimalFunction {
             };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -391,8 +389,8 @@ public class TestBDEFunction extends TestDecimalFunction {
             };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

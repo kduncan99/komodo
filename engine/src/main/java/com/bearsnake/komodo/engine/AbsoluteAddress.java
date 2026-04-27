@@ -9,6 +9,7 @@ package com.bearsnake.komodo.engine;
  * It contains a segment identifier which is used to select one storage bank from the manager,
  * and an offset value which indicates a specific word in that bank.
  * It is implemented as the concatenation of two 32-bit words and is represented as a singular 64-bit integer.
+ * ---
  * The segment is in the MSW, and the offset is in the LSW.
  * The segment:
  *      Indicates a particular segment - the offset is relative to the segment.
@@ -21,55 +22,81 @@ package com.bearsnake.komodo.engine;
  *      A value corresponding to an offset from the start of that MSP's segment.
  *      Range: 0:0x7FFFFFFF (31 bits)
  * We use a single 64-bit value in order to avoid leaving a lot of small objects lying about in storage.
+ * However: NOTE THAT THIS DIFFERS from how it is stored in 36-bit memory.
+ * When stored in 36-bit memory, the segment is in the first work, and the offset is in the second word.
  */
 public class AbsoluteAddress {
 
     // This is a static class - no instances allowed
     private AbsoluteAddress() {}
 
-    public static long construct(
+    public static long encodeToLong(
         final int segment,
         final int offset
     ) {
         return (((long)(segment & 0x7FFFFFFF)) << 32) | (offset & 0x7FFFFFFFL);
     }
 
-    public static int getOffset(
+    public static void encodeToStorage(
+        final int segment,
+        final int offset,
+        final long[] destination,
+        final int destinationOffset
+    ) {
+        destination[destinationOffset] = segment & 0x7FFFFFFF;
+        destination[destinationOffset + 1] = offset & 0x7FFFFFFF;
+    }
+
+    public static int extractSegmentFromStorage(
+        final long[] source,
+        final int sourceOffset
+    ) {
+        return (int)(source[sourceOffset] & 0x7FFFFFFF);
+    }
+
+    public static int extractOffsetFromStorage(
+        final long[] source,
+        final int sourceOffset
+    ) {
+        return (int)(source[sourceOffset + 1] & 0x7FFFFFFF);
+    }
+
+    public static int extractOffsetFromLong(
         final long addr
     ) {
         return (int)addr;
     }
 
-    public static int getSegment(
+    public static int extractSegmentFromLong(
         final long addr
     ) {
         return (int)(addr >> 32);
     }
 
-    public static long addOffset(
+    public static long addOffsetToLong(
         final long address,
         final int offset
     ) {
-        return ((long)getSegment(address) << 32) | ((getOffset(address) + offset) & 0x7FFFFFFFL);
+        return ((long) extractSegmentFromLong(address) << 32) | ((extractOffsetFromLong(address) + offset) & 0x7FFFFFFFL);
     }
 
-    public static long setOffset(
-        final long address,
-        final int offset
-    ) {
-        return ((long)getSegment(address) << 32) | (offset & 0x7FFFFFFFL);
-    }
-
-    public static long setSegment(
-        final long address,
-        final int segment
-    ) {
-        return (((long)(segment & 0x7FFFFFFF)) << 32) | (getOffset(address) & 0xFFFFFFFFL);
-    }
+//    public static long setOffset(
+//        final long address,
+//        final int offset
+//    ) {
+//        return ((long) extractSegmentFromLong(address) << 32) | (offset & 0x7FFFFFFFL);
+//    }
+//
+//    public static long setSegment(
+//        final long address,
+//        final int segment
+//    ) {
+//        return (((long)(segment & 0x7FFFFFFF)) << 32) | (extractOffsetFromLong(address) & 0xFFFFFFFFL);
+//    }
 
     public static String toString(
         final long address
     ) {
-        return String.format("0%o:%012o", getSegment(address), getOffset(address));
+        return String.format("0%o:%012o", extractSegmentFromLong(address), extractOffsetFromLong(address));
     }
 }

@@ -42,7 +42,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -65,7 +65,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -92,8 +92,8 @@ public class TestTOPFunction extends FunctionUnitTest {
         var data = new long[]{ 0_111111_111111L }; // bit count is 18 (EVEN) -> NO SKIP
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(2, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.encodeToLong(2, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -116,7 +116,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -140,7 +140,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -168,8 +168,8 @@ public class TestTOPFunction extends FunctionUnitTest {
         var data = new long[]{ 0_000000_000001L }; // 1 bit (ODD)
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(2, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.encodeToLong(2, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -195,8 +195,8 @@ public class TestTOPFunction extends FunctionUnitTest {
         var data = new long[]{ 0_000000_000003L }; // 2 bits (EVEN)
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(2, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.encodeToLong(2, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -219,7 +219,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -242,7 +242,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 15, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 15, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -271,7 +271,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 12, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 12, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -294,7 +294,7 @@ public class TestTOPFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 14, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 14, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

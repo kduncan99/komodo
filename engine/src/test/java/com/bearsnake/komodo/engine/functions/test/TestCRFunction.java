@@ -47,8 +47,8 @@ public class TestCRFunction extends FunctionUnitTest {
         data[42] = 0_123456_777777L;        // (U) initial value
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -81,8 +81,8 @@ public class TestCRFunction extends FunctionUnitTest {
         };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_0777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -114,8 +114,8 @@ public class TestCRFunction extends FunctionUnitTest {
         data[0_2000] = 0_123456_777777L; // (U) initial value
 
 
-        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 14, false, 0_22000, 0_25777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 14, false, 0_22000, 0_25777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -142,7 +142,7 @@ public class TestCRFunction extends FunctionUnitTest {
             0,
         };
 
-        loadBaseRegister((short) 12, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 12, false, 0, 0_777777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

@@ -50,8 +50,8 @@ public class TestMTLEFunction extends FunctionUnitTest {
         };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -88,7 +88,7 @@ public class TestMTLEFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -113,7 +113,7 @@ public class TestMTLEFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -138,7 +138,7 @@ public class TestMTLEFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -175,8 +175,8 @@ public class TestMTLEFunction extends FunctionUnitTest {
         };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -212,8 +212,8 @@ public class TestMTLEFunction extends FunctionUnitTest {
         var data = new long[] { 0_777777_777777L };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.construct(1, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.encodeToLong(1, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

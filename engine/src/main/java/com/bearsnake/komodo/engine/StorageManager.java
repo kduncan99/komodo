@@ -46,6 +46,13 @@ public interface StorageManager {
     void releaseSegment(final int segment) throws HardwareCheckInterrupt;
 
     /**
+     * Resizes the indicated segment.
+     * @param segment The segment index, from 0 to 0x7FFFFFFF.
+     * @param size The size of the segment in words, from 0 to 0x7FFFFFFF.
+     */
+    void resizeSegment(final int segment, final int size) throws HardwareCheckInterrupt;
+
+    /**
      * Sets a word in the indicated segment.
      * @param segment The segment index, from 0 to 0x7FFFFFFF.
      * @param offset The offset within the segment, from 0 to segment size - 1.

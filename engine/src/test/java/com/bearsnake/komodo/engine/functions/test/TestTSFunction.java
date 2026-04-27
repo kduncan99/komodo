@@ -45,8 +45,8 @@ public class TestTSFunction extends FunctionUnitTest {
         data[42] = 0_000000_000000L;   // (U) bit 5 is clear
 
 
-        loadBaseRegister((short) 0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), data);
+        loadBaseRegister((short) 0, false, 0, 0_777777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777777, AbsoluteAddress.encodeToLong(0, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -72,8 +72,8 @@ public class TestTSFunction extends FunctionUnitTest {
         data[42] = 0_010000_000000L;   // (U) bit 5 is already set
 
 
-        loadBaseRegister((short) 0, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0_777777, AbsoluteAddress.construct(0, 0), data);
+        loadBaseRegister((short) 0, false, 0, 0_777777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0_777777, AbsoluteAddress.encodeToLong(0, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -90,7 +90,7 @@ public class TestTSFunction extends FunctionUnitTest {
         var code = new long[0_20000];
         code[0] = tsBM(0, 0_100);
 
-        loadBaseRegister((short) 12, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 12, false, 0, 0_177777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -112,7 +112,7 @@ public class TestTSFunction extends FunctionUnitTest {
         code[0] = tsBM(0, 0_100);
         code[0_100] = 0_010000_000000L;
 
-        loadBaseRegister((short) 13, false, 0, 0_177777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 13, false, 0, 0_177777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

@@ -100,7 +100,7 @@ public class BankDescriptor {
         final long[] storage,
         final int offset
     ) {
-        return AbsoluteAddress.construct((int)storage[offset + 2], (int)storage[offset + 3]);
+        return AbsoluteAddress.encodeToLong((int)storage[offset + 2], (int)storage[offset + 3]);
     }
 
     public static long getInactiveQBDListNextPointer(
@@ -243,7 +243,7 @@ public class BankDescriptor {
         _inactive = (buffer[4] & 0_400000_000000L) != 0;
 
         _inactiveQBDListNextPointer = buffer[3];
-        _baseAddress = AbsoluteAddress.construct((int)buffer[2], (int)buffer[3]);
+        _baseAddress = AbsoluteAddress.encodeToLong((int)buffer[2], (int)buffer[3]);
     }
 
     public AccessLock getAccessLock() { return _accessLock; }
@@ -311,8 +311,8 @@ public class BankDescriptor {
             value2 = 0;
             value3 = _inactiveQBDListNextPointer;
         } else {
-            value2 = AbsoluteAddress.getSegment(_baseAddress);
-            value3 = AbsoluteAddress.getOffset(_baseAddress);
+            value2 = AbsoluteAddress.extractSegmentFromLong(_baseAddress);
+            value3 = AbsoluteAddress.extractOffsetFromLong(_baseAddress);
         }
 
         long value4 = 0;

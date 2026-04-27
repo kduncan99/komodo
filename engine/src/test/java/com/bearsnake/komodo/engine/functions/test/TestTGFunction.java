@@ -49,7 +49,7 @@ public class TestTGFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -74,7 +74,7 @@ public class TestTGFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -105,8 +105,8 @@ public class TestTGFunction extends FunctionUnitTest {
             };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(0, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -132,7 +132,7 @@ public class TestTGFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -156,7 +156,7 @@ public class TestTGFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -180,7 +180,7 @@ public class TestTGFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -208,8 +208,8 @@ public class TestTGFunction extends FunctionUnitTest {
         var data = new long[]{ 0_111111_111111L };
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0, 0777, AbsoluteAddress.construct(2, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0, 0777, AbsoluteAddress.encodeToLong(2, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -238,7 +238,7 @@ public class TestTGFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 12, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 12, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)

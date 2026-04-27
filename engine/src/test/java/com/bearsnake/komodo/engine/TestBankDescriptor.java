@@ -19,7 +19,7 @@ public class TestBankDescriptor {
         assertTrue(bd.getLowerLimit() > bd.getUpperLimit());
         assertTrue(bd.isInactive());
         assertEquals(0, bd.getDisplacement());
-        assertEquals(AbsoluteAddress.construct(0, 0), bd.getBaseAddress());
+        assertEquals(AbsoluteAddress.encodeToLong(0, 0), bd.getBaseAddress());
         assertEquals(0, bd.getIndirectLevelAndBDI());
         assertEquals(0, bd.getInactiveQBDListNextPointer());
         assertEquals(new AccessPermissions(false, false, false), bd.getGeneralAccessPermissions());
@@ -32,7 +32,7 @@ public class TestBankDescriptor {
         AccessLock lock = new AccessLock((short) 1, 10);
         AccessPermissions general = new AccessPermissions(true, true, false);
         AccessPermissions special = new AccessPermissions(true, true, true);
-        var base = AbsoluteAddress.construct(2, 3);
+        var base = AbsoluteAddress.encodeToLong(2, 3);
 
         // Not large bank. Lower limit is divided by 2^9 (512) and rounded up.
         // lower limit: 1000 -> 1000/512 = 1.95 -> 2
@@ -56,7 +56,7 @@ public class TestBankDescriptor {
         AccessLock lock = new AccessLock((short) 1, 10);
         AccessPermissions general = new AccessPermissions(true, true, false);
         AccessPermissions special = new AccessPermissions(true, true, true);
-        var base = AbsoluteAddress.construct(2, 3);
+        var base = AbsoluteAddress.encodeToLong(2, 3);
 
         // Large bank.
         // Lower limit: actualLowerLimit >> 15. If (actualLowerLimit & 077777) != 0, increment.
@@ -91,7 +91,7 @@ public class TestBankDescriptor {
           .setUpperLimit(0x20)
           .setInactiveQBDListNextPointer(0xFEED)
           .setAccessLock(new AccessLock((short) 2, 5))
-          .setBaseAddress(AbsoluteAddress.construct(5, 6))
+          .setBaseAddress(AbsoluteAddress.encodeToLong(5, 6))
           .setGeneralAccessPermissions(new AccessPermissions(true, false, true))
           .setSpecialAccessPermissions(new AccessPermissions(false, true, false));
 
@@ -140,7 +140,7 @@ public class TestBankDescriptor {
            .setLowerLimit(0x123)
            .setUpperLimit(0_777777)
            .setAccessLock(new AccessLock((short) 3, 0x1234))
-           .setBaseAddress(AbsoluteAddress.construct(0x123456, 0x789ABCDE))
+           .setBaseAddress(AbsoluteAddress.encodeToLong(0x123456, 0x789ABCDE))
            .setGeneralAccessPermissions(new AccessPermissions(true, false, true))
            .setSpecialAccessPermissions(new AccessPermissions(false, true, false));
 

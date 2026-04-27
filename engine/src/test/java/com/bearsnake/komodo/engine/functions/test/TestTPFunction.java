@@ -48,8 +48,8 @@ public class TestTPFunction extends FunctionUnitTest {
         var data = new long[]{ 0L }; // Positive zero
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.construct(2, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.encodeToLong(2, 0), data);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)
@@ -73,8 +73,8 @@ public class TestTPFunction extends FunctionUnitTest {
         var data = new long[]{ 0_777777_777777L }; // Negative zero
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.construct(2, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.encodeToLong(2, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -96,8 +96,8 @@ public class TestTPFunction extends FunctionUnitTest {
         var data = new long[]{ 1L }; // Positive non-zero
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.construct(2, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.encodeToLong(2, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -118,8 +118,8 @@ public class TestTPFunction extends FunctionUnitTest {
         var data = new long[]{ 0_777777_777776L }; // -1
 
 
-        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
-        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.construct(2, 0), data);
+        loadBaseRegister((short) 0, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
+        loadBaseRegister((short) 2, false, 0_0, 0_777, AbsoluteAddress.encodeToLong(2, 0), data);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -137,7 +137,7 @@ public class TestTPFunction extends FunctionUnitTest {
             0
         };
 
-        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(true)
@@ -158,7 +158,7 @@ public class TestTPFunction extends FunctionUnitTest {
             0,
             };
 
-        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -177,7 +177,7 @@ public class TestTPFunction extends FunctionUnitTest {
             0
         };
 
-        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);
@@ -201,7 +201,7 @@ public class TestTPFunction extends FunctionUnitTest {
             0
         };
 
-        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 13, false, 0_22000, 0_22777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true).setProcessorPrivilege((short)3);
         _engine.getProgramAddressRegister().setProgramCounter(0_22000).setBankDescriptorIndex(0_000004).setBankLevel((short)0_7);

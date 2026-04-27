@@ -39,7 +39,7 @@ public class TestADEFunction extends TestDecimalFunction {
         code[0_400] = decWord(0, 1, 1, 1, 1, 1, 1, 1, POSITIVE_SIGN);
         _engine.getExecOrUserARegister(4).setW(decWord(1, 2, 3, 4, 5, 6, 7, 8, POSITIVE_SIGN));
 
-        loadBaseRegister((short) 0, false, 0, 0_777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0, 0_777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
@@ -58,7 +58,7 @@ public class TestADEFunction extends TestDecimalFunction {
         code[0_400] = decWord(0, 0, 0, 0, 0, 0, 5, 0, NEGATIVE_SIGN);
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 0, 1, 0, 0, POSITIVE_SIGN));
 
-        loadBaseRegister((short) 0, false, 0, 0_777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0, 0_777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
@@ -76,7 +76,7 @@ public class TestADEFunction extends TestDecimalFunction {
         code[0_400] = decWord(0, 0, 0, 0, 0, 0, 0, 0, POSITIVE_SIGN);
         _engine.getExecOrUserARegister(4).setW(decWord(1, 2, 3, 4, 5, 6, 7, 8, POSITIVE_SIGN));
 
-        loadBaseRegister((short) 0, false, 0, 0_777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0, 0_777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
         _engine.getProgramAddressRegister().setProgramCounter(0).setBankDescriptorIndex(0);
@@ -95,7 +95,7 @@ public class TestADEFunction extends TestDecimalFunction {
         code[0_400] = decWord(0, 0, 0, 0, 0, 0, 2, 0, POSITIVE_SIGN);
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 0, 0, 1, 0, POSITIVE_SIGN));
 
-        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister().setBasicModeEnabled(true);
         _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0);
@@ -115,7 +115,7 @@ public class TestADEFunction extends TestDecimalFunction {
         code[0_600] = decWord(0, 0, 0, 0, 0, 0, 0, 5, POSITIVE_SIGN);
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 0, 0, 0, 5, POSITIVE_SIGN));
 
-        loadBaseRegister((short) 14, false, 0_1000, 0_1777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 14, false, 0_1000, 0_1777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getDesignatorRegister()
                 .setBasicModeEnabled(true)
@@ -135,7 +135,7 @@ public class TestADEFunction extends TestDecimalFunction {
         code[1] = 0;
         code[0_400] = decWord(0, 0, 0, 0, 1, 1, 1, 1, POSITIVE_SIGN);
 
-        loadBaseRegister((short) 0, false, 0, 0_777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0, 0_777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 2, 2, 2, 2, POSITIVE_SIGN));
         _engine.getDesignatorRegister().setBasicModeEnabled(false);
@@ -154,7 +154,7 @@ public class TestADEFunction extends TestDecimalFunction {
         code[0] = ade(4, 0, 0_100);
         code[1] = 0;
 
-        loadBaseRegister((short) 0, false, 0, 0_777, AbsoluteAddress.construct(0, 0), code);
+        loadBaseRegister((short) 0, false, 0, 0_777, AbsoluteAddress.encodeToLong(0, 0), code);
 
         _engine.getExecOrUserARegister(4).setW(decWord(0, 0, 0, 0, 2, 2, 2, 2, POSITIVE_SIGN));
         _engine.getExecOrUserRRegister(0).setW(decWord(0, 0, 0, 0, 1, 1, 1, 1, POSITIVE_SIGN));

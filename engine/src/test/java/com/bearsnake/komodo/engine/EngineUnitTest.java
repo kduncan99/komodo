@@ -7,6 +7,7 @@ package com.bearsnake.komodo.engine;
 import com.bearsnake.komodo.engine.interrupts.HardwareCheckInterrupt;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 public abstract class EngineUnitTest implements StorageManager, InterruptHandler {
@@ -61,10 +62,12 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
         final int size
     ) throws HardwareCheckInterrupt {
         if (_segments.size() == 0x7FFFFFFF) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, 0, 0);
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface,
+                                             false, 0, 0);
         }
         if (size < 0) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, 0, 0);
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface,
+                                             false, 0, 0);
         }
 
         for (int i = 0; ; ++i) {
@@ -82,67 +85,73 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
 
     @Override
     public synchronized long[] getSegment(
-        final int segment
+        final int segmentId
     ) throws HardwareCheckInterrupt {
-        if (!_segments.containsKey(segment)) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        if (!_segments.containsKey(segmentId)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface,
+                                             false, segmentId, 0);
         }
-        return _segments.get(segment);
+        return _segments.get(segmentId);
     }
 
-    /**
-     * Retrieves a word from the indicated segment.
-     * @param segment The segment index, from 0 to 0x7FFFFFFF.
-     * @param offset The offset within the segment, from 0 to segment size - 1.
-     * @return The word at the specified offset, or 0 if the segment is invalid or the offset is out of bounds.
-     */
     @Override
     public synchronized long getWord(
-        final int segment,
+        final int segmentId,
         final int offset
     ) throws HardwareCheckInterrupt {
-        if (!_segments.containsKey(segment)) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        if (!_segments.containsKey(segmentId)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface,
+                                             false, segmentId, 0);
         }
-        var bank = _segments.get(segment);
+        var bank = _segments.get(segmentId);
         if ((offset < 0) || (offset >= bank.length)) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface,
+                                             false, segmentId, 0);
         }
         return bank[offset];
     }
 
-    /**
-     * Releases the indicated segment.  The segment will no longer be accessible.
-     * @param segment The segment index, from 0 to 0x7FFFFFFF.
-     */
     @Override
     public synchronized void releaseSegment(
-        final int segment
+        final int segmentId
     ) throws HardwareCheckInterrupt {
-        if (!_segments.containsKey(segment)) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        if (!_segments.containsKey(segmentId)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface,
+                                             false, segmentId, 0);
         }
-        _segments.remove(segment);
+        _segments.remove(segmentId);
     }
 
-    /**
-     * Sets a word in the indicated segment.
-     * @param segment The segment index, from 0 to 0x7FFFFFFF.
-     * @param offset The offset within the segment, from 0 to segment size - 1.
-     * @param value The word value to set.
-     */
+    @Override
+    public synchronized void resizeSegment(
+        final int segmentId,
+        final int size
+    ) throws HardwareCheckInterrupt {
+        if (!_segments.containsKey(segmentId)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface,
+                                             false, segmentId, 0);
+        }
+        if (size < 0) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface,
+                                             false, 0, 0);
+        }
+        _segments.put(segmentId, Arrays.copyOf(_segments.get(segmentId), size));
+    }
+
     @Override
     public synchronized void setWord(
-        final int segment,
+        final int segmentId,
         final int offset,
         final long value
     ) throws HardwareCheckInterrupt {
-        if (!_segments.containsKey(segment)) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+        if (!_segments.containsKey(segmentId)) {
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface,
+                                             false, segmentId, 0);
         }
-        var bank = _segments.get(segment);
+        var bank = _segments.get(segmentId);
         if ((offset < 0) || (offset >= bank.length)) {
-            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface, false, segment, 0);
+            throw new HardwareCheckInterrupt(HardwareCheckInterrupt.RecoveryAction.DownIPStorageInterface,
+                                             false, segmentId, 0);
         }
         bank[offset] = value;
     }
@@ -172,7 +181,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             .setAccessLock(new AccessLock())
             .setGeneralAccessPermissions(AccessPermissions.ALL)
             .setSpecialAccessPermissions(AccessPermissions.ALL)
-            .setBaseAddress(AbsoluteAddress.construct(segx, 0));
+            .setBaseAddress(AbsoluteAddress.encodeToLong(segx, 0));
 
         xReg.setXI(stackFrameSize).setXM(upperLimit + 1);
     }
@@ -197,7 +206,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             .setAccessLock(new AccessLock())
             .setGeneralAccessPermissions(AccessPermissions.ALL)
             .setSpecialAccessPermissions(AccessPermissions.ALL)
-            .setBaseAddress(AbsoluteAddress.construct(segx, 0));
+            .setBaseAddress(AbsoluteAddress.encodeToLong(segx, 0));
 
         xReg.setXI(0).setXM(upperLimit + 1);
     }
@@ -230,7 +239,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             .setAccessLock(new AccessLock())
             .setGeneralAccessPermissions(AccessPermissions.ALL)
             .setSpecialAccessPermissions(AccessPermissions.ALL)
-            .setBaseAddress(AbsoluteAddress.construct(segx, 0));
+            .setBaseAddress(AbsoluteAddress.encodeToLong(segx, 0));
 
         xReg.setXI(stackFrameSize).setXM(upperLimit + 1);
     }
@@ -270,7 +279,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
         bd.setGeneralFault(false);
         bd.setInactive(false);
         bd.setDisplacement(0);
-        bd.setBaseAddress(AbsoluteAddress.construct(segx, 0));
+        bd.setBaseAddress(AbsoluteAddress.encodeToLong(segx, 0));
         bd.setAccessLock(new AccessLock());
         bd.setGeneralAccessPermissions(AccessPermissions.ALL);
         bd.setSpecialAccessPermissions(AccessPermissions.ALL);
@@ -313,7 +322,7 @@ public abstract class EngineUnitTest implements StorageManager, InterruptHandler
             bReg.setSpecialAccessPermissions(AccessPermissions.NONE);
             bReg.setGeneralAccessPermissions(AccessPermissions.NONE);
             bReg.setAccessLock(new AccessLock());
-            bReg.setBaseAddress(AbsoluteAddress.construct(bankDescriptorTableIdentifier, 0));
+            bReg.setBaseAddress(AbsoluteAddress.encodeToLong(bankDescriptorTableIdentifier, 0));
             bReg.setLimitsNormalized(false, 0, segment.length | 0777);
         } catch (HardwareCheckInterrupt e) {
             assert(false):"Caught hardware check interrupt:" + e;

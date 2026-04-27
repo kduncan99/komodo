@@ -36,12 +36,12 @@ public class SYSCFunction extends Function {
         switch ((int)(operand >> 30)) {
             case 016 -> {
                 var operands = engine.getConsecutiveOperandsFromCachedAddress(3);
-                var address = AbsoluteAddress.construct((int)operands[0], (int)operands[1]);
+                var address = AbsoluteAddress.encodeToLong((int)operands[0], (int)operands[1]);
                 engine.addressLockAndWait(address);
             }
             case 017 -> {
                 var operands = engine.getConsecutiveOperandsFromCachedAddress(3);
-                var address = AbsoluteAddress.construct((int)operands[0], (int)operands[1]);
+                var address = AbsoluteAddress.encodeToLong((int)operands[0], (int)operands[1]);
                 engine.addressClearLock(address);
             }
             default -> throw new InvalidInstructionInterrupt(InvalidInstructionInterrupt.Reason.UndefinedFunctionCode);

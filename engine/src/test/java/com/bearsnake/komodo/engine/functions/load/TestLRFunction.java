@@ -160,11 +160,11 @@ public class TestLRFunction extends FunctionUnitTest {
         var bd0 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0_1)
                                       .setUpperLimit(0_1777)
-                                      .setBaseAddress(AbsoluteAddress.construct(0, 0));
+                                      .setBaseAddress(AbsoluteAddress.encodeToLong(0, 0));
         var bd1 = new BankDescriptor().setBankType(BankType.ExtendedMode)
                                       .setLowerLimit(0)
                                       .setUpperLimit(0_10000_0777)
-                                      .setBaseAddress(AbsoluteAddress.construct(1, 0));
+                                      .setBaseAddress(AbsoluteAddress.encodeToLong(1, 0));
 
         _engine.getDesignatorRegister()
                .setBasicModeEnabled(false)

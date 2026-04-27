@@ -919,7 +919,7 @@ public class Engine {
             throw new AddressingExceptionInterrupt(AddressingExceptionInterrupt.Reason.FatalAddressingException, bankLevel, bankDescriptorIndex);
         }
 
-        return AbsoluteAddress.addOffset(addr, 8 * bankDescriptorIndex);
+        return AbsoluteAddress.addOffsetToLong(addr, 8 * bankDescriptorIndex);
     }
 
     /**
@@ -1198,7 +1198,7 @@ public class Engine {
         }
 
         var bdtStorageOffset = (8 * bankDescriptorIndex);
-        var address = AbsoluteAddress.addOffset(bdtReg.getBaseAddress(), bdtStorageOffset);
+        var address = AbsoluteAddress.addOffsetToLong(bdtReg.getBaseAddress(), bdtStorageOffset);
         loadBank(baseRegisterIndex, address, bankLevel, bankDescriptorIndex, subsetOffset);
     }
 
@@ -1219,8 +1219,8 @@ public class Engine {
     ) throws HardwareCheckInterrupt {
         var bReg = _baseRegisters[baseRegisterIndex];
 
-        var bdtStorage = _storageManager.getSegment(AbsoluteAddress.getSegment(address));
-        var bdtOffset = AbsoluteAddress.getOffset(address);
+        var bdtStorage = _storageManager.getSegment(AbsoluteAddress.extractSegmentFromLong(address));
+        var bdtOffset = AbsoluteAddress.extractOffsetFromLong(address);
         var large = BankDescriptor.isLargeBank(bdtStorage, bdtOffset);
         var normLower = BankDescriptor.getLowerLimit(bdtStorage, bdtOffset) << (large ? 15 : 9);
         var normUpper = BankDescriptor.getUpperLimit(bdtStorage, bdtOffset) << (large ? 6 : 0);
@@ -1230,7 +1230,7 @@ public class Engine {
         bReg.setSpecialAccessPermissions(BankDescriptor.getSpecialAccessPermissions(bdtStorage, bdtOffset));
         var baseAddr = BankDescriptor.getBaseAddress(bdtStorage, bdtOffset);
         bReg.setBaseAddress(baseAddr);
-        bReg.setStorage(_storageManager.getSegment(AbsoluteAddress.getSegment(baseAddr)));
+        bReg.setStorage(_storageManager.getSegment(AbsoluteAddress.extractSegmentFromLong(baseAddr)));
 
         if (baseRegisterIndex == 0) {
             // Update hard-held PAR
@@ -1718,7 +1718,7 @@ public class Engine {
         if (lockStorage) {
             var bReg = _baseRegisters[spGetOperandBaseRegisterIndex()];
             var offset = spGetOperandRelativeAddress() - bReg.getLowerLimitNormalized();
-            addressLockAndWait(AbsoluteAddress.addOffset(bReg.getBaseAddress(), offset));
+            addressLockAndWait(AbsoluteAddress.addOffsetToLong(bReg.getBaseAddress(), offset));
         }
 
         if (allowPartialWordTransfer) {
@@ -2193,8 +2193,8 @@ public class Engine {
              HardwareCheckInterrupt {
         if (!_bamTargetIsVoid) {
             _bamTargetBDAddress = findBankDescriptorAbsoluteAddress(_bamTargetBankLevel, _bamTargetBankDescriptorIndex);
-            _bamTargetBDStorage = _storageManager.getSegment(AbsoluteAddress.getSegment(_bamTargetBDAddress));
-            _bamTargetBDOffset = AbsoluteAddress.getOffset(_bamTargetBDAddress);
+            _bamTargetBDStorage = _storageManager.getSegment(AbsoluteAddress.extractSegmentFromLong(_bamTargetBDAddress));
+            _bamTargetBDOffset = AbsoluteAddress.extractOffsetFromLong(_bamTargetBDAddress);
             _bamTargetBankType = BankDescriptor.getBankType(_bamTargetBDStorage, _bamTargetBDOffset);
         }
     }
@@ -2305,8 +2305,8 @@ public class Engine {
 
         // Find indirected-to bank descriptor address
         _bamTargetBDAddress = findBankDescriptorAbsoluteAddress(_bamTargetBankLevel, _bamTargetBankDescriptorIndex);
-        _bamTargetBDStorage = _storageManager.getSegment(AbsoluteAddress.getSegment(_bamTargetBDAddress));
-        _bamTargetBDOffset = AbsoluteAddress.getOffset(_bamTargetBDAddress);
+        _bamTargetBDStorage = _storageManager.getSegment(AbsoluteAddress.extractSegmentFromLong(_bamTargetBDAddress));
+        _bamTargetBDOffset = AbsoluteAddress.extractOffsetFromLong(_bamTargetBDAddress);
         _bamTargetBankType = BankDescriptor.getBankType(_bamTargetBDStorage, _bamTargetBDOffset);
 
         // another bank type check very similar to the one above, except we don't allow indirect banks now
@@ -2393,11 +2393,11 @@ public class Engine {
 
         // substep c - calculate gate address
         var gateAddress = BankDescriptor.getBaseAddress(_bamTargetBDStorage, _bamTargetBDOffset);
-        AbsoluteAddress.addOffset(gateAddress, _bamTargetOffset);
+        AbsoluteAddress.addOffsetToLong(gateAddress, _bamTargetOffset);
 
         // substep d - check for enter access to the gate itself
-        _bamGateStorage = _storageManager.getSegment(AbsoluteAddress.getSegment(gateAddress));
-        _bamGateOffset = AbsoluteAddress.getOffset(gateAddress);
+        _bamGateStorage = _storageManager.getSegment(AbsoluteAddress.extractSegmentFromLong(gateAddress));
+        _bamGateOffset = AbsoluteAddress.extractOffsetFromLong(gateAddress);
         lock = Gate.getAccessLock(_bamGateStorage, _bamGateOffset);
         gap = Gate.getGeneralAccessPermissions(_bamGateStorage, _bamGateOffset);
         sap = Gate.getSpecialAccessPermissions(_bamGateStorage, _bamGateOffset);
@@ -2438,8 +2438,8 @@ public class Engine {
 
         // substep i - go get new target bank descriptor address
         _bamTargetBDAddress = findBankDescriptorAbsoluteAddress(_bamTargetBankLevel, _bamTargetBankDescriptorIndex);
-        _bamTargetBDStorage = _storageManager.getSegment(AbsoluteAddress.getSegment(_bamTargetBDAddress));
-        _bamTargetBDOffset = AbsoluteAddress.getOffset(_bamTargetBDAddress);
+        _bamTargetBDStorage = _storageManager.getSegment(AbsoluteAddress.extractSegmentFromLong(_bamTargetBDAddress));
+        _bamTargetBDOffset = AbsoluteAddress.extractOffsetFromLong(_bamTargetBDAddress);
 
         // substep j - ensure new target bank is BASIC or EXTENDED, and not something else
         _bamTargetBankType = BankDescriptor.getBankType(_bamTargetBDStorage, _bamTargetBDOffset);
