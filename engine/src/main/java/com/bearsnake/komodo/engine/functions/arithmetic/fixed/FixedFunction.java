@@ -3,6 +3,7 @@ package com.bearsnake.komodo.engine.functions.arithmetic.fixed;
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.Function;
+import com.bearsnake.komodo.engine.interrupts.OperationTrapInterrupt;
 
 public abstract class FixedFunction extends Function {
 
@@ -14,7 +15,7 @@ public abstract class FixedFunction extends Function {
         final Engine engine,
         final long addend1,
         final long addend2
-    ) {
+    ) throws OperationTrapInterrupt {
         long result;
         boolean carry = false;
         boolean overflow = false;
@@ -35,6 +36,10 @@ public abstract class FixedFunction extends Function {
             var opNeg = Word36.isNegative(addend2);
             var resNeg = Word36.isNegative(result);
             overflow = (aNeg == opNeg) && (aNeg != resNeg);
+
+            if (overflow && engine.getDesignatorRegister().isOperationTrapEnabled()) {
+                engine.postInterrupt(new OperationTrapInterrupt(OperationTrapInterrupt.Reason.FixedPointBinaryIntegerOverflow));
+            }
         }
 
         var dr = engine.getDesignatorRegister();

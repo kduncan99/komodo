@@ -8,6 +8,7 @@ import com.bearsnake.komodo.engine.Constants;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
+import com.bearsnake.komodo.engine.interrupts.OperationTrapInterrupt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -366,6 +367,30 @@ public class TestAAFunction extends FunctionUnitTest {
         run();
 
         assertEquals(0_377777_777777L, _engine.getExecOrUserARegister(5).getW());
+        assertTrue(_engine.getDesignatorRegister().isOverflow());
+    }
+
+    @Test
+    public void testAA_OverflowWithOperationTrap_BM() throws MachineInterrupt {
+        var code = new long[0_1000];
+
+        code[0] = aaImm(5, 0, 0_200);
+
+        loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
+
+        _engine.getDesignatorRegister()
+               .setBasicModeEnabled(true)
+               .setProcessorPrivilege((short) 3)
+               .setQuarterWordModeEnabled(false)
+               .setExecRegisterSetSelected(false)
+               .setOperationTrapEnabled(true);
+        _engine.getProgramAddressRegister().setProgramCounter(0_1000).setBankDescriptorIndex(0_000004).setBankLevel((short) 0_7);
+        _engine.getExecOrUserARegister(5).setW(0_377777_777677L);
+
+        var i = assertThrows(OperationTrapInterrupt.class, this::run);
+        assertEquals(OperationTrapInterrupt.Reason.FixedPointBinaryIntegerOverflow.getCode(), i.getShortStatusField());
+
+        assertEquals(0_400000_000077L, _engine.getExecOrUserARegister(5).getW());
         assertTrue(_engine.getDesignatorRegister().isOverflow());
     }
 
