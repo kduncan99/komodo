@@ -14,8 +14,7 @@ import com.bearsnake.komodo.engine.functions.addrSpace.DABTFunction;
 import com.bearsnake.komodo.engine.functions.addrSpace.LBEFunction;
 import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.decimal.*;
-import com.bearsnake.komodo.engine.functions.arithmetic.fixed.AAFunction;
-import com.bearsnake.komodo.engine.functions.arithmetic.fixed.ANAFunction;
+import com.bearsnake.komodo.engine.functions.arithmetic.fixed.*;
 import com.bearsnake.komodo.engine.functions.intControl.AAIJFunction;
 import com.bearsnake.komodo.engine.functions.intControl.ERFunction;
 import com.bearsnake.komodo.engine.functions.intControl.PAIJFunction;
@@ -92,16 +91,16 @@ public abstract class FunctionTable {
         AAFunction.INSTANCE,
         // ADD1Function.INSTANCE,
         // AHFunction.INSTANCE,
-        // AMAFunction.INSTANCE,
+        AMAFunction.INSTANCE,
         ANAFunction.INSTANCE,
         // ANHFunction.INSTANCE,
-        // ANMAFunction.INSTANCE,
+        ANMAFunction.INSTANCE,
         // ANTFunction.INSTANCE,
-        // ANUFunction.INSTANCE,
-        // ANXFunction.INSTANCE,
+        ANUFunction.INSTANCE,
+        ANXFunction.INSTANCE,
         // ATFunction.INSTANCE,
-        // AUFunction.INSTANCE,
-        // AXFunction.INSTANCE,
+        AUFunction.INSTANCE,
+        AXFunction.INSTANCE,
         // BAOFunction.INSTANCE,
         // DAFunction.INSTANCE,
         // DANFunction.INSTANCE,
