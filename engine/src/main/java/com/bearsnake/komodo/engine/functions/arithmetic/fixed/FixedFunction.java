@@ -2,6 +2,7 @@ package com.bearsnake.komodo.engine.functions.arithmetic.fixed;
 
 import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
+import com.bearsnake.komodo.engine.Register;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.interrupts.OperationTrapInterrupt;
 
@@ -117,5 +118,52 @@ public abstract class FixedFunction extends Function {
         }
 
         return result;
+    }
+
+    /**
+     * Signed ones-complement 72 bit addition
+     */
+    protected void add72(
+        final Engine engine,
+        final Register register0,   // MSWord
+        final Register register1,   // LSWord
+        final long operand0,        // MSWord
+        final long operand1         // LSWord
+    ) {
+        if (register0.isNegativeZero() && register1.isNegativeZero()
+            && Word36.isNegativeZero(operand0) && Word36.isNegativeZero(operand1)) {
+            // leave the registers as is - they're already negative zero.
+            return;
+        }
+
+        var result1 = register1.getW() + operand1;
+        var result0 = register0.getW() + operand0;
+        if ((result1 & 01_000000_000000L) != 0) {
+            result1 &= 0_777777_777777L;
+            result0++;
+        }
+        if ((result0 & 01_000000_000000L) != 0) {
+            result0 &= 0_777777_777777L;
+            result1++;
+            engine.getDesignatorRegister().setCarry(true);
+        }
+
+        if (result0 == Word36.NEGATIVE_ZERO && result1 == Word36.NEGATIVE_ZERO) {
+            register0.setW(0);
+            register1.setW(0);
+        }
+
+        var aNeg = register0.isNegative();
+        var opNeg = Word36.isNegative(operand0);
+        var resNeg = Word36.isNegative(result0);
+        if ((aNeg == opNeg) && (aNeg != resNeg)) {
+            engine.getDesignatorRegister().setOverflow(true);
+            if (engine.getDesignatorRegister().isOperationTrapEnabled()) {
+                engine.postInterrupt(new OperationTrapInterrupt(OperationTrapInterrupt.Reason.FixedPointBinaryIntegerOverflow));
+            }
+        }
+
+        register0.setW(result0);
+        register1.setW(result1);
     }
 }
