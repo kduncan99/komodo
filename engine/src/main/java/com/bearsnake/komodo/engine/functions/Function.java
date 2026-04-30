@@ -340,7 +340,7 @@ public abstract class Function {
         }
 
         if (xRegActive) {
-            while (sb.length() < 25) {
+            while (sb.length() < 30) {
                 sb.append(" ");
             }
             var xReg = engine.getExecOrUserXRegister(iWord.getX());
