@@ -107,14 +107,14 @@ public abstract class FunctionTable {
         // DECFunction.INSTANCE,
         // DEC2Function.INSTANCE,
         // DFFunction.INSTANCE,
-        // DIFunction.INSTANCE,
-        // DSFFunction.INSTANCE,
+        DIFunction.INSTANCE, // TODO needs unit tests
+        DSFFunction.INSTANCE, // TODO needs unit tests
         // ENZFunction.INSTANCE,
         // INCFunction.INSTANCE,
         // INC2Function.INSTANCE,
-        // MFFunction.INSTANCE,
-        // MIFunction.INSTANCE,
-        // MSIFunction.INSTANCE,
+        MFFunction.INSTANCE, // TODO needs unit tests
+        MIFunction.INSTANCE, // TODO needs unit tests
+        MSIFunction.INSTANCE, // TODO needs unit tests
         // SUB1Function.INSTANCE,
 
         // float

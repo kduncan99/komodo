@@ -17,6 +17,7 @@ public class ADEFunction extends DecimalFunction {
 
     public static final ADEFunction INSTANCE = new ADEFunction();
 
+    // TODO BIG TODO - all these decimal functions need to check for overflow (and carry?) and operation trap
     private ADEFunction() {
         super("ADE");
         var fc = new FunctionCode(0_07).setJField(0_00);
