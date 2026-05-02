@@ -44,6 +44,7 @@ public abstract class FunctionUnitTest extends EngineUnitTest {
     }
 
     protected MachineInterrupt _interrupt = null;
+    protected boolean _ignoreJumpHistoryInterrupt = true;
 
     protected void run() throws MachineInterrupt {
         _engine.halt(HaltCode.NONE);
@@ -89,7 +90,12 @@ public abstract class FunctionUnitTest extends EngineUnitTest {
     public void handleInterrupt(
         final MachineInterrupt interrupt
     ) {
-        _interrupt = interrupt;
-        _engine.halt(HaltCode.UNIT_TEST_STOP);
+        if ((interrupt.getInterruptClass() == MachineInterrupt.InterruptClass.JumpHistoryFull) && _ignoreJumpHistoryInterrupt) {
+            System.out.println("***** Ignoring jump history interrupt *****");
+            _engine.clearJumpHistoryTable();
+        } else {
+            _interrupt = interrupt;
+            _engine.halt(HaltCode.UNIT_TEST_STOP);
+        }
     }
 }

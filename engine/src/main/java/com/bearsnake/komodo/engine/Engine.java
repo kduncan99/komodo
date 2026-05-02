@@ -773,11 +773,15 @@ public class Engine {
             var str = Function.interpret(this, ci);
             // TODO log this, don't print it
             if (spGetInstructionPoint() == InstructionPoint.RESOLVING_ADDRESS) {
-                IO.println("                 [" + str + "]");
+                IO.println("                         [" + str + "]");
             } else {
-                System.out.printf("--|%s:%06o| --> %s\n",
+                var par = _activityStatePacket.getProgramAddressRegister();
+                System.out.printf("--|%s:%o:%05o:%06o| --> %s\n",
                                   dr.isBasicModeEnabled() ? "BM" : "EM",
-                                  _activityStatePacket.getProgramAddressRegister().getProgramCounter(), str);
+                                  par.getBankLevel(),
+                                  par.getBankDescriptorIndex(),
+                                  par.getProgramCounter(),
+                                  str);
             }
         }
 
