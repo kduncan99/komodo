@@ -89,7 +89,7 @@ public abstract class FunctionTable {
 
         // fixed
         AAFunction.INSTANCE,
-        // ADD1Function.INSTANCE,
+        ADD1Function.INSTANCE,
         AHFunction.INSTANCE,
         AMAFunction.INSTANCE,
         ANAFunction.INSTANCE,
@@ -115,7 +115,7 @@ public abstract class FunctionTable {
         MFFunction.INSTANCE, // TODO needs unit tests
         MIFunction.INSTANCE, // TODO needs unit tests
         MSIFunction.INSTANCE, // TODO needs unit tests
-        // SUB1Function.INSTANCE,
+        SUB1Function.INSTANCE,
 
         // float
         // CDUFunction.INSTANCE,
