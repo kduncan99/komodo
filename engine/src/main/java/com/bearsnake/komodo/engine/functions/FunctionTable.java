@@ -109,7 +109,7 @@ public abstract class FunctionTable {
         DFFunction.INSTANCE, // TODO needs unit tests
         DIFunction.INSTANCE, // TODO needs unit tests
         DSFFunction.INSTANCE, // TODO needs unit tests
-        // ENZFunction.INSTANCE,
+        ENZFunction.INSTANCE, // TODO needs unit tests
         INCFunction.INSTANCE,
         INC2Function.INSTANCE,
         MFFunction.INSTANCE, // TODO needs unit tests
