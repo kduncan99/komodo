@@ -5,6 +5,15 @@ import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.Register;
 import com.bearsnake.komodo.engine.functions.Function;
 import com.bearsnake.komodo.engine.interrupts.OperationTrapInterrupt;
+import com.bearsnake.komodo.engine.interrupts.ReferenceViolationInterrupt;
+
+import static com.bearsnake.komodo.engine.Constants.*;
+import static com.bearsnake.komodo.engine.Constants.JFIELD_T1;
+import static com.bearsnake.komodo.engine.Constants.JFIELD_T2;
+import static com.bearsnake.komodo.engine.Constants.JFIELD_T3;
+import static com.bearsnake.komodo.engine.Constants.JFIELD_U;
+import static com.bearsnake.komodo.engine.Constants.JFIELD_W;
+import static com.bearsnake.komodo.engine.Constants.JFIELD_XU;
 
 public abstract class FixedFunction extends Function {
 
@@ -165,5 +174,104 @@ public abstract class FixedFunction extends Function {
 
         register0.setW(result0);
         register1.setW(result1);
+    }
+
+    /**
+     * Performs decrement logic for SUB1, DEC, and DEC2 instructions.
+     * @param engine reference to engine
+     * @param fullOperand full fullOperand at the storage location (regardless of partial word indicator)
+     * @param subtrahend amount to subtract from fullOperand
+     * @param checkSkip true if we should check the partial fullOperand for +/- zero before and after incrementing (skipping if not)
+     */
+    protected void decrement(
+        final Engine engine,
+        final long fullOperand,
+        final int subtrahend,
+        final boolean checkSkip
+    ) throws ReferenceViolationInterrupt {
+        var dr = engine.getDesignatorRegister();
+        var ci = engine.getCurrentInstruction();
+        var jf = ci.getJ();
+
+        long finalOperand = fullOperand;
+        boolean initialZero = Word36.isZero(finalOperand);
+
+        var ones = (jf == JFIELD_W)
+                   || (jf == JFIELD_XH2)
+                   || (!dr.isQuarterWordModeEnabled()
+                       && ((jf == JFIELD_XH1) || (jf == JFIELD_T1) || (jf == JFIELD_T2) || (jf == JFIELD_T3)));
+        var fullWord = dr.isBasicModeEnabled() && engine.spGetOperandIsGRS();
+
+        if (!fullWord) {
+            finalOperand = Engine.extractPartialWord(finalOperand, jf, dr.isQuarterWordModeEnabled());
+        }
+
+        if (ones) {
+            finalOperand = add36(engine, finalOperand, subtrahend ^ Word36.BIT_MASK);
+        } else {
+            finalOperand = (finalOperand - subtrahend) & Word36.BIT_MASK;
+        }
+
+        if ((jf != JFIELD_U) && (jf != JFIELD_XU)) {
+            engine.storeToCachedAddress(finalOperand,
+                                        engine.spGetOperandIsGRS(),
+                                        dr.isBasicModeEnabled() ? JFIELD_W : jf,
+                                        false);
+        }
+
+        boolean finalZero = Word36.isZero(finalOperand);
+        if (checkSkip && !initialZero && !finalZero) {
+            engine.getProgramAddressRegister().incrementProgramCounter();
+        }
+    }
+
+    /**
+     * Performs increment logic for ADD1, INC, and INC2 instructions.
+     * @param engine reference to engine
+     * @param fullOperand full fullOperand at the storage location (regardless of partial word indicator)
+     * @param addend amount to add to fullOperand
+     * @param checkSkip true if we should check the partial fullOperand for +/- zero before and after incrementing (skipping if not)
+     */
+    protected void increment(
+        final Engine engine,
+        final long fullOperand,
+        final int addend,
+        final boolean checkSkip
+    ) throws ReferenceViolationInterrupt {
+        var dr = engine.getDesignatorRegister();
+        var ci = engine.getCurrentInstruction();
+        var jf = ci.getJ();
+
+        long finalOperand = fullOperand;
+        boolean initialZero = Word36.isZero(finalOperand);
+
+        if (engine.spGetOperandIsGRS()) {
+            // full word, maybe 1's, maybe 2's.
+            var ones = (jf == JFIELD_W)
+                       || (jf == JFIELD_XH2)
+                       || (!dr.isQuarterWordModeEnabled()
+                           && ((jf == JFIELD_XH1) || (jf == JFIELD_T1) || (jf == JFIELD_T2) || (jf == JFIELD_T3)));
+            if (ones) {
+                finalOperand = add36(engine, finalOperand, addend);
+            } else {
+                finalOperand = (finalOperand + addend) & Word36.BIT_MASK;
+            }
+        } else {
+            // storage, partial word
+            finalOperand = Engine.extractPartialWord(finalOperand, jf, dr.isQuarterWordModeEnabled());
+            finalOperand = add36(engine, finalOperand, addend);
+        }
+
+        if ((jf != JFIELD_U) && (jf != JFIELD_XU)) {
+            engine.storeToCachedAddress(finalOperand,
+                                        engine.spGetOperandIsGRS(),
+                                        dr.isBasicModeEnabled() ? JFIELD_W : jf,
+                                        false);
+        }
+
+        boolean finalZero = Word36.isZero(finalOperand);
+        if (checkSkip && !initialZero && !finalZero) {
+            engine.getProgramAddressRegister().incrementProgramCounter();
+        }
     }
 }

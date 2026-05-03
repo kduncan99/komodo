@@ -20,6 +20,10 @@ public class TestSUB1Function extends FunctionUnitTest {
         return fjaxhiu(005, JFIELD_U, 016, x, h, i, u);
     }
 
+    private long sub1XImm(long x, long h, long i, long u) {
+        return fjaxhiu(005, JFIELD_XU, 016, x, h, i, u);
+    }
+
     private long sub1BM(long j, long x, long h, long i, long u) {
         return fjaxhiu(005, j, 016, x, h, i, u);
     }
@@ -157,8 +161,8 @@ public class TestSUB1Function extends FunctionUnitTest {
         code[013] = sub1EM(Constants.JFIELD_S3, 0, 0, 0, 2, 0_1013);
         code[014] = sub1EM(Constants.JFIELD_S2, 0, 0, 0, 2, 0_1014);
         code[015] = sub1EM(Constants.JFIELD_S1, 0, 0, 0, 2, 0_1015);
-        code[016] = sub1EM(Constants.JFIELD_U, 0, 0, 0, 0, 0_1016);
-        code[017] = sub1EM(Constants.JFIELD_XU, 0, 0, 0, 0, 0_1017);
+        code[016] = sub1Imm(0, 1, 1, 0_177777);
+        code[017] = sub1XImm(0, 1, 1, 0_177777);
         code[020] = 0;
 
         data[0] = 0L;
@@ -175,8 +179,6 @@ public class TestSUB1Function extends FunctionUnitTest {
         data[013] = 0L;
         data[014] = 0L;
         data[015] = 0L;
-        data[016] = 0L;
-        data[017] = 0L;
 
         loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
         loadBaseRegister((short) 2, false, 0_1000, 0_1777, 0, data);
@@ -204,8 +206,6 @@ public class TestSUB1Function extends FunctionUnitTest {
         assertEquals(0_000077_000000L, data[013]);
         assertEquals(0_007700_000000L, data[014]);
         assertEquals(0_770000_000000L, data[015]);
-        assertEquals(0L, data[016]);
-        assertEquals(0L, data[017]);
     }
 
     @Test
@@ -227,9 +227,7 @@ public class TestSUB1Function extends FunctionUnitTest {
         code[013] = sub1EM(Constants.JFIELD_S3, 0, 0, 0, 2, 0_1013);
         code[014] = sub1EM(Constants.JFIELD_S2, 0, 0, 0, 2, 0_1014);
         code[015] = sub1EM(Constants.JFIELD_S1, 0, 0, 0, 2, 0_1015);
-        code[016] = sub1EM(Constants.JFIELD_U, 0, 0, 0, 0, 0_1016);
-        code[017] = sub1EM(Constants.JFIELD_XU, 0, 0, 0, 0, 0_1017);
-        code[020] = 0;
+        code[016] = 0;
 
         data[0] = 0L;
         data[1] = 0L;
@@ -245,8 +243,6 @@ public class TestSUB1Function extends FunctionUnitTest {
         data[013] = 0L;
         data[014] = 0L;
         data[015] = 0L;
-        data[016] = 0L;
-        data[017] = 0L;
 
         loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
         loadBaseRegister((short) 2, false, 0_1000, 0_1777, 0, data);
@@ -274,8 +270,6 @@ public class TestSUB1Function extends FunctionUnitTest {
         assertEquals(0_000077_000000L, data[013]);
         assertEquals(0_007700_000000L, data[014]);
         assertEquals(0_770000_000000L, data[015]);
-        assertEquals(0L, data[016]);
-        assertEquals(0L, data[017]);
     }
 
     @Test

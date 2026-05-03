@@ -4,21 +4,20 @@
 
 package com.bearsnake.komodo.engine.functions.arithmetic.fixed;
 
-import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.InstructionPoint;
 import com.bearsnake.komodo.engine.functions.FunctionCode;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
 
-import static com.bearsnake.komodo.engine.Constants.*;
-
 /**
- * Subtract One from Storage instruction
- * (SUB1) Decrements the operand by 1 under storage lock.
+ * Decrement Storage by 2 instruction
+ * (DEC) Decrements the operand by 2 under storage lock.
+ * If the operand is +/- zero before or after the operation, execute NI else skip.
  * For Memory, j-field is interpreted as follows:
  *      W, XH1, XH2, T1, T2, T3 -> 1's complement with Carry/Overflow detection
  *      H1, H2, S1-S6, Q1-Q6 -> 2's complement (Carry/Overflow behavior is undefined)
  *      U, XU -> 1's complement with Carry/Overflow detection, but the result is not stored.
+ * NOTE that all of the above will be accomplished automatically by just using normal operand load and store.
  * For Extended Mode with GRS reference,
  *      W -> 1's complement with Carry/Overflow detection
  *      01-015 is undefined
@@ -29,14 +28,14 @@ import static com.bearsnake.komodo.engine.Constants.*;
  *      U, XU -> 1's complement with Carry/Overflow detection, but the result is not stored.
  * NOTE that this requires a bit of special code for the 2's complement variation.
  */
-public class SUB1Function extends FixedFunction {
+public class DEC2Function extends FixedFunction {
 
-    public static final SUB1Function INSTANCE = new SUB1Function();
+    public static final DEC2Function INSTANCE = new DEC2Function();
 
-    private SUB1Function() {
-        super("SUB1");
-        setBasicModeFunctionCode(new FunctionCode(0_05).setAField(0_016).setProcessorPrivilege(0));
-        setExtendedModeFunctionCode(new FunctionCode(0_05).setAField(0_016));
+    private DEC2Function() {
+        super("DEC2");
+        setBasicModeFunctionCode(new FunctionCode(0_05).setAField(0_013));
+        setExtendedModeFunctionCode(new FunctionCode(0_05).setAField(0_013));
 
         setAFieldSemantics(AFieldSemantics.UNUSED);
         setImmediateMode(true);
@@ -53,7 +52,7 @@ public class SUB1Function extends FixedFunction {
             return false;
         }
 
-        decrement(engine, operand, 1, false);
+        decrement(engine, operand, 2, true);
         engine.addressClearAllLocks();
 
         return true;

@@ -54,32 +54,7 @@ public class ADD1Function extends FixedFunction {
             return false;
         }
 
-        var dr = engine.getDesignatorRegister();
-        var ci = engine.getCurrentInstruction();
-        var jf = ci.getJ();
-        if (engine.spGetOperandIsGRS()) {
-            // full word, maybe 1's, maybe 2's.
-            var ones = (jf == JFIELD_W)
-                       || (jf == JFIELD_XH2)
-                       || (!dr.isQuarterWordModeEnabled()
-                           && ((jf == JFIELD_XH1) || (jf == JFIELD_T1) || (jf == JFIELD_T2) || (jf == JFIELD_T3)));
-            if (ones) {
-                operand = add36(engine, operand, 1);
-            } else {
-                operand = (operand + 1) & Word36.BIT_MASK;
-            }
-        } else {
-            // storage, partial word
-            operand = Engine.extractPartialWord(operand, jf, dr.isQuarterWordModeEnabled());
-            operand = add36(engine, operand, 1);
-        }
-
-        if ((jf != JFIELD_U) && (jf != JFIELD_XU)) {
-            engine.storeToCachedAddress(operand,
-                                        engine.spGetOperandIsGRS(),
-                                        dr.isBasicModeEnabled() ? JFIELD_W : jf,
-                                        false);
-        }
+        increment(engine, operand, 1, false);
         engine.addressClearAllLocks();
 
         return true;

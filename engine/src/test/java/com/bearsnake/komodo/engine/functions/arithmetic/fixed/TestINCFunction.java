@@ -14,22 +14,22 @@ import org.junit.jupiter.api.Test;
 import static com.bearsnake.komodo.engine.Constants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestADD1Function extends FunctionUnitTest {
+public class TestINCFunction extends FunctionUnitTest {
 
-    private long add1Imm(long x, long h, long i, long u) {
-        return fjaxhiu(005, JFIELD_U, 015, x, h, i, u);
+    private long incImm(long x, long h, long i, long u) {
+        return fjaxhiu(005, JFIELD_U, 010, x, h, i, u);
     }
 
-    private long add1XImm(long x, long h, long i, long u) {
-        return fjaxhiu(005, JFIELD_XU, 015, x, h, i, u);
+    private long incXImm(long x, long h, long i, long u) {
+        return fjaxhiu(005, JFIELD_XU, 010, x, h, i, u);
     }
 
-    private long add1BM(long j, long x, long h, long i, long u) {
-        return fjaxhiu(005, j, 015, x, h, i, u);
+    private long incBM(long j, long x, long h, long i, long u) {
+        return fjaxhiu(005, j, 010, x, h, i, u);
     }
 
-    private long add1EM(long j, long x, long h, long i, long b, long d) {
-        return fjaxhibd(005, j, 015, x, h, i, b, d);
+    private long incEM(long j, long x, long h, long i, long b, long d) {
+        return fjaxhibd(005, j, 010, x, h, i, b, d);
     }
 
     @BeforeEach
@@ -38,13 +38,13 @@ public class TestADD1Function extends FunctionUnitTest {
     }
 
     @Test
-    public void testADD1_Zeros_EM() throws MachineInterrupt {
+    public void testINC_Zeros_EM() throws MachineInterrupt {
         var code = new long[0_1000];
         var data = new long[0_1000];
 
-        code[0] = add1EM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
-        code[1] = add1EM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1001);
-        code[2] = add1EM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1002);
+        code[0] = incEM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
+        code[1] = incEM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1001);
+        code[2] = incEM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1002);
         code[3] = 0;
 
         data[0] = 0;
@@ -68,11 +68,11 @@ public class TestADD1Function extends FunctionUnitTest {
     }
 
     @Test
-    public void testADD1_NoCarryOverflow_EM() throws MachineInterrupt {
+    public void testINC_NoCarryOverflow_EM() throws MachineInterrupt {
         var code = new long[0_1000];
         var data = new long[0_1000];
 
-        code[0] = add1EM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
+        code[0] = incEM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
         code[1] = 0;
 
         data[0] = 0_333222_111000L;
@@ -94,11 +94,11 @@ public class TestADD1Function extends FunctionUnitTest {
     }
 
     @Test
-    public void testADD1_Carry_EM() throws MachineInterrupt {
+    public void testINC_Carry_EM() throws MachineInterrupt {
         var code = new long[0_1000];
         var data = new long[0_1000];
 
-        code[0] = add1EM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
+        code[0] = incEM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
         code[1] = 0;
 
         data[0] = 0_777777_777777L;
@@ -119,12 +119,12 @@ public class TestADD1Function extends FunctionUnitTest {
     }
 
     @Test
-    public void testADD1_Overflow_EM() throws MachineInterrupt {
+    public void testINC_Overflow_EM() throws MachineInterrupt {
         var code = new long[0_1000];
         var data = new long[0_1000];
         data[0] = 0_377777_777777L;
 
-        code[0] = add1EM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
+        code[0] = incEM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
         code[1] = 0;
 
         loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
@@ -143,26 +143,26 @@ public class TestADD1Function extends FunctionUnitTest {
     }
 
     @Test
-    public void testADD1_JField_ThirdWord_EM() throws MachineInterrupt {
+    public void testINC_JField_ThirdWord_EM() throws MachineInterrupt {
         var code = new long[0_1000];
         var data = new long[0_1000];
 
-        code[0] = add1EM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
-        code[1] = add1EM(Constants.JFIELD_H2, 0, 0, 0, 2, 0_1001);
-        code[2] = add1EM(Constants.JFIELD_H1, 0, 0, 0, 2, 0_1002);
-        code[3] = add1EM(Constants.JFIELD_XH2, 0, 0, 0, 2, 0_1003);
-        code[4] = add1EM(Constants.JFIELD_XH1, 0, 0, 0, 2, 0_1004);
-        code[5] = add1EM(Constants.JFIELD_T3, 0, 0, 0, 2, 0_1005);
-        code[6] = add1EM(Constants.JFIELD_T2, 0, 0, 0, 2, 0_1006);
-        code[7] = add1EM(Constants.JFIELD_T1, 0, 0, 0, 2, 0_1007);
-        code[010] = add1EM(Constants.JFIELD_S6, 0, 0, 0, 2, 0_1010);
-        code[011] = add1EM(Constants.JFIELD_S5, 0, 0, 0, 2, 0_1011);
-        code[012] = add1EM(Constants.JFIELD_S4, 0, 0, 0, 2, 0_1012);
-        code[013] = add1EM(Constants.JFIELD_S3, 0, 0, 0, 2, 0_1013);
-        code[014] = add1EM(Constants.JFIELD_S2, 0, 0, 0, 2, 0_1014);
-        code[015] = add1EM(Constants.JFIELD_S1, 0, 0, 0, 2, 0_1015);
-        code[016] = add1Imm(0, 1, 1, 0_177777);
-        code[017] = add1XImm(0, 1, 1, 0_177777);
+        code[0] = incEM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
+        code[1] = incEM(Constants.JFIELD_H2, 0, 0, 0, 2, 0_1001);
+        code[2] = incEM(Constants.JFIELD_H1, 0, 0, 0, 2, 0_1002);
+        code[3] = incEM(Constants.JFIELD_XH2, 0, 0, 0, 2, 0_1003);
+        code[4] = incEM(Constants.JFIELD_XH1, 0, 0, 0, 2, 0_1004);
+        code[5] = incEM(Constants.JFIELD_T3, 0, 0, 0, 2, 0_1005);
+        code[6] = incEM(Constants.JFIELD_T2, 0, 0, 0, 2, 0_1006);
+        code[7] = incEM(Constants.JFIELD_T1, 0, 0, 0, 2, 0_1007);
+        code[010] = incEM(Constants.JFIELD_S6, 0, 0, 0, 2, 0_1010);
+        code[011] = incEM(Constants.JFIELD_S5, 0, 0, 0, 2, 0_1011);
+        code[012] = incEM(Constants.JFIELD_S4, 0, 0, 0, 2, 0_1012);
+        code[013] = incEM(Constants.JFIELD_S3, 0, 0, 0, 2, 0_1013);
+        code[014] = incEM(Constants.JFIELD_S2, 0, 0, 0, 2, 0_1014);
+        code[015] = incEM(Constants.JFIELD_S1, 0, 0, 0, 2, 0_1015);
+        code[016] = incImm(0, 1, 1, 0_177777);
+        code[017] = incXImm(0, 1, 1, 0_177777);
         code[020] = 0;
 
         data[0] = 0_777777_777777L;
@@ -209,25 +209,25 @@ public class TestADD1Function extends FunctionUnitTest {
     }
 
     @Test
-    public void testADD1_JField_QuarterWord_EM() throws MachineInterrupt {
+    public void testINC_JField_QuarterWord_EM() throws MachineInterrupt {
         var code = new long[0_1000];
         var data = new long[0_1000];
 
-        code[0] = add1EM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
-        code[1] = add1EM(Constants.JFIELD_H2, 0, 0, 0, 2, 0_1001);
-        code[2] = add1EM(Constants.JFIELD_H1, 0, 0, 0, 2, 0_1002);
-        code[3] = add1EM(Constants.JFIELD_XH2, 0, 0, 0, 2, 0_1003);
-        code[4] = add1EM(Constants.JFIELD_Q2, 0, 0, 0, 2, 0_1004);
-        code[5] = add1EM(Constants.JFIELD_Q4, 0, 0, 0, 2, 0_1005);
-        code[6] = add1EM(Constants.JFIELD_Q3, 0, 0, 0, 2, 0_1006);
-        code[7] = add1EM(Constants.JFIELD_Q1, 0, 0, 0, 2, 0_1007);
-        code[010] = add1EM(Constants.JFIELD_S6, 0, 0, 0, 2, 0_1010);
-        code[011] = add1EM(Constants.JFIELD_S5, 0, 0, 0, 2, 0_1011);
-        code[012] = add1EM(Constants.JFIELD_S4, 0, 0, 0, 2, 0_1012);
-        code[013] = add1EM(Constants.JFIELD_S3, 0, 0, 0, 2, 0_1013);
-        code[014] = add1EM(Constants.JFIELD_S2, 0, 0, 0, 2, 0_1014);
-        code[015] = add1EM(Constants.JFIELD_S1, 0, 0, 0, 2, 0_1015);
-        code[017] = 0;
+        code[0] = incEM(Constants.JFIELD_W, 0, 0, 0, 2, 0_1000);
+        code[1] = incEM(Constants.JFIELD_H2, 0, 0, 0, 2, 0_1001);
+        code[2] = incEM(Constants.JFIELD_H1, 0, 0, 0, 2, 0_1002);
+        code[3] = incEM(Constants.JFIELD_XH2, 0, 0, 0, 2, 0_1003);
+        code[4] = incEM(Constants.JFIELD_Q2, 0, 0, 0, 2, 0_1004);
+        code[5] = incEM(Constants.JFIELD_Q4, 0, 0, 0, 2, 0_1005);
+        code[6] = incEM(Constants.JFIELD_Q3, 0, 0, 0, 2, 0_1006);
+        code[7] = incEM(Constants.JFIELD_Q1, 0, 0, 0, 2, 0_1007);
+        code[010] = incEM(Constants.JFIELD_S6, 0, 0, 0, 2, 0_1010);
+        code[011] = incEM(Constants.JFIELD_S5, 0, 0, 0, 2, 0_1011);
+        code[012] = incEM(Constants.JFIELD_S4, 0, 0, 0, 2, 0_1012);
+        code[013] = incEM(Constants.JFIELD_S3, 0, 0, 0, 2, 0_1013);
+        code[014] = incEM(Constants.JFIELD_S2, 0, 0, 0, 2, 0_1014);
+        code[015] = incEM(Constants.JFIELD_S1, 0, 0, 0, 2, 0_1015);
+        code[022] = 0;
 
         data[0] = 0_777777_777777L;
         data[1] = 0_777777_777777L;
@@ -273,13 +273,16 @@ public class TestADD1Function extends FunctionUnitTest {
     }
 
     @Test
-    public void testADD1_GRS_EM() throws MachineInterrupt {
+    public void testINC_GRS_EM() throws MachineInterrupt {
         var code = new long[0_1000];
 
-        code[0] = add1EM(Constants.JFIELD_W, 0, 0, 0, 0, GRS_A0);
-        code[1] = add1EM(Constants.JFIELD_U, 0, 0, 0, 0, GRS_A1);
-        code[2] = add1EM(Constants.JFIELD_XU, 0, 0, 0, 0, GRS_A2);
-        code[3] = 0;
+        code[0] = incEM(Constants.JFIELD_W, 0, 0, 0, 0, GRS_A0);
+        code[1] = 0_777777_777777L; // this is skipped
+        code[2] = incEM(Constants.JFIELD_U, 0, 0, 0, 0, GRS_A1);
+        code[3] = 0_777777_777777L; // this is skipped
+        code[4] = incEM(Constants.JFIELD_XU, 0, 0, 0, 0, GRS_A2);
+        code[5] = 0_777777_777777L; // this is skipped
+        code[6] = 0;
 
         loadBaseRegister((short) 0, false, 0_1000, 0_1777, 0, code);
 
@@ -302,12 +305,12 @@ public class TestADD1Function extends FunctionUnitTest {
     }
 
     @Test
-    public void testADD1_GRS_BM() throws MachineInterrupt {
+    public void testINC_GRS_BM() throws MachineInterrupt {
         var code = new long[0_1000];
 
-        code[0] = add1EM(Constants.JFIELD_W, 0, 0, 0, 0, GRS_A0);
-        code[1] = add1EM(Constants.JFIELD_T2, 0, 0, 0, 0, GRS_A1);
-        code[2] = add1EM(Constants.JFIELD_S4, 0, 0, 0, 0, GRS_A2);
+        code[0] = incEM(Constants.JFIELD_W, 0, 0, 0, 0, GRS_A0);
+        code[1] = incEM(Constants.JFIELD_T2, 0, 0, 0, 0, GRS_A1);
+        code[2] = incEM(Constants.JFIELD_S4, 0, 0, 0, 0, GRS_A2);
         code[3] = 0;
 
         loadBaseRegister((short) 12, false, 0_1000, 0_1777, 0, code);
