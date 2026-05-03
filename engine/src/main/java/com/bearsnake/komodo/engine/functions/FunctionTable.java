@@ -15,6 +15,8 @@ import com.bearsnake.komodo.engine.functions.addrSpace.LBEFunction;
 import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.decimal.*;
 import com.bearsnake.komodo.engine.functions.arithmetic.fixed.*;
+import com.bearsnake.komodo.engine.functions.arithmetic.floating.DFMFunction;
+import com.bearsnake.komodo.engine.functions.arithmetic.floating.FMFunction;
 import com.bearsnake.komodo.engine.functions.intControl.AAIJFunction;
 import com.bearsnake.komodo.engine.functions.intControl.ERFunction;
 import com.bearsnake.komodo.engine.functions.intControl.PAIJFunction;
@@ -104,17 +106,17 @@ public abstract class FunctionTable {
         // BAOFunction.INSTANCE,
         DAFunction.INSTANCE,
         DANFunction.INSTANCE,
-        DECFunction.INSTANCE, // TODO needs unit tests
-        DEC2Function.INSTANCE, // TODO needs unit tests
-        DFFunction.INSTANCE, // TODO needs unit tests
-        DIFunction.INSTANCE, // TODO needs unit tests
-        DSFFunction.INSTANCE, // TODO needs unit tests
-        ENZFunction.INSTANCE, // TODO needs unit tests
+        DECFunction.INSTANCE,// TODO needs unit tests
+        DEC2Function.INSTANCE,// TODO needs unit tests
+        DFFunction.INSTANCE,// TODO needs unit tests
+        DIFunction.INSTANCE,// TODO needs unit tests
+        DSFFunction.INSTANCE,// TODO needs unit tests
+        ENZFunction.INSTANCE,// TODO needs unit tests
         INCFunction.INSTANCE,
         INC2Function.INSTANCE,
-        MFFunction.INSTANCE, // TODO needs unit tests
-        MIFunction.INSTANCE, // TODO needs unit tests
-        MSIFunction.INSTANCE, // TODO needs unit tests
+        MFFunction.INSTANCE,// TODO needs unit tests
+        MIFunction.INSTANCE,// TODO needs unit tests
+        MSIFunction.INSTANCE,// TODO needs unit tests
         SUB1Function.INSTANCE,
 
         // float
@@ -122,7 +124,7 @@ public abstract class FunctionTable {
         // DFAFunction.INSTANCE,
         // DFANFunction.INSTANCE,
         // DFDFunction.INSTANCE,
-        // DFMFunction.INSTANCE,
+        DFMFunction.INSTANCE,// TODO needs unit tests
         // DFUFunction.INSTANCE,
         // DLCFFunction.INSTANCE, // (also DFP)
         // FAFunction.INSTANCE,
@@ -130,7 +132,7 @@ public abstract class FunctionTable {
         // FCLFunction.INSTANCE,
         // FDFunction.INSTANCE,
         // FELFunction.INSTANCE,
-        // FMFunction.INSTANCE,
+        FMFunction.INSTANCE,// TODO needs unit tests
         // LCFFunction.INSTANCE,
         // LUFFunction.INSTANCE,
         // MCDUFunction.INSTANCE,
