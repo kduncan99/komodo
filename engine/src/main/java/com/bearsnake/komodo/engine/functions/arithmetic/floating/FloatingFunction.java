@@ -32,7 +32,7 @@ public abstract class FloatingFunction extends Function {
 
     // single precision ------------------------------------------------------------------------------------------------------------
 
-    protected long construct(
+    protected static long construct(
         final long sign,
         final long characteristic,
         final long mantissa
@@ -40,37 +40,37 @@ public abstract class FloatingFunction extends Function {
         return ((sign & 01) << 35) | ((characteristic & 0_377) << 27) | (mantissa & 0_000777_777777L);
     }
 
-    protected long getCharacteristic(
+    protected static long getCharacteristic(
         final long value
     ) {
         return (value >> 27) & 0_0377;
     }
 
-    protected long getSinglePrecisionCharacteristicFromExponent(
+    protected static long getSinglePrecisionCharacteristicFromExponent(
         final long exponent
     ) {
         return exponent + 0200;
     }
 
-    protected long getExponent(
+    protected static long getExponent(
         final long value
     ) {
         return getCharacteristic(value) - 0200;
     }
 
-    protected long getMantissa(
+    protected static long getMantissa(
         final long value
     ) {
         return value & 0_000777_777777L;
     }
 
-    protected long getSign(
+    protected static long getSign(
         final long value
     ) {
         return value >> 35;
     }
 
-    protected boolean isNormalized(
+    protected static boolean isNormalized(
         final long value
     ) {
         // Positive and Negative zero are considered normalized
@@ -82,7 +82,7 @@ public abstract class FloatingFunction extends Function {
         return (check != 0) && (check != 0_400400_000000L);
     }
 
-    protected long normalize(
+    protected static long normalize(
         final long value
     ) {
         var result = value;
@@ -101,7 +101,7 @@ public abstract class FloatingFunction extends Function {
 
     // double precision ------------------------------------------------------------------------------------------------------------
 
-    protected void construct(
+    protected static void construct(
         final long[] result,
         final long sign,
         final long characteristic,
@@ -111,37 +111,37 @@ public abstract class FloatingFunction extends Function {
         result[1] = mantissa & 0_000077_777777_777777_777777L;
     }
 
-    protected long getCharacteristic(
+    protected static long getCharacteristic(
         final long[] value
     ) {
         return (value[0] >> 24) & 0_03777;
     }
 
-    protected long getDoublePrecisionCharacteristicFromExponent(
+    protected static long getDoublePrecisionCharacteristicFromExponent(
         final long exponent
     ) {
         return exponent + 02000;
     }
 
-    protected long getExponent(
+    protected static long getExponent(
         final long[] value
     ) {
         return getCharacteristic(value) - 02000;
     }
 
-    protected long getMantissa(
+    protected static long getMantissa(
         final long[] value
     ) {
         return value[1] & 0_000077_777777_777777_777777L;
     }
 
-    protected long getSign(
+    protected static long getSign(
         final long[] value
     ) {
         return value[0] >> 35;
     }
 
-    protected boolean isNormalized(
+    protected static boolean isNormalized(
         final long[] value
     ) {
         if (DoubleWord36.isZero(value[0], value[1])) {
@@ -151,7 +151,7 @@ public abstract class FloatingFunction extends Function {
         return (check != 0) && (check != 0_400040_000000L);
     }
 
-    protected void normalize(
+    protected static void normalize(
         final long[] value
     ) {
         if (!DoubleWord36.isZero(value[0], value[1])) {

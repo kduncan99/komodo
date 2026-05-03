@@ -56,9 +56,9 @@ public class DFMFunction extends FloatingFunction {
         var aValues = new long[]{aValue0, aValue1};
         var mantissa = BigInteger.valueOf(getMantissa(aValues))
                                  .multiply(BigInteger.valueOf(getMantissa(operands)))
-                                 .shiftRight(64)
+                                 .shiftRight(119)
                                  .longValue();
-        var exponent = getCharacteristic(aValues) + getCharacteristic(operands);
+        var exponent = getExponent(aValues) + getExponent(operands);
         var sign = getSign(aValues) ^ getSign(operands);
         while (mantissa >> 26 == sign) {
             mantissa <<= 1;
@@ -67,17 +67,21 @@ public class DFMFunction extends FloatingFunction {
 
         var dr = engine.getDesignatorRegister();
         if (exponent < -02000) {
+            dr.setCharacteristicUnderflow(true);
             if (dr.isArithmeticExceptionEnabled()) {
-                throw new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicUnderflow);
-            } else {
-                dr.setCharacteristicUnderflow(true);
+                engine.postInterrupt(new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicUnderflow));
             }
+            aReg0.setW(0);
+            aReg1.setW(0);
+            return true;
         } else if (exponent > 02000) {
+            dr.setCharacteristicOverflow(true);
             if (dr.isArithmeticExceptionEnabled()) {
-                throw new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicOverflow);
-            } else {
-                dr.setCharacteristicOverflow(true);
+                engine.postInterrupt(new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicOverflow));
             }
+            aReg0.setW(0);
+            aReg1.setW(0);
+            return true;
         }
 
         construct(aValues, sign, getSinglePrecisionCharacteristicFromExponent(exponent), mantissa);
