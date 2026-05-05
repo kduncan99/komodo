@@ -86,6 +86,8 @@ public class TestDFMFunction extends FunctionUnitTest {
         assertEquals(lotsLSW, _engine.getExecOrUserARegister(6).getW());
     }
 
+    // TODO need signed values test
+
     @Test
     public void testDFM_Canonical_EM() throws MachineInterrupt {
         var code = new long[0_1000];

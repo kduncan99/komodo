@@ -4,6 +4,7 @@
 
 package com.bearsnake.komodo.engine.functions.arithmetic.floating;
 
+import com.bearsnake.komodo.baselib.Word36;
 import com.bearsnake.komodo.engine.Engine;
 import com.bearsnake.komodo.engine.functions.FunctionUnitTest;
 import com.bearsnake.komodo.engine.interrupts.MachineInterrupt;
@@ -83,7 +84,7 @@ public class TestFMFunction extends FunctionUnitTest {
         var code = new long[0_1000];
         var data = new long[0_1000];
 
-        var negativeFive = 0_603_500000000L;
+        var negativeFive = 0_203_500000000L ^ Word36.BIT_MASK;
         var positiveFour = 0_203_400000000L;
 
         code[0] = fmEM(0, 0, 0, 0, 2, 0_1000);
@@ -109,7 +110,7 @@ public class TestFMFunction extends FunctionUnitTest {
 
         run();
 
-        var negativeTwenty = 0_606_240000000L;
+        var negativeTwenty = 0_206_240000000L ^ Word36.BIT_MASK;
         var positiveTwentyFive = 0_205_620000000L;
         var positiveSixteen = 0_205_400000000L;
 

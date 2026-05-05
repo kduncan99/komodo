@@ -23,6 +23,9 @@ import com.bearsnake.komodo.engine.functions.Function;
  *      Bit 0: Sign Bit (1 == negative, 0 == positive)
  *      Bits 1-11: Characteristic, biased by 02000 (exponent is characteristic - 02000)
  *      Bits 12-71: Mantissa (60 bits)
+ * ---
+ * Note that a negative floating point number is represented by the ones-complement of its magnitude.
+ * Hence, negative zero is all ones (as it is in fixed point).
  */
 public abstract class FloatingFunction extends Function {
 
@@ -32,15 +35,19 @@ public abstract class FloatingFunction extends Function {
 
     // single precision ------------------------------------------------------------------------------------------------------------
 
-    protected static long construct(
-        final long sign,
-        final long characteristic,
-        final long mantissa
+    protected static long constructSinglePrecision(
+        final long signBit,
+        final long absoluteCharacteristic,
+        final long absoluteMantissa
     ) {
-        return ((sign & 01) << 35) | ((characteristic & 0_377) << 27) | (mantissa & 0_000777_777777L);
+        var result = ((absoluteCharacteristic & 0_377) << 27) | (absoluteMantissa & 0_000777_777777L);
+        if (signBit == 1) {
+            result ^= Word36.BIT_MASK;
+        }
+        return result;
     }
 
-    protected static long getCharacteristic(
+    protected static long getSinglePrecisionCharacteristic(
         final long value
     ) {
         return (value >> 27) & 0_0377;
@@ -52,19 +59,19 @@ public abstract class FloatingFunction extends Function {
         return exponent + 0200;
     }
 
-    protected static long getExponent(
+    protected static long getSinglePrecisionExponent(
         final long value
     ) {
-        return getCharacteristic(value) - 0200;
+        return getSinglePrecisionCharacteristic(value) - 0200;
     }
 
-    protected static long getMantissa(
+    protected static long getSinglePrecisionMantissa(
         final long value
     ) {
         return value & 0_000777_777777L;
     }
 
-    protected static long getSign(
+    protected static long getSinglePrecisionSign(
         final long value
     ) {
         return value >> 35;
@@ -87,31 +94,31 @@ public abstract class FloatingFunction extends Function {
     ) {
         var result = value;
         if (!Word36.isZero(value)) {
-            var sign = getSign(value);
-            var characteristic = getCharacteristic(value);
-            var mantissa = getMantissa(value);
+            var sign = getSinglePrecisionSign(value);
+            var characteristic = getSinglePrecisionCharacteristic(value);
+            var mantissa = getSinglePrecisionMantissa(value);
             while (mantissa >> 23 == sign) {
                 mantissa = (mantissa << 1) & 0_77_777777L;
                 characteristic--;
             }
-            result = construct(sign, characteristic, mantissa);
+            result = constructSinglePrecision(sign, characteristic, mantissa);
         }
         return result;
     }
 
     // double precision ------------------------------------------------------------------------------------------------------------
 
-    protected static void construct(
+    protected static void constructDoublePrecision(
         final long[] result,
-        final long sign,
-        final long characteristic,
-        final long mantissa
+        final long signBit,
+        final long absoluteCharacteristic,
+        final long absoluteMantissa
     ) {
-        result[0] = ((sign & 01) << 35) | ((characteristic & 0_3777) << 24) | (mantissa >> 36);
-        result[1] = mantissa & 0_000077_777777_777777_777777L;
+        result[0] = ((signBit & 01) << 35) | ((absoluteCharacteristic & 0_3777) << 24) | (absoluteMantissa >> 36);
+        result[1] = absoluteMantissa & 0_000077_777777_777777_777777L;
     }
 
-    protected static long getCharacteristic(
+    protected static long getDoublePrecisionCharacteristic(
         final long[] value
     ) {
         return (value[0] >> 24) & 0_03777;
@@ -123,19 +130,19 @@ public abstract class FloatingFunction extends Function {
         return exponent + 02000;
     }
 
-    protected static long getExponent(
+    protected static long getDoublePrecisionExponent(
         final long[] value
     ) {
-        return getCharacteristic(value) - 02000;
+        return getDoublePrecisionCharacteristic(value) - 02000;
     }
 
-    protected static long getMantissa(
+    protected static long getDoublePrecisionMantissa(
         final long[] value
     ) {
         return ((value[0] & 0_7777_7777) << 36) | (value[1] & 0_777777_777777L);
     }
 
-    protected static long getSign(
+    protected static long getDoublePrecisionSign(
         final long[] value
     ) {
         return value[0] >> 35;
@@ -162,7 +169,7 @@ public abstract class FloatingFunction extends Function {
                 mantissa = (mantissa << 1) & 0_77_777777_777777_777777L;
                 characteristic--;
             }
-            construct(value, sign, characteristic, mantissa);
+            constructDoublePrecision(value, sign, characteristic, mantissa);
         }
     }
 }

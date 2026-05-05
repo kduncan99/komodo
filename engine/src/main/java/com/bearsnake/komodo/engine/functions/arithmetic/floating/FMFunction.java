@@ -48,10 +48,19 @@ public class FMFunction extends FloatingFunction {
             return true;
         }
 
-        var mantissa = (getMantissa(aValue) * getMantissa(operand));
-        var exponent = getExponent(aValue) + getExponent(operand);
-        var sign = getSign(aValue) ^ getSign(operand);
-        while (mantissa >> 53 == sign) {
+        var resultSign = 0;
+        if (getSinglePrecisionSign(operand) == 1) {
+            resultSign = 1;
+            operand ^= Word36.BIT_MASK;
+        }
+        if (getSinglePrecisionSign(aValue) == 1) {
+            resultSign = 1 - resultSign;
+            aValue ^= Word36.BIT_MASK;
+        }
+
+        var mantissa = (getSinglePrecisionMantissa(aValue) * getSinglePrecisionMantissa(operand));
+        var exponent = getSinglePrecisionExponent(aValue) + getSinglePrecisionExponent(operand);
+        while (mantissa >> 53 == resultSign) {
             mantissa <<= 1;
             exponent--;
         }
@@ -74,7 +83,7 @@ public class FMFunction extends FloatingFunction {
             return true;
         }
 
-        aReg.setW(construct(sign, getSinglePrecisionCharacteristicFromExponent(exponent), mantissa));
+        aReg.setW(constructSinglePrecision(resultSign, getSinglePrecisionCharacteristicFromExponent(exponent), mantissa));
 
         return true;
     }

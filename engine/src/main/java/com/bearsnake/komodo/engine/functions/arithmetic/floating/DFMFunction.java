@@ -54,10 +54,10 @@ public class DFMFunction extends FloatingFunction {
         }
 
         var aValues = new long[]{aValue0, aValue1};
-        var mantissa = BigInteger.valueOf(getMantissa(aValues))
-                                 .multiply(BigInteger.valueOf(getMantissa(operands)));
-        var exponent = getExponent(aValues) + getExponent(operands);
-        var sign = getSign(aValues) ^ getSign(operands);
+        var mantissa = BigInteger.valueOf(getDoublePrecisionMantissa(aValues))
+                                 .multiply(BigInteger.valueOf(getDoublePrecisionMantissa(operands)));
+        var exponent = getDoublePrecisionExponent(aValues) + getDoublePrecisionExponent(operands);
+        var sign = getDoublePrecisionSign(aValues) ^ getDoublePrecisionSign(operands);
 
         while (mantissa.shiftRight(119).intValue() == sign) {
             mantissa = mantissa.shiftLeft(1);
@@ -84,7 +84,7 @@ public class DFMFunction extends FloatingFunction {
             return true;
         }
 
-        construct(aValues, sign, getDoublePrecisionCharacteristicFromExponent(exponent), mantissa.longValue());
+        constructDoublePrecision(aValues, sign, getDoublePrecisionCharacteristicFromExponent(exponent), mantissa.longValue());
         aReg0.setW(aValues[0]);
         aReg1.setW(aValues[1]);
 
