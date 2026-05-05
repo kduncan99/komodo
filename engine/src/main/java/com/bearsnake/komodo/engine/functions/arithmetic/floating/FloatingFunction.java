@@ -132,7 +132,7 @@ public abstract class FloatingFunction extends Function {
     protected static long getMantissa(
         final long[] value
     ) {
-        return value[1] & 0_000077_777777_777777_777777L;
+        return ((value[0] & 0_7777_7777) << 36) | (value[1] & 0_777777_777777L);
     }
 
     protected static long getSign(

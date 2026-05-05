@@ -48,18 +48,14 @@ public class FMFunction extends FloatingFunction {
             return true;
         }
 
-        System.out.printf("aReg %o:%d:%09o\n", getSign(aValue), getExponent(aValue), getMantissa(aValue)); // TODO remove
-        System.out.printf("oper %o:%d:%09o\n", getSign(operand), getExponent(operand), getMantissa(operand));//TODO remove
         var mantissa = (getMantissa(aValue) * getMantissa(operand));
         var exponent = getExponent(aValue) + getExponent(operand);
         var sign = getSign(aValue) ^ getSign(operand);
-        System.out.printf("rslt %o:%d:%09o\n", sign, exponent, mantissa);//TODO remove
         while (mantissa >> 53 == sign) {
             mantissa <<= 1;
             exponent--;
         }
         mantissa >>= 27;
-        System.out.printf("norm %o:%d:%09o\n", sign, exponent, mantissa);//TODO remove
 
         var dr = engine.getDesignatorRegister();
         if (exponent < -0200) {

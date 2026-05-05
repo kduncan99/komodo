@@ -55,15 +55,15 @@ public class DFMFunction extends FloatingFunction {
 
         var aValues = new long[]{aValue0, aValue1};
         var mantissa = BigInteger.valueOf(getMantissa(aValues))
-                                 .multiply(BigInteger.valueOf(getMantissa(operands)))
-                                 .shiftRight(119)
-                                 .longValue();
+                                 .multiply(BigInteger.valueOf(getMantissa(operands)));
         var exponent = getExponent(aValues) + getExponent(operands);
         var sign = getSign(aValues) ^ getSign(operands);
-        while (mantissa >> 26 == sign) {
-            mantissa <<= 1;
+
+        while (mantissa.shiftRight(119).intValue() == sign) {
+            mantissa = mantissa.shiftLeft(1);
             exponent--;
         }
+        mantissa = mantissa.shiftRight(60);
 
         var dr = engine.getDesignatorRegister();
         if (exponent < -02000) {
@@ -84,7 +84,7 @@ public class DFMFunction extends FloatingFunction {
             return true;
         }
 
-        construct(aValues, sign, getSinglePrecisionCharacteristicFromExponent(exponent), mantissa);
+        construct(aValues, sign, getDoublePrecisionCharacteristicFromExponent(exponent), mantissa.longValue());
         aReg0.setW(aValues[0]);
         aReg1.setW(aValues[1]);
 
