@@ -59,18 +59,18 @@ public class FMFunction extends FloatingFunction {
 
         var dr = engine.getDesignatorRegister();
         if (exponent < -0200) {
-            dr.setCharacteristicUnderflow(true);
             if (dr.isArithmeticExceptionEnabled()) {
-                engine.postInterrupt(new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicUnderflow));
+                throw new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicUnderflow);
             }
             aReg.setW(0);
+            dr.setCharacteristicUnderflow(true);
             return true;
         } else if (exponent > 0200) {
-            dr.setCharacteristicOverflow(true);
             if (dr.isArithmeticExceptionEnabled()) {
-                engine.postInterrupt(new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicOverflow));
+                throw new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicOverflow);
             }
             aReg.setW(0);
+            dr.setCharacteristicOverflow(true);
             return true;
         }
 

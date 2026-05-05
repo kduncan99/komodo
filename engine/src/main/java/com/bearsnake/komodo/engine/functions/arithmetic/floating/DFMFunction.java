@@ -67,20 +67,20 @@ public class DFMFunction extends FloatingFunction {
 
         var dr = engine.getDesignatorRegister();
         if (exponent < -02000) {
-            dr.setCharacteristicUnderflow(true);
             if (dr.isArithmeticExceptionEnabled()) {
-                engine.postInterrupt(new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicUnderflow));
+                throw new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicUnderflow);
             }
             aReg0.setW(0);
             aReg1.setW(0);
+            dr.setCharacteristicUnderflow(true);
             return true;
         } else if (exponent > 02000) {
-            dr.setCharacteristicOverflow(true);
             if (dr.isArithmeticExceptionEnabled()) {
-                engine.postInterrupt(new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicOverflow));
+                throw new ArithmeticExceptionInterrupt(ArithmeticExceptionInterrupt.Reason.CharacteristicOverflow);
             }
             aReg0.setW(0);
             aReg1.setW(0);
+            dr.setCharacteristicOverflow(true);
             return true;
         }
 
