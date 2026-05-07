@@ -15,6 +15,7 @@ import com.bearsnake.komodo.engine.functions.addrSpace.LBEFunction;
 import com.bearsnake.komodo.engine.functions.addrSpace.LBUFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.decimal.*;
 import com.bearsnake.komodo.engine.functions.arithmetic.fixed.*;
+import com.bearsnake.komodo.engine.functions.arithmetic.floating.CDUFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.floating.DFMFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.floating.FMFunction;
 import com.bearsnake.komodo.engine.functions.intControl.AAIJFunction;
@@ -120,11 +121,11 @@ public abstract class FunctionTable {
         SUB1Function.INSTANCE,
 
         // float
-        // CDUFunction.INSTANCE,
+        CDUFunction.INSTANCE,
         // DFAFunction.INSTANCE,
         // DFANFunction.INSTANCE,
         // DFDFunction.INSTANCE,
-        DFMFunction.INSTANCE,// TODO needs unit tests
+        DFMFunction.INSTANCE,
         // DFUFunction.INSTANCE,
         // DLCFFunction.INSTANCE, // (also DFP)
         // FAFunction.INSTANCE,
@@ -132,7 +133,7 @@ public abstract class FunctionTable {
         // FCLFunction.INSTANCE,
         // FDFunction.INSTANCE,
         // FELFunction.INSTANCE,
-        FMFunction.INSTANCE,// TODO needs unit tests
+        FMFunction.INSTANCE,
         // LCFFunction.INSTANCE,
         // LUFFunction.INSTANCE,
         // MCDUFunction.INSTANCE,

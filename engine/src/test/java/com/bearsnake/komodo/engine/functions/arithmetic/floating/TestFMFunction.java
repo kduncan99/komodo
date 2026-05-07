@@ -33,7 +33,7 @@ public class TestFMFunction extends FunctionUnitTest {
         var code = new long[0_1000];
         var data = new long[0_1000];
 
-        code[0] = fmEM(5, 5, 0, 0, 2, 0_1005);
+        code[0] = fmEM(5, 0, 0, 0, 2, 0_1005);
         code[1] = 0;
         data[5] = 0;
 
