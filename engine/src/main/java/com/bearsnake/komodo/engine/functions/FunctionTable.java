@@ -18,6 +18,7 @@ import com.bearsnake.komodo.engine.functions.arithmetic.fixed.*;
 import com.bearsnake.komodo.engine.functions.arithmetic.floating.CDUFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.floating.DFMFunction;
 import com.bearsnake.komodo.engine.functions.arithmetic.floating.FMFunction;
+import com.bearsnake.komodo.engine.functions.arithmetic.floating.MCDUFunction;
 import com.bearsnake.komodo.engine.functions.intControl.AAIJFunction;
 import com.bearsnake.komodo.engine.functions.intControl.ERFunction;
 import com.bearsnake.komodo.engine.functions.intControl.PAIJFunction;
@@ -136,7 +137,7 @@ public abstract class FunctionTable {
         FMFunction.INSTANCE,
         // LCFFunction.INSTANCE,
         // LUFFunction.INSTANCE,
-        // MCDUFunction.INSTANCE,
+        MCDUFunction.INSTANCE,
 
         // decimal
         ADEFunction.INSTANCE,
