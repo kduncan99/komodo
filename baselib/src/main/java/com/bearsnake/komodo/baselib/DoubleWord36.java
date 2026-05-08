@@ -10,6 +10,7 @@ import static com.bearsnake.komodo.baselib.Word36.negate;
 
 /**
  * Library for doing architecturally correct 72-bit operations on integers
+ * TODO Clean up unused code someday
  */
 @SuppressWarnings("Duplicates")
 public class DoubleWord36 {
@@ -596,6 +597,33 @@ public class DoubleWord36 {
     }
 
     /**
+     * Shifts the given 72-bit value left by a number of bits, in ploce
+     * @param operands Word36 operands, [0] is MSWord, [1] is LSWord
+     * @param count number of bits to be shifted
+     */
+    public static void leftShiftLogical(
+        final long[] operands,
+        final int count
+    ) {
+        if (count < 0) {
+            rightShiftLogical(operands, -count);
+        } else if (count >= 72) {
+            operands[0] = 0L;
+            operands[1] = 0L;
+        } else if (count > 0) {
+            if (count < 36) {
+                var res0 = ((operands[0] << count) | (operands[1] >>> (36 - count))) & 0_777777_777777L;
+                var res1 = (operands[1] << count) & 0_777777_777777L;
+                operands[0] = res0;
+                operands[1] = res1;
+            } else {
+                operands[0] = (operands[1] << (count - 36)) & 0_777777_777777L;
+                operands[1] = 0L;
+            }
+        }
+    }
+
+    /**
      * Shifts the given 72-bit value left by a number of bits
      * @param operand1 most significant 36 bits of the value to be shifted
      * @param operand2 least significant 36 bits of the value to be shifted
@@ -730,6 +758,33 @@ public class DoubleWord36 {
                 res = (operand1 >>> (count - 36)) & 0_777777_777777L;
                 result[1] = res;
                 result[0] = 0L;
+            }
+        }
+    }
+
+    /**
+     * Shifts the given 72-bit value right by a number of bits, in place
+     * @param operands Word36 operands, [0] is MSWord, [1] is LSWord
+     * @param count number of bits to be shifted
+     */
+    public static void rightShiftLogical(
+        final long[] operands,
+        final int count
+    ) {
+        if (count < 0) {
+            leftShiftLogical(operands, -count);
+        } else if (count >= 72) {
+            operands[0] = 0L;
+            operands[1] = 0L;
+        } else if (count > 0) {
+            if (count < 36) {
+                var res0 = (operands[0] >>> count) & 0_777777_777777L;
+                var res1 = ((operands[1] >>> count) | (operands[0] << (36 - count))) & 0_777777_777777L;
+                operands[0] = res0;
+                operands[1] = res1;
+            } else {
+                operands[1] = (operands[0] >>> (count - 36)) & 0_777777_777777L;
+                operands[0] = 0L;
             }
         }
     }

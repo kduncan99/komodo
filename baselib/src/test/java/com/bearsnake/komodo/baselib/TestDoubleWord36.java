@@ -328,6 +328,7 @@ public class TestDoubleWord36 {
         assertEquals(0L, result[0]);
         assertEquals(1L, result[1]);
     }
+
     @Test
     public void testLeftShiftLogical() {
         Long[] result = new Long[2];
@@ -365,6 +366,53 @@ public class TestDoubleWord36 {
     }
 
     @Test
+    public void testLeftShiftLogicalInPlace() {
+        var op = new long[2];
+
+        op[0] = 0_400000_000000L;
+        op[1] = 0_000000_000001L;
+        DoubleWord36.leftShiftLogical(op, 1);
+        assertEquals(0_000000_000000L, op[0]);
+        assertEquals(0_000000_000002L, op[1]);
+
+        // Shift bit from LSW to MSW
+        op[0] = 0_000000_000000L;
+        op[1] = 0_400000_000000L;
+        DoubleWord36.leftShiftLogical(op, 1);
+        assertEquals(0_000000_000001L, op[0]);
+        assertEquals(0_000000_000000L, op[1]);
+
+        // 36-bit shift
+        op[0] = 0_123456_765432L;
+        op[1] = 0_000111_222333L;
+        DoubleWord36.leftShiftLogical(op, 36);
+        assertEquals(0_000111_222333L, op[0]);
+        assertEquals(0_000000_000000L, op[1]);
+
+        // 37-bit shift (36 + 1)
+        // LSW 0_000000_000001L -> MSW 0_000000_000002L
+        op[0] = 0_777777_777777L;
+        op[1] = 0_000000_000001L;
+        DoubleWord36.leftShiftLogical(op, 37);
+        assertEquals(0_000000_000002L, op[0]);
+        assertEquals(0_000000_000000L, op[1]);
+
+        // 72-bit shift
+        op[0] = 0_777777_777777L;
+        op[1] = 0_777777_777777L;
+        DoubleWord36.leftShiftLogical(op, 72);
+        assertEquals(0L, op[0]);
+        assertEquals(0L, op[1]);
+
+        // Negative shift count (calls right shift)
+        op[0] = 0_000000_000001L;
+        op[1] = 0_000000_000000L;
+        DoubleWord36.leftShiftLogical(op, -1);
+        assertEquals(0_000000_000000L, op[0]);
+        assertEquals(0_400000_000000L, op[1]);
+    }
+
+    @Test
     public void testRightShiftLogical() {
         Long[] result = new Long[2];
 
@@ -398,6 +446,54 @@ public class TestDoubleWord36 {
         DoubleWord36.rightShiftLogical(0_000000_000000L, 0_400000_000000L, -1, result);
         assertEquals(0_000000_000001L, result[0].longValue());
         assertEquals(0_000000_000000L, result[1].longValue());
+    }
+
+    @Test
+    public void testRightShiftLogicalInPlace() {
+        var op = new long[2];
+
+        // 1-bit shift
+        op[0] = 0_000000_000002L;
+        op[1] = 0_000000_000000L;
+        DoubleWord36.rightShiftLogical(op, 1);
+        assertEquals(0_000000_000001L, op[0]);
+        assertEquals(0_000000_000000L, op[1]);
+
+        // Shift bit from MSW to LSW
+        op[0] = 0_000000_000001L;
+        op[1] = 0_000000_000000L;
+        DoubleWord36.rightShiftLogical(op, 1);
+        assertEquals(0_000000_000000L, op[0]);
+        assertEquals(0_400000_000000L, op[1]);
+
+        // 36-bit shift
+        op[0] = 0_123456_765432L;
+        op[1] = 0_000111_222333L;
+        DoubleWord36.rightShiftLogical(op, 36);
+        assertEquals(0_000000_000000L, op[0]);
+        assertEquals(0_123456_765432L, op[1]);
+
+        // 37-bit shift (36 + 1)
+        // MSW 0_400000_000000L -> LSW 0_200000_000000L
+        op[0] = 0_400000_000000L;
+        op[1] = 0_000000_000000L;
+        DoubleWord36.rightShiftLogical(op, 37);
+        assertEquals(0_000000_000000L, op[0]);
+        assertEquals(0_200000_000000L, op[1]);
+
+        // 72-bit shift
+        op[0] = 0_777777_777777L;
+        op[1] = 0_777777_777777L;
+        DoubleWord36.rightShiftLogical(op, 72);
+        assertEquals(0L, op[0]);
+        assertEquals(0L, op[1]);
+
+        // Negative shift count (calls left shift)
+        op[0] = 0_000000_000000L;
+        op[1] = 0_400000_000000L;
+        DoubleWord36.rightShiftLogical(op, -1);
+        assertEquals(0_000000_000001L, op[0]);
+        assertEquals(0_000000_000000L, op[1]);
     }
 
     @Test
