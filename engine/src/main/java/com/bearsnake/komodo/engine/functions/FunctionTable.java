@@ -128,9 +128,9 @@ public abstract class FunctionTable {
         DLCFFunction.INSTANCE, // (also DFP)
         // FAFunction.INSTANCE,
         // FANFunction.INSTANCE,
-        // FCLFunction.INSTANCE,
+        FCLFunction.INSTANCE,
         // FDFunction.INSTANCE,
-        // FELFunction.INSTANCE,
+        FELFunction.INSTANCE,
         FMFunction.INSTANCE,
         LCFFunction.INSTANCE,
         LUFFunction.INSTANCE,
